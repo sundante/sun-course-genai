@@ -1,0 +1,3361 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A structured curriculum covering the full modern GenAI stack — from foundational LLMs through autonomous agentic systems.">
+      
+      
+      
+        <link rel="canonical" href="https://sundante.github.io/sun-course-genai/03-RAGs/Notes/12-Interview-QA-Bank/">
+      
+      
+        <link rel="prev" href="../11-Scaling-and-LLM-Issues/">
+      
+      
+        <link rel="next" href="../../../04-MCP/INDEX/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Interview Q&A Bank - GenAI Learning Curriculum</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#interview-qa-bank" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="GenAI Learning Curriculum" class="md-header__button md-logo" aria-label="GenAI Learning Curriculum" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            GenAI Learning Curriculum
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Interview Q&A Bank
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../01-LLM-Models/INDEX/" class="md-tabs__link">
+          
+  
+  
+  LLM Models
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../02-Prompts/INDEX/" class="md-tabs__link">
+          
+  
+  
+  Prompt Engineering
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../INDEX/" class="md-tabs__link">
+          
+  
+  
+  RAG
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../04-MCP/INDEX/" class="md-tabs__link">
+          
+  
+  
+  MCP
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../05-Agents/INDEX/" class="md-tabs__link">
+          
+  
+  
+  Agents
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../06-Agentic-AI/INDEX/" class="md-tabs__link">
+          
+  
+  
+  Agentic AI
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../All_Questions/" class="md-tabs__link">
+          
+  
+  
+  Interview Prep
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="GenAI Learning Curriculum" class="md-nav__button md-logo" aria-label="GenAI Learning Curriculum" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    GenAI Learning Curriculum
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    LLM Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../01-LLM-Models/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../01-LLM-Models/Notes/01-LLM-Fundamentals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM Fundamentals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../01-LLM-Models/Notes/02-Architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../01-LLM-Models/Notes/03-Training-and-Finetuning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Training & Fine-Tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../01-LLM-Models/Notes/04-Prompting-Strategies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompting Strategies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompt Engineering
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Prompt Engineering
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../02-Prompts/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../02-Prompts/Notes/01-Prompt-Basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompt Basics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../02-Prompts/Notes/02-Core-Techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core Techniques
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../02-Prompts/Notes/03-Advanced-Techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced Techniques
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../02-Prompts/Notes/04-Prompt-Engineering-for-Production/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompts in Production
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    RAG
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-RAG-Fundamentals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Fundamentals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-Embeddings-and-Vector-Stores/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Embeddings & Vector Stores
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-Chunking-and-Indexing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chunking & Indexing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-Retrieval-Strategies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retrieval Strategies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-Advanced-RAG-Patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced RAG Patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-RAG-Evaluation-and-Failure-Modes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evaluation & Failure Modes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-RAG-Types-Taxonomy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Types Taxonomy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-RAG-System-Design/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG System Design
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-Vertex-AI-RAG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vertex AI RAG
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-Production-Deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Production Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../11-Scaling-and-LLM-Issues/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scaling & LLM Issues
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interview Q&A Bank
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interview Q&A Bank
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#section-1-fundamentals-15-qa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 1: Fundamentals (15 Q&amp;A)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#section-2-retrieval-embeddings-15-qa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 2: Retrieval &amp; Embeddings (15 Q&amp;A)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#section-3-advanced-patterns-15-qa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 3: Advanced Patterns (15 Q&amp;A)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#section-4-system-design-scenarios-10-qa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 4: System Design Scenarios (10 Q&amp;A)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#section-5-vertex-ai-gcp-10-qa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 5: Vertex AI / GCP (10 Q&amp;A)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#section-6-production-debugging-15-qa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 6: Production &amp; Debugging (15 Q&amp;A)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    MCP
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-MCP/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-MCP/Notes/01-The-Problem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Problem
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-MCP/Notes/02-Definition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Definition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-MCP/Notes/03-The-Solution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Solution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-MCP/Notes/04-Components/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Components
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-MCP/Notes/05-Capabilities/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Capabilities
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-MCP/Notes/06-Why-MCP-Matters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why It Matters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-MCP/Notes/07-Architecture-Deep-Dive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Deep-Dive
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-MCP/Notes/08-Getting-Started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agents
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Agents
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/Notes/01-Agent-Fundamentals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Fundamentals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/Notes/02-Agent-Patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_4" id="__nav_6_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GCP ADK
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    GCP ADK
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/GCP-ADK/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/GCP-ADK/01-ADK-Fundamentals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADK Fundamentals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/GCP-ADK/02-Simple-Agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simple Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/GCP-ADK/03-Complex-Agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complex Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_5" id="__nav_6_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LangChain
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    LangChain
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/LangChain/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/LangChain/01-LangChain-Fundamentals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LangChain Fundamentals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/LangChain/02-Simple-Agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simple Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/LangChain/03-Complex-Agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complex Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_6" id="__nav_6_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LangGraph
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    LangGraph
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/LangGraph/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/LangGraph/01-LangGraph-Fundamentals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LangGraph Fundamentals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/LangGraph/02-Simple-Agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simple Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/LangGraph/03-Complex-Agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complex Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_7" id="__nav_6_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CrewAI
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    CrewAI
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/CrewAI/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/CrewAI/01-CrewAI-Fundamentals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CrewAI Fundamentals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/CrewAI/02-Simple-Agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simple Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/CrewAI/03-Complex-Agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complex Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agentic AI
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Agentic AI
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../06-Agentic-AI/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../06-Agentic-AI/Notes/01-Agentic-Concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agentic Concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../06-Agentic-AI/Notes/02-Architectural-Patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architectural Patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../06-Agentic-AI/Notes/03-Design-Patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Design Patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../06-Agentic-AI/Notes/04-Multi-Agent-Systems/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multi-Agent Systems
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interview Prep
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Interview Prep
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../All_Questions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    All Questions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Interview-Questions/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Interview-Questions/01-LLM-Models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Interview-Questions/02-Prompt-Engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompt Engineering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Interview-Questions/03-RAGs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAGs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Interview-Questions/04-MCP/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Interview-Questions/05-Agents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Interview-Questions/06-Agentic-AI/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agentic AI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#section-1-fundamentals-15-qa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 1: Fundamentals (15 Q&amp;A)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#section-2-retrieval-embeddings-15-qa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 2: Retrieval &amp; Embeddings (15 Q&amp;A)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#section-3-advanced-patterns-15-qa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 3: Advanced Patterns (15 Q&amp;A)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#section-4-system-design-scenarios-10-qa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 4: System Design Scenarios (10 Q&amp;A)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#section-5-vertex-ai-gcp-10-qa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 5: Vertex AI / GCP (10 Q&amp;A)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#section-6-production-debugging-15-qa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 6: Production &amp; Debugging (15 Q&amp;A)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="interview-qa-bank">Interview Q&amp;A Bank</h1>
+<p>80+ curated Q&amp;A pairs for Google/Amazon interview preparation.<br />
+Each answer is 3-5 sentences with specifics — not vague responses.<br />
+Tags: <code>[Easy]</code> = conceptual, <code>[Medium]</code> = design decisions, <code>[Hard]</code> = system design / deep technical.</p>
+<hr />
+<h2 id="section-1-fundamentals-15-qa">Section 1: Fundamentals (15 Q&amp;A)</h2>
+<p><strong>Q1: What is RAG and why was it introduced?</strong> <code>[Easy]</code>
+A: RAG (Retrieval-Augmented Generation) augments an LLM's responses by retrieving relevant documents from an external corpus and injecting them into the prompt before generation. It was introduced to address three LLM limitations: knowledge cutoff (training data has a hard end date), hallucination (LLMs confabulate when they don't know something), and inability to access private/proprietary knowledge. RAG separates parametric memory (weights) from non-parametric memory (documents), letting you update knowledge without retraining.</p>
+<p><strong>Q2: What are the two phases of a RAG pipeline?</strong> <code>[Easy]</code>
+A: Index phase (offline): load documents, chunk, embed, store vectors in a vector database. This runs once and incrementally for new documents. Query phase (online, user-facing): embed the user's query, run ANN search to retrieve top-k chunks, assemble retrieved chunks + query into a prompt, generate an answer with an LLM. The critical invariant: query-time and index-time must use the same embedding model.</p>
+<p><strong>Q3: Why doesn't RAG eliminate hallucination completely?</strong> <code>[Medium]</code>
+A: Three failure paths remain even with RAG: (1) retrieval failure — the relevant chunk isn't retrieved, so the LLM generates without grounding; (2) "lost in the middle" — relevant chunks are retrieved but placed in the middle of a long context window where LLM attention is weakest; (3) parametric override — the LLM has strong parametric priors that override retrieved context, especially for highly-contested facts. RAG reduces hallucination substantially but doesn't eliminate it.</p>
+<p><strong>Q4: When would you recommend fine-tuning instead of RAG?</strong> <code>[Medium]</code>
+A: Fine-tune when you need to change the model's reasoning behavior, output format, or domain-specific style — not facts. RAG can inject facts; fine-tuning injects behavior patterns. Examples favoring fine-tuning: generating medical SOAP notes in a specific format, adopting legal writing style, or using specialized abbreviations consistently. For facts that change frequently, RAG is always better — fine-tuning requires retraining every time knowledge changes.</p>
+<p><strong>Q5: What is the critical invariant that, if violated, causes silent total failure?</strong> <code>[Hard]</code>
+A: The embedding model used at query time must be identical to the one used at index time. Each model defines its own geometric vector space; cosine similarity is only meaningful within the same space. Switching models (even to a "better" one) makes every query retrieve semantically unrelated chunks, producing completely wrong answers with no error or exception. This is a silent failure — standard integration tests won't catch it. Always pin the embedding model version and treat a model upgrade as requiring full re-indexing.</p>
+<p><strong>Q6: Explain the RAG vs fine-tuning decision matrix.</strong> <code>[Medium]</code>
+A: RAG wins for: frequently changing knowledge, private/proprietary data, need for source citations, large diverse corpora. Fine-tuning wins for: stable knowledge, custom output formats/styles, domain-specific reasoning patterns, when retrieval latency is prohibitive. The two are complementary: fine-tune for behavior, use RAG for knowledge. A medical Q&amp;A system might fine-tune for clinical reasoning style while using RAG for specific drug information from a current formulary.</p>
+<p><strong>Q7: How does RAG address the knowledge cutoff problem?</strong> <code>[Easy]</code>
+A: RAG bypasses the training cutoff entirely. The vector database is the source of truth, not the model's weights. You can index a document published today and it's immediately retrievable — no retraining required. The key insight: knowledge retrieval is separated from knowledge encoding. You update the retrieval store (cheap, instant), not the model (expensive, slow).</p>
+<p><strong>Q8: What is the difference between dense and sparse retrieval at a high level?</strong> <code>[Easy]</code>
+A: Dense retrieval uses neural embedding models to represent text as continuous vectors in high-dimensional space; similar meaning produces similar vectors regardless of exact word choice (handles synonyms, paraphrases). Sparse retrieval (BM25) represents text as sparse vectors in vocabulary space; it excels at exact keyword matching. Dense retrieval has better semantic generalization; sparse retrieval has better exact-match precision for rare terms, product codes, and proper nouns.</p>
+<p><strong>Q9: A user complains "the system doesn't know about our new product released last week." What's the likely issue?</strong> <code>[Easy]</code>
+A: The new product's documentation hasn't been indexed yet. Index staleness is a common RAG failure mode. Fix: check the ingest pipeline's trigger — is it event-driven (instant on document change) or scheduled (nightly batch)? If batch, the document will appear after the next scheduled run. For near-real-time requirements, implement event-driven ingestion using a Pub/Sub/webhook trigger that re-indexes documents within minutes of being updated.</p>
+<p><strong>Q10: What is the difference between RAG and a search engine?</strong> <code>[Easy]</code>
+A: A search engine retrieves and ranks documents, returning links and snippets. RAG retrieves relevant passages AND generates a synthesized answer using an LLM. Search returns sources; RAG returns an answer grounded in sources. RAG adds the generation step, which enables natural language answers, synthesis across multiple documents, and conversational follow-up — but also introduces the risk of hallucination that pure search doesn't have.</p>
+<p><strong>Q11: What is k in RAG and how do you decide what value to use?</strong> <code>[Medium]</code>
+A: k is the number of document chunks retrieved from the vector database per query. Higher k → better recall (less chance of missing relevant information) but more noise and higher LLM token cost. Lower k → less noise but higher miss rate. Typical values: k=4-6 for standard Q&amp;A, k=10-20 if followed by reranking (retrieve many, rerank to top 4). Tune k on a golden eval dataset: increase k until Recall@k plateaus, then set production k at the elbow point.</p>
+<p><strong>Q12: What information do you include in chunk metadata and why?</strong> <code>[Medium]</code>
+A: Metadata enables pre-filtering (search only relevant subset) and answer attribution (cite the source). Key fields: <code>source</code> (file path/URL), <code>page_number</code> (for PDFs), <code>section_title</code>, <code>document_date</code>, <code>department</code>/<code>category</code>, <code>content_hash</code> (deduplication). Access control fields: <code>security_level</code>, <code>owner_group</code>. Date metadata enables time-windowed queries ("only documents from 2024") without embedding the date information. Source enables citations in the generated answer for auditability.</p>
+<p><strong>Q13: Why might a RAG system produce different answers to the same question asked twice?</strong> <code>[Medium]</code>
+A: Four sources of non-determinism: (1) LLM temperature &gt; 0 — different sampling in the generator. (2) ANN non-determinism — HNSW approximate search may return slightly different results on repeated queries (especially near decision boundaries). (3) Index updates between queries — the corpus was updated and different chunks are now in top-k. (4) Semantic cache miss — the first query was cached; the second query was slightly paraphrased, cache missed, and a different retrieval result was returned. For deterministic Q&amp;A systems, use temperature=0 and exact hash caching.</p>
+<p><strong>Q14: What is the difference between extractive and abstractive RAG?</strong> <code>[Medium]</code>
+A: Extractive RAG returns verbatim passages from retrieved chunks as the answer (no generation). Abstractive RAG uses an LLM to synthesize a new answer based on retrieved chunks (standard RAG). Extractive is more faithful and traceable (every word came from the source) but may be verbose or miss cross-chunk synthesis. Abstractive allows summarization, synthesis, and natural language reformulation but introduces hallucination risk. Most production systems use abstractive RAG with faithfulness constraints; extractive is used when verbatim accuracy is paramount (legal, regulatory).</p>
+<p><strong>Q15: How would you explain RAG to a product manager in one minute?</strong> <code>[Easy]</code>
+A: RAG is like giving your AI assistant a set of reference books before answering a question. Instead of relying on what the AI learned during training, you first find the relevant pages in your company's documentation, then give those pages to the AI to read before answering. This makes the AI more accurate (it's reading your actual policies, not guessing), keeps answers current (update the books, not the AI), and lets you trace where each answer came from. The trade-off: it's slightly slower and costs a bit more per query than asking the AI without any reference material.</p>
+<hr />
+<h2 id="section-2-retrieval-embeddings-15-qa">Section 2: Retrieval &amp; Embeddings (15 Q&amp;A)</h2>
+<p><strong>Q16: Why does cosine similarity outperform dot product for text retrieval?</strong> <code>[Medium]</code>
+A: Text embedding models output vectors with varying magnitudes. Verbose, information-dense chunks get higher-norm vectors — dot product would unfairly rank these higher regardless of topical relevance. Cosine similarity normalizes by vector magnitude, measuring only the angular relationship (semantic direction). Use dot product only if your embedding model was explicitly trained with dot product as the objective; otherwise, cosine similarity or normalized dot product (equivalent) is the correct choice.</p>
+<p><strong>Q17: Explain HNSW and why it's the default ANN algorithm for most RAG systems.</strong> <code>[Hard]</code>
+A: HNSW (Hierarchical Navigable Small World) builds a multilayer graph where upper layers have sparse long-range connections for fast navigation and lower layers have dense local connections for precision. Search starts at the top layer, greedily navigates toward the query vector, and descends for refinement. HNSW achieves 95-99% recall at sub-millisecond query times for corpora up to ~10M vectors, with no training phase (unlike IVF which requires k-means clustering). The trade-off: high memory footprint (each of M connections stored per vector). At &gt;10M vectors, IVF or Vertex AI Vector Search (ScaNN-based) becomes more practical.</p>
+<p><strong>Q18: When does BM25 beat dense retrieval?</strong> <code>[Medium]</code>
+A: BM25 wins for three query types: (1) exact technical terms — product codes, CVE IDs, regulatory citations, version numbers that are rare or absent in the embedding model's training data; (2) short queries where there's insufficient context for semantic matching; (3) highly specialized jargon in domain-specific corpora where the general-purpose embedding model wasn't trained on those terms. In practice, hybrid search (BM25 + dense) outperforms either alone by 5-15% Recall@10 — BM25 covers lexical gaps that dense retrieval misses.</p>
+<p><strong>Q19: What is Reciprocal Rank Fusion and why is it preferred for combining retrieval results?</strong> <code>[Hard]</code>
+A: RRF(d) = Σ 1/(k + rank(d, r)) summed over each retrieval system r. It's preferred because dense and sparse scores are on incomparable scales (cosine similarity 0-1 vs BM25 0-25), making direct score combination require arbitrary normalization assumptions. RRF sidesteps normalization by using only rank positions. Documents appearing at the top of multiple independent retrieval systems get a strong combined score — documents that independently two systems agree are relevant are likely to be relevant. The k=60 constant prevents rank-1 from dominating too strongly.</p>
+<p><strong>Q20: What is a cross-encoder and why is it used for reranking instead of retrieval?</strong> <code>[Medium]</code>
+A: A cross-encoder processes a (query, document) pair jointly as a single input, producing a scalar relevance score that captures fine-grained query-document interaction. This is far more precise than a bi-encoder (which embeds query and document independently and compares cosine similarity) but 10-100x slower because it cannot pre-compute document representations. You can't use it for first-stage retrieval against 10M documents (that's 10M inference calls per query). Use it for reranking the top-20 candidates from fast bi-encoder ANN search — 20 cross-encoder calls takes ~150ms, acceptable for most RAG systems.</p>
+<p><strong>Q21: How do you evaluate whether your embedding model is right for your domain?</strong> <code>[Medium]</code>
+A: Domain-specific evaluation: build a test set of 100-200 (query, relevant_chunk) pairs manually curated from your corpus. Compute Recall@5 and Recall@10 with each candidate model. Check the MTEB benchmark scores in the "Retrieval" category for your domain (BEIR subset). If your domain is specialized (legal, medical, code), look for domain-specific fine-tuned models (e5-mistral, legal-specific E5). A 5-10% Recall@10 difference between models translates directly to 5-10% of queries returning wrong answers.</p>
+<p><strong>Q22: What is Matryoshka Representation Learning and how do you use it in production?</strong> <code>[Hard]</code>
+A: MRL trains embedding models to encode information hierarchically — the first N dimensions of the full vector capture the most important semantics, and adding dimensions adds finer detail. This allows truncating the vector (e.g., from 3072 to 512 dimensions) with minimal quality loss. In production: store truncated 256-dim vectors for first-stage ANN retrieval (6x smaller index, 6x faster queries), then re-score top-50 candidates using full 3072-dim vectors for precision. This two-stage approach reduces storage cost and first-stage latency while maintaining full-precision reranking quality.</p>
+<p><strong>Q23: How would you choose between Pinecone, Vertex AI Vector Search, and pgvector for a new project?</strong> <code>[Medium]</code>
+A: Pinecone: fully managed, great developer experience, easy multi-tenancy via namespaces, not GCP-native. Vertex AI Vector Search: best if on GCP, scales to 1B+ vectors, integrates natively with Gemini and Vertex AI RAG Engine, requires more setup than Pinecone. pgvector: ideal when you already have PostgreSQL (or AlloyDB) and want to add vector search without a new service — SQL + vector in one place, ACID transactions on updates. Rule of thumb: new GCP projects → Vertex AI Vector Search; existing SQL infrastructure → pgvector/AlloyDB; multi-cloud or simple managed option → Pinecone.</p>
+<p><strong>Q24: What are the signs of poor chunking quality in a production RAG system?</strong> <code>[Medium]</code>
+A: Three patterns: (1) retrieval returns the right document section but the answer misses key facts that are present in the source — key information was split across chunk boundaries; fix with larger chunks or overlap. (2) Retrieved chunks frequently contain only partial sentences — the splitter is splitting mid-sentence; fix by prioritizing sentence-boundary splits. (3) Multiple retrieved chunks contain similar/redundant content about slightly different topics (embedding similarity is diluted by unrelated context) — chunks are too large, mixing multiple topics; fix with smaller chunks or semantic chunking.</p>
+<p><strong>Q25: How do you handle multilingual documents in a RAG system?</strong> <code>[Medium]</code>
+A: Two strategies: (1) multilingual embedding model — use <code>multilingual-e5-large</code> or <code>text-multilingual-embedding-002</code> (Vertex AI), which projects all languages into one shared embedding space. Query in any language and retrieve across languages. Lower peak quality per language but simpler architecture. (2) Language-separated indices — detect document and query language, route to language-specific indices using monolingual high-quality models. Better precision per language, more complex routing. For most enterprise systems, a multilingual model with good MTEB multilingual scores is sufficient and far simpler to maintain.</p>
+<p><strong>Q26: Why should you retrieve k=20 and rerank to k=4 rather than just retrieving k=4?</strong> <code>[Medium]</code>
+A: First-stage ANN retrieval (bi-encoder) optimizes for speed over precision — it may miss the most relevant chunk if a less-relevant chunk has a slightly better embedding alignment. By retrieving k=20, you ensure the relevant chunk is in the candidate set with high probability. The cross-encoder reranker then selects the truly best 4 from those 20, with much higher precision because it sees query-document interaction. Retrieval recall@20 is typically 15-30% higher than recall@4, and the reranker recovers most of that gap for top-4 precision.</p>
+<p><strong>Q27: How does MMR differ from standard top-k retrieval and when should you use it?</strong> <code>[Easy]</code>
+A: Standard top-k returns the k most similar documents to the query — often 3-4 nearly identical paragraphs from the same source. MMR (Maximal Marginal Relevance) greedily selects each additional document to maximize both relevance to the query AND dissimilarity from already-selected documents. Use MMR when corpus coverage matters: product recommendations (diverse brands), research survey (diverse perspectives), or when you've noticed top-k always returns chunks from the same document. Lambda parameter: higher (0.7-1.0) weights relevance, lower (0.3-0.5) weights diversity.</p>
+<p><strong>Q28: What is HyDE and when should you be cautious with it?</strong> <code>[Hard]</code>
+A: HyDE (Hypothetical Document Embeddings) asks the LLM to write a hypothetical document that would answer the query, then embeds that document instead of the raw query. The hypothesis is in "document space" rather than "question space," improving recall for technical or complex queries where the user's phrasing is very different from how documents are written. Be cautious when: (1) the LLM generates a confidently wrong hypothesis (common in specialized domains) — this contaminates the embedding and retrieves documents about the wrong topic; (2) the query is already well-phrased and information-dense — HyDE adds latency without benefit; (3) the domain is safety-critical (medical, legal) — a wrong hypothesis risks retrieving dangerously misleading documents.</p>
+<p><strong>Q29: How do you test retrieval quality before deploying to production?</strong> <code>[Medium]</code>
+A: Build a golden retrieval test set: 100-300 (query, expected_chunk_ids) pairs where you manually verified which chunks should be retrieved. Compute Recall@k and MRR (Mean Reciprocal Rank). Recall@5 ≥ 0.85 is a reasonable production threshold. Run this in CI/CD — if a code change (new chunker, new embedding model) drops Recall@5 by more than 5%, block deployment. Augment with synthetic data: for each chunk, generate 2-3 questions an LLM thinks the chunk answers; use those as additional test queries.</p>
+<p><strong>Q30: Explain the trade-off between index build time and query performance for HNSW.</strong> <code>[Hard]</code>
+A: HNSW has two key parameters that trade build vs query performance: (1) M (number of connections per node): higher M → better recall and faster queries (more navigation options), but longer build time and more memory (M connections stored per vector). Typical M=16-48. (2) efConstruction (search depth during build): higher efConstruction → better recall (more thorough graph construction), but much longer build time. Typical efConstruction=100-400. At query time, efSearch controls recall vs query latency. These parameters are set at build time and cannot be changed without rebuilding the index — so choose carefully. For most RAG systems: M=32, efConstruction=200, efSearch=64 gives a good balance.</p>
+<hr />
+<h2 id="section-3-advanced-patterns-15-qa">Section 3: Advanced Patterns (15 Q&amp;A)</h2>
+<p><strong>Q31: What is Self-RAG and how does it differ from Corrective RAG (CRAG)?</strong> <code>[Hard]</code>
+A: Self-RAG uses a specially fine-tuned LLM that generates reflection tokens during generation — <code>[Retrieve]</code> to decide whether to retrieve, <code>[IsRel]</code> to evaluate retrieved document relevance, <code>[IsSup]</code> to verify claim support. It interleaves retrieval and generation, retrieving only when needed. CRAG, by contrast, runs standard retrieval first, then uses a separate LLM call to grade the retrieval quality (CORRECT/INCORRECT/AMBIGUOUS), and falls back to web search if the retrieval is poor. Self-RAG is more elegant but requires a fine-tuned model. CRAG works with any LLM and adds a quality safety net around the retrieval step.</p>
+<p><strong>Q32: When would you choose Agentic RAG over Pipeline RAG?</strong> <code>[Medium]</code>
+A: Agentic RAG is warranted when: (1) the query requires multi-hop reasoning — you don't know in advance what information you'll need until you see the first retrieval result; (2) the question decomposes into sub-questions that each need separate retrieval; (3) different types of retrieval may be needed for different sub-questions (vector search + SQL + web search). Pipeline RAG is better when: latency is critical, queries are predictably single-hop, and you want deterministic, testable behavior. The 80/20 rule: 80% of customer support queries are single-hop and best served by pipeline RAG; 20% require agentic reasoning.</p>
+<p><strong>Q33: Describe the GraphRAG build pipeline and its cost implications.</strong> <code>[Hard]</code>
+A: GraphRAG build: (1) LLM extracts entities and relationships from each document chunk — one LLM call per chunk, typically 2-5 cents per 1K tokens; (2) build a knowledge graph (nodes=entities, edges=relationships); (3) run Leiden community detection to group related entities; (4) LLM generates summary for each community at each hierarchical level — another round of LLM calls. Total build cost: 3-5x the text volume in LLM tokens. For a 1M-document corpus, GraphRAG indexing can cost $1,000-5,000, vs $50-200 for dense vector indexing. Query cost is also higher — community summaries add 500-2000 tokens per query. Justified for corpora where relationship traversal or global synthesis is a core use case.</p>
+<p><strong>Q34: What is FLARE and how does it know when to retrieve?</strong> <code>[Hard]</code>
+A: FLARE (Forward-Looking Active REtrieval) monitors token-level generation probabilities. During generation, if the model's next-token probability drops below a threshold (e.g., 0.2), it signals uncertainty about that span of text. FLARE pauses generation, uses the uncertain span as a retrieval query, fetches new context, then continues generation. This enables mid-generation retrieval — unlike standard RAG which retrieves once at the start. FLARE is most valuable for long-form generation where different facts emerge at different points in the response. The practical limitation: requires access to token-level probabilities, which not all LLM APIs expose.</p>
+<p><strong>Q35: How does contextual compression reduce "lost in the middle" failures?</strong> <code>[Medium]</code>
+A: Contextual compression extracts only the relevant sentences from each retrieved chunk before assembling the context. If k=5 chunks average 500 tokens each (2500 total), compression might reduce each to 100-150 relevant tokens (500-750 total). Shorter total context means: (1) the relevant content represents a much larger fraction of the context window, making it harder for the LLM to "miss" it; (2) the effective middle of the context is smaller; (3) the relevant sentences are more likely to be near the beginning or end of the compressed context. Use <code>LLMChainExtractor</code> for best quality or <code>EmbeddingsFilter</code> for speed/cost.</p>
+<p><strong>Q36: Compare Multi-Query RAG and HyDE — when would you use each?</strong> <code>[Medium]</code>
+A: Both are pre-retrieval query transformation techniques, but for different failure modes. Multi-Query generates multiple paraphrased versions of the question to improve coverage — best when the question is ambiguous or has multiple valid interpretations, and when different phrasings would match different relevant documents. HyDE generates a hypothetical answer document and embeds that instead of the query — best when the user's question is phrased very differently from how documents are written (question vs answer space mismatch). HyDE is more compute-intensive (one LLM call to generate the hypothesis) and riskier if the hypothesis is wrong. Multi-Query is safer and often better for ambiguous queries.</p>
+<p><strong>Q37: What is Modular RAG and how does it differ from Advanced RAG?</strong> <code>[Medium]</code>
+A: Advanced RAG improves a fixed pipeline at specific stages (pre/retrieval/post) but maintains the same pipeline structure. Modular RAG deconstructs RAG into interchangeable components (search module, memory module, routing module, fusion module) and adds a routing layer that selects which modules to invoke based on query type. A legal query might invoke the vector store + BM25 + reranker; a "what's in the news today" query might invoke only web search. Advanced RAG is a better pipeline; Modular RAG is a configurable, multi-strategy system.</p>
+<p><strong>Q38: How would you implement multi-hop reasoning in RAG without an agentic framework?</strong> <code>[Hard]</code>
+A: Multi-query decomposition: use the LLM to decompose the complex question into 2-4 sub-questions, retrieve independently for each, merge and deduplicate all retrieved chunks, then provide the merged context to generate a final synthesized answer. Example: "What caused the revenue decline in Q3 given the executive changes?" decomposes into (1) "Q3 revenue figures and decline details", (2) "executive changes timeline", (3) "CEO/CFO statements about strategy." Retrieve for all three, merge, generate. This is a fixed-step approach without dynamic control flow — simpler than Agentic RAG but handles many multi-hop patterns effectively.</p>
+<p><strong>Q39: What is the difference between GraphRAG local search and global search?</strong> <code>[Hard]</code>
+A: Local search is for specific entity-based questions — it identifies entities mentioned in the query, finds their neighborhoods in the knowledge graph (nearby entities, relationships, community memberships), retrieves their community summaries and entity reports, and generates a focused answer. Global search is for broad thematic questions ("What are the main themes in this corpus?") — it uses community summaries at multiple hierarchical levels, generates partial answers from each community, and synthesizes them with a map-reduce step. Local is faster (fewer communities involved); global reads many community summaries and is more expensive but necessary for corpus-wide synthesis.</p>
+<p><strong>Q40: When should you NOT implement reranking in a RAG system?</strong> <code>[Medium]</code>
+A: Skip reranking when: (1) latency budget doesn't allow it — if p95 SLA is 500ms and the LLM alone takes 300ms, there's no room for 150ms reranking; (2) k is small (≤3) and the embedding model is already high quality — reranking top-3 provides marginal gain; (3) queries are highly specific factual lookups where BM25 or dense retrieval already gives near-perfect Precision@1; (4) cost is severely constrained — Cohere Rerank adds ~$0.001-0.002 per query, which matters at 10M queries/month. Instead of always reranking, consider conditional reranking: skip when the top retrieval score is very high (&gt;0.95), rerank only when the score gap between rank-1 and rank-4 is small.</p>
+<p><strong>Q41: Describe a scenario where CRAG would significantly outperform standard RAG.</strong> <code>[Medium]</code>
+A: Customer support for a company that recently rebranded and updated all its product names. The internal RAG corpus hasn't been fully re-indexed. A user asks about a feature by the new product name — the vector index mostly contains documents with the old name. Standard RAG retrieves poor results (old docs don't match the new name's embedding), and the LLM either hallucinates an answer or says "I don't know." CRAG detects the poor retrieval quality (grade=INCORRECT), falls back to web search, and finds the new product's documentation. Result: CRAG answers correctly, standard RAG fails.</p>
+<p><strong>Q42: How does Parent-Child chunking solve the precision/recall tension?</strong> <code>[Easy]</code>
+A: Parent-child chunking separates retrieval granularity from generation context. Small child chunks (100-200 chars) produce focused, high-precision embeddings — each child is about exactly one thing. These are what the vector DB indexes. When a child chunk matches, you return its parent chunk (1000-1500 chars, full surrounding context) to the LLM. The LLM gets rich context; the retriever gets precise semantic targeting. Without this, you must choose: small chunks (good retrieval, poor generation context) or large chunks (poor retrieval, good context).</p>
+<p><strong>Q43: What is the Self-RAG "IsUse" token and why does it matter?</strong> <code>[Hard]</code>
+A: The <code>[IsUse]</code> token in Self-RAG evaluates whether the final generated response is actually useful/helpful to the user. The model generates this token after producing the response. If <code>[IsUse]</code> is low, the model can decide to regenerate — possibly with a different retrieval strategy or by acknowledging uncertainty. This makes Self-RAG self-evaluating at the generation level, not just the retrieval level. In practice, the <code>[IsUse]</code> signal is used during training to reinforce responses that the model itself deems helpful, creating a form of self-supervised quality filtering.</p>
+<p><strong>Q44: How do you prevent Agentic RAG from running an infinite loop?</strong> <code>[Medium]</code>
+A: Three safeguards: (1) hard iteration cap — set <code>max_iterations=5</code> (LangChain AgentExecutor parameter) or an equivalent in LangGraph via state counter; (2) force-stop on budget — track total tokens spent, force completion if over budget; (3) novelty detection — track all queries issued; if the agent generates a retrieval query it already tried, force it to generate a final answer with the information it has. LangGraph's conditional edge approach is cleaner: the routing function checks <code>state["retrieval_count"] &gt;= MAX_RETRIEVAL</code> and routes to the finalize node.</p>
+<p><strong>Q45: Why might a RAG system work well on your test set but poorly on production queries?</strong> <code>[Hard]</code>
+A: Three causes: (1) test set distribution mismatch — your golden dataset was created by curating "typical" questions from documentation, but real users ask adversarial, vague, or domain-crossing questions that weren't represented. (2) Corpus distribution shift — production users query about topics that are in the corpus but under-represented in your test set; retrieval quality is lower for those topics. (3) Feedback loop bias — you only added queries to the golden set that the system answered correctly, creating survivorship bias. Fix: sample 5-10% of real production queries weekly, have a human label quality, add poor-quality examples to the golden set as regression tests.</p>
+<hr />
+<h2 id="section-4-system-design-scenarios-10-qa">Section 4: System Design Scenarios (10 Q&amp;A)</h2>
+<p><strong>Q46: Design a RAG system for a 50M-document legal corpus serving 100 concurrent lawyers.</strong> <code>[Hard]</code>
+A: Requirements: ~100 concurrent users × 30 queries/hour = ~3000 queries/hour = ~1 QPS peak. Latency SLA: p95 &lt; 3s (lawyers accept slightly higher latency for quality). Corpus: 50M legal docs → ~60M chunks at 500-char. Architecture: GCS for raw docs → Cloud Run ingest worker → text-embedding-004 (batch 256) → Vertex AI Vector Search (IVF index for 60M scale). Query: hybrid search (Vector Search + Elasticsearch BM25) for keyword + semantic, mandatory — cross-encoder rerank (<code>bge-reranker-large</code> or Cohere), Gemini Pro for generation. Critical additions: metadata with jurisdiction, court level, date, practice area; pre-filters to jurisdiction and date range. For legal, add RAGAS faithfulness monitoring and verbatim citation extraction (extractive QA mode for critical passages). Security: AlloyDB access log + user-document audit trail.</p>
+<p><strong>Q47: A company wants to build a RAG system for their customer support chatbot handling 500K queries/day. Design it.</strong> <code>[Hard]</code>
+A: 500K queries/day = 6 QPS average, ~30 QPS peak (business hours). Cost is critical at this scale. Architecture: semantic cache (Redis, 1hr TTL) targeting 40-50% hit rate → 250K uncached queries/day. For uncached: query embedding (Cloud Run, cached 24h) → hybrid retrieval (Vertex AI Vector Search + BM25 Elasticsearch) → lightweight reranker (MiniLM-L-6-v2 self-hosted, fast) → query routing: classify simple factoid (70% of traffic) → Gemini Flash (cheap, fast), complex (30%) → Gemini Pro. Cost optimization: contextual compression reduces context tokens 40%. Monitoring: thumbs-down rate, "escalated to human" rate (proxy for poor RAG quality), cache hit rate. Total estimated cost at this scale: ~$2-4K/month depending on cache hit rate and query complexity distribution.</p>
+<p><strong>Q48: You join a company where the RAG system has been running for 6 months. Users are complaining quality has degraded. How do you diagnose it?</strong> <code>[Hard]</code>
+A: Systematic diagnosis in 4 steps: (1) <strong>Timeline correlation</strong> — when exactly did quality drop? Correlate with: corpus changes (new document types added), embedding model version changes, LLM model updates, code deployments. (2) <strong>Metric breakdown</strong> — run golden dataset against current system. Which metric is worst: faithfulness, context recall, or context precision? Faithfulness → generation issue. Context recall → retrieval/indexing issue. Context precision → retrieval noise. (3) <strong>Query category analysis</strong> — sample 100 bad production queries from user feedback. Do they cluster into topics? Time periods? Document types? (4) <strong>Index audit</strong> — are documents indexed correctly? Check a known-bad query: is the answer physically present in the index? If yes, retrieval failure. If no, ingest failure.</p>
+<p><strong>Q49: Design a RAG system that must answer questions across both a structured database (SQL) and unstructured documents.</strong> <code>[Hard]</code>
+A: This is a routing + tool-use architecture. Query classifier: use an LLM or fine-tuned classifier to classify queries as "structured" (counts, aggregations, specific records: "How many orders were placed in Q3?") vs "unstructured" (policy, procedures, explanations: "What is the refund policy?") vs "hybrid" (mixed: "What's the average order value for enterprise customers per our SLA policy?"). Structured → SQL agent (text-to-SQL with LLM, execute query, return result). Unstructured → standard RAG pipeline. Hybrid → parallel execution: SQL for data, RAG for context, LLM synthesizes. Tools needed: <code>SQLDatabaseToolkit</code> (LangChain), standard RAG retriever. Key challenge: SQL agent must have schema access and access controls matching the RAG corpus access controls.</p>
+<p><strong>Q50: How would you design a real-time RAG system for a financial news application where answers must use documents from the last 24 hours?</strong> <code>[Hard]</code>
+A: Freshness is the primary constraint. Ingest: stream news articles via RSS/NewsAPI → Pub/Sub → Cloud Run ingest worker → batch embed → Vertex AI Vector Search streaming upsert. Index must be updated within 5-10 minutes of publication. Retention: delete vectors for documents &gt; 48 hours old (automated with document date metadata). Query: mandatory metadata pre-filter: <code>date &gt;= (now - 24h)</code>. Hybrid search needed because news has specific named entities and ticker symbols (BM25 for exact match) + semantic search for concept-level queries. Challenge: small k with recency filter may have low recall if few recent documents match. Mitigation: if query returns &lt;3 results within 24h window, expand window to 48h and note recency in the response.</p>
+<p><strong>Q51: Design a multi-tenant RAG system for a SaaS product with 500 enterprise customers, each with 1M-10M documents.</strong> <code>[Hard]</code>
+A: Range: 500M to 5B total documents — exceeds single-index scale. Architecture decision: per-tenant index shards. Group tenants into index shards by size tier: small (&lt;2M docs), medium (2-5M), large (5M+). Each shard is one Vertex AI Vector Search index, serving multiple small tenants via namespace isolation. Large tenants get dedicated indices. Query routing: look up tenant → identify their shard + namespace → route query. Per-tenant configuration stored in Firestore: embedding model, chunk size, LLM model, enable_reranking flag. Tenant onboarding: automated Pub/Sub pipeline provisions namespace, ingests documents. Tenant offboarding: delete vectors by tenant namespace. Cost: scale with index usage, not flat per tenant. Security: namespace isolation + IAM, audit logs, optional KMS encryption per tenant.</p>
+<p><strong>Q52: How would you A/B test a new reranking model vs the current one without affecting production users?</strong> <code>[Medium]</code>
+A: Shadow mode A/B test: for 10% of production traffic, run both rerankers in parallel. The primary (current) reranker's result is served to the user; the challenger (new) reranker's result is logged but not served. Compare: (1) offline — RAGAS faithfulness on the 10% shadow traffic for both models; (2) automated — check if the shadow model's top-1 result matches the current model's top-1 (overlap rate); high overlap = models agree, no risk. (3) If shadow metrics show improvement: promote shadow to 50% traffic (now serving both), measure user thumbs-up rate. (4) If thumbs-up is equal or better for 48h, full rollout. Rollback: redeploy old model without re-indexing (only the reranker changed, not the index).</p>
+<p><strong>Q53: Design the ingest pipeline for a RAG system over a company's entire email archive (10 years, 50M emails).</strong> <code>[Hard]</code>
+A: Unique challenges: PII-heavy, highly variable length (2-line replies vs 100-page threads), threading structure, access control (not all employees should see all emails). Pipeline: email export → PII scrubbing (Google DLP: names, SSNs, credit cards, passwords) → email thread reconstruction (group by thread_id) → smart chunking: for short emails (&lt; 500 chars), chunk entire email as one unit; for long threads, semantic chunking within the thread → embed → metadata: sender_domain, recipients, date, labels, security_classification. Access control: tag chunks with <code>allowed_users</code> list or <code>security_group</code> from email permissions. Index only with user-context filtering: when user A queries, apply filter to only retrieve emails user A had access to. Index must support per-user visibility — use Qdrant's payload filtering or Pinecone namespaces per user group.</p>
+<p><strong>Q54: A startup wants to build a RAG product on top of Vertex AI. What's the fastest path to production?</strong> <code>[Medium]</code>
+A: Fastest path using GCP-native managed services: (1) Vertex AI RAG Engine — create a RagCorpus, import documents from GCS, use the <code>RetrieveContexts</code> API. No vector DB to manage, no embedding calls to write. (2) Connect to Gemini using <code>Tool.from_retrieval()</code> — native integration, no retrieval loop to write. (3) Deploy a thin API layer on Cloud Run that handles auth, rate limiting, and logging. Total setup: 1-2 days for proof of concept. When to graduate: when you need custom chunking, a non-Google embedding model, hybrid BM25 search, or custom reranking. Graduate to Vertex AI Vector Search + Cloud Run + custom pipeline at that point.</p>
+<p><strong>Q55: How would you design a RAG system that needs to answer from both public web content and private internal documents?</strong> <code>[Hard]</code>
+A: Two retrieval paths that must be combined. Architecture: query intent classifier → (1) internal RAG corpus (Vertex AI Vector Search or RAG Engine, private docs), (2) Google Search Grounding (public web, via Grounding API). For most queries: try internal corpus first (private knowledge takes precedence). If internal retrieval confidence is low (top score &lt; threshold), also query Google Search grounding. Combine: internal results for policy/proprietary facts + web results for general context. Prompt design: clearly label context source ("From internal documentation: [internal chunks]" and "From public sources: [web results]") so the LLM and user can distinguish their provenance. Security: web results are never stored in the internal index; they're transient per-query only.</p>
+<hr />
+<h2 id="section-5-vertex-ai-gcp-10-qa">Section 5: Vertex AI / GCP (10 Q&amp;A)</h2>
+<p><strong>Q56: What are the three Vertex AI RAG services and when do you use each?</strong> <code>[Easy]</code>
+A: Vertex AI Search: fully managed search over enterprise data (structured + unstructured), no retrieval code needed, returns search results with extractive answers. Use for standalone search applications or when RAG is secondary to a search UI. Vertex AI RAG Engine: managed retrieval corpus with Gemini-native integration — create a RagCorpus, upload files, query via SDK. Fastest path to Gemini-grounded RAG with zero infra management. Custom RAG on GCP: Vertex AI Vector Search + Cloud Run + your own embedding + LLM — maximum flexibility, multi-vendor, hybrid search support. Use when the managed services lack capabilities you need.</p>
+<p><strong>Q57: How does Vertex AI Vector Search differ from FAISS for production workloads?</strong> <code>[Medium]</code>
+A: FAISS is an in-process library — you manage the index in memory (or on disk), handle sharding, replication, health checks, and auto-scaling yourself. Vertex AI Vector Search is a managed distributed service: it handles horizontal scaling, replication, load balancing, and SLA management. Vector Search supports 1B+ vectors with managed HNSW (actually ScaNN internally) and streaming updates. The cost structure differs: FAISS has compute cost only; Vector Search has per-query and per-GB storage costs. Choose FAISS for local dev and small corpora; Vertex AI Vector Search for production on GCP where you want managed infrastructure.</p>
+<p><strong>Q58: Explain the <code>dynamic_threshold</code> parameter in Vertex AI Grounding and how to tune it.</strong> <code>[Medium]</code>
+A: Dynamic threshold (0.0-1.0) controls when Google Search grounding activates. When Gemini's confidence in its parametric answer falls below the threshold, it triggers a Google Search retrieval. Threshold=0: always ground (every response checked against search). Threshold=1: never ground. Threshold=0.5: ground when model confidence &lt; 50%. Tuning: test on 100 queries split equally between "requires current info" (news, prices) and "general knowledge." Check grounding activation rate and answer quality for each. For time-sensitive domains, use 0.3-0.5 (more grounding). For general knowledge Q&amp;A, use 0.7-0.8 (fewer unnecessary retrievals).</p>
+<p><strong>Q59: How would you implement per-user data isolation in Vertex AI RAG Engine?</strong> <code>[Medium]</code>
+A: Vertex AI RAG Engine supports multiple corpora. The cleanest isolation: one RagCorpus per tenant/user-group. Map user authentication (IAM email, service account) to their permitted corpus name(s) stored in Firestore. At query time: look up user → get permitted corpus names → query only those corpora via <code>rag_resources=[RagResource(rag_corpus=permitted_corpus)]</code>. The alternative — one corpus with per-document access metadata — is not natively supported in RAG Engine's <code>RetrieveContexts</code> API with filtering. For strict isolation (regulatory compliance), separate corpora are the safer choice.</p>
+<p><strong>Q60: What is AlloyDB pgvector and when would you choose it over Vertex AI Vector Search?</strong> <code>[Hard]</code>
+A: AlloyDB is Google's fully managed PostgreSQL with enterprise features (columnar engine, ML integration). Combined with the pgvector extension, it provides vector similarity search alongside standard SQL. Choose AlloyDB pgvector over Vertex AI Vector Search when: (1) you need hybrid SQL+vector queries in one place — "Find documents WHERE department='legal' AND embedding ≈ query_vec AND date &gt; '2023-01-01'" — combining structured filters with vector search in a single SQL query is extremely expressive; (2) your team is SQL-native and doesn't want to manage a separate vector DB service; (3) you need ACID transactions on document updates (vector + metadata updated atomically, no partial states). Limitations: less scale than Vertex AI Vector Search (practical limit ~10M vectors on standard AlloyDB), and ANN recall is slightly lower than HNSW-optimized dedicated vector DBs.</p>
+<p><strong>Q61: How does Vertex AI Search handle re-ranking differently from a custom RAG pipeline?</strong> <code>[Medium]</code>
+A: Vertex AI Search has built-in proprietary ranking trained on click signals from Google Search patterns. It handles structured boosts (you can boost certain categories), and you can configure <code>ranking_expression</code> to customize scoring. Unlike a custom cross-encoder reranker (which you control entirely), Vertex AI Search's ranking is a black box — you can't inspect why a document ranked 3rd vs 1st. Custom RAG with Cohere Rerank or BGE-Reranker gives you full visibility and allows domain-specific fine-tuning of the reranker. For most enterprise use cases, Vertex AI Search's built-in ranking is sufficient and saves significant engineering effort.</p>
+<p><strong>Q62: How would you migrate from Vertex AI RAG Engine to a custom RAG pipeline?</strong> <code>[Hard]</code>
+A: Migration path: (1) export all RagFiles from the corpus (list files via API, download from GCS); (2) re-ingest through your custom pipeline with your chosen chunker and embedding model; (3) build your own vector index on Vertex AI Vector Search; (4) update query service to call your custom retriever instead of <code>rag.retrieval_query</code>; (5) optionally add hybrid BM25 and reranking. Run both pipelines in parallel on shadow traffic for 1 week, compare Recall@5. Gotcha: Vertex AI RAG Engine's internal chunking and embedding are not exposed — you can't reuse them. You'll need to re-chunk and re-embed from scratch with your chosen models, which requires all original documents.</p>
+<p><strong>Q63: What is the Grounding API's <code>grounding_attributions</code> and why is it important for production?</strong> <code>[Medium]</code>
+A: <code>grounding_attributions</code> (part of <code>grounding_metadata</code> in the response) provides fine-grained attribution: for each span of text in the generated response, it identifies which grounding source(s) support that span, with confidence scores. This enables: (1) citation generation — display footnotes linking response spans to source documents; (2) faithfulness verification — check if every response span has a grounding attribution; spans without attribution may be hallucinated; (3) audit trail — log which sources informed which response parts for regulatory compliance. For production deployments where answer provenance matters (legal, medical, financial), extracting and displaying <code>grounding_attributions</code> is essential.</p>
+<p><strong>Q64: How does Vertex AI Vector Search handle streaming updates and what are the limitations?</strong> <code>[Hard]</code>
+A: Vertex AI Vector Search supports two update modes: batch (re-index from GCS JSONL files, best recall, requires a rebuild cycle) and streaming (real-time <code>UpsertDatapoints</code> API, returns within seconds). Streaming limitations: (1) slightly lower recall during the "streaming buffer" window — new vectors are in a separate small index that gets periodically merged into the main index; during this window, ANN recall is slightly lower; (2) maximum streaming update throughput is lower than batch ingestion; for very high update rates, batch is more efficient; (3) streaming updates are eventually consistent — there's a short delay between upsert and availability in search results. For most RAG use cases, streaming updates with their eventual consistency are perfectly acceptable; only hard real-time requirements (&lt; 30 second freshness) push you toward more complex architectures.</p>
+<p><strong>Q65: How would you use Vertex AI Tracing for a production RAG system on GCP?</strong> <code>[Medium]</code>
+A: Vertex AI integrates with Cloud Trace for distributed tracing. For a RAG system: instrument each pipeline stage as a span (retrieval, reranking, generation), tagged with metadata (query_id, user_id, num_docs_retrieved, retrieval_latency_ms). Use <code>opentelemetry-sdk</code> with Google Cloud Trace exporter. In the Cloud Trace console, filter by query_id to trace a specific user complaint end-to-end. Set up Cloud Monitoring dashboards using trace span data: retrieval latency p50/p95, reranker latency, LLM TTFT broken out per service. Alert when any span exceeds latency thresholds. For LLM-specific tracing (prompt/response logging), combine with LangSmith or Langfuse for the application-layer trace, and Cloud Trace for the infrastructure-layer trace.</p>
+<hr />
+<h2 id="section-6-production-debugging-15-qa">Section 6: Production &amp; Debugging (15 Q&amp;A)</h2>
+<p><strong>Q66: Users report the RAG chatbot is giving outdated answers. How do you diagnose and fix this?</strong> <code>[Medium]</code>
+A: Diagnosis: (1) check the index metadata — query the vector DB for the document the user expects, check its <code>indexed_at</code> timestamp vs when the source was updated; (2) check the ingest pipeline logs — is the pipeline running on schedule? Any failures in the last N days? (3) Compare the source document with what's in the index — is the correct version indexed? Fix depends on root cause: ingest pipeline failure → fix and trigger manual re-index; stale batch schedule → switch to event-driven ingestion; partial index update → delete vectors by document_id, re-ingest the document. Preventive: add an "index freshness" dashboard showing oldest and newest indexed document timestamps.</p>
+<p><strong>Q67: RAGAS faithfulness drops from 0.92 to 0.78 after a new embedding model deployment. What do you check?</strong> <code>[Hard]</code>
+A: Immediate check: was the index rebuilt with the new model? If yes, the model likely performs worse on your specific domain despite better general MTEB scores. If no (the model was switched at query time without re-indexing), this is the "mismatched embedding model" failure — the query embedding is in a different space than the index vectors, retrieval is broken. Fix: re-index. If index was properly rebuilt: (1) run retrieval eval (Recall@5) with both models on your golden dataset — is retrieval quality the same? If recall dropped, the new model is worse for your domain despite better benchmark scores; revert. (2) If recall is the same but faithfulness dropped, the new model may be retrieving slightly different (but still relevant) chunks that the LLM handles differently. Try increasing k slightly or adjusting chunk overlap.</p>
+<p><strong>Q68: A RAG system works for English queries but performs poorly for Spanish queries despite having Spanish documents indexed. What's wrong?</strong> <code>[Medium]</code>
+A: Likely cause: the embedding model is English-only. If you use a monolingual English model (e.g., <code>bge-large-en</code>) to embed Spanish documents and Spanish queries, both are mapped to the same English-centric vector space but with poor representations — the model doesn't understand Spanish, so semantic alignment is weak. Fix: switch to a multilingual embedding model (<code>multilingual-e5-large</code>, <code>text-multilingual-embedding-002</code>) and re-index all documents. Verify: after re-indexing, run Recall@5 on Spanish golden queries. Also check: are the Spanish documents preprocessed correctly (encoding issues, incorrect PDF extraction of non-ASCII characters)?</p>
+<p><strong>Q69: Your RAG system has 95% accuracy on the golden dataset but users still complain. What are possible explanations?</strong> <code>[Hard]</code>
+A: Five possibilities: (1) golden dataset distribution mismatch — it was curated from typical questions, missing the adversarial/edge-case queries real users ask; (2) the 5% failure rate is concentrated in high-stakes questions where failures are very visible (pricing, policy, SLA details); (3) answer quality issues not captured by accuracy — answers are technically correct but verbose, poorly formatted, or miss user intent; (4) latency issues — correct answers delivered in 8 seconds feel like failures; (5) UI issues — the RAG is answering correctly but the citation formatting confuses users into thinking the answer is wrong. Root cause analysis: sample 50 user complaints, manually classify into these categories, address the top 2-3.</p>
+<p><strong>Q70: How do you handle a RAG query that returns no relevant results?</strong> <code>[Medium]</code>
+A: Three strategies: (1) <strong>graceful fallback with disclosure</strong> — return the LLM's parametric answer with a clear disclaimer: "I couldn't find relevant information in the knowledge base. Based on my training knowledge: [answer]." This is transparent and still helpful. (2) <strong>fallback retrieval</strong> — expand the search: try BM25-only if dense retrieval returned nothing, expand the date range, remove metadata filters temporarily. (3) <strong>query rewriting</strong> — if the query is complex, try decomposing it; maybe one sub-question has hits even if the full query doesn't. Always log "no results" queries — they indicate corpus coverage gaps that need to be addressed in the indexing pipeline.</p>
+<p><strong>Q71: How do you detect when retrieved documents are being ignored by the LLM?</strong> <code>[Hard]</code>
+A: Two approaches: (1) RAGAS faithfulness score — measures what fraction of answer claims are supported by context; a low faithfulness with high context recall means the LLM has the right information but isn't using it. (2) Direct comparison — include a unique identifier or token in the retrieved chunk that doesn't appear anywhere in the question. If the LLM's answer contains that identifier, it used the context. If not, it may have ignored it. For systematic production monitoring: sample 1% of queries, run faithfulness scoring async. Alert when faithfulness &lt; 0.85 for a rolling hour window. Root causes of low faithfulness: LLM model too small, grounding instruction too weak, relevant chunk in middle position of long context, or conflicting information in retrieved chunks.</p>
+<p><strong>Q72: You notice that adding a new data source to the RAG corpus degraded quality for existing queries. Why might this happen?</strong> <code>[Hard]</code>
+A: Three mechanisms: (1) <strong>semantic contamination</strong> — the new documents introduce a large volume of vocabulary or concepts that pull embedding space representations, changing what "nearby" means for existing queries. Less likely with modern embedding models. (2) <strong>Retrieval dilution</strong> — the new corpus is many times larger than the original, so for any given query, the top-k now includes more chunks from the new source (statistically dominant) even if they're less relevant to the original query types; (3) <strong>Content overlap and contradiction</strong> — the new source has overlapping content with different terminology or out-of-date information; when both sources match, the contradictory context confuses the LLM. Diagnosis: test the specific failing queries with new source excluded; if quality recovers, root cause is in the new source. Fix: add metadata filtering to restrict by source for queries where the new source isn't relevant.</p>
+<p><strong>Q73: What would cause a RAG system to answer "I don't know" when the answer is clearly in the corpus?</strong> <code>[Medium]</code>
+A: Five possible causes: (1) retrieval failure — the relevant chunk isn't in top-k; run a direct vector DB search for the answer text to verify it's in the index; (2) the chunk is in the index but the query embedding is too different from the chunk embedding — vocabulary mismatch; add hybrid BM25 search; (3) the answer was in the document but that section wasn't indexed (e.g., PDF table extraction failed, image-only pages not processed); (4) the chunk was retrieved but with a low score, filtered out by a score threshold; lower the threshold or remove it; (5) the grounding instruction is too strict ("only answer from context") and the retrieved chunks contain partial information — the model correctly says "I don't know the complete answer" when it only has partial context. Fix the last case by using "use context to answer as completely as possible."</p>
+<p><strong>Q74: How would you reduce the p95 latency of a RAG system from 4 seconds to under 2 seconds?</strong> <code>[Hard]</code>
+A: Measure first: instrument each stage to find where the 4 seconds are spent. Common bottlenecks and fixes: (1) LLM generation (1.5-2.5s) → switch to a faster model (Gemini Flash instead of Pro), use streaming (perceived latency drops even if total time doesn't); (2) Reranking (0.5-1s) → switch to a smaller model (MiniLM-L-6 instead of L-12), or skip reranking for high-confidence retrievals; (3) Query rewriting (0.5-1s) → cache rewritten queries, or skip rewriting for queries that don't benefit (measure first); (4) No semantic cache (every query hits the full pipeline) → add Redis semantic cache; 40-50% of customer support queries are near-duplicates and will hit the cache at ~20ms; (5) Cold start latency on Cloud Run → set min-instances=2-3 so there's always a warm instance.</p>
+<p><strong>Q75: How do you maintain a golden evaluation dataset over time as the corpus and user base evolves?</strong> <code>[Hard]</code>
+A: Three practices: (1) <strong>weekly production sampling</strong> — randomly sample 20-30 production queries weekly, have a human rater label quality (pass/fail), and add failures to the golden set as regression tests; (2) <strong>coverage tracking</strong> — run the golden dataset queries through the index and check which corpus sections are covered; as new document types are added, explicitly add golden queries covering them; (3) <strong>score-triggered review</strong> — when a code change causes a metric regression on the golden set, investigate the failing queries; if they represent a new pattern, add more examples of that pattern to the set. Avoid: letting the golden set grow without pruning — a 5000-query golden set that takes 2 hours to run is a CI antipattern; keep it under 500 queries with targeted coverage.</p>
+<p><strong>Q76: Describe how you'd investigate a RAG system that returns correct answers for 90% of queries but wrong answers for 10% in a consistent, non-random pattern.</strong> <code>[Hard]</code>
+A: Consistent failure pattern suggests a category of queries, not random noise. Investigation: (1) cluster the failing 10% by query topic, document source, answer type; look for patterns (all failures about topic X, all from source Y, all requiring numeric answers); (2) for each cluster, trace the full pipeline: what was retrieved? Was the relevant chunk present? Was it ranked in top-4? Did the LLM use it? This identifies whether the failure is retrieval, ranking, or generation; (3) common systematic patterns: a document type that was parsed incorrectly at ingest (tables, PDFs with special formatting); a vocabulary domain that the embedding model doesn't represent well (product codes, abbreviations); queries requiring numeric reasoning that the LLM gets wrong despite correct context (math operations — replace with a calculator tool); (4) fix the root cause for each cluster, add regression tests.</p>
+<p><strong>Q77: How do you handle conflicting information across retrieved chunks from different documents?</strong> <code>[Medium]</code>
+A: Conflicting context is a generation challenge. Four approaches: (1) <strong>Source prioritization at retrieval</strong> — tag documents with authority/recency scores; when two chunks conflict, prefer the higher-authority or more recent one. Add this as a metadata filter or reranking signal. (2) <strong>Conflict detection in prompt</strong> — instruct the LLM: "If retrieved context contains conflicting information, note the conflict and present both versions rather than choosing one." (3) <strong>Source-aware generation</strong> — provide source metadata (document name, date) alongside each chunk; the LLM can weigh more recent sources higher for factual claims. (4) <strong>Deduplication at ingest</strong> — for documents that are versions of each other (policy v1 and v2), keep only the most recent in the index; use document_id-based updates to replace old versions.</p>
+<p><strong>Q78: What is the most common cause of RAG systems being much slower in production than in development?</strong> <code>[Medium]</code>
+A: Three common causes: (1) <strong>Development used Chroma locally (in-process), production uses Pinecone or Vertex AI</strong> — network calls add 10-50ms that didn't exist in local development; (2) <strong>Cold start</strong> — the development service was always warm; Cloud Run without min-instances takes 1-3 seconds to cold start; (3) <strong>Token budget</strong> — in dev, you tested with short documents; in production, real users query about topics that retrieve 5000-token chunks, which take much longer to generate from; profile with production-scale token counts. Fix: benchmark with production-representative data from day one of development. Use profiling to measure actual latency contributions of each stage.</p>
+<p><strong>Q79: How do you ensure the RAG system degrades gracefully when the vector database is down?</strong> <code>[Medium]</code>
+A: Implement a fallback hierarchy: (1) try vector DB (primary dense retrieval); (2) on failure: try BM25 fallback — maintain a local in-memory BM25 index (BM25Retriever.from_documents, rebuilt nightly) that can serve without the vector DB; (3) on BM25 failure: serve cached recent answers from Redis for queries that match a recent cached response; (4) if all retrieval fails: use LLM parametric knowledge with a clear disclosure: "Our knowledge base is temporarily unavailable. This answer is based on general knowledge and may not reflect current company policy." Log all fallback events with urgency — vector DB downtime should page on-call immediately.</p>
+<p><strong>Q80: A lawyer at your company says "the RAG system cited a source that doesn't actually say what the citation claims." What went wrong?</strong> <code>[Hard]</code>
+A: This is a faithfulness failure: the LLM generated a claim and attributed it to a source that doesn't support the claim. Investigation: (1) verify the citation is real — did the cited chunk actually appear in the retrieved context? If not, the LLM invented a citation (hallucinated source), which is the most dangerous variant. (2) If the chunk was retrieved, check the RAGAS faithfulness score for this query — was the claim generated from parametric memory and the citation assigned post-hoc? (3) Check if the claim is a blend of two retrieved chunks — the LLM may have synthesized information from chunk A and chunk B into one sentence and incorrectly cited only chunk B. Fix: (1) stronger grounding instruction; (2) post-generation faithfulness check to flag citations that don't appear to be supported; (3) for legal/compliance use cases, consider extractive QA only — return verbatim passages, not synthesized answers.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "search.suggest", "toc.follow", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,3959 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A structured curriculum covering the full modern GenAI stack — from foundational LLMs through autonomous agentic systems.">
+      
+      
+      
+        <link rel="canonical" href="https://sundante.github.io/sun-course-genai/03-RAGs/Notes/08-RAG-System-Design/">
+      
+      
+        <link rel="prev" href="../07-RAG-Types-Taxonomy/">
+      
+      
+        <link rel="next" href="../09-Vertex-AI-RAG/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>RAG System Design - GenAI Learning Curriculum</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#rag-system-design" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="GenAI Learning Curriculum" class="md-header__button md-logo" aria-label="GenAI Learning Curriculum" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            GenAI Learning Curriculum
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              RAG System Design
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../01-LLM-Models/INDEX/" class="md-tabs__link">
+          
+  
+  
+  LLM Models
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../02-Prompts/INDEX/" class="md-tabs__link">
+          
+  
+  
+  Prompt Engineering
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../INDEX/" class="md-tabs__link">
+          
+  
+  
+  RAG
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../04-MCP/INDEX/" class="md-tabs__link">
+          
+  
+  
+  MCP
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../05-Agents/INDEX/" class="md-tabs__link">
+          
+  
+  
+  Agents
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../06-Agentic-AI/INDEX/" class="md-tabs__link">
+          
+  
+  
+  Agentic AI
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../All_Questions/" class="md-tabs__link">
+          
+  
+  
+  Interview Prep
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="GenAI Learning Curriculum" class="md-nav__button md-logo" aria-label="GenAI Learning Curriculum" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    GenAI Learning Curriculum
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    LLM Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../01-LLM-Models/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../01-LLM-Models/Notes/01-LLM-Fundamentals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM Fundamentals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../01-LLM-Models/Notes/02-Architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../01-LLM-Models/Notes/03-Training-and-Finetuning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Training & Fine-Tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../01-LLM-Models/Notes/04-Prompting-Strategies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompting Strategies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompt Engineering
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Prompt Engineering
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../02-Prompts/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../02-Prompts/Notes/01-Prompt-Basics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompt Basics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../02-Prompts/Notes/02-Core-Techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core Techniques
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../02-Prompts/Notes/03-Advanced-Techniques/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced Techniques
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../02-Prompts/Notes/04-Prompt-Engineering-for-Production/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompts in Production
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    RAG
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-RAG-Fundamentals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Fundamentals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-Embeddings-and-Vector-Stores/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Embeddings & Vector Stores
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-Chunking-and-Indexing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chunking & Indexing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-Retrieval-Strategies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retrieval Strategies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-Advanced-RAG-Patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced RAG Patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-RAG-Evaluation-and-Failure-Modes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evaluation & Failure Modes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-RAG-Types-Taxonomy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Types Taxonomy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG System Design
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG System Design
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#interview-framework-how-to-approach-any-rag-system-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interview Framework: How to Approach Any RAG System Design
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#full-production-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full Production Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ingest-pipeline-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ingest Pipeline Design
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Ingest Pipeline Design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concept
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#query-pipeline-latency-budget" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Query Pipeline: Latency Budget
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Query Pipeline: Latency Budget">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concept
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#code_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scalability-designing-for-100m-documents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scalability: Designing for 100M+ Documents
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Scalability: Designing for 100M+ Documents">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concept
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#caching-strategies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Caching Strategies
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Caching Strategies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concept
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#index-freshness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Index Freshness
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Index Freshness">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concept
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#code_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#failure-handling-and-graceful-degradation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Failure Handling and Graceful Degradation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Failure Handling and Graceful Degradation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concept
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-design-walkthrough-enterprise-knowledge-base" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        System Design Walkthrough: Enterprise Knowledge Base
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interview-qa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interview Q&amp;A
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-Vertex-AI-RAG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vertex AI RAG
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-Production-Deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Production Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../11-Scaling-and-LLM-Issues/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scaling & LLM Issues
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../12-Interview-QA-Bank/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interview Q&A Bank
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    MCP
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-MCP/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-MCP/Notes/01-The-Problem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Problem
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-MCP/Notes/02-Definition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Definition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-MCP/Notes/03-The-Solution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Solution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-MCP/Notes/04-Components/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Components
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-MCP/Notes/05-Capabilities/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Capabilities
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-MCP/Notes/06-Why-MCP-Matters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why It Matters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-MCP/Notes/07-Architecture-Deep-Dive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Deep-Dive
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-MCP/Notes/08-Getting-Started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agents
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Agents
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/Notes/01-Agent-Fundamentals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Fundamentals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/Notes/02-Agent-Patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_4" id="__nav_6_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GCP ADK
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    GCP ADK
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/GCP-ADK/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/GCP-ADK/01-ADK-Fundamentals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADK Fundamentals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/GCP-ADK/02-Simple-Agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simple Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/GCP-ADK/03-Complex-Agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complex Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_5" id="__nav_6_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LangChain
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    LangChain
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/LangChain/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/LangChain/01-LangChain-Fundamentals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LangChain Fundamentals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/LangChain/02-Simple-Agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simple Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/LangChain/03-Complex-Agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complex Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_6" id="__nav_6_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LangGraph
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    LangGraph
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/LangGraph/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/LangGraph/01-LangGraph-Fundamentals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LangGraph Fundamentals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/LangGraph/02-Simple-Agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simple Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/LangGraph/03-Complex-Agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complex Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_7" id="__nav_6_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CrewAI
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    CrewAI
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/CrewAI/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/CrewAI/01-CrewAI-Fundamentals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CrewAI Fundamentals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/CrewAI/02-Simple-Agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simple Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../05-Agents/CrewAI/03-Complex-Agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Complex Agent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agentic AI
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Agentic AI
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../06-Agentic-AI/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../06-Agentic-AI/Notes/01-Agentic-Concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agentic Concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../06-Agentic-AI/Notes/02-Architectural-Patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architectural Patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../06-Agentic-AI/Notes/03-Design-Patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Design Patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../06-Agentic-AI/Notes/04-Multi-Agent-Systems/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multi-Agent Systems
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interview Prep
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Interview Prep
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../All_Questions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    All Questions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Interview-Questions/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Interview-Questions/01-LLM-Models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LLM Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Interview-Questions/02-Prompt-Engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompt Engineering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Interview-Questions/03-RAGs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAGs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Interview-Questions/04-MCP/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Interview-Questions/05-Agents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Interview-Questions/06-Agentic-AI/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agentic AI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#interview-framework-how-to-approach-any-rag-system-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interview Framework: How to Approach Any RAG System Design
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#full-production-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full Production Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ingest-pipeline-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ingest Pipeline Design
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Ingest Pipeline Design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concept
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#query-pipeline-latency-budget" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Query Pipeline: Latency Budget
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Query Pipeline: Latency Budget">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concept
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#code_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scalability-designing-for-100m-documents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scalability: Designing for 100M+ Documents
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Scalability: Designing for 100M+ Documents">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concept
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#caching-strategies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Caching Strategies
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Caching Strategies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concept
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#index-freshness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Index Freshness
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Index Freshness">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concept
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#code_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#failure-handling-and-graceful-degradation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Failure Handling and Graceful Degradation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Failure Handling and Graceful Degradation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concept
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-design-walkthrough-enterprise-knowledge-base" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        System Design Walkthrough: Enterprise Knowledge Base
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interview-qa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interview Q&amp;A
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="rag-system-design">RAG System Design</h1>
+<p>This is the highest-leverage section for Google/Amazon interviews. Every system design question about RAG follows the same structure — learn to decompose it into components, draw the two pipelines, and then drill into trade-offs.</p>
+<hr />
+<h2 id="interview-framework-how-to-approach-any-rag-system-design">Interview Framework: How to Approach Any RAG System Design</h2>
+<p>When an interviewer asks "Design a RAG system for X," structure your answer in 5 minutes:</p>
+<pre><code>1. Clarify requirements  (2 min)
+   - Scale: How many documents? How many QPS?
+   - Latency SLA: p95 under how many seconds?
+   - Freshness: How often does content change?
+   - Quality: Precision vs recall vs cost trade-off?
+   - Multi-tenancy: One corpus or per-tenant isolation?
+
+2. Draw two pipelines  (3 min)
+   - Ingest (offline): how documents get into the system
+   - Query (online): how user questions get answered
+
+3. Drill into each component  (5 min)
+   - Chunking strategy
+   - Embedding model choice
+   - Vector DB choice + configuration
+   - Retrieval strategy (dense / hybrid / rerank)
+   - Prompt design
+
+4. Discuss trade-offs  (3 min)
+   - Latency vs quality
+   - Cost vs accuracy
+   - Freshness vs stability
+
+5. Production concerns  (2 min)
+   - Monitoring: what metrics do you watch?
+   - Failure modes: what breaks first at scale?
+</code></pre>
+<hr />
+<h2 id="full-production-architecture">Full Production Architecture</h2>
+<pre><code>INGEST PIPELINE (offline / async)
+─────────────────────────────────────────────────────────────────────
+Data Sources                Document Processor         Vector Store
+(S3, GCS, SharePoint,  →  [Loader → Extract →  →  [Upsert vectors
+ Confluence, database)      Clean → Chunk →             + metadata]
+                            Embed]
+                               ↕
+                         Queue (Pub/Sub, SQS)
+                         for async processing
+
+QUERY PIPELINE (online / synchronous, user-facing)
+─────────────────────────────────────────────────────────────────────
+User query
+    ↓
+[Query Preprocessing]         ← query rewrite / expand / classify
+    ↓
+[Cache Layer]                 ← semantic cache (Redis + vector search)
+    ↓ (cache miss)
+[Retriever]                   ← hybrid (dense + BM25) → top-20 candidates
+    ↓
+[Reranker]                    ← cross-encoder → top-4 chunks
+    ↓
+[Context Assembly]            ← format chunks + metadata citations
+    ↓
+[LLM Generation]              ← Gemini / GPT-4 with grounding prompt
+    ↓
+[Post-processing]             ← citation formatting, PII scrubbing
+    ↓
+Answer + Source Citations
+
+FEEDBACK LOOP (async)
+─────────────────────────────────────────────────────────────────────
+[User Feedback] → [Eval Store] → [Quality Metrics] → [Trigger Re-index / Rerank Tuning]
+</code></pre>
+<hr />
+<h2 id="ingest-pipeline-design">Ingest Pipeline Design</h2>
+<h3 id="concept">Concept</h3>
+<p>The ingest pipeline runs offline or on a schedule. It's the foundation — errors here propagate silently to all future queries.</p>
+<p><strong>Stages:</strong></p>
+<p><strong>1. Document Loading</strong>
+Different document types require different loaders:
+- PDFs: <code>PyPDFLoader</code>, <code>pymupdf</code> (better for complex layouts), or cloud services (Google Document AI, AWS Textract) for scanned PDFs
+- HTML: <code>BeautifulSoupTransformer</code>, <code>Trafilatura</code> (extracts clean content, ignores nav/footer)
+- DOCX/PPTX: <code>Docx2txtLoader</code>, <code>python-pptx</code>
+- Databases: custom SQL queries → structured rows → templated text</p>
+<p><strong>2. Document Cleaning</strong>
+Remove: HTML tags, page numbers, headers/footers, boilerplate legal text, repeated disclaimers. Extract: meaningful metadata (title, author, date, section, URL) for later filtering.</p>
+<p><strong>3. Chunking</strong>
+(see file 03 for full details). Default: <code>RecursiveCharacterTextSplitter</code>, 500 chars, 50 overlap. For domain-specific: semantic chunking.</p>
+<p><strong>4. Embedding</strong>
+Batch embed chunks. CRITICAL: batch size matters — most embedding APIs accept 100-2048 texts per call. Batching 1 text at a time is 100x slower and 100x more expensive.</p>
+<p><strong>5. Upsert</strong>
+Write (vector, metadata, document_id) to vector DB. Handle:
+- <strong>De-duplication</strong>: hash chunk content, skip if hash exists
+- <strong>Updates</strong>: when a document changes, delete old vectors by document_id, re-embed, re-upsert</p>
+<h3 id="code">Code</h3>
+<pre><code class="language-python">import hashlib
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_community.vectorstores import Chroma
+from langchain_community.document_loaders import PyPDFLoader
+
+def ingest_document(file_path: str, source_id: str, vectorstore: Chroma):
+    # Load
+    loader = PyPDFLoader(file_path)
+    docs = loader.load()
+
+    # Clean and add metadata
+    for doc in docs:
+        doc.metadata[&quot;source_id&quot;] = source_id
+        doc.metadata[&quot;ingested_at&quot;] = datetime.utcnow().isoformat()
+
+    # Chunk
+    splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+    chunks = splitter.split_documents(docs)
+
+    # De-duplicate: skip chunks already in index
+    new_chunks = []
+    for chunk in chunks:
+        content_hash = hashlib.md5(chunk.page_content.encode()).hexdigest()
+        if not chunk_exists(vectorstore, content_hash):
+            chunk.metadata[&quot;content_hash&quot;] = content_hash
+            new_chunks.append(chunk)
+
+    # Batch embed + upsert (batches of 100)
+    for i in range(0, len(new_chunks), 100):
+        batch = new_chunks[i:i+100]
+        vectorstore.add_documents(batch)
+
+    print(f&quot;Ingested {len(new_chunks)} new chunks from {source_id}&quot;)
+
+def update_document(source_id: str, vectorstore: Chroma):
+    # Delete all vectors for this source, then re-ingest
+    vectorstore.delete(where={&quot;source_id&quot;: source_id})
+    ingest_document(new_file_path, source_id, vectorstore)
+</code></pre>
+<hr />
+<h2 id="query-pipeline-latency-budget">Query Pipeline: Latency Budget</h2>
+<h3 id="concept_1">Concept</h3>
+<p>For a p95 latency SLA of 2 seconds, you need to budget time across each stage:</p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Typical Latency</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Query preprocessing (rewrite)</td>
+<td>200-400ms</td>
+<td>Optional — skip if query is clear</td>
+</tr>
+<tr>
+<td>Cache lookup</td>
+<td>5-20ms</td>
+<td>Redis or in-memory</td>
+</tr>
+<tr>
+<td>Query embedding</td>
+<td>10-30ms</td>
+<td>Cached if same query</td>
+</tr>
+<tr>
+<td>ANN search (dense)</td>
+<td>5-20ms</td>
+<td>HNSW at k=20</td>
+</tr>
+<tr>
+<td>BM25 search</td>
+<td>2-10ms</td>
+<td>In-memory</td>
+</tr>
+<tr>
+<td>RRF merge</td>
+<td>&lt;1ms</td>
+<td>Trivial computation</td>
+</tr>
+<tr>
+<td>Cross-encoder rerank</td>
+<td>80-200ms</td>
+<td>20 pairs × ~8ms each</td>
+</tr>
+<tr>
+<td>LLM generation</td>
+<td>800-1500ms</td>
+<td>First token; streaming hides this</td>
+</tr>
+<tr>
+<td><strong>Total (optimistic)</strong></td>
+<td><strong>~900ms</strong></td>
+<td>With caching + fast LLM</td>
+</tr>
+<tr>
+<td><strong>Total (pessimistic)</strong></td>
+<td><strong>~2200ms</strong></td>
+<td>Without caching, with rewrite</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Optimization hierarchy (biggest wins first):</strong>
+1. <strong>Semantic caching</strong> — deduplicate near-identical queries (30-60% hit rate for customer support)
+2. <strong>Skip reranking for high-confidence retrievals</strong> — if top BM25 and top dense agree, skip cross-encoder
+3. <strong>Smaller reranker model</strong> — <code>MiniLM-L-6-v2</code> (6-layer) is 3x faster than <code>L-12-v2</code> at ~80% quality
+4. <strong>Streaming LLM output</strong> — stream tokens immediately; users perceive faster responses
+5. <strong>Pre-computed query embeddings cache</strong> — hash query string, cache embedding for 24h</p>
+<h3 id="code_1">Code</h3>
+<pre><code class="language-python">import hashlib, json
+import redis
+
+cache = redis.Redis(host=&quot;localhost&quot;, port=6379)
+CACHE_TTL = 3600  # 1 hour
+
+def semantic_cache_lookup(query: str, threshold: float = 0.95) -&gt; str | None:
+    &quot;&quot;&quot;Check if a semantically similar query was answered recently.&quot;&quot;&quot;
+    query_vec = embeddings.embed_query(query)
+
+    # Check vector similarity against cached query embeddings
+    cached_queries = cache.keys(&quot;rag_cache:*&quot;)
+    for key in cached_queries[:100]:  # limit lookup to 100 recent queries
+        cached = json.loads(cache.get(key))
+        sim = cosine_similarity(query_vec, cached[&quot;query_vec&quot;])
+        if sim &gt;= threshold:
+            return cached[&quot;answer&quot;]
+    return None
+
+def cache_answer(query: str, query_vec: list[float], answer: str):
+    key = f&quot;rag_cache:{hashlib.md5(query.encode()).hexdigest()}&quot;
+    cache.setex(key, CACHE_TTL, json.dumps({
+        &quot;query&quot;: query,
+        &quot;query_vec&quot;: query_vec,
+        &quot;answer&quot;: answer
+    }))
+</code></pre>
+<hr />
+<h2 id="scalability-designing-for-100m-documents">Scalability: Designing for 100M+ Documents</h2>
+<h3 id="concept_2">Concept</h3>
+<p>At 100M documents, several assumptions of standard RAG break. Here's how to handle each:</p>
+<p><strong>1. Index size</strong>
+100M documents × 500 chars avg × 1.2 chunks/doc = 120M chunks
+120M chunks × 768 floats × 4 bytes = ~369 GB — won't fit in memory on a single machine.</p>
+<p>Solution: <strong>IVF (Inverted File Index)</strong> + optionally PQ compression, OR distributed vector DB (Vertex AI Vector Search, Pinecone, Qdrant distributed mode).</p>
+<p><strong>2. Query throughput (QPS)</strong>
+A single vector DB node handles ~500-2000 QPS. At 10K QPS, you need horizontal scaling.</p>
+<p>Solution: <strong>Read replicas</strong> — the vector index is read-heavy; create multiple read replicas. Queries are load-balanced across replicas.</p>
+<p><strong>3. Write throughput (ingestion rate)</strong>
+Re-indexing 100M documents is not feasible in real-time. </p>
+<p>Solution: <strong>Write-ahead log</strong> — new documents go to a write log; a background job merges them into the main index on a schedule. Queries search both the main index and the recent write log (union of results).</p>
+<p><strong>4. Sharding</strong>
+Two strategies:
+- <strong>Document-based sharding</strong>: shard by document source, category, or date range. Queries route to the relevant shard(s). Requires a routing layer.
+- <strong>Hash-based sharding</strong>: distribute vectors uniformly by ID hash. All queries fan out to all shards. Simpler but all shards participate in every query.</p>
+<p><strong>5. Multi-region</strong>
+For global products, replicate the index to multiple regions. Use eventual consistency for index updates — slight staleness (seconds to minutes) is acceptable for most RAG use cases.</p>
+<pre><code>Architecture for 100M documents:
+┌─────────────────────────────────────────────────────────────┐
+│  Ingest Service (Cloud Run)                                 │
+│  ├─ Doc processor × 10 workers (async, Pub/Sub queue)       │
+│  └─ Batch embedding (text-embedding-004, batch=512)         │
+│                      ↓                                      │
+│  Vertex AI Vector Search (managed HNSW, auto-scaled)        │
+│  ├─ Index: 120M vectors, 768-dim, cosine                    │
+│  ├─ Read replicas: 3 (auto-scaled based on QPS)             │
+│  └─ Deployed endpoint: http call → top-k                    │
+│                      ↓                                      │
+│  Query Service (Cloud Run, min-instances=3)                 │
+│  ├─ Semantic cache (Cloud Memorystore Redis)                 │
+│  ├─ Hybrid search (Vector Search + BM25 on Elasticsearch)   │
+│  ├─ Reranker (MiniLM deployed on Cloud Run GPU)             │
+│  └─ Gemini API for generation                               │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="caching-strategies">Caching Strategies</h2>
+<h3 id="concept_3">Concept</h3>
+<p>Three caching layers, each with different hit rates and complexity:</p>
+<p><strong>1. Query embedding cache</strong>
+- Cache: query_text → embedding_vector
+- TTL: 24 hours
+- Hit rate: ~40-70% (many users ask the same question)
+- Cost savings: eliminates repeated embedding API calls</p>
+<p><strong>2. Semantic result cache</strong>
+- Cache: (query_embedding, filters) → (retrieved_chunks, answer)
+- Uses vector similarity to find "close enough" cached queries (threshold ~0.95)
+- TTL: 30-60 minutes (balance freshness vs hit rate)
+- Hit rate: ~30-60% for customer support, ~10-20% for open-domain
+- Implementation: GPTCache, Redis + FAISS, or Qdrant as cache store</p>
+<p><strong>3. LLM response cache</strong>
+- Cache: exact prompt hash → LLM response
+- TTL: 5-30 minutes
+- Only useful for deterministic prompts (temperature=0)
+- Hit rate: very low for open-ended queries; high for templated reports</p>
+<hr />
+<h2 id="index-freshness">Index Freshness</h2>
+<h3 id="concept_4">Concept</h3>
+<p>How quickly do changes in source documents appear in the RAG system?</p>
+<p><strong>Batch re-indexing</strong> (simplest):
+- Schedule: nightly or weekly
+- Freshness: up to 24h stale
+- Use when: content changes slowly (annual reports, product documentation)</p>
+<p><strong>Event-driven incremental updates</strong> (real-time):
+- Trigger: document change event (Pub/Sub, Webhooks)
+- Freshness: seconds to minutes
+- Process: extract changed doc → re-chunk → re-embed → update vector DB (delete old, insert new)
+- Complexity: need to handle document versioning and ID-based deletion</p>
+<p><strong>Hybrid (write-ahead log)</strong>:
+- New/changed documents go to a "hot" index (small, always fresh)
+- Large corpus stays in "cold" index (stale by hours)
+- Query searches both indices, merges results
+- Best balance of cost and freshness</p>
+<h3 id="code_2">Code</h3>
+<pre><code class="language-python"># Event-driven update using Pub/Sub
+from google.cloud import pubsub_v1
+import json
+
+subscriber = pubsub_v1.SubscriberClient()
+subscription_path = subscriber.subscription_path(project_id, &quot;doc-updates-sub&quot;)
+
+def process_update_message(message):
+    event = json.loads(message.data.decode())
+    doc_id = event[&quot;document_id&quot;]
+    action = event[&quot;action&quot;]  # &quot;created&quot;, &quot;updated&quot;, &quot;deleted&quot;
+
+    if action == &quot;deleted&quot;:
+        vectorstore.delete(where={&quot;doc_id&quot;: doc_id})
+    elif action in (&quot;created&quot;, &quot;updated&quot;):
+        if action == &quot;updated&quot;:
+            vectorstore.delete(where={&quot;doc_id&quot;: doc_id})
+        new_doc = fetch_document(doc_id)
+        ingest_document(new_doc, doc_id, vectorstore)
+
+    message.ack()
+
+streaming_pull_future = subscriber.subscribe(subscription_path, callback=process_update_message)
+</code></pre>
+<hr />
+<h2 id="failure-handling-and-graceful-degradation">Failure Handling and Graceful Degradation</h2>
+<h3 id="concept_5">Concept</h3>
+<p>Production RAG systems must handle partial failures gracefully. The user should always get an answer, even if degraded.</p>
+<p><strong>Failure hierarchy:</strong></p>
+<pre><code>Vector DB unavailable
+    → Fallback to BM25-only (Elasticsearch / in-memory index)
+    → If BM25 also unavailable → fallback to LLM with no context + uncertainty disclaimer
+
+Embedding model API unavailable
+    → If query embedding fails → serve stale cache if available
+    → If no cache → fallback to BM25
+
+LLM API rate limited / unavailable
+    → Queue request, return &quot;processing&quot; response
+    → For synchronous requirement → switch to smaller/faster fallback model
+
+Reranker unavailable
+    → Skip reranking, use first-stage retrieval order
+    → Monitor precision drop in downstream metrics
+</code></pre>
+<p><strong>Circuit breaker pattern:</strong>
+Wrap each external dependency (embedding API, vector DB, LLM) in a circuit breaker. If error rate exceeds threshold (e.g., 5% in 60 seconds), open the circuit and immediately serve fallback responses. Reset after a probe interval.</p>
+<pre><code class="language-python">from circuitbreaker import circuit
+
+@circuit(failure_threshold=5, recovery_timeout=60, expected_exception=Exception)
+def embed_with_circuit_breaker(query: str) -&gt; list[float]:
+    return embeddings.embed_query(query)
+
+@circuit(failure_threshold=10, recovery_timeout=30, expected_exception=Exception)
+def vector_search_with_circuit_breaker(query_vec: list[float], k: int) -&gt; list:
+    return vectorstore.similarity_search_by_vector(query_vec, k=k)
+</code></pre>
+<hr />
+<h2 id="system-design-walkthrough-enterprise-knowledge-base">System Design Walkthrough: Enterprise Knowledge Base</h2>
+<p><strong>Question:</strong> "Design a RAG system for a 10M-document enterprise knowledge base with 5,000 employees querying it. SLA: p95 &lt; 2.5s. Documents update daily. Multi-tenant: HR, Legal, Engineering departments have separate access."</p>
+<p><strong>Sample answer structure:</strong></p>
+<p><strong>Requirements:</strong>
+- Scale: 10M docs → ~12M chunks after chunking
+- QPS: 5,000 users × estimated 20 queries/day / 28,800 working seconds = ~3.5 QPS average, ~20 QPS peak
+- Freshness: daily batch re-indexing acceptable
+- Multi-tenancy: namespace isolation by department + RBAC</p>
+<p><strong>Architecture:</strong></p>
+<pre><code>Ingest (daily batch, 9 PM):
+  SharePoint / Confluence → Doc processor (Cloud Run) → 
+  Text clean + chunk (500 chars) → Batch embed (text-embedding-004) →
+  Vertex AI Vector Search (upsert, namespace=department)
+
+Query (real-time):
+  Employee query
+    → Auth check (IAM → map user to department)
+    → Semantic cache (Redis) — 30-60% hit rate expected
+    → Cache miss: hybrid retrieval (Vector Search + Elasticsearch BM25)
+                  filter={&quot;department&quot;: user_dept}  ← tenant isolation
+    → Cohere Rerank API (top-20 → top-5)
+    → Gemini Pro (generation, streaming)
+    → Answer + citations (doc title, department, URL)
+</code></pre>
+<p><strong>Latency budget:</strong>
+- Cache hit: ~20ms total
+- Cache miss: embed (20ms) + Vector Search (15ms) + BM25 (5ms) + Rerank (150ms) + Gemini (800ms) = ~990ms → within SLA</p>
+<p><strong>Failure handling:</strong>
+- Vector Search unavailable → fallback to Elasticsearch full-text search
+- Reranker unavailable → skip, use RRF-merged first-stage results
+- Gemini rate limited → queue + async delivery, or switch to Gemini Flash</p>
+<p><strong>Monitoring:</strong>
+- Retrieval latency p50/p95 per department
+- Answer quality score (RAGAS faithfulness, sampled 1%)
+- Cache hit rate (alert if drops below 20%)
+- Daily: run eval set of 100 golden Q&amp;A pairs, alert if Recall@5 drops below baseline</p>
+<hr />
+<h2 id="interview-qa">Interview Q&amp;A</h2>
+<p><strong>Q: A product manager asks you to design a RAG system for a company with 10M internal documents. Walk me through your approach.</strong> <code>[Hard]</code>
+A: I'd start with 5 clarifying questions: QPS, latency SLA, update frequency, access control requirements, and whether answers need citations. Then I'd draw the two pipelines — ingest (offline: load → chunk → embed → upsert) and query (online: cache check → hybrid retrieval → rerank → generate). For 10M docs at ~5 QPS, I'd use Vertex AI Vector Search for managed scale, Elasticsearch for BM25, Cohere Rerank, and Gemini Pro. Daily batch re-indexing at low-traffic hours. Namespace-based tenant isolation if multiple departments. p95 target: under 2s (cache hit: 20ms, cache miss: ~1s).</p>
+<p><strong>Q: How do you handle index freshness in a RAG system where documents update every hour?</strong> <code>[Medium]</code>
+A: Use event-driven incremental updates. Subscribe to document change events (Pub/Sub or Webhooks). On each event: (1) delete existing vectors with that document_id from the vector DB, (2) re-chunk and re-embed the new version, (3) upsert new vectors. For high-throughput update scenarios, buffer changes in a "hot" write-ahead index that is searched alongside the main "cold" index. This avoids re-indexing the entire corpus for each update.</p>
+<p><strong>Q: What is a semantic cache and how does it differ from a standard key-value cache?</strong> <code>[Medium]</code>
+A: A standard key-value cache returns a hit only on exact string matches. A semantic cache stores query embeddings alongside answers and returns a cache hit when a new query's embedding is within a cosine similarity threshold (e.g., 0.95) of a cached query. This handles paraphrases: "What is your refund policy?" and "How do I get a refund?" both hit the same cache entry. Tools: GPTCache (open source), Redis + FAISS, or Qdrant as a vector-based cache store.</p>
+<p><strong>Q: How would you design a multi-tenant RAG system where tenants must not see each other's data?</strong> <code>[Hard]</code>
+A: Two isolation strategies: (1) <strong>Namespace isolation</strong> — store all tenants in one vector DB but with a tenant_id namespace/collection. At query time, apply a mandatory metadata filter: <code>filter={"tenant_id": current_user.tenant_id}</code>. This is simple but relies on correct filter application at every query — a missed filter leaks data. (2) <strong>Index isolation</strong> — separate vector DB indices per tenant. Stronger isolation, but higher operational overhead (N indices to manage). For high-security requirements (HIPAA, SOC2), index isolation is preferred. For standard enterprise, namespace isolation with application-layer enforcement + audit logging is sufficient.</p>
+<p><strong>Q: How do you detect and handle retrieval quality degradation in production?</strong> <code>[Hard]</code>
+A: Set up three signals: (1) <strong>Offline eval</strong>: a fixed set of 100-500 golden (question, expected_answer) pairs; run weekly, alert if Recall@5 or faithfulness score drops &gt;5% from baseline. (2) <strong>Online signals</strong>: thumbs down / feedback buttons; low user rating rate is a leading indicator of quality degradation. (3) <strong>Embedding distribution drift</strong>: periodically compute the centroid of recent query embeddings; if it drifts significantly from the training distribution of your embedding model, re-evaluate whether to switch models. Common causes of degradation: corpus changes (new document types or vocabulary), index staleness, or changes in user query patterns.</p>
+<p><strong>Q: What are the trade-offs between batch and streaming ingestion for a RAG system?</strong> <code>[Medium]</code>
+A: Batch ingestion (nightly runs) is simple, cost-efficient (bulk embedding API rates), and idempotent — easy to retry and monitor. Freshness SLA: hours to a day. Streaming ingestion (event-driven) achieves minute-level freshness but adds operational complexity: you need idempotent updates (delete old vectors → insert new ones), handling of race conditions (same document updated twice in quick succession), and dead-letter queues for failed ingestion events. Choose based on freshness requirement: most enterprise knowledge bases are fine with daily batch; customer support (where KB articles change hourly) needs streaming.</p>
+<p><strong>Q: How do you prevent the RAG system from returning confidential documents to unauthorized users?</strong> <code>[Hard]</code>
+A: Defense in depth: (1) <strong>Metadata tagging at ingest</strong> — tag every document with its access control level (public, internal, confidential, top-secret) and owner group during ingestion. (2) <strong>Mandatory metadata filtering at query time</strong> — the retrieval function always includes a filter based on the authenticated user's permissions. This filter must be applied at the vector DB layer, not in application code after retrieval. (3) <strong>Audit logging</strong> — log every (user, query, retrieved_doc_ids) tuple for forensic capability. (4) <strong>Index-level isolation</strong> for highly sensitive data (never co-locate top-secret documents with general documents in the same index, regardless of filters).</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "search.suggest", "toc.follow", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
