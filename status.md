@@ -1,6 +1,6 @@
 # Status — GenAI Learning Curriculum
 
-Last updated: 2026-04-20
+Last updated: 2026-04-21
 
 ---
 
@@ -19,7 +19,7 @@ A general-to-advanced learning resource covering the full modern GenAI stack. Si
 | 03 | RAG | 12 files — fundamentals through GCP production | ✅ 80+ Q&A | Complete |
 | 04 | MCP | 8 files (Problem → Getting Started) | ✅ | Complete |
 | 05 | Agents | Conceptual notes + 4 frameworks | ✅ | Complete |
-| 06 | Agentic AI | 4 files (Concepts, Arch, Design, Multi-Agent) | ✅ | Complete |
+| 06 | Agentic AI | 6 files (Concepts, Arch, Design, Multi-Agent, System Design, Eval) | ✅ | Complete |
 
 ---
 
@@ -64,10 +64,12 @@ A general-to-advanced learning resource covering the full modern GenAI stack. Si
   - **CrewAI** — role-based multi-agent collaboration
 
 ### 06 — Agentic AI
-- `01-Agentic-Concepts.md` — What makes a system "agentic", agent vs system
-- `02-Architectural-Patterns.md` — Single-agent, hierarchical, peer-to-peer, hybrid
-- `03-Design-Patterns.md` — ReAct, Reflexion, Plan-and-Execute, debate patterns
-- `04-Multi-Agent-Systems.md` — Orchestration, shared memory, HITL, evaluation
+- `01-Agentic-Concepts.md` — What makes a system "agentic", autonomy spectrum, core properties
+- `02-Architectural-Patterns.md` — All 8 patterns (Single/Orchestrator/Hierarchical/P2P/Pipeline/Parallel/Debate/Reflexion), HITL
+- `03-Design-Patterns.md` — Tool-use, Reflection, Planning (ReAct/Plan-and-Execute/ToT), routing
+- `04-Multi-Agent-Systems.md` — Coordination, communication protocols, state management, failure modes
+- `05-Agentic-System-Design.md` — Production architecture, reliability, HITL design, memory, cost, security
+- `06-Evaluation-and-Observability.md` — Trajectory eval, metrics, LangSmith/Langfuse, debugging
 
 ---
 
@@ -98,12 +100,25 @@ A general-to-advanced learning resource covering the full modern GenAI stack. Si
 
 ---
 
+## Code Examples
+
+| Directory | Contents |
+|-----------|---------|
+| `Codes/01-Agent-Types/` | Single agents at 3 complexity levels across 4 frameworks |
+| `Codes/02-Architectures/` | 7 architectural patterns across 4 frameworks (28 implementations) |
+| `Codes/03-Agentic-Systems/` | 4 end-to-end system designs across 4 frameworks (new) |
+
+### 03-Agentic-Systems (new)
+- `01-Research-Assistant/` — Orchestrator-Subagent + Parallel fan-out + Reflexion
+- `02-Document-Processor/` — Pipeline + Conditional Routing + HITL gate
+- `03-Autonomous-Task-Planner/` — Plan-and-Execute + feedback loop + replanning
+- `04-Code-Review-System/` — Parallel fan-out + Aggregation + Reflexion
+
 ## What's Not Here Yet
 
 - `01-LLM-Models` — no code examples yet (notes only)
 - `02-Prompts` — no code examples yet (notes only)
 - `04-MCP` — no code examples beyond Getting Started
-- `06-Agentic-AI` — no code examples yet (conceptual notes only)
 - Evaluations / benchmarks section
 - Cost estimation / token budgeting guide
 - OpenAI / Claude / Gemini API integration examples beyond framework snippets

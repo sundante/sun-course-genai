@@ -6,22 +6,40 @@ Agentic AI refers to systems designed to pursue goals autonomously over extended
 
 ## Scope of This Section
 
-This section focuses on the *system-level* view: architectural patterns, design principles, and multi-agent coordination. For framework-specific implementations, see [05 — Agents](../05-Agents/INDEX.md).
+This section focuses on the *system-level* view: architectural patterns, design principles, and multi-agent coordination. For framework-specific implementations, see [05 — Agents](../05-Agents/INDEX.md). For end-to-end system design code examples, see [Codes/03-Agentic-Systems](../../Codes/03-Agentic-Systems/README.md).
 
 ## Chapter Map
 
-| # | File | Topic |
-|---|------|-------|
-| 1 | [Agentic Concepts](Notes/01-Agentic-Concepts.md) | Core vocabulary and distinctions |
-| 2 | [Architectural Patterns](Notes/02-Architectural-Patterns.md) | Orchestrator-subagent, feedback loops, HITL |
-| 3 | [Design Patterns](Notes/03-Design-Patterns.md) | Tool-use, reflection, planning, multi-agent |
-| 4 | [Multi-Agent Systems](Notes/04-Multi-Agent-Systems.md) | Coordination, communication, resilience |
-| 5 | [Interview Q&A](../Interview-Questions/06-Agentic-AI.md) | Conceptual and system design questions |
+| # | File | Topic | Difficulty |
+|---|------|-------|------------|
+| 1 | [Agentic Concepts](Notes/01-Agentic-Concepts.md) | Core vocabulary, autonomy spectrum, properties | ★★☆ |
+| 2 | [Architectural Patterns](Notes/02-Architectural-Patterns.md) | 8 patterns, HITL, feedback loops, pattern selection | ★★★ |
+| 3 | [Design Patterns](Notes/03-Design-Patterns.md) | Tool-use, reflection, planning, routing | ★★★ |
+| 4 | [Multi-Agent Systems](Notes/04-Multi-Agent-Systems.md) | Coordination, communication, state, resilience | ★★★ |
+| 5 | [Agentic System Design](Notes/05-Agentic-System-Design.md) | Production architecture, reliability, security, cost | ★★★ |
+| 6 | [Evaluation and Observability](Notes/06-Evaluation-and-Observability.md) | Trajectory eval, metrics, tracing, debugging | ★★★ |
+| 7 | [Interview Q&A](../Interview-Questions/06-Agentic-AI.md) | Conceptual, architecture, system design, evaluation | ★★★ |
 
-## Relationship to Agents Section
+## Relationship to Other Sections
 
-- **05 — Agents**: How to build agents using specific frameworks
-- **06 — Agentic AI**: How to design agentic *systems* — patterns, flows, failure modes
+- **05 — Agents**: How to build agents using specific frameworks (LangChain, LangGraph, CrewAI, ADK)
+- **06 — Agentic AI**: How to design agentic *systems* — patterns, flows, failure modes, production engineering
+- **Codes/02-Architectures**: Framework implementations of each architectural pattern
+- **Codes/03-Agentic-Systems**: End-to-end system designs combining multiple patterns
+
+## Learning Paths
+
+### Path A — Full Progression (recommended for interview prep)
+Read chapters 1 → 2 → 3 → 4 → 5 → 6 in order, then do the Q&A. ~4–6 hours.
+
+### Path B — Accelerated (familiar with agents already)
+Skip chapter 1, read 2 → 3 → 4, skim 5 and 6. ~2 hours.
+
+### Path C — System Design Focus
+Read chapter 1 (vocabulary) → 5 (system design) → 2 (patterns to reference). ~1.5 hours.
+
+### Path D — Code First
+Browse [Codes/03-Agentic-Systems](../../Codes/03-Agentic-Systems/README.md), then read notes for concepts you encounter.
 
 ## Resources
 
