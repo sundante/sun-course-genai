@@ -1,4 +1,4 @@
-# Interview Q&A — Agentic AI
+# Concept Review — Agentic AI
 
 ## Conceptual and Definitional Questions
 

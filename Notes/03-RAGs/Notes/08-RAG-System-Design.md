@@ -1,12 +1,12 @@
 # RAG System Design
 
-This is the highest-leverage section for Google/Amazon interviews. Every system design question about RAG follows the same structure — learn to decompose it into components, draw the two pipelines, and then drill into trade-offs.
+This is the highest-leverage section for building production RAG expertise. Every system design question about RAG follows the same structure — learn to decompose it into components, draw the two pipelines, and then drill into trade-offs.
 
 ---
 
-## Interview Framework: How to Approach Any RAG System Design
+## Framework: How to Approach Any RAG System Design
 
-When an interviewer asks "Design a RAG system for X," structure your answer in 5 minutes:
+When designing a RAG system for a given use case, structure your thinking in 5 minutes:
 
 ```
 1. Clarify requirements  (2 min)

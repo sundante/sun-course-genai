@@ -1,6 +1,6 @@
-# Interview Q&A Bank
+# Q&A Review Bank
 
-80+ curated Q&A pairs for Google/Amazon interview preparation.  
+80+ curated Q&A pairs for deep RAG concept mastery.  
 Each answer is 3-5 sentences with specifics — not vague responses.  
 Tags: `[Easy]` = conceptual, `[Medium]` = design decisions, `[Hard]` = system design / deep technical.
 

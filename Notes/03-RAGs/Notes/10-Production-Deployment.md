@@ -52,7 +52,7 @@ Query Path (user-facing):
 | **AlloyDB** | SQL + vector in one DB | Fully managed Postgres, pgvector, columnar analytics |
 | **Elasticsearch on GCP** | BM25 for hybrid search | Self-managed but battle-tested |
 
-**For most teams at Google/Amazon interview level:**
+**For most production teams starting out:**
 - Start with Cloud Run for both ingest and query services
 - Use Vertex AI Vector Search for the ANN index
 - Add GKE when QPS or ML model serving complexity requires it

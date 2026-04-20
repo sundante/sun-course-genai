@@ -1,4 +1,4 @@
-# Interview Q&A — MCP (Model Context Protocol)
+# Concept Review — MCP (Model Context Protocol)
 
 ## Conceptual Questions
 

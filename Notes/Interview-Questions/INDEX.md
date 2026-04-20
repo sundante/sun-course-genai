@@ -1,6 +1,6 @@
-# Interview Questions — Master Index
+# Knowledge Check — Master Index
 
-All interview Q&A files consolidated in one place, organized by topic.
+All concept review Q&A files consolidated in one place, organized by topic.
 
 ## Files
 
@@ -35,4 +35,4 @@ All interview Q&A files consolidated in one place, organized by topic.
 
 ## Back to Main Curriculum
 
-[GenAI-all Master Index](../INDEX.md)
+[GenAI Learning Curriculum — Home](../index.md)

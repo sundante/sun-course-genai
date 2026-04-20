@@ -1,6 +1,6 @@
 # 03 — RAG (Retrieval-Augmented Generation)
 
-**Interview prep level:** Google / Amazon senior engineer  
+**Level:** General to Advanced  
 **Format:** Prose + code + Q&A pairs tagged `[Easy]` `[Medium]` `[Hard]`
 
 ---
@@ -18,7 +18,7 @@
 - Vertex AI Search, RAG Engine, Grounding API — when to use which
 - Deploying, monitoring, and scaling RAG in production on GCP
 - LLM-specific failure modes: hallucination, lost-in-the-middle, prompt injection
-- 80+ curated interview Q&A pairs covering all weak spots
+- 80+ curated Q&A pairs covering all weak spots
 
 ---
 
@@ -37,7 +37,7 @@
 | 9 | [Vertex AI RAG](Notes/09-Vertex-AI-RAG.md) | Vertex AI Search, RAG Engine, Grounding API, Vector Search, AlloyDB | ★★★ |
 | 10 | [Production Deployment](Notes/10-Production-Deployment.md) | Cloud Run vs GKE, monitoring, CI/CD eval gates, security, PII | ★★★ |
 | 11 | [Scaling and LLM Issues](Notes/11-Scaling-and-LLM-Issues.md) | Hallucination types, lost-in-the-middle, context management, prompt injection | ★★★ |
-| 12 | [Interview Q&A Bank](Notes/12-Interview-QA-Bank.md) | 80+ Q&A pairs: fundamentals → system design → GCP → production debugging | ★★★ |
+| 12 | [Q&A Review Bank](Notes/12-Interview-QA-Bank.md) | 80+ Q&A pairs: fundamentals → system design → GCP → production debugging | ★★★ |
 
 ---
 
@@ -55,15 +55,15 @@
 9. [Vertex AI RAG](Notes/09-Vertex-AI-RAG.md) — GCP-specific knowledge
 10. [Scaling and LLM Issues](Notes/11-Scaling-and-LLM-Issues.md) — tricky edge cases
 11. [Production Deployment](Notes/10-Production-Deployment.md) — real-world ops
-12. [Interview Q&A Bank](Notes/12-Interview-QA-Bank.md) — final consolidation
+12. [Q&A Review Bank](Notes/12-Interview-QA-Bank.md) — final consolidation
 
-### Path B: 48-hour interview sprint
+### Path B: Accelerated Deep Dive (4–5 hours)
 1. [RAG Types Taxonomy](Notes/07-RAG-Types-Taxonomy.md) — quick mental map (30 min)
 2. [Retrieval Strategies](Notes/04-Retrieval-Strategies.md) — BM25 + hybrid math (45 min)
 3. [RAG System Design](Notes/08-RAG-System-Design.md) — system design depth (60 min)
 4. [Advanced RAG Patterns](Notes/05-Advanced-RAG-Patterns.md) — GraphRAG, Self-RAG (45 min)
 5. [Vertex AI RAG](Notes/09-Vertex-AI-RAG.md) — GCP specifics (30 min)
-6. [Interview Q&A Bank](Notes/12-Interview-QA-Bank.md) — all 80 Q&A pairs (90 min)
+6. [Q&A Review Bank](Notes/12-Interview-QA-Bank.md) — all 80 Q&A pairs (90 min)
 
 ### Path C: Weak spots only
 - System design → [08-RAG-System-Design.md](Notes/08-RAG-System-Design.md)

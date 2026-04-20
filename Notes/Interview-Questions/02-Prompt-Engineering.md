@@ -1,4 +1,4 @@
-# Interview Q&A — Prompt Engineering
+# Concept Review — Prompt Engineering
 
 ## Foundational Questions
 

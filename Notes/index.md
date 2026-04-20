@@ -50,10 +50,10 @@ Foundation  Interface  Knowledge  Protocol  Frameworks   Systems
 11. Pick one framework — recommended: [LangGraph Fundamentals](05-Agents/LangGraph/01-LangGraph-Fundamentals.md)
 12. [Agentic Concepts](06-Agentic-AI/Notes/01-Agentic-Concepts.md)
 13. [Architectural Patterns](06-Agentic-AI/Notes/02-Architectural-Patterns.md)
-14. All [Interview Prep](Interview-Questions/INDEX.md) files as final review
+14. All [Knowledge Check](Interview-Questions/INDEX.md) Q&A as final review
 
 ---
 
-## Interview Prep
+## Knowledge Check
 
-All Q&A consolidated by topic in the [Interview Prep](Interview-Questions/INDEX.md) section.
+All concept review Q&A consolidated by topic in the [Knowledge Check](Interview-Questions/INDEX.md) section.

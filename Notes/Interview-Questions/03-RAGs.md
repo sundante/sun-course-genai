@@ -1,4 +1,4 @@
-# Interview Q&A — RAG (Retrieval-Augmented Generation)
+# Concept Review — RAG (Retrieval-Augmented Generation)
 
 ## Conceptual Questions
 
