@@ -16,7 +16,7 @@
         <link rel="prev" href="../01-LLM-Fundamentals/">
       
       
-        <link rel="next" href="../03-Training-and-Finetuning/">
+        <link rel="next" href="../03-Attention-Mechanisms/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Architecture - GenAI Learning Curriculum</title>
+        <title>Transformer Architecture - GenAI Learning Curriculum</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#llm-architecture" class="md-skip">
+        <a href="#transformer-architecture" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Architecture
+              Transformer Architecture
             
           </span>
         </div>
@@ -564,7 +564,7 @@
   <span class="md-ellipsis">
     
   
-    Architecture
+    Transformer Architecture
   
 
     
@@ -582,7 +582,7 @@
   <span class="md-ellipsis">
     
   
-    Architecture
+    Transformer Architecture
   
 
     
@@ -616,38 +616,189 @@
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#attention-mechanism" class="md-nav__link">
+    <nav class="md-nav" aria-label="Transformer Architecture Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Attention Mechanism
+        Concept
       
     </span>
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#decoder-only-vs-encoder-decoder" class="md-nav__link">
+  <a href="#input-embedding-and-positional-encoding" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Decoder-Only vs Encoder-Decoder
+        Input Embedding and Positional Encoding
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Input Embedding and Positional Encoding">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concept
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#key-model-families-gpt-gemma-llama-etc" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#1-sinusoidal-positional-encoding-original-transformer" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Key Model Families (GPT, Gemma, LLaMA, etc.)
+        1. Sinusoidal Positional Encoding (original Transformer)
       
     </span>
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-learned-absolute-positional-embeddings-gpt-2-bert" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Learned Absolute Positional Embeddings (GPT-2, BERT)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-rotary-position-embeddings-rope-llama-gemma-mistral" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Rotary Position Embeddings — RoPE (LLaMA, Gemma, Mistral)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-alibi-attention-with-linear-biases-mpt-bloom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. ALiBi — Attention with Linear Biases (MPT, BLOOM)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#layer-normalization-and-residual-connections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer Normalization and Residual Connections
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Layer Normalization and Residual Connections">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concept
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#feed-forward-network-ffn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Feed-Forward Network (FFN)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Feed-Forward Network (FFN)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concept
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-architectural-hyperparameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Architectural Hyperparameters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Key Architectural Hyperparameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concept
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -678,14 +829,210 @@
   
   
     <li class="md-nav__item">
-      <a href="../03-Training-and-Finetuning/" class="md-nav__link">
+      <a href="../03-Attention-Mechanisms/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Training & Fine-Tuning
+    Attention Mechanisms
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-Model-Architecture-Types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Architecture Types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-KV-Cache-and-Inference-Optimization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KV Cache & Inference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-Training-and-Pretraining/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Training & Pretraining
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-Fine-Tuning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fine-Tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-GPU-and-Hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GPU & Hardware
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-Failure-Modes-and-Tricky-Issues/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Failure Modes & Tricky Issues
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-Production-Deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Production Deployment
   
 
     
@@ -714,6 +1061,34 @@
     
   
     Prompting Strategies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../12-Interview-QA-Bank/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interview Q&A Bank
   
 
     
@@ -3035,38 +3410,189 @@
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#attention-mechanism" class="md-nav__link">
+    <nav class="md-nav" aria-label="Transformer Architecture Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Attention Mechanism
+        Concept
       
     </span>
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#decoder-only-vs-encoder-decoder" class="md-nav__link">
+  <a href="#input-embedding-and-positional-encoding" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Decoder-Only vs Encoder-Decoder
+        Input Embedding and Positional Encoding
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Input Embedding and Positional Encoding">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concept
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#key-model-families-gpt-gemma-llama-etc" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#1-sinusoidal-positional-encoding-original-transformer" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Key Model Families (GPT, Gemma, LLaMA, etc.)
+        1. Sinusoidal Positional Encoding (original Transformer)
       
     </span>
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-learned-absolute-positional-embeddings-gpt-2-bert" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Learned Absolute Positional Embeddings (GPT-2, BERT)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-rotary-position-embeddings-rope-llama-gemma-mistral" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Rotary Position Embeddings — RoPE (LLaMA, Gemma, Mistral)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-alibi-attention-with-linear-biases-mpt-bloom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. ALiBi — Attention with Linear Biases (MPT, BLOOM)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#layer-normalization-and-residual-connections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer Normalization and Residual Connections
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Layer Normalization and Residual Connections">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concept
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#feed-forward-network-ffn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Feed-Forward Network (FFN)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Feed-Forward Network (FFN)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concept
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-architectural-hyperparameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Architectural Hyperparameters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Key Architectural Hyperparameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concept
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3098,12 +3624,330 @@
 
 
 
-<h1 id="llm-architecture">LLM Architecture</h1>
+<h1 id="transformer-architecture">Transformer Architecture</h1>
 <h2 id="transformer-architecture-overview">Transformer Architecture Overview</h2>
-<h2 id="attention-mechanism">Attention Mechanism</h2>
-<h2 id="decoder-only-vs-encoder-decoder">Decoder-Only vs Encoder-Decoder</h2>
-<h2 id="key-model-families-gpt-gemma-llama-etc">Key Model Families (GPT, Gemma, LLaMA, etc.)</h2>
+<h3 id="concept">Concept</h3>
+<p>The transformer architecture, introduced in "Attention Is All You Need" (Vaswani et al., 2017), replaced recurrent networks (LSTMs, GRUs) as the dominant architecture for sequence modeling. Its key insight: replace sequential recurrence with <strong>parallel attention</strong> — compute relationships between all positions simultaneously.</p>
+<p><strong>Why transformers displaced RNNs:</strong>
+- RNNs process tokens sequentially → cannot parallelize → slow training
+- RNNs struggle with long-range dependencies (gradient vanishing over many steps)
+- Transformers compute all pairwise relationships in one pass → fully parallelizable on GPUs
+- Self-attention has direct access to any position in the sequence, regardless of distance</p>
+<p><strong>The original architecture</strong> had two components:
+1. <strong>Encoder</strong> — reads the full input with bidirectional attention, produces context representations
+2. <strong>Decoder</strong> — generates output tokens autoregressively, attends to encoder output via cross-attention</p>
+<p>Modern LLMs (GPT, LLaMA, Gemma) use <strong>decoder-only</strong> — the encoder is dropped. See <a href="../04-Model-Architecture-Types/">Model Architecture Types</a> for why.</p>
+<p><strong>High-level decoder-only forward pass:</strong></p>
+<pre><code>Input tokens
+    ↓
+Token Embedding  (token_id → dense vector, vocab_size × d_model)
+    ↓
++ Positional Encoding  (adds position information)
+    ↓
+┌─────────────────────────────────────┐
+│  Transformer Block × N layers       │
+│                                     │
+│  ┌─────────────────────────────┐   │
+│  │  LayerNorm (pre-norm)       │   │
+│  │  Multi-Head Self-Attention  │   │
+│  │  + Residual Connection      │   │
+│  └─────────────────────────────┘   │
+│  ┌─────────────────────────────┐   │
+│  │  LayerNorm (pre-norm)       │   │
+│  │  Feed-Forward Network       │   │
+│  │  + Residual Connection      │   │
+│  └─────────────────────────────┘   │
+└─────────────────────────────────────┘
+    ↓
+Final LayerNorm
+    ↓
+Linear projection (d_model → vocab_size)
+    ↓
+Softmax → probability distribution over next token
+</code></pre>
+<hr />
+<h2 id="input-embedding-and-positional-encoding">Input Embedding and Positional Encoding</h2>
+<h3 id="concept_1">Concept</h3>
+<p><strong>Token Embedding:</strong> Maps each token ID to a learnable dense vector of size <code>d_model</code> (512–8192 depending on model). This is a lookup table — a matrix of shape <code>[vocab_size, d_model]</code> — learned during training.</p>
+<p><strong>The positional encoding problem:</strong> Self-attention is permutation-invariant by design — the same tokens in different orders produce the same attention outputs without positional information. You must inject position explicitly.</p>
+<p><strong>Three approaches, each with different trade-offs:</strong></p>
+<h3 id="1-sinusoidal-positional-encoding-original-transformer">1. Sinusoidal Positional Encoding (original Transformer)</h3>
+<p>Fixed (not learned), uses sine/cosine at different frequencies:</p>
+<pre><code>PE(pos, 2i)   = sin(pos / 10000^(2i/d_model))
+PE(pos, 2i+1) = cos(pos / 10000^(2i/d_model))
+</code></pre>
+<ul>
+<li>Advantage: works for any sequence length (extrapolates to unseen lengths)</li>
+<li>Disadvantage: performance degrades for lengths not seen during training; no adaptation</li>
+</ul>
+<h3 id="2-learned-absolute-positional-embeddings-gpt-2-bert">2. Learned Absolute Positional Embeddings (GPT-2, BERT)</h3>
+<p>A trainable embedding table of shape <code>[max_seq_len, d_model]</code>, just like token embeddings.</p>
+<ul>
+<li>Advantage: the model optimizes position representations for the task</li>
+<li>Disadvantage: hard limit at <code>max_seq_len</code> — cannot extrapolate to longer sequences</li>
+</ul>
+<h3 id="3-rotary-position-embeddings-rope-llama-gemma-mistral">3. Rotary Position Embeddings — RoPE (LLaMA, Gemma, Mistral)</h3>
+<p>Instead of adding position to the embedding, RoPE <strong>rotates</strong> the query and key vectors in attention by an angle proportional to position. The dot product Q·K then naturally encodes relative position.</p>
+<pre><code>Q_rotated = Q * rotation_matrix(pos_q)
+K_rotated = K * rotation_matrix(pos_k)
+Q·K encodes relative position (pos_q - pos_k)
+</code></pre>
+<ul>
+<li>Advantage: encodes <strong>relative</strong> position → generalizes better to longer sequences; enables techniques like YaRN for context extension</li>
+<li>Used by: LLaMA-2/3, Gemma, Mistral, Phi, Falcon</li>
+<li>RoPE with scaling (YaRN, LongRoPE) allows extending context beyond the training length</li>
+</ul>
+<h3 id="4-alibi-attention-with-linear-biases-mpt-bloom">4. ALiBi — Attention with Linear Biases (MPT, BLOOM)</h3>
+<p>Adds a position-dependent bias directly to attention scores (not embeddings):</p>
+<pre><code>attention_score = Q·K / sqrt(d_k) - m * |i - j|
+</code></pre>
+<p>Where <code>m</code> is a per-head slope and <code>|i-j|</code> is the distance between positions.</p>
+<ul>
+<li>Advantage: zero extra parameters; strong length generalization beyond training length</li>
+<li>Disadvantage: doesn't encode exact position, only proximity — can hurt tasks needing absolute position</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Encoding</th>
+<th>Model examples</th>
+<th>Extrapolates?</th>
+<th>Relative position?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sinusoidal</td>
+<td>Original Transformer</td>
+<td>Poorly</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Learned absolute</td>
+<td>GPT-2, BERT</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>RoPE</td>
+<td>LLaMA, Gemma, Mistral</td>
+<td>With scaling</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>ALiBi</td>
+<td>MPT, BLOOM</td>
+<td>Yes, naturally</td>
+<td>Proximity only</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="layer-normalization-and-residual-connections">Layer Normalization and Residual Connections</h2>
+<h3 id="concept_2">Concept</h3>
+<p>Two techniques that make deep transformers trainable: residual connections and layer normalization.</p>
+<p><strong>Residual connections (He et al., 2016):</strong></p>
+<pre><code>output = LayerNorm(x + Sublayer(x))  # Post-LN (original)
+output = x + Sublayer(LayerNorm(x))  # Pre-LN (modern)
+</code></pre>
+<p>Why they matter: in a 32-layer network without residuals, gradients must flow through 32 multiplicative transformations and easily vanish to zero or explode. Residuals create a "highway" — gradients can flow directly from the output to any layer without passing through all the transformations.</p>
+<p><strong>Layer Normalization:</strong> Normalizes across the feature dimension (d_model) for each token independently:</p>
+<pre><code>LayerNorm(x) = γ * (x - μ) / (σ + ε) + β
+</code></pre>
+<p>Where γ, β are learned scale and shift parameters; μ, σ are computed per-token across features.</p>
+<p><strong>Pre-LN vs Post-LN — a critical difference:</strong></p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Post-LN (original "Attention is All You Need")</th>
+<th>Pre-LN (modern LLMs: LLaMA, GPT-3)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Formula</td>
+<td><code>x + Sublayer(LayerNorm(x))</code> (LN after residual)</td>
+<td><code>x + Sublayer(LayerNorm(x))</code> (LN before sublayer)</td>
+</tr>
+<tr>
+<td>Training stability</td>
+<td>Requires careful learning rate warmup; can diverge</td>
+<td>Much more stable; easier to train without warmup</td>
+</tr>
+<tr>
+<td>Final layer</td>
+<td>Needs no extra LN</td>
+<td>Needs final LN before the output projection</td>
+</tr>
+<tr>
+<td>Gradient flow</td>
+<td>Gradients pass through LN at every layer</td>
+<td>LN is bypassed by the residual path</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Why modern LLMs use Pre-LN:</strong> More stable training dynamics, easier to scale to very deep networks, less sensitive to learning rate choice.</p>
+<hr />
+<h2 id="feed-forward-network-ffn">Feed-Forward Network (FFN)</h2>
+<h3 id="concept_3">Concept</h3>
+<p>Each transformer block has an FFN that applies the same two-layer MLP to each token <strong>independently</strong> (no cross-token interaction — that's attention's job):</p>
+<p><strong>Original FFN (ReLU):</strong></p>
+<pre><code>FFN(x) = W2 · ReLU(W1 · x + b1) + b2
+</code></pre>
+<ul>
+<li>Dimensions: <code>d_model → 4 * d_model → d_model</code> (the 4× expansion is the original choice)</li>
+<li>This creates a "wide" intermediate layer that stores fact-like associations</li>
+</ul>
+<p><strong>SwiGLU variant (LLaMA, Gemma, Mistral):</strong></p>
+<pre><code>FFN(x) = W2 · (SiLU(W1 · x) ⊗ (W3 · x))
+</code></pre>
+<p>Where SiLU(x) = x · sigmoid(x) and ⊗ is element-wise multiplication (gating).</p>
+<p>SwiGLU uses <strong>three</strong> weight matrices (W1, W2, W3) but the intermediate dimension is scaled down to compensate (~2/3 × 4 × d_model). Empirically outperforms ReLU and GELU variants.</p>
+<p><strong>Why the FFN matters as much as attention:</strong>
+- Attention routes information between tokens
+- FFN stores and recalls knowledge — "factual associations" are often thought to live in FFN weights
+- The 4× intermediate dimension is why transformers are computationally expensive: for a 7B model with d_model=4096, each FFN layer is 4096 → 16384 → 4096 = 2 × (4096 × 16384) = 134M parameters per layer</p>
+<hr />
+<h2 id="key-architectural-hyperparameters">Key Architectural Hyperparameters</h2>
+<h3 id="concept_4">Concept</h3>
+<p>Understanding model shape hyperparameters is essential for VRAM estimation (see <a href="../08-GPU-and-Hardware/">GPU and Hardware</a>) and for interpreting model cards.</p>
+<table>
+<thead>
+<tr>
+<th>Hyperparameter</th>
+<th>Meaning</th>
+<th>Typical values</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>d_model</code> (hidden size)</td>
+<td>Embedding and residual stream dimension</td>
+<td>2048–8192</td>
+</tr>
+<tr>
+<td><code>n_layers</code></td>
+<td>Number of transformer blocks</td>
+<td>24–80</td>
+</tr>
+<tr>
+<td><code>n_heads</code></td>
+<td>Number of attention heads</td>
+<td>16–64</td>
+</tr>
+<tr>
+<td><code>d_head</code></td>
+<td>Dimension per head = d_model / n_heads</td>
+<td>64–128</td>
+</tr>
+<tr>
+<td><code>n_kv_heads</code></td>
+<td>KV heads (&lt; n_heads for GQA)</td>
+<td>8–n_heads</td>
+</tr>
+<tr>
+<td><code>d_ffn</code></td>
+<td>FFN intermediate dimension</td>
+<td>4× d_model (or ~2.67× for SwiGLU)</td>
+</tr>
+<tr>
+<td><code>vocab_size</code></td>
+<td>Number of tokens in vocabulary</td>
+<td>32K–200K</td>
+</tr>
+<tr>
+<td><code>max_position</code></td>
+<td>Maximum sequence length</td>
+<td>4K–1M</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example — LLaMA-3 8B:</strong>
+- <code>d_model = 4096</code>, <code>n_layers = 32</code>, <code>n_heads = 32</code>, <code>n_kv_heads = 8</code> (GQA), <code>d_ffn = 14336</code> (SwiGLU)</p>
+<p><strong>Parameter count estimation:</strong></p>
+<pre><code>Embedding:       vocab_size × d_model = 128K × 4096 ≈ 0.5B
+Attention/layer: 4 × d_model² = 4 × 4096² = 67M (per layer, 32 layers)
+FFN/layer:       3 × d_model × d_ffn = 3 × 4096 × 14336 = 176M (per layer)
+Total ≈ 8B ✓
+</code></pre>
+<h3 id="code">Code</h3>
+<pre><code class="language-python">import torch
+import torch.nn as nn
+import math
+
+class TransformerBlock(nn.Module):
+    &quot;&quot;&quot;Minimal decoder-only transformer block (Pre-LN, no attention for brevity).&quot;&quot;&quot;
+    def __init__(self, d_model=512, n_heads=8, d_ffn=2048, dropout=0.1):
+        super().__init__()
+        self.norm1 = nn.LayerNorm(d_model)
+        self.norm2 = nn.LayerNorm(d_model)
+        self.attn = nn.MultiheadAttention(d_model, n_heads, batch_first=True)
+        self.ffn = nn.Sequential(
+            nn.Linear(d_model, d_ffn),
+            nn.GELU(),
+            nn.Linear(d_ffn, d_model),
+            nn.Dropout(dropout),
+        )
+
+    def forward(self, x, causal_mask=None):
+        # Pre-LN + residual
+        normed = self.norm1(x)
+        attn_out, _ = self.attn(normed, normed, normed, attn_mask=causal_mask)
+        x = x + attn_out          # residual
+        x = x + self.ffn(self.norm2(x))  # residual
+        return x
+
+class MiniDecoder(nn.Module):
+    def __init__(self, vocab_size=1000, d_model=512, n_layers=6, n_heads=8):
+        super().__init__()
+        self.embed = nn.Embedding(vocab_size, d_model)
+        self.pos_embed = nn.Embedding(2048, d_model)  # learned absolute
+        self.blocks = nn.ModuleList([
+            TransformerBlock(d_model, n_heads) for _ in range(n_layers)
+        ])
+        self.norm = nn.LayerNorm(d_model)
+        self.head = nn.Linear(d_model, vocab_size, bias=False)
+
+    def forward(self, token_ids):
+        B, T = token_ids.shape
+        positions = torch.arange(T, device=token_ids.device).unsqueeze(0)
+        x = self.embed(token_ids) + self.pos_embed(positions)
+
+        # Causal mask: upper triangle = -inf
+        causal_mask = torch.triu(
+            torch.full((T, T), float('-inf'), device=x.device), diagonal=1
+        )
+        for block in self.blocks:
+            x = block(x, causal_mask)
+
+        x = self.norm(x)
+        logits = self.head(x)  # [B, T, vocab_size]
+        return logits
+
+# Quick sanity check
+model = MiniDecoder(vocab_size=1000, d_model=256, n_layers=4)
+tokens = torch.randint(0, 1000, (2, 16))  # batch=2, seq_len=16
+logits = model(tokens)
+print(f&quot;Input shape: {tokens.shape}&quot;)
+print(f&quot;Output shape: {logits.shape}&quot;)  # [2, 16, 1000]
+print(f&quot;Parameters: {sum(p.numel() for p in model.parameters()):,}&quot;)
+</code></pre>
+<hr />
 <h2 id="study-notes">Study Notes</h2>
+<p><strong>Must-know for interviews:</strong>
+- Transformers replaced RNNs by computing all pairwise token relationships in parallel (no sequential bottleneck)
+- Decoder-only = causal attention mask, autoregressive generation; encoder-only = bidirectional, no generation
+- Pre-LN is more stable than Post-LN and is used by all modern LLMs (LLaMA, Gemma, GPT-3+)
+- Residual connections prevent gradient vanishing in deep networks
+- RoPE encodes relative position via rotation → enables context extension; used by LLaMA, Gemma, Mistral
+- FFN stores factual associations; SwiGLU variant outperforms ReLU and is used in LLaMA/Gemma
+- d_model, n_layers, n_heads, d_ffn are the four key hyperparameters for parameter count estimation</p>
+<p><strong>Quick recall Q&amp;A:</strong>
+- <em>Why can't you just add more layers to improve a model without residuals?</em> Gradients vanish through deep multiplicative transformations — residuals provide a gradient highway.
+- <em>What is the role of the FFN in a transformer?</em> Stores and recalls learned associations per-token (independent of cross-token interaction, which is attention's job).
+- <em>Why does RoPE generalize better than learned absolute embeddings?</em> It encodes relative position in the attention dot product, not absolute position in embeddings — relative patterns seen at shorter contexts extend to longer ones.
+- <em>What is Pre-LN and why does it matter?</em> LayerNorm is applied before the sublayer, not after; makes training stable without requiring careful warmup schedules.</p>
 
 
 
