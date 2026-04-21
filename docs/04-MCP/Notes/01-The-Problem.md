@@ -1,6 +1,6 @@
 # 🎯 The Problem
 
-[← Back to Index](INDEX.md)
+[← Back to Index](../INDEX.md)
 
 ## Current Challenges
 

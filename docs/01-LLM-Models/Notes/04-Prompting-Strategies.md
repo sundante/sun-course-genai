@@ -1,6 +1,6 @@
 # Prompting Strategies
 
-> Note: This file covers prompting from the **LLM model mechanics perspective** — how the model processes prompts internally and what formats it expects. For prompt engineering techniques (CoT, ReAct, ToT, meta-prompting), see the dedicated [02-Prompts](../../../02-Prompts/INDEX.md) module.
+> Note: This file covers prompting from the **LLM model mechanics perspective** — how the model processes prompts internally and what formats it expects. For prompt engineering techniques (CoT, ReAct, ToT, meta-prompting), see the dedicated [02-Prompts](../../02-Prompts/INDEX.md) module.
 
 ## Zero-Shot and Few-Shot from the Model's Perspective
 

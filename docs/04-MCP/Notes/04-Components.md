@@ -1,6 +1,6 @@
 # 🔧 Three Major Components of MCP
 
-[← Back to Index](INDEX.md)
+[← Back to Index](../INDEX.md)
 
 ## Component 1: MCP Specifications and SDKs
 

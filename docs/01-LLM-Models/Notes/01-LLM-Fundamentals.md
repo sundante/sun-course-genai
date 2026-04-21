@@ -241,7 +241,7 @@ LLMs are categorized by their training architecture and objective. Three core ty
 **Mixture of Experts (MoE) — a fourth category:**
 Not a separate architecture but a modification: instead of one dense FFN per layer, use N "expert" FFNs and a router that selects 1–2 experts per token. Result: large total parameters but only a fraction active per token (Mixtral-8x7B: 47B total, ~13B active).
 
-Full architecture deep dive: see [Transformer Architecture](02-Transformer-Architecture.md) and [Model Architecture Types](04-Model-Architecture-Types.md).
+Full architecture deep dive: see [Transformer Architecture](02-Architecture.md) and [Model Architecture Types](04-Model-Architecture-Types.md).
 
 ---
 

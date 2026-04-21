@@ -1,6 +1,6 @@
 # ⭐ Why does MCP Matter?
 
-[← Back to Index](INDEX.md)
+[← Back to Index](../INDEX.md)
 
 ## Three Perspectives
 

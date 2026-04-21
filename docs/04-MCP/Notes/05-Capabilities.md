@@ -1,6 +1,6 @@
 # ✨ What can MCP Enable?
 
-[← Back to Index](INDEX.md)
+[← Back to Index](../INDEX.md)
 
 ## Use Cases & Applications
 

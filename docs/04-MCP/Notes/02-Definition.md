@@ -1,6 +1,6 @@
 # 📖 Definition (MCP)
 
-[← Back to Index](INDEX.md)
+[← Back to Index](../INDEX.md)
 
 ## What is MCP?
 

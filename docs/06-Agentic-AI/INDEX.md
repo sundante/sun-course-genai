@@ -49,4 +49,4 @@ Browse [Code Labs — Agentic Systems](CodeLabs/03-Agentic-Systems.md), then rea
 
 ## Navigation
 
-[Previous: 05 — Agents](../05-Agents/INDEX.md) | [Back to Master Index](../INDEX.md)
+[Previous: 05 — Agents](../05-Agents/INDEX.md) | [Back to Master Index](../index.md)

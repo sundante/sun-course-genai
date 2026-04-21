@@ -1,6 +1,6 @@
 # 🚀 Getting Started with MCP
 
-[← Back to Index](INDEX.md)
+[← Back to Index](../INDEX.md)
 
 ## Learning Path
 

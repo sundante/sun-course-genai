@@ -1,6 +1,6 @@
 # 💡 The Solution (MCP)
 
-[← Back to Index](INDEX.md)
+[← Back to Index](../INDEX.md)
 
 ## How MCP Solves the Problem
 

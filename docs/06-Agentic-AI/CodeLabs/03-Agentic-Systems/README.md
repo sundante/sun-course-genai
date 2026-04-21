@@ -48,5 +48,5 @@ cp .env.example .env
 
 ## Related Notes
 
-- [06-Agentic-AI Notes](../../Notes/06-Agentic-AI/INDEX.md) — architectural patterns and system design concepts
+- [06-Agentic-AI Notes](../../INDEX.md) — architectural patterns and system design concepts
 - [02-Architectures](../02-Architectures/README.md) — individual pattern implementations
