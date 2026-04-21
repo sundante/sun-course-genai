@@ -3661,6 +3661,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#interview-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interview Questions
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3713,6 +3724,34 @@
     
   
     Evaluation & Observability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-Interview-QA-Bank/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interview Q&A Bank
   
 
     
@@ -4561,6 +4600,20 @@ Two agents independently reach different conclusions and both write to the same 
 <li>Every multi-agent system needs <strong>structured communication interfaces</strong> (typed outputs from each agent). Unstructured handoffs (agent A just returns a paragraph that agent B has to parse) are a major source of bugs.</li>
 <li>Design for failure from the start. Cascading failures are the most common production issue in multi-agent systems, and they're cheap to prevent if the defensive patterns are built in from day one.</li>
 </ul>
+<hr />
+<h2 id="interview-questions">Interview Questions</h2>
+<p><strong>Q1: What are the four reasons to go multi-agent, and what mistake do teams most often make when choosing this architecture?</strong> <code>[Medium]</code>
+A: The four reasons are: Task Decomposition (the task has natural seams that benefit from focused sub-tasks), Specialization (different agents optimized with different prompts, models, and tools outperform a generalist), Parallelism (independent subtasks running concurrently reduce wall-clock time), and Fault Isolation (one agent's failure doesn't crash the whole system). The most common mistake is choosing multi-agent because it sounds more capable, without checking whether the overhead of coordination — extra LLM calls, state management, structured communication, error handling — actually produces better results than a well-designed single agent. Always measure whether the multi-agent version outperforms the single-agent version on your specific task before committing to the complexity.</p>
+<p><strong>Q2: What is cascading failure in multi-agent systems and what are the two primary defenses?</strong> <code>[Hard]</code>
+A: Cascading failure is when Agent A fails and passes a bad output silently to Agent B, which produces a worse output, which is passed to Agent C — resulting in a wrong final answer with no visible error. The system appears to complete successfully while all downstream results are garbage. The two primary defenses are: (1) explicit error propagation — each agent validates its inputs and returns a typed error if they are malformed, rather than trying to process bad data; (2) orchestrator error detection — the orchestrator compares each subagent's output against expected structure before passing it downstream, halting or rerouting rather than blindly continuing. These defenses are cheap to implement at design time and expensive to retrofit after a production incident.</p>
+<p><strong>Q3: Compare centralized (orchestrator) vs decentralized (peer-to-peer) coordination.</strong> <code>[Medium]</code>
+A: Centralized: one orchestrator holds the plan and assigns tasks; agents are stateless workers with no knowledge of the broader plan. Advantages — easy to reason about, easy to debug (single trace), easy to add HITL gates. Disadvantages — orchestrator is a single point of failure and a bottleneck. Decentralized: agents observe shared state and self-assign work; coordination emerges from agent behavior. Advantages — no single point of failure, scales to many agents, self-organizing. Disadvantages — race conditions, harder to add HITL, much harder to debug. Use centralized for almost all production systems; use decentralized only when you have a specific fault-tolerance requirement and the team has experience debugging distributed systems.</p>
+<p><strong>Q4: What is a task ledger and why is it critical for long-running agentic systems?</strong> <code>[Hard]</code>
+A: A task ledger is a structured, external-to-context-window record of all planned subtasks, their status (pending/in-progress/done/failed), their dependencies, and their outputs. It's critical because conversation history eventually exceeds the context window and gets summarized or truncated — the task ledger is never summarized, so the agent always knows exactly what remains to be done and what has been completed. It also enables replanning: if a subtask fails, the orchestrator reads the ledger to determine what was completed, updates the remaining plan, and continues — without losing work done so far. The ledger is the difference between an agent that can recover from failure and one that has to start over from scratch.</p>
+<p><strong>Q5: What is an idempotent action and give an example of making a non-idempotent tool idempotent?</strong> <code>[Medium]</code>
+A: An idempotent action produces the same result whether executed once or multiple times with the same inputs. It's critical for agentic systems because agents retry on failure — if a tool creates a duplicate record each time it's called, retries cause data corruption. Example: a <code>create_user(email)</code> tool is non-idempotent by default (multiple calls create duplicate users). To make it idempotent: before inserting, check if a user with that email already exists; if yes, return the existing user record; if no, create and return the new user. The check-then-act pattern, upserts, and idempotency keys (unique per task+step token sent with each API request) are the standard implementation approaches.</p>
+<p><strong>Q6: Why do agents using event-driven (pub/sub) communication need special care compared to shared state?</strong> <code>[Hard]</code>
+A: Event-driven communication is highly decoupled — agents publish events and subscribe to events from others, with no direct coupling. This is ideal for long-running async systems and horizontal scaling. However, it introduces event ordering challenges (an agent may receive events out of order), duplicate event delivery (message brokers guarantee at-least-once delivery, not exactly-once), and complex debugging (there's no single trace to follow — you must reconstruct the sequence from distributed logs). You also lose the natural barrier checking of shared state (where you can easily see what's been written). Use event-driven when you need async processing, true decoupling, or need to fan out to many consumers; use shared state for simpler synchronous pipelines where debuggability is more important than decoupling.</p>
 
 
 
@@ -4593,6 +4646,46 @@ Two agents independently reach different conclusions and both write to the same 
       
         <footer class="md-footer">
   
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../03-Design-Patterns/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Design Patterns">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Design Patterns
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../05-Agentic-System-Design/" class="md-footer__link md-footer__link--next" aria-label="Next: Agentic System Design">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Agentic System Design
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
       <div class="md-copyright">
@@ -4618,7 +4711,7 @@ Two agents independently reach different conclusions and both write to the same 
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "search.suggest", "toc.integrate", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "toc.integrate", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>

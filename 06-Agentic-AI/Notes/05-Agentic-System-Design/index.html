@@ -3800,6 +3800,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#interview-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interview Questions
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3824,6 +3835,34 @@
     
   
     Evaluation & Observability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-Interview-QA-Bank/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interview Q&A Bank
   
 
     
@@ -4735,6 +4774,20 @@ A sequential log of everything that happened: every LLM call, tool call, agent a
 <li><strong>Security in multi-agent systems is different from single-model security.</strong> Prompt injection via multi-hop (external content → agent A → agent B → malicious action) is the key new threat. Role separation and action validation are the primary defenses.</li>
 <li><strong>Design for the failure path before the happy path.</strong> What does the system do when a subagent times out? When an external API returns a 503? When the user doesn't respond to a HITL prompt? These paths must be designed, not discovered in production.</li>
 </ul>
+<hr />
+<h2 id="interview-questions">Interview Questions</h2>
+<p><strong>Q1: Name the six layers of a production agentic system and their primary responsibilities.</strong> <code>[Medium]</code>
+A: Interface Layer (API gateway, auth, input validation, async task queuing and result delivery), Orchestration Layer (workflow decomposition, agent assignment, dependency management, HITL gates, retry and error handling), Agent Pool (specialized stateless agents each with a fixed role, system prompt, model, and tool set), Tool Layer (external APIs, search, code execution, databases — each sandboxed and rate-limited), Memory Layer (short-term context window, working state in a database, long-term vector store, episodic event log), and Monitoring Layer (tracing, logging, cost tracking, alerting). Layer separation is what makes the system maintainable — changes in one layer don't break others.</p>
+<p><strong>Q2: What is a circuit breaker and when should it open in an agentic system?</strong> <code>[Hard]</code>
+A: A circuit breaker monitors calls to a downstream dependency (API, database) and temporarily stops sending requests when that dependency is repeatedly failing — instead of flooding a struggling service with retries. It has three states: Closed (normal, all calls pass through), Open (tripped after N consecutive failures — reject calls immediately with an error), and Half-Open (after a recovery timeout, allow one test call; if it succeeds, close the circuit; if it fails, keep it open). It should open when a service shows repeated transient failures suggesting it's overloaded or down. Without circuit breakers, a failing downstream API causes every agent step to hang until timeout, cascading into system-wide latency spikes and wasted LLM context.</p>
+<p><strong>Q3: Why should long-running agentic tasks always be designed as asynchronous?</strong> <code>[Easy]</code>
+A: Long-running tasks (anything beyond a few seconds) should not block the caller waiting for a result — this creates poor user experience and server resource exhaustion (connections held open, timeouts). The correct pattern is: accept the task and return a task ID immediately, process the task asynchronously in a worker, and deliver the result via a webhook callback or polling endpoint. This also enables horizontal scaling (multiple workers process the queue), natural retry on worker crash (the task is still in the queue), and back-pressure handling (the queue absorbs traffic spikes without crashing workers).</p>
+<p><strong>Q4: What are the four memory types in an agentic system and what is each used for?</strong> <code>[Hard]</code>
+A: Short-term memory (the LLM's active context window — current session history, tool results, task state; lost when the session ends), Working memory (structured agent state maintained by the orchestration layer — task ledger, agent assignments, partial results, error log; survives agent restarts via database), Long-term memory (a vector store of semantic knowledge accumulated across tasks — past research, user preferences, previously solved problems; queried semantically when relevant to the current task), and Episodic memory (a sequential append-only event log of everything that happened — every LLM call, tool call, HITL decision, error; used for debugging, auditing, and training data generation). A production system uses all four; which one is queried at a given moment depends on the agent's current need.</p>
+<p><strong>Q5: How does prompt injection in a multi-agent system differ from single-agent injection, and what is the primary defense?</strong> <code>[Hard]</code>
+A: In a single-agent system, injection requires the malicious content to be in the agent's direct context. In multi-agent systems, injection can be multi-hop: malicious content in a web page is processed by Agent A (the research agent), injected into its output, passed to Agent B (the writer), which then passes the injected instruction to Agent C (the email agent) which takes an unauthorized action — all three hops are required for the attack, and the injection is invisible in any single agent's trace. The primary defense is role separation: the agent that processes external content (research agent) and the agent that takes actions (email agent) should never share a context window. The research agent's output should be validated and sanitized before it reaches any action-taking agent.</p>
+<p><strong>Q6: Why is routing tasks to different model sizes a cost strategy, and what is the decision criterion?</strong> <code>[Medium]</code>
+A: LLM pricing scales with model capability — larger models that handle complex reasoning cost 10-50× more per token than smaller models for simple tasks. An orchestrator that sends every task to the most powerful model regardless of complexity wastes most of that budget on tasks that a smaller model handles equally well. The decision criterion is task complexity: simple classification, formatting, and structured extraction tasks go to small fast models (Gemini Flash Lite); research, analysis, and multi-step reasoning go to medium models (Gemini 2.0 Flash); planning, adversarial evaluation, and complex synthesis go to large models (Gemini 1.5 Pro). In practice, instrument actual cost per agent type first, then optimize by routing the highest-volume cheap tasks to smaller models.</p>
 
 
 
@@ -4767,6 +4820,46 @@ A sequential log of everything that happened: every LLM call, tool call, agent a
       
         <footer class="md-footer">
   
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../04-Multi-Agent-Systems/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Multi-Agent Systems">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Multi-Agent Systems
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../06-Evaluation-and-Observability/" class="md-footer__link md-footer__link--next" aria-label="Next: Evaluation &amp; Observability">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Evaluation & Observability
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
       <div class="md-copyright">
@@ -4792,7 +4885,7 @@ A sequential log of everything that happened: every LLM call, tool call, agent a
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "search.suggest", "toc.integrate", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "toc.integrate", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>

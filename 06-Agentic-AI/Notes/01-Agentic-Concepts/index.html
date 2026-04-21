@@ -3438,6 +3438,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#interview-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interview Questions
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3574,6 +3585,34 @@
     
   
     Evaluation & Observability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-Interview-QA-Bank/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interview Q&A Bank
   
 
     
@@ -4326,6 +4365,20 @@ A full system designed for autonomy: persistent state across sessions, long-hori
 <li>Agentic systems are <strong>harder to evaluate</strong> than traditional AI. A wrong final answer is obvious; a subtly wrong intermediate step that compounds into a wrong final answer is not.</li>
 <li>The biggest practical risk in agentic systems is <strong>unintended action</strong> — the system takes a real-world action (sends an email, deletes a file, makes an API call) that was not intended. HITL and bounded autonomy are the primary mitigations.</li>
 </ul>
+<hr />
+<h2 id="interview-questions">Interview Questions</h2>
+<p><strong>Q1: What is the fundamental difference between traditional AI and agentic AI?</strong> <code>[Easy]</code>
+A: Traditional AI is reactive — given a single input, it produces a single output and stops. Agentic AI is proactive — given a goal, it decides what steps to take, executes them, observes results, and continues until the goal is met. The key shift is who holds the initiative: in traditional AI the human drives every step; in agentic AI the system drives the steps within a defined goal boundary. This difference is not just technical but architectural — agentic systems require planning, memory, tool use, and failure handling that single-turn systems don't need.</p>
+<p><strong>Q2: What are the four core properties of an agentic system?</strong> <code>[Easy]</code>
+A: Goal-directed (the system pursues an objective, not just responds to input), Autonomous Action (takes real-world actions without human approval at each step), Extended Horizon (operates across multiple steps and sessions with persistent state), and Adaptive (adjusts its approach based on feedback and failure). Most real systems sit somewhere between fully agentic and fully traditional — the four properties describe a spectrum. When evaluating whether to use an agentic architecture, ask whether the task actually requires all four; over-engineering to "full agentic" when it's not needed adds cost and complexity.</p>
+<p><strong>Q3: Why isn't a RAG system considered agentic, even though it uses retrieval tools?</strong> <code>[Medium]</code>
+A: A RAG system is Level 2 on the autonomy spectrum — it retrieves relevant context before generating, but it's still fundamentally reactive: one retrieval plus one generation per query. It doesn't decide what to do next based on results, can't take actions beyond answering, and has no extended horizon or goal-directed behavior. Agentic systems start at Level 3 (single agent) where an LLM can use tools in a loop, reason about results, and continue until a multi-step task is complete. RAG provides knowledge; agentic systems provide agency — the ability to decide and act.</p>
+<p><strong>Q4: What is "context drift" and why does it only appear in agentic systems?</strong> <code>[Medium]</code>
+A: Context drift is the gradual degradation of an agent's reasoning quality as the context window fills with accumulated history — the agent starts losing track of the original goal and later reasoning contradicts earlier reasoning. It only appears in extended-horizon systems because a single-turn LLM never accumulates more than one round of context. In agentic systems, a task ledger (a separate structured record of the goal and remaining steps) is the primary mitigation — the goal is always retrievable even when the conversation history is long or summarized.</p>
+<p><strong>Q5: What does "bounded autonomy" mean and why is it essential in production?</strong> <code>[Hard]</code>
+A: Bounded autonomy means placing explicit limits on an agent's ability to act: maximum steps, maximum wall-clock time, maximum cost, maximum number of retries, and a restricted set of permitted actions. Without these limits, agents can enter infinite retry loops, exhaust API quotas, accumulate runaway costs, or take unintended real-world actions. In production, every agent config should declare these limits explicitly, and when a limit is hit the agent should record partial results, set a status flag, and exit gracefully — not silently fail or continue indefinitely. Bounded autonomy is what separates a reliable production system from a demo that works in the happy path.</p>
+<p><strong>Q6: Why does moving up the autonomy spectrum reduce predictability, and how do you manage that tradeoff?</strong> <code>[Hard]</code>
+A: Each level up the spectrum adds emergent behavior: the system makes more of its own decisions, meaning more paths through the state space are possible. A chatbot has one output per input. An agentic system can take dozens of different tool-call sequences to reach the same goal — and some of those sequences may be subtly wrong in ways that don't surface until production. You manage this tradeoff by investing in trajectory evaluation (evaluating the execution path, not just the final answer), HITL gates for high-risk decisions, and observability tooling (LangSmith, Langfuse) that captures every step for debugging. The goal isn't to eliminate unpredictability but to instrument it so failures are detectable and correctable.</p>
 
 
 
@@ -4358,6 +4411,46 @@ A full system designed for autonomy: persistent state across sessions, long-hori
       
         <footer class="md-footer">
   
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../../INDEX/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Overview">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Overview
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../02-Architectural-Patterns/" class="md-footer__link md-footer__link--next" aria-label="Next: Architectural Patterns">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Architectural Patterns
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
       <div class="md-copyright">
@@ -4383,7 +4476,7 @@ A full system designed for autonomy: persistent state across sessions, long-hori
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "search.suggest", "toc.integrate", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "toc.integrate", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>

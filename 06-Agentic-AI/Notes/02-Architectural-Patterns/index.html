@@ -3554,6 +3554,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#interview-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interview Questions
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3662,6 +3673,34 @@
     
   
     Evaluation & Observability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-Interview-QA-Bank/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interview Q&A Bank
   
 
     
@@ -4610,6 +4649,20 @@ The orchestrator includes a debate step for high-stakes decisions: one subagent 
 <li><strong>Reflexion is expensive</strong> — each iteration doubles the LLM calls. Use it only where quality justifies the cost.</li>
 <li>HITL is <strong>not a workaround</strong> — it's a first-class architectural element. Design for it from the start, not as an afterthought.</li>
 </ul>
+<hr />
+<h2 id="interview-questions">Interview Questions</h2>
+<p><strong>Q1: What distinguishes an architectural pattern from a design pattern in agentic systems?</strong> <code>[Easy]</code>
+A: An architectural pattern defines the structural blueprint — how many agents exist, how they relate to each other, and how control and information flow between them. A design pattern defines the behavior and logic of individual agents or agent interactions (e.g., how reflection works inside a single agent). The choice of architectural pattern is the first major system design decision; design patterns are applied within that structure. The same design pattern (e.g., Reflexion) can appear inside any architectural pattern (Pipeline, Orchestrator-Subagent, etc.).</p>
+<p><strong>Q2: When would you choose a Pipeline pattern over an Orchestrator-Subagent pattern?</strong> <code>[Medium]</code>
+A: Choose Pipeline when the task naturally decomposes into sequential stages with well-defined input/output contracts, each stage can be implemented and tested independently, and the execution order is fixed at design time. Choose Orchestrator-Subagent when the decomposition is dynamic, subtasks can run in parallel, or different subtasks require different tools and expertise. Pipeline is the most reliable pattern because its behavior is statically defined and easy to reason about; Orchestrator-Subagent is more powerful but introduces coordination overhead. If you can model the task as a fixed ETL chain, Pipeline is almost always preferable.</p>
+<p><strong>Q3: What are the specific conditions that justify adding a Reflexion loop to your system?</strong> <code>[Medium]</code>
+A: Three conditions must all be true: the output quality from a single pass is consistently insufficient for production use, there is a clear quality criterion that can be evaluated automatically (a rubric, test suite, or factual check), and the task's latency tolerance can absorb the extra LLM round-trips. You should also always set a <code>max_iterations</code> limit and use a different or stronger model as the evaluator to avoid self-consistency bias (the same model often fails to catch its own errors). If you can't define a stopping criterion, don't use Reflexion — you'll build an infinite loop.</p>
+<p><strong>Q4: Why is Orchestrator-Subagent the default production pattern, and what is its single biggest risk?</strong> <code>[Hard]</code>
+A: It's the default because it maps naturally to how complex tasks decompose (one coordinator, multiple specialists), it makes HITL easy to implement (insert a gate in the orchestrator), it's easy to debug (one place holds all decisions and state), and it can run subagents in parallel for latency reduction. The single biggest risk is that the orchestrator is both a bottleneck and a single point of failure — all coordination and planning flows through one LLM, and if the orchestrator's reasoning degrades (context drift, hallucinated plan), the entire system fails. Mitigations: task ledger external to conversation history, explicit subagent output validation, and replanning logic when a subagent fails.</p>
+<p><strong>Q5: When does HITL become required rather than optional?</strong> <code>[Medium]</code>
+A: HITL is required for irreversible actions (sending email, making payments, deleting data — these cannot be undone), when agent confidence is below a threshold, when regulated data (PII, financial, medical records) is involved, when compliance mandates human sign-off, and when the estimated cost or scope exceeds a defined risk threshold. HITL is optional for high-confidence, reversible, low-risk decisions. The key design principle: HITL that triggers too frequently becomes noise and gets ignored; reserve it for decisions where a human mistake is recoverable but an agent mistake is not.</p>
+<p><strong>Q6: Describe a scenario where you would combine three architectural patterns.</strong> <code>[Hard]</code>
+A: A research and analysis system combines Orchestrator-Subagent + Parallel + Reflexion: the orchestrator decomposes "Prepare a competitive analysis of EV manufacturers" into subtasks and fans out to five parallel research agents (one per manufacturer) — that's Orchestrator-Subagent + Parallel. Each research agent has an internal Reflexion loop: it produces a structured research summary, an evaluator agent checks whether the data is complete and sourced, and the research agent revises if not. The orchestrator then synthesizes all five validated summaries into the final analysis. This combination achieves breadth (parallel), correctness (reflection), and coordination (orchestrator) in a single system.</p>
 
 
 
@@ -4642,6 +4695,46 @@ The orchestrator includes a debate step for high-stakes decisions: one subagent 
       
         <footer class="md-footer">
   
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../01-Agentic-Concepts/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Agentic Concepts">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Agentic Concepts
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../03-Design-Patterns/" class="md-footer__link md-footer__link--next" aria-label="Next: Design Patterns">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Design Patterns
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
       <div class="md-copyright">
@@ -4667,7 +4760,7 @@ The orchestrator includes a debate step for high-stakes decisions: one subagent 
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "search.suggest", "toc.integrate", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "toc.integrate", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
