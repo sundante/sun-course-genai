@@ -14,7 +14,7 @@ A general-to-advanced learning resource covering the full modern GenAI stack. Si
 
 | # | Topic | Notes | Q&A Review | Status |
 |---|-------|-------|------------|--------|
-| 01 | LLM Models | 4 files (Fundamentals, Architecture, Training, Prompting) | ✅ | Complete |
+| 01 | LLM Models | 12 files — Fundamentals through Production Deployment | ✅ 68+ Q&A | Complete |
 | 02 | Prompt Engineering | 4 files (Basics, Core, Advanced, Production) | ✅ | Complete |
 | 03 | RAG | 12 files — fundamentals through GCP production | ✅ 80+ Q&A | Complete |
 | 04 | MCP | 8 files (Problem → Getting Started) | ✅ | Complete |
@@ -25,11 +25,19 @@ A general-to-advanced learning resource covering the full modern GenAI stack. Si
 
 ## Content Breakdown
 
-### 01 — LLM Models
-- `01-LLM-Fundamentals.md` — What an LLM is, tokens, context windows, sampling
-- `02-Architecture.md` — Transformer internals, attention, positional encoding
-- `03-Training-and-Finetuning.md` — Pretraining, SFT, RLHF, PEFT (LoRA, QLoRA)
-- `04-Prompting-Strategies.md` — Zero-shot, few-shot, system prompts, chat format
+### 01 — LLM Models (12 files, fully written)
+- `01-LLM-Fundamentals.md` — Tokens, context window, sampling parameters, model types, open vs proprietary
+- `02-Architecture.md` — Transformer architecture, positional encoding (RoPE/ALiBi/sinusoidal), Pre-LN, SwiGLU FFN
+- `03-Attention-Mechanisms.md` — Q/K/V math, multi-head, Flash Attention 1/2/3, GQA/MQA, sliding window
+- `04-Model-Architecture-Types.md` — Encoder-only (BERT), Decoder-only (LLaMA/GPT), Encoder-Decoder (T5), MoE, comparison table
+- `05-KV-Cache-and-Inference-Optimization.md` — KV cache math, MHA/MQA/GQA, paged attention, speculative decoding, continuous batching
+- `06-Training-and-Pretraining.md` — Data curation, BPE tokenization, CLM/MLM objectives, Chinchilla scaling laws, distributed training
+- `07-Fine-Tuning.md` — SFT (loss masking), RLHF, DPO, LoRA math, QLoRA (NF4), multi-head fine-tuning
+- `08-GPU-and-Hardware.md` — VRAM estimation, quantization (INT8/GPTQ/AWQ/NF4), tensor/pipeline/data parallelism, ZeRO stages
+- `09-Failure-Modes-and-Tricky-Issues.md` — Catastrophic forgetting, lost in middle, hallucination taxonomy, sycophancy, repetition
+- `10-Production-Deployment.md` — vLLM/TGI/Triton, latency budget, prefix caching, token window workarounds, cost optimization
+- `04-Prompting-Strategies.md` — Chat templates (LLaMA-3/Gemma/ChatML), CoT mechanics, system prompts, prompt injection
+- `12-Interview-QA-Bank.md` — 68+ Q&A pairs tagged Easy/Medium/Hard across all topics
 
 ### 02 — Prompt Engineering
 - `01-Prompt-Basics.md` — Anatomy of a prompt, roles, instruction clarity
@@ -116,7 +124,7 @@ A general-to-advanced learning resource covering the full modern GenAI stack. Si
 
 ## What's Not Here Yet
 
-- `01-LLM-Models` — no code examples yet (notes only)
+- `01-LLM-Models` — notes fully written (12 files); no standalone Codes/ folder yet (code snippets embedded in notes)
 - `02-Prompts` — no code examples yet (notes only)
 - `04-MCP` — no code examples beyond Getting Started
 - Evaluations / benchmarks section
