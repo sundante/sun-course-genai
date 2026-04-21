@@ -4185,6 +4185,155 @@ print(f&quot;LLaMA-3 count: {len(llama_tok.encode(sample))}&quot;)
 </table>
 <p><strong>The dirty secret:</strong> A large context window ≠ uniform retrieval quality. The "lost in the middle" problem (see <a href="../09-Failure-Modes-and-Tricky-Issues/">Failure Modes</a>) means models attend poorly to tokens buried in the middle of very long contexts. Putting the most important information at the beginning or end of the context is a practical mitigation.</p>
 <p><strong>Context is shared between input and output.</strong> A 128K window with a 100K-token prompt leaves only 28K tokens for the response.</p>
+<p><strong>Context window scaling approaches — how modern models extend context:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Approach</th>
+<th>Description</th>
+<th>Used by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fixed Context</td>
+<td>Choose max tokens at model design time (e.g., 2K, 8K)</td>
+<td>Early GPTs, BERT</td>
+</tr>
+<tr>
+<td>Sliding Window / Chunking</td>
+<td>Split input into overlapping windows (e.g., 512 tokens with 128 overlap)</td>
+<td>RAG / long-doc QA</td>
+</tr>
+<tr>
+<td>Adaptive Context</td>
+<td>Dynamically select relevant chunks based on task</td>
+<td>Attention routing systems</td>
+</tr>
+<tr>
+<td>Sparse Attention</td>
+<td>Fixed-size context but sparsified heads — reduces O(n²) cost</td>
+<td>Longformer, BigBird, FlashAttention</td>
+</tr>
+<tr>
+<td>Memory-efficient Transformers</td>
+<td>Linear attention or recurrent state instead of full attention</td>
+<td>Performer, RWKV, Mamba</td>
+</tr>
+<tr>
+<td>Recurrence / Caching</td>
+<td>Reuse past hidden states or token representations</td>
+<td>LLaMA 2/3, RWKV, Gemini, GPT Turbo</td>
+</tr>
+<tr>
+<td>Retriever-Augmented (RAG)</td>
+<td>Retrieve external chunks to keep active context short and focused</td>
+<td>All RAG systems</td>
+</tr>
+<tr>
+<td>Compressed Context</td>
+<td>Summarize long text, feed a compact version to the model</td>
+<td>Hybrid long-doc systems</td>
+</tr>
+<tr>
+<td>RoPE Interpolation</td>
+<td>Rescale rotary position embeddings to extend native context window</td>
+<td>GPT-NeoX, Mistral 7B, Claude 3, LLaMA 2/3</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Context window sizes in current models (2025/2026):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Context Length</th>
+<th>How it's achieved</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GPT-3.5</td>
+<td>4K / 16K</td>
+<td>Naive Transformer</td>
+</tr>
+<tr>
+<td>GPT-4 / GPT-4.1</td>
+<td>128K / 1M</td>
+<td>FlashAttention + chunking</td>
+</tr>
+<tr>
+<td>Claude 3 / Sonnet 4</td>
+<td>200K</td>
+<td>Sparse attention + retrieval + caching</td>
+</tr>
+<tr>
+<td>Gemini 2.5 Pro</td>
+<td>1M</td>
+<td>Memory compression + long-context training</td>
+</tr>
+<tr>
+<td>LLaMA 4 Scout</td>
+<td>10M</td>
+<td>MoE + extreme context training</td>
+</tr>
+<tr>
+<td>Mistral 7B</td>
+<td>32K (tested 64K)</td>
+<td>RoPE interpolation</td>
+</tr>
+<tr>
+<td>Longformer</td>
+<td>4K–16K</td>
+<td>Sparse local + global attention</td>
+</tr>
+<tr>
+<td>RWKV</td>
+<td>Infinite (streaming)</td>
+<td>RNN-like with token recurrence</td>
+</tr>
+<tr>
+<td>Mamba</td>
+<td>Sub-quadratic</td>
+<td>Attention-free state-space model</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Practical guidelines — choosing context window strategy:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Use Case</th>
+<th>Recommended Strategy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Small chatbot (FAQ, support)</td>
+<td>2K–4K context is sufficient</td>
+</tr>
+<tr>
+<td>Long documents (legal, medical, policy)</td>
+<td>8K–32K + retrieval or summarization</td>
+</tr>
+<tr>
+<td>Summarization of books or legal docs</td>
+<td>RAG + chunking + re-ranking</td>
+</tr>
+<tr>
+<td>Code generation</td>
+<td>8K–16K (code needs larger context for multi-file awareness)</td>
+</tr>
+<tr>
+<td>Training from scratch</td>
+<td>Trade off context size vs GPU memory (O(n²) attention cost)</td>
+</tr>
+<tr>
+<td>Local inference on laptop</td>
+<td>Prefer 2K–4K with quantization</td>
+</tr>
+</tbody>
+</table>
 <hr />
 <h3 id="sampling-parameters">Sampling Parameters</h3>
 <h3 id="concept_3">Concept</h3>

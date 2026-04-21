@@ -1520,6 +1520,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#gcp-recommended-stack-for-hybrid-rag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GCP Recommended Stack for Hybrid RAG
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-vertex-ai-rag-landscape" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1711,6 +1722,45 @@
         
           <li class="md-nav__item">
   <a href="#code_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vertex-ai-reranker-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vertex AI ReRanker API
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Vertex AI ReRanker API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concept
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#code_5" class="md-nav__link">
     <span class="md-ellipsis">
       
         Code
@@ -3891,6 +3941,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#gcp-recommended-stack-for-hybrid-rag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GCP Recommended Stack for Hybrid RAG
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-vertex-ai-rag-landscape" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4097,6 +4158,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#vertex-ai-reranker-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vertex AI ReRanker API
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Vertex AI ReRanker API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concept
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#code_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#interview-qa" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4129,6 +4229,83 @@
 
 <h1 id="vertex-ai-rag">Vertex AI RAG</h1>
 <p>GCP offers three distinct managed services for RAG. Choosing the wrong one is a common interview mistake — each occupies a different point on the control vs. convenience spectrum.</p>
+<hr />
+<h2 id="gcp-recommended-stack-for-hybrid-rag">GCP Recommended Stack for Hybrid RAG</h2>
+<p>When building production-grade RAG on Google Cloud, each pipeline stage has a recommended GCP-native or GCP-compatible service. This table is a starting point for interviews and architecture reviews.</p>
+<table>
+<thead>
+<tr>
+<th>Pipeline Stage</th>
+<th>GCP-Recommended Option</th>
+<th>Alternatives on GCP</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Embeddings</strong></td>
+<td>Vertex AI Embeddings API (<code>text-embedding-004</code>, 768-dim)</td>
+<td>BAAI <code>bge-m3</code> on Vertex AI Model Garden; <code>gemini-embedding-001</code> (3072-dim)</td>
+<td><code>text-embedding-004</code> is the production default; <code>bge-m3</code> is stronger for multilingual/domain-specific corpora</td>
+</tr>
+<tr>
+<td><strong>Vector Store</strong></td>
+<td>Vertex AI Vector Search (Matching Engine, ANN-based)</td>
+<td>Pinecone, Weaviate, Qdrant via Cloud Run</td>
+<td>Managed, scales to 1B+ vectors; use when staying fully GCP-native</td>
+</tr>
+<tr>
+<td><strong>Graph Store</strong></td>
+<td>Neo4j AuraDS (managed graph DB)</td>
+<td>Spanner Graph (preview), AlloyDB + age extension</td>
+<td>Required for GraphRAG or entity-relationship queries; Neo4j AuraDS is the easiest managed option</td>
+</tr>
+<tr>
+<td><strong>Sparse / Keyword</strong></td>
+<td>Elasticsearch on GKE</td>
+<td>OpenSearch on GKE, BigQuery full-text search</td>
+<td>Vertex AI Vector Search has no built-in BM25; must pair with Elasticsearch for hybrid search</td>
+</tr>
+<tr>
+<td><strong>Re-ranker</strong></td>
+<td>Vertex AI ReRanker API (<code>text-reranker@001</code>)</td>
+<td>Cohere Rerank API; <code>BAAI/bge-reranker-v2-m3</code> on Vertex AI Model Garden</td>
+<td>Vertex AI ReRanker is fully integrated with Matching Engine; Cohere is stronger multilingual</td>
+</tr>
+<tr>
+<td><strong>LLM Generator</strong></td>
+<td>Gemini 1.5 Flash (latency-sensitive) / Gemini 1.5 Pro (quality-sensitive)</td>
+<td>Gemini 2.0 Flash, Claude on Vertex AI (via Model Garden)</td>
+<td>Gemini has native tool integration with RAG Engine corpus</td>
+</tr>
+<tr>
+<td><strong>Orchestration</strong></td>
+<td>LangGraph (stateful agent graphs) + Vertex AI Pipelines (batch/scheduled)</td>
+<td>LangChain + Cloud Run, CrewAI on GKE</td>
+<td>LangGraph for real-time agents; Vertex AI Pipelines for batch ingestion jobs</td>
+</tr>
+<tr>
+<td><strong>Observability</strong></td>
+<td>Cloud Trace + Langfuse (self-hosted on Cloud Run)</td>
+<td>Arize Phoenix on GKE, LangSmith</td>
+<td>Cloud Trace for infrastructure; Langfuse for LLM-specific span tracing and RAGAS integration</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Typical Hybrid RAG architecture on GCP:</strong></p>
+<pre><code>User query
+    ↓
+Cloud Run (query service)
+    ├─ text-embedding-004 → Vertex AI Vector Search (dense k=20)
+    ├─ Elasticsearch on GKE (BM25 k=20)
+    └─ RRF fusion → 20 candidates
+         ↓
+    Vertex AI ReRanker API → top 5 chunks
+         ↓
+    Gemini 1.5 Pro (generator)
+         ↓
+    Response + citations
+</code></pre>
 <hr />
 <h2 id="the-vertex-ai-rag-landscape">The Vertex AI RAG Landscape</h2>
 <pre><code>                   ← more managed / less control        more control / less managed →
@@ -4506,6 +4683,118 @@ request = UpsertDatapointsRequest(
     datapoints=datapoints
 )
 match_client.upsert_datapoints(request=request)
+</code></pre>
+<hr />
+<h2 id="vertex-ai-reranker-api">Vertex AI ReRanker API</h2>
+<h3 id="concept_5">Concept</h3>
+<p>Vertex AI provides a managed cross-encoder reranker (<code>text-reranker@001</code>) that integrates with both the RAG Engine corpus and custom Vertex AI Vector Search indices. It accepts (query, document) pairs and returns a relevance score in [0, 1].</p>
+<p><strong>Impact of adding the reranker to a typical RAG pipeline:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Before ReRanker (k=20, dense only)</th>
+<th>After ReRanker (k=20 → top 5)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Recall@5</td>
+<td>0.70</td>
+<td>0.75</td>
+</tr>
+<tr>
+<td>Precision@5</td>
+<td>0.68</td>
+<td>0.84</td>
+</tr>
+<tr>
+<td>Faithfulness (downstream RAGAS)</td>
+<td>0.72</td>
+<td>0.86</td>
+</tr>
+<tr>
+<td>Latency added</td>
+<td>—</td>
+<td>~80–150ms</td>
+</tr>
+</tbody>
+</table>
+<p>Precision improvement is larger than recall improvement — the reranker primarily reduces noise rather than recovering missed documents.</p>
+<p><strong>Best practices:</strong>
+- Over-retrieve at stage 1: set k=15–25 before reranking; narrowing from k=5 gives no room for the reranker to improve
+- Score threshold: filter documents with reranker score &lt; 0.4 before passing to the LLM to avoid low-signal context
+- Combine with Matching Engine <code>restricts</code> (metadata filtering) before reranking to reduce latency</p>
+<h3 id="code_5">Code</h3>
+<pre><code class="language-python">from vertexai.language_models import TextEmbeddingModel
+from google.cloud.aiplatform_v1 import RerankServiceClient
+
+# Vertex AI ReRanker via the Ranking API (us-central1)
+from google.cloud import discoveryengine_v1alpha as discoveryengine
+
+def vertex_rerank(
+    query: str,
+    candidates: list[str],
+    project_id: str,
+    location: str = &quot;global&quot;,
+    top_n: int = 5
+) -&gt; list[tuple[str, float]]:
+    &quot;&quot;&quot;Rerank candidate documents using Vertex AI ReRanker API.&quot;&quot;&quot;
+    client = discoveryengine.RankServiceClient()
+
+    ranking_config = client.ranking_config_path(
+        project=project_id,
+        location=location,
+        ranking_config=&quot;default_ranking_config&quot;
+    )
+
+    records = [
+        discoveryengine.RankingRecord(id=str(i), content=doc)
+        for i, doc in enumerate(candidates)
+    ]
+
+    request = discoveryengine.RankRequest(
+        ranking_config=ranking_config,
+        model=&quot;semantic-ranker-512@latest&quot;,
+        top_n=top_n,
+        query=query,
+        records=records,
+    )
+
+    response = client.rank(request=request)
+    return [(candidates[int(r.id)], r.score) for r in response.records]
+
+
+# Full pipeline: Vector Search → ReRanker → Gemini
+def rag_with_reranker(
+    query: str,
+    project_id: str,
+    vector_endpoint,
+    top_k_retrieve: int = 20,
+    top_k_rerank: int = 5
+) -&gt; str:
+    # Stage 1: dense retrieval
+    query_vec = embed_text([query])[0]
+    raw_results = vector_endpoint.find_neighbors(
+        deployed_index_id=&quot;knowledge_v1&quot;,
+        queries=[query_vec],
+        num_neighbors=top_k_retrieve
+    )
+    candidate_texts = [fetch_document_text(n.id) for n in raw_results[0]]
+
+    # Stage 2: rerank
+    reranked = vertex_rerank(query, candidate_texts, project_id, top_n=top_k_rerank)
+
+    # Filter low-confidence results
+    filtered = [(doc, score) for doc, score in reranked if score &gt; 0.4]
+    context = &quot;\n\n&quot;.join([doc for doc, _ in filtered])
+
+    # Stage 3: generate
+    from vertexai.generative_models import GenerativeModel
+    model = GenerativeModel(&quot;gemini-1.5-flash-001&quot;)
+    return model.generate_content(
+        f&quot;Context:\n{context}\n\nQuestion: {query}\nAnswer:&quot;
+    ).text
 </code></pre>
 <hr />
 <h2 id="interview-qa">Interview Q&amp;A</h2>

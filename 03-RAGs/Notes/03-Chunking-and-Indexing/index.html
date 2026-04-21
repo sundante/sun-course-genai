@@ -1575,6 +1575,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#cross-chunk-retrieval-problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-Chunk Retrieval Problem
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cross-Chunk Retrieval Problem">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concept
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#interview-qa" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4131,6 +4159,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#cross-chunk-retrieval-problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-Chunk Retrieval Problem
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cross-Chunk Retrieval Problem">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concept
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#interview-qa" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4509,6 +4565,107 @@ def df_to_markdown_chunks(df, chunk_rows: int = 20) -&gt; list[str]:
         chunks.append(df.iloc[i:i+chunk_rows].to_markdown(index=False))
     return chunks
 </code></pre>
+<hr />
+<h2 id="cross-chunk-retrieval-problem">Cross-Chunk Retrieval Problem</h2>
+<h3 id="concept_6">Concept</h3>
+<p>One of the most common retrieval failure modes: a semantic unit (key claim, definition, or answer) is <strong>split across two or more adjacent chunks</strong> by the chunking process. Neither chunk alone scores high enough in ANN search to be retrieved, so the answer is effectively lost even though the document contains it.</p>
+<p><strong>Why this happens:</strong>
+- Fixed-size chunking splits at character/token counts, not topic boundaries
+- A definition may start at the end of chunk N and finish at the start of chunk N+1
+- An ANN search for the full concept matches neither chunk precisely — both are partial</p>
+<p><strong>Six strategies to mitigate cross-chunk retrieval failures:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Strategy</th>
+<th>How It Works</th>
+<th>Implementation</th>
+<th>Trade-off</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1. Hierarchical / Parent-Child Chunking</strong></td>
+<td>Retrieve with small precise child chunks; return larger parent chunks to the LLM</td>
+<td><code>ParentDocumentRetriever</code> in LangChain</td>
+<td>Higher storage (two indices); see dedicated section above</td>
+</tr>
+<tr>
+<td><strong>2. Chunk Overlap (20–40%)</strong></td>
+<td>Adjacent chunks share a sliding window of content — boundary information appears in both chunks</td>
+<td><code>chunk_overlap=100</code> in <code>RecursiveCharacterTextSplitter</code></td>
+<td>Larger index size; redundant storage of ~30% of content</td>
+</tr>
+<tr>
+<td><strong>3. Multi-Vector Retrieval</strong></td>
+<td>Generate multiple embeddings per chunk (summary + full text + hypothetical Q)</td>
+<td><code>MultiVectorRetriever</code>; index summary embedding, store full chunk</td>
+<td>More complex ingest; improves recall for differently-phrased queries</td>
+</tr>
+<tr>
+<td><strong>4. Neighborhood Expansion at Retrieval</strong></td>
+<td>After ANN search, fetch N adjacent chunks (before + after) and return them together</td>
+<td>Post-retrieval step: look up <code>chunk_id ± 1</code> in the docstore</td>
+<td>Increases context window usage; adds latency for docstore lookups</td>
+</tr>
+<tr>
+<td><strong>5. Cross-Encoder / Reranker over Expanded Set</strong></td>
+<td>Over-retrieve k=20 candidates including neighbors, then rerank the full set with a cross-encoder</td>
+<td>Stage 1: ANN k=20 + neighbors; Stage 2: cross-encoder rerank to top 5</td>
+<td>Best precision improvement; adds ~100ms reranking latency</td>
+</tr>
+<tr>
+<td><strong>6. Long-Context Models or Contextual Merging</strong></td>
+<td>Use a model with a very large context window; merge all retrieved chunks into one long context</td>
+<td>Gemini 1.5 Pro (1M tokens), GPT-4 Turbo (128K) as generator</td>
+<td>High token cost per query; "lost in the middle" problem for very long contexts</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recommended production flow for cross-chunk recall:</strong></p>
+<pre><code>1. Ingest with 20% overlap (cheap insurance against boundary splits)
+2. Use parent-child for documents with variable structure (annual reports, legal docs)
+3. At retrieval: ANN k=20 → fetch ±1 neighbors for top-5 candidates → rerank 25 → take top 5
+4. Monitor: if faithfulness drops for multi-paragraph answers, increase overlap or k
+</code></pre>
+<p><strong>Retrieval improvement at each stage:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Method</th>
+<th>Effect on Recall@5</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Baseline (dense k=5)</td>
+<td>—</td>
+<td>0.62</td>
+</tr>
+<tr>
+<td>+ Overlap 20%</td>
+<td>Chunk overlap</td>
+<td>+0.05 → 0.67</td>
+</tr>
+<tr>
+<td>+ Hybrid (BM25 + dense)</td>
+<td>RRF fusion</td>
+<td>+0.06 → 0.73</td>
+</tr>
+<tr>
+<td>+ Neighborhood expansion</td>
+<td>±1 adjacent chunks</td>
+<td>+0.03 → 0.76</td>
+</tr>
+<tr>
+<td>+ Cross-encoder rerank</td>
+<td>Rerank k=20 → top 5</td>
+<td>+0.08 → 0.84</td>
+</tr>
+</tbody>
+</table>
+<p><em>Note: numbers are representative benchmarks from RAG literature; results vary by corpus.</em></p>
 <hr />
 <h2 id="interview-qa">Interview Q&amp;A</h2>
 <p><strong>Q: What is the retrieval precision/recall trade-off in chunk sizing, and how do you decide?</strong> <code>[Medium]</code>

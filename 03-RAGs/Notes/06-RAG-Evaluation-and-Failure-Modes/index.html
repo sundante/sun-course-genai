@@ -1464,6 +1464,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#8-dimension-rag-evaluation-framework" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8-Dimension RAG Evaluation Framework
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8-Dimension RAG Evaluation Framework">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concept
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ragas-metrics" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1476,7 +1504,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#concept_1" class="md-nav__link">
+  <a href="#concept_2" class="md-nav__link">
     <span class="md-ellipsis">
       
         Concept
@@ -1515,7 +1543,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#concept_2" class="md-nav__link">
+  <a href="#concept_3" class="md-nav__link">
     <span class="md-ellipsis">
       
         Concept
@@ -1554,7 +1582,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#concept_3" class="md-nav__link">
+  <a href="#concept_4" class="md-nav__link">
     <span class="md-ellipsis">
       
         Concept
@@ -1593,7 +1621,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#concept_4" class="md-nav__link">
+  <a href="#concept_5" class="md-nav__link">
     <span class="md-ellipsis">
       
         Concept
@@ -1621,7 +1649,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#concept_5" class="md-nav__link">
+  <a href="#concept_6" class="md-nav__link">
     <span class="md-ellipsis">
       
         Concept
@@ -3914,6 +3942,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#8-dimension-rag-evaluation-framework" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8-Dimension RAG Evaluation Framework
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8-Dimension RAG Evaluation Framework">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concept
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ragas-metrics" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3926,7 +3982,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#concept_1" class="md-nav__link">
+  <a href="#concept_2" class="md-nav__link">
     <span class="md-ellipsis">
       
         Concept
@@ -3965,7 +4021,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#concept_2" class="md-nav__link">
+  <a href="#concept_3" class="md-nav__link">
     <span class="md-ellipsis">
       
         Concept
@@ -4004,7 +4060,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#concept_3" class="md-nav__link">
+  <a href="#concept_4" class="md-nav__link">
     <span class="md-ellipsis">
       
         Concept
@@ -4043,7 +4099,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#concept_4" class="md-nav__link">
+  <a href="#concept_5" class="md-nav__link">
     <span class="md-ellipsis">
       
         Concept
@@ -4071,7 +4127,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#concept_5" class="md-nav__link">
+  <a href="#concept_6" class="md-nav__link">
     <span class="md-ellipsis">
       
         Concept
@@ -4147,8 +4203,116 @@
 - <strong>Context utilization failure</strong>: The LLM has the right context but ignores it, preferring its parametric memory. Common with GPT-3.5 / older models on highly contested facts.
 - <strong>Lost in the middle</strong>: Extensive research (Liu et al., 2023) shows performance degrades significantly for relevant content placed in the middle of a long context. Position 0 and position N (last) are best attended to.</p>
 <hr />
-<h2 id="ragas-metrics">RAGAS Metrics</h2>
+<h2 id="8-dimension-rag-evaluation-framework">8-Dimension RAG Evaluation Framework</h2>
 <h3 id="concept_1">Concept</h3>
+<p>RAGAS covers the core four metrics, but production RAG evaluation requires a broader lens. This 8-dimension framework maps every failure mode to its measurement tool.</p>
+<table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>What It Measures</th>
+<th>Tools</th>
+<th>Key Metrics</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Retrieval Quality</strong></td>
+<td>Are the right chunks being found? Covers precision, recall, and ranking order of retrieved context</td>
+<td>RAGAS (<code>context_precision</code>, <code>context_recall</code>), custom Recall@k test sets</td>
+<td>Context Precision, Context Recall, NDCG@k, MRR</td>
+</tr>
+<tr>
+<td><strong>Groundedness / Faithfulness</strong></td>
+<td>Are generated claims supported by retrieved context? Detects fabricated or unsupported assertions</td>
+<td>RAGAS (<code>faithfulness</code>), TruLens, LangSmith, FactCC</td>
+<td>Faithfulness score (0–1), Claim Support Rate</td>
+</tr>
+<tr>
+<td><strong>Hallucination Detection</strong></td>
+<td>Identifies model-generated content that contradicts the source or knowledge base</td>
+<td>SelfCheckGPT (multi-sample consistency), GPTScore, NLI-based classifiers</td>
+<td>Hallucination Rate, Contradiction Score</td>
+</tr>
+<tr>
+<td><strong>Answer Quality</strong></td>
+<td>Measures relevance, completeness, and clarity of the final answer</td>
+<td>RAGAS (<code>answer_relevancy</code>), G-Eval / LLM-as-Judge, BERTScore, ROUGE-L</td>
+<td>Answer Relevancy, ROUGE-L, BERTScore F1, Human BLEU</td>
+</tr>
+<tr>
+<td><strong>Robustness</strong></td>
+<td>How well does the system handle adversarial inputs, ambiguous queries, and out-of-distribution questions?</td>
+<td>Adversarial test suites, perturbation testing</td>
+<td>Accuracy under query paraphrase, accuracy under context noise</td>
+</tr>
+<tr>
+<td><strong>End-to-End Task Metrics</strong></td>
+<td>Task-specific correctness — F1, Exact Match, pass@k for code, accuracy for QA benchmarks</td>
+<td>Dataset-specific (SQuAD F1, HotpotQA EM, HumanEval pass@k)</td>
+<td>Exact Match, F1, pass@1, NDCG for ranking tasks</td>
+</tr>
+<tr>
+<td><strong>Latency &amp; Cost</strong></td>
+<td>P50/P95 TTFT, tokens per query, embedding cost, rerank cost</td>
+<td>Langfuse, LangSmith, Arize Phoenix, Cloud Trace</td>
+<td>P95 latency, cost per query, cache hit rate</td>
+</tr>
+<tr>
+<td><strong>User Feedback Loop</strong></td>
+<td>Real-world quality signal — thumbs up/down, escalations, follow-up clarifications</td>
+<td>Thumbs up/down UI, support ticket analysis, explicit feedback collection</td>
+<td>Negative feedback rate, clarification rate, resolution rate</td>
+</tr>
+</tbody>
+</table>
+<p><strong>How to prioritize dimensions in practice:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Application Type</th>
+<th>Primary Metric</th>
+<th>Secondary Metric</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Legal / Medical / Financial Q&amp;A</td>
+<td>Faithfulness (hallucination is catastrophic)</td>
+<td>Retrieval Recall</td>
+</tr>
+<tr>
+<td>Customer Support Chatbot</td>
+<td>Answer Quality + User Feedback</td>
+<td>Latency</td>
+</tr>
+<tr>
+<td>Code Assistant</td>
+<td>End-to-End Task (pass@k)</td>
+<td>Robustness</td>
+</tr>
+<tr>
+<td>Internal Knowledge Search</td>
+<td>Retrieval Quality</td>
+<td>Latency &amp; Cost</td>
+</tr>
+<tr>
+<td>Real-time Streaming RAG</td>
+<td>Latency &amp; Cost</td>
+<td>Groundedness</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recommended evaluation stack per dimension:</strong>
+- <strong>Retrieval</strong>: RAGAS + hand-labeled golden test set (200–500 (q, expected_chunk) pairs)
+- <strong>Faithfulness</strong>: RAGAS faithfulness + FactCC for claim-level verification
+- <strong>Hallucination</strong>: SelfCheckGPT (sample 5 responses, check internal consistency)
+- <strong>Answer quality</strong>: LLM-as-Judge (G-Eval) + human spot-checks for 5% of traffic
+- <strong>Latency</strong>: Langfuse or Arize Phoenix for distributed tracing with per-stage spans
+- <strong>User feedback</strong>: Thumbs up/down in UI → store to evaluation dataset → weekly RAGAS re-evaluation</p>
+<hr />
+<h2 id="ragas-metrics">RAGAS Metrics</h2>
+<h3 id="concept_2">Concept</h3>
 <p>RAGAS (Retrieval Augmented Generation Assessment) is the standard evaluation framework. It measures four dimensions, each using LLM-based scoring:</p>
 <p><strong>1. Faithfulness</strong> — Does the generated answer only contain claims that are supported by the retrieved context?</p>
 <pre><code>Faithfulness = (number of claims in answer supported by context) / (total claims in answer)
@@ -4225,7 +4389,7 @@ For each claim, write: CLAIM: &lt;claim&gt; | VERDICT: &lt;SUPPORTED/NOT_SUPPORT
 </code></pre>
 <hr />
 <h2 id="llm-as-judge">LLM-as-Judge</h2>
-<h3 id="concept_2">Concept</h3>
+<h3 id="concept_3">Concept</h3>
 <p>Beyond RAGAS's automated metrics, LLM-as-Judge uses an LLM to evaluate response quality on dimensions that are hard to formalize mathematically: clarity, completeness, tone, citation quality.</p>
 <p><strong>G-Eval framework:</strong>
 Define evaluation criteria as natural language rubrics, then ask an LLM to score (1-5) on each criterion. More reliable when using chain-of-thought before scoring.</p>
@@ -4268,7 +4432,7 @@ Clarity: X/5&quot;&quot;&quot;
 </code></pre>
 <hr />
 <h2 id="tracing-and-observability">Tracing and Observability</h2>
-<h3 id="concept_3">Concept</h3>
+<h3 id="concept_4">Concept</h3>
 <p>You cannot improve what you cannot measure. Production RAG systems need end-to-end tracing to diagnose latency, quality, and cost issues.</p>
 <p><strong>What to instrument:</strong></p>
 <pre><code>Per request, trace:
@@ -4365,7 +4529,7 @@ LangChainInstrumentor().instrument()  # auto-instruments all LangChain calls
 </code></pre>
 <hr />
 <h2 id="ab-testing-rag">A/B Testing RAG</h2>
-<h3 id="concept_4">Concept</h3>
+<h3 id="concept_5">Concept</h3>
 <p>To improve a RAG system, you need to know when a change is actually better. A/B testing RAG requires:</p>
 <p><strong>Offline evaluation (pre-deployment):</strong>
 Maintain a golden dataset of 100-500 (question, expected_answer, expected_source) tuples from production traffic. Before deploying a change, run both old and new pipelines against the golden set, compare RAGAS scores. Deploy only if new ≥ old on primary metric (typically faithfulness or Recall@5).</p>
@@ -4375,7 +4539,7 @@ Run new pipeline in parallel with production pipeline but only log results (don'
 Choose one primary metric for go/no-go decisions. Faithfulness for factual applications. Answer relevancy for conversational. Recall@5 for retrieval-focused improvements.</p>
 <hr />
 <h2 id="when-rag-is-not-the-answer">When RAG Is NOT the Answer</h2>
-<h3 id="concept_5">Concept</h3>
+<h3 id="concept_6">Concept</h3>
 <p>RAG is not always the right solution. Over-applying it wastes cost and latency.</p>
 <table>
 <thead>

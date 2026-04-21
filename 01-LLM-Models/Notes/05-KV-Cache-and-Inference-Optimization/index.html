@@ -950,6 +950,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#comprehensive-speed-up-techniques-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comprehensive Speed-Up Techniques Reference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Comprehensive Speed-Up Techniques Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concept
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#study-notes" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4133,6 +4161,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#comprehensive-speed-up-techniques-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comprehensive Speed-Up Techniques Reference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Comprehensive Speed-Up Techniques Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concept_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concept
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#study-notes" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4372,6 +4428,128 @@ Step 3: [A, E, C, D]  ← new request E fills B's slot immediately
 1. Decode speed per step (KV cache read + attention + FFN)
 2. Number of concurrent requests sharing the GPU</p>
 <p><strong>Rule of thumb:</strong> For user-facing chat applications, TTFT &lt; 500ms is usually required. For batch document processing, throughput matters more than TTFT.</p>
+<hr />
+<h2 id="comprehensive-speed-up-techniques-reference">Comprehensive Speed-Up Techniques Reference</h2>
+<h3 id="concept_8">Concept</h3>
+<p>A consolidated reference of all major LLM inference and training speed-up techniques. Many are covered in depth elsewhere — this table gives you the full landscape for interviews.</p>
+<table>
+<thead>
+<tr>
+<th>Technique</th>
+<th>How It Works</th>
+<th>Speedup / Savings</th>
+<th>Where Covered</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Quantization</strong></td>
+<td>Reduce weight/activation precision (FP16→INT8→INT4)</td>
+<td>2–4× memory, 1.5–3× latency</td>
+<td>GPU &amp; Hardware</td>
+</tr>
+<tr>
+<td><strong>KV-Cache Quantization</strong></td>
+<td>Store KV cache in INT8/INT4 instead of FP16</td>
+<td>Reduces KV memory 2–4×</td>
+<td>This file</td>
+</tr>
+<tr>
+<td><strong>Flash Attention</strong></td>
+<td>Tiling + recomputation to avoid O(n²) memory — compute stays O(n²) but memory is O(n)</td>
+<td>2–4× memory, 2× speed</td>
+<td>Attention Mechanisms</td>
+</tr>
+<tr>
+<td><strong>Speculative Decoding</strong></td>
+<td>Small draft model proposes K tokens; large target verifies all in one pass</td>
+<td>2–3× decode speedup</td>
+<td>This file</td>
+</tr>
+<tr>
+<td><strong>LoRA (at inference)</strong></td>
+<td>Merged LoRA weights add zero latency; multiple adapters can share the same base</td>
+<td>Zero overhead vs base</td>
+<td>Fine-Tuning</td>
+</tr>
+<tr>
+<td><strong>Pruning</strong></td>
+<td>Remove low-magnitude weights (unstructured) or entire heads/layers (structured). Structured pruning is inference-friendly; unstructured needs sparse hardware support.</td>
+<td>10–50% size, 10–30% speedup</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>Knowledge Distillation</strong></td>
+<td>Train a smaller "student" model to mimic a larger "teacher" via soft probability targets (not just hard labels). Result: student achieves near-teacher quality at fraction of size.</td>
+<td>3–10× smaller model</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>Weight Sharing</strong></td>
+<td>Share weight matrices across layers or sub-components (ALBERT uses cross-layer parameter sharing). Reduces model size without full distillation pipeline.</td>
+<td>2–4× smaller</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>Sparse Attention</strong></td>
+<td>Replace full O(n²) attention with local windows, global tokens, or hash-based routing (Longformer, BigBird, Reformer)</td>
+<td>O(n log n) or O(n) attention</td>
+<td>Attention Mechanisms</td>
+</tr>
+<tr>
+<td><strong>Batching &amp; Dynamic Batching</strong></td>
+<td>Group multiple requests into one GPU pass; dynamic = fill slots as requests arrive/complete</td>
+<td>5–10× throughput</td>
+<td>This file (continuous batching)</td>
+</tr>
+<tr>
+<td><strong>Model Serving Optimization</strong></td>
+<td>Frameworks (vLLM, TGI, SGLang) combining paged attention, continuous batching, prefix caching in one stack</td>
+<td>Combined 10–20× improvement</td>
+<td>Production Deployment</td>
+</tr>
+<tr>
+<td><strong>Tensor Parallelism</strong></td>
+<td>Split individual weight matrices across GPUs column/row-wise — each GPU holds a slice</td>
+<td>Linear latency scaling with GPU count</td>
+<td>GPU &amp; Hardware</td>
+</tr>
+<tr>
+<td><strong>Pipeline Parallelism</strong></td>
+<td>Assign different transformer layers to different GPUs — pipeline them with micro-batches</td>
+<td>Enables models too large for one GPU</td>
+<td>GPU &amp; Hardware</td>
+</tr>
+<tr>
+<td><strong>Paged Attention</strong></td>
+<td>Virtual memory for KV cache — non-contiguous blocks, eliminates fragmentation, enables prefix sharing</td>
+<td>Near 100% GPU memory utilization</td>
+<td>This file</td>
+</tr>
+<tr>
+<td><strong>Mixed Precision Inference</strong></td>
+<td>Run forward pass in FP16/BF16 (fast matrix ops) while keeping master weights in FP32 for numerical stability. Modern GPUs have dedicated FP16/BF16 tensor cores.</td>
+<td>2× speed vs FP32, same quality as FP32</td>
+<td>GPU &amp; Hardware</td>
+</tr>
+<tr>
+<td><strong>Early Exit / Token-Level Pruning</strong></td>
+<td>Shallow layers output confident predictions early — skip remaining layers for "easy" tokens or inputs. Works best on classification; harder to implement for generation.</td>
+<td>20–50% compute reduction on easy inputs</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Most impactful combination in production:</strong></p>
+<pre><code>Quantization (INT8/INT4)          → halve memory
++ Flash Attention                 → efficient long context
++ Paged Attention (vLLM)          → max GPU utilization
++ Continuous batching             → max throughput
++ Speculative decoding (optional) → latency for interactive use
+</code></pre>
+<p><strong>Pruning vs Distillation — when to use each:</strong>
+- <strong>Pruning</strong>: Already have a large model you want to compress; best for structured pruning (remove whole heads/layers); requires hardware that exploits sparsity for unstructured gains.
+- <strong>Distillation</strong>: Want a general-purpose smaller model trained from scratch with teacher guidance; better final quality than pruning at the same size; requires training pipeline.</p>
 <hr />
 <h2 id="study-notes">Study Notes</h2>
 <p><strong>Must-know for interviews:</strong>

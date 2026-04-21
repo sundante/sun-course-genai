@@ -1709,6 +1709,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#extended-rag-variant-taxonomy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extended RAG Variant Taxonomy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#interview-qa" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4175,6 +4186,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#extended-rag-variant-taxonomy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extended RAG Variant Taxonomy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#interview-qa" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4623,6 +4645,82 @@ vectorstore = Chroma.from_texts(
 </tr>
 </tbody>
 </table>
+<hr />
+<h2 id="extended-rag-variant-taxonomy">Extended RAG Variant Taxonomy</h2>
+<p>Beyond the five generations above, production systems often exhibit specialized patterns. These are named variants, not separate generations — most are specializations of Agentic or Advanced RAG.</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Variant</th>
+<th>What It Does</th>
+<th>Distinguishing Feature</th>
+<th>Best For</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Corrective</strong></td>
+<td>Corrective RAG (CRAG)</td>
+<td>After retrieval, meta-evaluates chunks for quality; if below threshold, re-queries or falls back to web search</td>
+<td>Self-correcting retrieval loop</td>
+<td>High-stakes domains where a bad retrieval is worse than no retrieval</td>
+</tr>
+<tr>
+<td><strong>Anticipatory</strong></td>
+<td>Speculative RAG</td>
+<td>Pre-fetches potential follow-up chunks before the user asks the follow-up question</td>
+<td>Proactive, predictive retrieval</td>
+<td>Customer support, FAQ flows with predictable next-step patterns</td>
+</tr>
+<tr>
+<td><strong>Reflective</strong></td>
+<td>Self-RAG / Re-Feed</td>
+<td>Feeds earlier generated responses back through the retrieval pipeline iteratively; generation informs next retrieval</td>
+<td>Iterative self-refinement cycle</td>
+<td>Complex multi-part answers requiring successive refinement</td>
+</tr>
+<tr>
+<td><strong>Memory-based</strong></td>
+<td>MEMO / Memory-Augmented RAG</td>
+<td>Uses long-term conversational memory as a retrieval context — past interactions stored and retrieved alongside documents</td>
+<td>Persistent episodic memory</td>
+<td>Multi-session agents, personalized assistants</td>
+</tr>
+<tr>
+<td><strong>Retriever-trained</strong></td>
+<td>REALM-style RAG</td>
+<td>Retriever is jointly pre-trained with the language model via masked language modeling — retrieval is learned, not fixed</td>
+<td>End-to-end retriever training</td>
+<td>When retriever quality is the dominant bottleneck and training budget is available</td>
+</tr>
+<tr>
+<td><strong>Budget-aware</strong></td>
+<td>Cost-Constrained RAG</td>
+<td>Retrieval optimized under explicit compute or latency budget; may skip reranking, reduce k, or use a cheaper embedding model dynamically</td>
+<td>Explicit cost-quality trade-off</td>
+<td>High-volume consumer products with tight per-query cost budgets</td>
+</tr>
+<tr>
+<td><strong>Contextual</strong></td>
+<td>Adaptive RAG</td>
+<td>Dynamically adjusts retrieval strategy (k, chunk size, model choice) based on evolving conversation context and query complexity</td>
+<td>Strategy adapts per-query</td>
+<td>Long conversations where early turns are simple and later turns are complex</td>
+</tr>
+<tr>
+<td><strong>Streaming</strong></td>
+<td>Real-Time / Streaming RAG</td>
+<td>Continuously ingests new data (Kafka, pub/sub) and retrieves in real-time; index is always fresh</td>
+<td>Sub-second index freshness</td>
+<td>News feeds, live financial data, incident response systems</td>
+</tr>
+</tbody>
+</table>
+<p><strong>When to use each:</strong>
+- <strong>CRAG</strong> over vanilla Agentic RAG: when your retrieval quality is unreliable (noisy corpus, domain-shifted queries) and a wrong context causes more harm than a "I don't know" fallback.
+- <strong>Streaming RAG</strong> over standard RAG: when document freshness is a hard requirement — e.g., a retrieval lag of even 5 minutes is unacceptable (live market data, incident runbooks updated in real time).
+- <strong>MEMO-style RAG</strong>: when the same user will have many sessions and context from previous sessions should influence retrieval (customer service agent that remembers prior issues).</p>
 <hr />
 <h2 id="interview-qa">Interview Q&amp;A</h2>
 <p><strong>Q: What's the difference between Advanced RAG and Modular RAG?</strong> <code>[Medium]</code>

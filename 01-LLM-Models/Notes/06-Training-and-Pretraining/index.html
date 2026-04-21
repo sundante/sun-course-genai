@@ -4203,45 +4203,229 @@ Example:
   → [low] [low,e,r] [low,e,s,t]
   ...continues until target vocab size
 </code></pre>
-<p><strong>Comparing tokenizers:</strong></p>
+<p><strong>Tokenization algorithms — full comparison:</strong></p>
 <table>
 <thead>
 <tr>
-<th>Tokenizer</th>
 <th>Algorithm</th>
+<th>Description</th>
+<th>Characteristics</th>
 <th>Used by</th>
-<th>Vocab size</th>
+<th>Pros</th>
+<th>Cons</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>tiktoken (cl100k)</td>
-<td>BPE</td>
-<td>GPT-4, Claude</td>
-<td>100K</td>
+<td>Whitespace</td>
+<td>Splits on spaces</td>
+<td>Fast, naive</td>
+<td>Early NLP tools</td>
+<td>Very simple</td>
+<td>Poor for subword languages</td>
 </tr>
 <tr>
-<td>SentencePiece BPE</td>
-<td>BPE</td>
-<td>LLaMA, Gemma</td>
-<td>32K–256K</td>
+<td>Character-level</td>
+<td>Each char is a token</td>
+<td>Fine-grained</td>
+<td>Some toy/code models</td>
+<td>Robust to OOV</td>
+<td>Long sequences</td>
+</tr>
+<tr>
+<td>Word-level</td>
+<td>Splits on words</td>
+<td>Basic NLP</td>
+<td>NLTK, SpaCy</td>
+<td>Easy to read</td>
+<td>Poor generalization</td>
+</tr>
+<tr>
+<td>BPE (Byte-Pair Encoding)</td>
+<td>Merges most frequent subword pairs</td>
+<td>Greedy, deterministic</td>
+<td>GPT-2, RoBERTa, CodeBERT</td>
+<td>Efficient, fast</td>
+<td>Doesn't adapt well</td>
 </tr>
 <tr>
 <td>WordPiece</td>
-<td>Greedy likelihood</td>
+<td>Probabilistic merges</td>
+<td>Likelihood-based</td>
 <td>BERT, DistilBERT</td>
-<td>30K</td>
+<td>Better OOV handling</td>
+<td>Slightly slower</td>
 </tr>
 <tr>
-<td>Unigram</td>
+<td>Unigram Language Model</td>
+<td>Chooses most likely subword sequence</td>
 <td>Probabilistic</td>
-<td>T5, ALBERT</td>
-<td>32K</td>
+<td>ALBERT, T5, Gemini</td>
+<td>Flexible, language-agnostic</td>
+<td>More complex</td>
+</tr>
+<tr>
+<td>SentencePiece (BPE/Unigram)</td>
+<td>Works on raw UTF-8 bytes</td>
+<td>Multilingual models</td>
+<td>T5, mT5, Gemini</td>
+<td>No pre-tokenization needed</td>
+<td>May be less readable</td>
+</tr>
+<tr>
+<td>Byte-Level BPE</td>
+<td>Extends BPE to raw bytes</td>
+<td>Includes spaces, emojis</td>
+<td>GPT-2, GPT-Neo, GPT-J</td>
+<td>No UNK tokens</td>
+<td>Tokens may be unreadable</td>
+</tr>
+<tr>
+<td>SentencePiece (byte-level)</td>
+<td>Uses bytes with Unigram</td>
+<td>Language-agnostic</td>
+<td>PaLM, Gemini</td>
+<td>Works on all scripts</td>
+<td>Needs detokenization mapping</td>
+</tr>
+<tr>
+<td>tiktoken (OpenAI)</td>
+<td>GPT-custom BPE</td>
+<td>Special tokens, efficient</td>
+<td>GPT-3, GPT-4</td>
+<td>Very fast</td>
+<td>Custom, undocumented</td>
 </tr>
 </tbody>
 </table>
-<p><strong>SentencePiece (LLaMA, Gemma):</strong> Works on raw bytes without pre-tokenization — handles all languages and code uniformly; no whitespace issues.</p>
-<p><strong>tiktoken (GPT-4):</strong> Uses cl100k_base with a 100K vocabulary — larger vocab reduces token counts, improving efficiency for English and code.</p>
+<p><strong>Key practical notes:</strong>
+- <strong>SentencePiece (LLaMA, Gemma):</strong> Works on raw bytes without pre-tokenization — handles all languages and code uniformly; no whitespace issues.
+- <strong>tiktoken (GPT-4):</strong> Uses cl100k_base with a 100K vocabulary — larger vocab reduces token counts, improving efficiency for English and code.
+- <strong>Multilingual/emoji-rich datasets:</strong> Always use byte-level tokenization to avoid OOV.
+- <strong>Training vs inference:</strong> Tokenizer must match exactly — inconsistency causes silent failures.</p>
+<p><strong>Tokenizer implementations across provider ecosystems:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>Tokenizer/Model</th>
+<th>Algorithm</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Hugging Face</td>
+<td>BertTokenizer</td>
+<td>WordPiece</td>
+<td>For BERT and variants</td>
+</tr>
+<tr>
+<td></td>
+<td>GPT2Tokenizer</td>
+<td>Byte-Level BPE</td>
+<td>GPT-2, GPT-Neo</td>
+</tr>
+<tr>
+<td></td>
+<td>RobertaTokenizer</td>
+<td>BPE</td>
+<td>No space token splitting</td>
+</tr>
+<tr>
+<td></td>
+<td>T5Tokenizer</td>
+<td>SentencePiece (Unigram)</td>
+<td>Used in T5, mT5</td>
+</tr>
+<tr>
+<td></td>
+<td>LlamaTokenizer</td>
+<td>SentencePiece (BPE)</td>
+<td>Used in LLaMA 1/2/3</td>
+</tr>
+<tr>
+<td></td>
+<td>BloomTokenizer</td>
+<td>Byte-Level BPE</td>
+<td>For BLOOM</td>
+</tr>
+<tr>
+<td>GCP / Vertex AI</td>
+<td>Gemini 1.5</td>
+<td>SentencePiece (Unigram, Byte-Level)</td>
+<td>Google prefers SentencePiece</td>
+</tr>
+<tr>
+<td></td>
+<td>PaLM / T5 / mT5</td>
+<td>SentencePiece (Unigram)</td>
+<td>Internal tokenizer tools</td>
+</tr>
+<tr>
+<td>AWS Bedrock</td>
+<td>Claude (Anthropic)</td>
+<td>BPE / Custom variant</td>
+<td>Similar to GPT-2 tokenizer</td>
+</tr>
+<tr>
+<td></td>
+<td>Mistral / LLaMA</td>
+<td>SentencePiece (BPE)</td>
+<td>HF model hosted via Bedrock</td>
+</tr>
+<tr>
+<td>OpenAI</td>
+<td>GPT-3, GPT-4</td>
+<td>tiktoken (custom BPE)</td>
+<td>Based on GPT-2 tokenizer</td>
+</tr>
+<tr>
+<td>Meta</td>
+<td>LLaMA 1/2/3</td>
+<td>SentencePiece (BPE)</td>
+<td>Open, multilingual</td>
+</tr>
+<tr>
+<td>Anthropic</td>
+<td>Claude 1/2/3</td>
+<td>BPE-like, tiktoken-compatible</td>
+<td>Focused on safety tokenization</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Popular tokenization libraries:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Library</th>
+<th>Algorithms supported</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>transformers</code> (HuggingFace)</td>
+<td>BPE, WordPiece, Unigram, SentencePiece</td>
+<td>Easy integration</td>
+</tr>
+<tr>
+<td><code>tokenizers</code> (HuggingFace)</td>
+<td>Fast Rust-based tokenizers</td>
+<td>Train your own</td>
+</tr>
+<tr>
+<td><code>sentencepiece</code></td>
+<td>BPE, Unigram</td>
+<td>Used by Google models</td>
+</tr>
+<tr>
+<td><code>tiktoken</code></td>
+<td>GPT BPE</td>
+<td>Used in OpenAI APIs</td>
+</tr>
+</tbody>
+</table>
 <hr />
 <h2 id="training-objectives">Training Objectives</h2>
 <h3 id="concept_3">Concept</h3>
