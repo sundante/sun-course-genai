@@ -6,7 +6,7 @@ Agentic AI refers to systems designed to pursue goals autonomously over extended
 
 ## Scope of This Section
 
-This section focuses on the *system-level* view: architectural patterns, design principles, and multi-agent coordination. For framework-specific implementations, see [05 — Agents](../05-Agents/INDEX.md). For end-to-end system design code examples, see [Codes/03-Agentic-Systems](../../Codes/03-Agentic-Systems/README.md).
+This section focuses on the *system-level* view: architectural patterns, design principles, and multi-agent coordination. For framework-specific implementations, see [05 — Agents](../05-Agents/INDEX.md). For end-to-end system design code examples, see [Code Labs — Agentic Systems](../Codes/03-Agentic-Systems.md).
 
 ## Chapter Map
 
@@ -24,8 +24,8 @@ This section focuses on the *system-level* view: architectural patterns, design 
 
 - **05 — Agents**: How to build agents using specific frameworks (LangChain, LangGraph, CrewAI, ADK)
 - **06 — Agentic AI**: How to design agentic *systems* — patterns, flows, failure modes, production engineering
-- **Codes/02-Architectures**: Framework implementations of each architectural pattern
-- **Codes/03-Agentic-Systems**: End-to-end system designs combining multiple patterns
+- **[Code Labs — Architecture Patterns](../Codes/02-Architectures.md)**: Framework implementations of each architectural pattern
+- **[Code Labs — Agentic Systems](../Codes/03-Agentic-Systems.md)**: End-to-end system designs combining multiple patterns
 
 ## Learning Paths
 
@@ -39,7 +39,7 @@ Skip chapter 1, read 2 → 3 → 4, skim 5 and 6. ~2 hours.
 Read chapter 1 (vocabulary) → 5 (system design) → 2 (patterns to reference). ~1.5 hours.
 
 ### Path D — Code First
-Browse [Codes/03-Agentic-Systems](../../Codes/03-Agentic-Systems/README.md), then read notes for concepts you encounter.
+Browse [Code Labs — Agentic Systems](../Codes/03-Agentic-Systems.md), then read notes for concepts you encounter.
 
 ## Resources
 

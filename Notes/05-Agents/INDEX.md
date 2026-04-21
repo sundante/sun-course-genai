@@ -29,6 +29,13 @@ AI agents are LLM-powered systems that can perceive their environment, reason ab
 | Cloud integration | GCP native | Cloud-agnostic | Cloud-agnostic | Cloud-agnostic |
 | Best complexity | Medium-High | Low-Medium | Medium-High | Medium-High |
 
+## Code Labs
+
+| Section | What You'll Build | Link |
+|---------|------------------|------|
+| Agent Types | Simple → Intermediate → Complex agents across all 4 frameworks | [Codes/01-Agent-Types](../Codes/01-Agent-Types.md) |
+| Architecture Patterns | 7 multi-agent coordination patterns × 4 frameworks | [Codes/02-Architectures](../Codes/02-Architectures.md) |
+
 ## Notes
 
 - [01 — Agent Fundamentals](Notes/01-Agent-Fundamentals.md)
