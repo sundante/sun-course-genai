@@ -126,6 +126,38 @@ In plain English: increase the log-probability of preferred responses relative t
 | RLHF/PPO | Yes (separate) | Yes (PPO) | Difficult | GPT-3.5, early ChatGPT |
 | DPO | No | No (supervised) | Easy | LLaMA-3, Gemma 2 |
 | ORPO | No | No | Easiest | Some recent models |
+| RFT | Reward signal | No PPO loop | Moderate | Gemini, open LLMs |
+| GRPO | Generative RL | Yes (GRPO) | Good at scale | DeepSeek-R1, reasoning models |
+
+---
+
+## RFT and GRPO — Modern Alignment Alternatives
+
+### Concept
+
+**RFT (Reward Function Fine-Tuning):** Trains the model directly with reward signals without running the full PPO loop. Simpler than RLHF and often more stable, though less expressive than full RL. Best used when you want alignment improvements with less complexity than RLHF.
+
+**GRPO (Group Relative Policy Optimization):** A generative RL algorithm that optimizes model policies with better sample efficiency than PPO. Instead of a value function, GRPO estimates baselines from groups of sampled outputs — making it more stable and scalable to long-sequence generation.
+
+```
+GRPO vs PPO key difference:
+PPO: needs a value function (critic) estimated for each token
+GRPO: samples a group of outputs, uses relative reward within the group as baseline
+      → eliminates the need for a separate critic model
+      → more stable gradient estimates for long responses
+```
+
+**Why GRPO matters for reasoning models:**
+- DeepSeek-R1 (2025) used GRPO to train long chain-of-thought reasoning — the model learns to produce extended reasoning traces that score higher on math/code benchmarks
+- GRPO's group-relative baseline naturally handles sparse rewards (e.g., "is the final answer correct?") which PPO struggles with at long horizons
+- Enables "thinking out loud" behavior where intermediate steps are rewarded
+
+| Method | Reward model needed? | Stability | Best for |
+|--------|---------------------|-----------|---------|
+| RLHF/PPO | Yes (separate) | Difficult | Helpfulness + safety alignment |
+| DPO | No | Easy | Preference alignment from pairs |
+| RFT | Reward signal only | Moderate | Structured response format alignment |
+| GRPO | Reward function | Good | Reasoning, long-form generation, math |
 
 ---
 
@@ -356,6 +388,59 @@ optimizer = torch.optim.AdamW([
 | Prefix tuning | ~0.1% | Good for generation | Low | Domain-specific generation |
 | Prompt tuning | ~0.01% | Acceptable | Minimal | Very limited compute |
 | Adapters | ~1–5% | Good | Medium | Multi-task with swappable modules |
+
+---
+
+## Choosing the Right Fine-Tuning Method
+
+| Use Case | Recommended Method |
+|----------|--------------------|
+| Lightweight tuning for multiple tasks | LoRA / QLoRA / Adapter Tuning |
+| Personalization or named entity learning | DreamBooth / Textual Inversion (multimodal) |
+| Teaching specific structured response formats | SFT + RFT |
+| Aligning with human preferences | SFT → Reward Modeling → RLHF / GRPO |
+| Tuning on large domain corpus without labels | Continual Pretraining |
+| High compute, max performance task adaptation | Full Fine-Tuning |
+| Few-shot, low-resource setups | Prefix Tuning / LoRA |
+| Fast prototyping with prebuilt tools | PEFT (Hugging Face library) |
+| Long-chain reasoning (math, code) | GRPO-based RL fine-tuning |
+
+**Continual Pretraining** (distinct from instruction fine-tuning): Resume language model training on unlabeled domain-specific corpus. Captures domain jargon and writing style without requiring labeled examples. Risk: forgetting general language knowledge. Used when you want the model to "speak the language" of your domain before task-specific instruction tuning.
+
+---
+
+## Fine-Tuning Evaluation
+
+### Concept
+
+After fine-tuning, you need to verify that quality improved on the target task without degrading general capability. Evaluation spans multiple dimensions.
+
+| Category | Method | What It Measures | Tools |
+|----------|--------|-----------------|-------|
+| Quantitative Metrics | Accuracy, F1, BLEU, ROUGE, Perplexity | Basic task correctness or fluency | `evaluate`, scikit-learn, sacrebleu, rouge-score, bert_score |
+| LLM-as-a-Judge | GPT-4/Gemini comparison & scoring | Human-like eval for quality, factuality, tone | TruLens, promptfoo, LangSmith |
+| Embedding Similarity | BERTScore, Cosine similarity | Semantic similarity of output to ground truth | bert_score, sentence-transformers |
+| Prompt-Based Unit Tests | Pass/Fail output checks | Regression testing on curated prompts | promptfoo, LangSmith, Evals-as-Code |
+| RAG-Specific Metrics | Faithfulness, Context Recall, Precision | Groundedness of RAG output in source | RAGAS, TruLens, LangChain evals |
+| Human Feedback | Thumbs-up/down, rating | Real-world helpfulness and satisfaction | LangSmith, TruLens, custom dashboards |
+| Live Monitoring | Latency, fail rates, usage stats | Operational metrics in production | OpenTelemetry, MLflow, Weights & Biases |
+
+**Code snippet — ROUGE + BERTScore evaluation:**
+
+```python
+import evaluate
+
+rouge = evaluate.load("rouge")
+bertscore = evaluate.load("bertscore")
+
+predictions = ["The model predicts the next token using attention."]
+references = ["LLMs use attention mechanisms to predict the next token."]
+
+print(rouge.compute(predictions=predictions, references=references))
+print(bertscore.compute(predictions=predictions, references=references, lang="en"))
+```
+
+**Regression testing:** Always keep a fixed "golden set" of prompts and expected behaviors. After each fine-tuning run, check that scores on this set don't degrade — catches catastrophic forgetting before deployment.
 
 ---
 

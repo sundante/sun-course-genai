@@ -37,6 +37,43 @@ RAG Failure Taxonomy
 
 ---
 
+## 8-Dimension RAG Evaluation Framework
+
+### Concept
+
+RAGAS covers the core four metrics, but production RAG evaluation requires a broader lens. This 8-dimension framework maps every failure mode to its measurement tool.
+
+| Dimension | What It Measures | Tools | Key Metrics |
+|---|---|---|---|
+| **Retrieval Quality** | Are the right chunks being found? Covers precision, recall, and ranking order of retrieved context | RAGAS (`context_precision`, `context_recall`), custom Recall@k test sets | Context Precision, Context Recall, NDCG@k, MRR |
+| **Groundedness / Faithfulness** | Are generated claims supported by retrieved context? Detects fabricated or unsupported assertions | RAGAS (`faithfulness`), TruLens, LangSmith, FactCC | Faithfulness score (0–1), Claim Support Rate |
+| **Hallucination Detection** | Identifies model-generated content that contradicts the source or knowledge base | SelfCheckGPT (multi-sample consistency), GPTScore, NLI-based classifiers | Hallucination Rate, Contradiction Score |
+| **Answer Quality** | Measures relevance, completeness, and clarity of the final answer | RAGAS (`answer_relevancy`), G-Eval / LLM-as-Judge, BERTScore, ROUGE-L | Answer Relevancy, ROUGE-L, BERTScore F1, Human BLEU |
+| **Robustness** | How well does the system handle adversarial inputs, ambiguous queries, and out-of-distribution questions? | Adversarial test suites, perturbation testing | Accuracy under query paraphrase, accuracy under context noise |
+| **End-to-End Task Metrics** | Task-specific correctness — F1, Exact Match, pass@k for code, accuracy for QA benchmarks | Dataset-specific (SQuAD F1, HotpotQA EM, HumanEval pass@k) | Exact Match, F1, pass@1, NDCG for ranking tasks |
+| **Latency & Cost** | P50/P95 TTFT, tokens per query, embedding cost, rerank cost | Langfuse, LangSmith, Arize Phoenix, Cloud Trace | P95 latency, cost per query, cache hit rate |
+| **User Feedback Loop** | Real-world quality signal — thumbs up/down, escalations, follow-up clarifications | Thumbs up/down UI, support ticket analysis, explicit feedback collection | Negative feedback rate, clarification rate, resolution rate |
+
+**How to prioritize dimensions in practice:**
+
+| Application Type | Primary Metric | Secondary Metric |
+|---|---|---|
+| Legal / Medical / Financial Q&A | Faithfulness (hallucination is catastrophic) | Retrieval Recall |
+| Customer Support Chatbot | Answer Quality + User Feedback | Latency |
+| Code Assistant | End-to-End Task (pass@k) | Robustness |
+| Internal Knowledge Search | Retrieval Quality | Latency & Cost |
+| Real-time Streaming RAG | Latency & Cost | Groundedness |
+
+**Recommended evaluation stack per dimension:**
+- **Retrieval**: RAGAS + hand-labeled golden test set (200–500 (q, expected_chunk) pairs)
+- **Faithfulness**: RAGAS faithfulness + FactCC for claim-level verification
+- **Hallucination**: SelfCheckGPT (sample 5 responses, check internal consistency)
+- **Answer quality**: LLM-as-Judge (G-Eval) + human spot-checks for 5% of traffic
+- **Latency**: Langfuse or Arize Phoenix for distributed tracing with per-stage spans
+- **User feedback**: Thumbs up/down in UI → store to evaluation dataset → weekly RAGAS re-evaluation
+
+---
+
 ## RAGAS Metrics
 
 ### Concept

@@ -390,6 +390,50 @@ def df_to_markdown_chunks(df, chunk_rows: int = 20) -> list[str]:
 
 ---
 
+## Cross-Chunk Retrieval Problem
+
+### Concept
+
+One of the most common retrieval failure modes: a semantic unit (key claim, definition, or answer) is **split across two or more adjacent chunks** by the chunking process. Neither chunk alone scores high enough in ANN search to be retrieved, so the answer is effectively lost even though the document contains it.
+
+**Why this happens:**
+- Fixed-size chunking splits at character/token counts, not topic boundaries
+- A definition may start at the end of chunk N and finish at the start of chunk N+1
+- An ANN search for the full concept matches neither chunk precisely — both are partial
+
+**Six strategies to mitigate cross-chunk retrieval failures:**
+
+| Strategy | How It Works | Implementation | Trade-off |
+|---|---|---|---|
+| **1. Hierarchical / Parent-Child Chunking** | Retrieve with small precise child chunks; return larger parent chunks to the LLM | `ParentDocumentRetriever` in LangChain | Higher storage (two indices); see dedicated section above |
+| **2. Chunk Overlap (20–40%)** | Adjacent chunks share a sliding window of content — boundary information appears in both chunks | `chunk_overlap=100` in `RecursiveCharacterTextSplitter` | Larger index size; redundant storage of ~30% of content |
+| **3. Multi-Vector Retrieval** | Generate multiple embeddings per chunk (summary + full text + hypothetical Q) | `MultiVectorRetriever`; index summary embedding, store full chunk | More complex ingest; improves recall for differently-phrased queries |
+| **4. Neighborhood Expansion at Retrieval** | After ANN search, fetch N adjacent chunks (before + after) and return them together | Post-retrieval step: look up `chunk_id ± 1` in the docstore | Increases context window usage; adds latency for docstore lookups |
+| **5. Cross-Encoder / Reranker over Expanded Set** | Over-retrieve k=20 candidates including neighbors, then rerank the full set with a cross-encoder | Stage 1: ANN k=20 + neighbors; Stage 2: cross-encoder rerank to top 5 | Best precision improvement; adds ~100ms reranking latency |
+| **6. Long-Context Models or Contextual Merging** | Use a model with a very large context window; merge all retrieved chunks into one long context | Gemini 1.5 Pro (1M tokens), GPT-4 Turbo (128K) as generator | High token cost per query; "lost in the middle" problem for very long contexts |
+
+**Recommended production flow for cross-chunk recall:**
+```
+1. Ingest with 20% overlap (cheap insurance against boundary splits)
+2. Use parent-child for documents with variable structure (annual reports, legal docs)
+3. At retrieval: ANN k=20 → fetch ±1 neighbors for top-5 candidates → rerank 25 → take top 5
+4. Monitor: if faithfulness drops for multi-paragraph answers, increase overlap or k
+```
+
+**Retrieval improvement at each stage:**
+
+| Stage | Method | Effect on Recall@5 |
+|---|---|---|
+| Baseline (dense k=5) | — | 0.62 |
+| + Overlap 20% | Chunk overlap | +0.05 → 0.67 |
+| + Hybrid (BM25 + dense) | RRF fusion | +0.06 → 0.73 |
+| + Neighborhood expansion | ±1 adjacent chunks | +0.03 → 0.76 |
+| + Cross-encoder rerank | Rerank k=20 → top 5 | +0.08 → 0.84 |
+
+*Note: numbers are representative benchmarks from RAG literature; results vary by corpus.*
+
+---
+
 ## Interview Q&A
 
 **Q: What is the retrieval precision/recall trade-off in chunk sizing, and how do you decide?** `[Medium]`

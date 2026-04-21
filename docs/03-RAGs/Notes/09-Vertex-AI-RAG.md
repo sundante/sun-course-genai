@@ -4,6 +4,39 @@ GCP offers three distinct managed services for RAG. Choosing the wrong one is a 
 
 ---
 
+## GCP Recommended Stack for Hybrid RAG
+
+When building production-grade RAG on Google Cloud, each pipeline stage has a recommended GCP-native or GCP-compatible service. This table is a starting point for interviews and architecture reviews.
+
+| Pipeline Stage | GCP-Recommended Option | Alternatives on GCP | Notes |
+|---|---|---|---|
+| **Embeddings** | Vertex AI Embeddings API (`text-embedding-004`, 768-dim) | BAAI `bge-m3` on Vertex AI Model Garden; `gemini-embedding-001` (3072-dim) | `text-embedding-004` is the production default; `bge-m3` is stronger for multilingual/domain-specific corpora |
+| **Vector Store** | Vertex AI Vector Search (Matching Engine, ANN-based) | Pinecone, Weaviate, Qdrant via Cloud Run | Managed, scales to 1B+ vectors; use when staying fully GCP-native |
+| **Graph Store** | Neo4j AuraDS (managed graph DB) | Spanner Graph (preview), AlloyDB + age extension | Required for GraphRAG or entity-relationship queries; Neo4j AuraDS is the easiest managed option |
+| **Sparse / Keyword** | Elasticsearch on GKE | OpenSearch on GKE, BigQuery full-text search | Vertex AI Vector Search has no built-in BM25; must pair with Elasticsearch for hybrid search |
+| **Re-ranker** | Vertex AI ReRanker API (`text-reranker@001`) | Cohere Rerank API; `BAAI/bge-reranker-v2-m3` on Vertex AI Model Garden | Vertex AI ReRanker is fully integrated with Matching Engine; Cohere is stronger multilingual |
+| **LLM Generator** | Gemini 1.5 Flash (latency-sensitive) / Gemini 1.5 Pro (quality-sensitive) | Gemini 2.0 Flash, Claude on Vertex AI (via Model Garden) | Gemini has native tool integration with RAG Engine corpus |
+| **Orchestration** | LangGraph (stateful agent graphs) + Vertex AI Pipelines (batch/scheduled) | LangChain + Cloud Run, CrewAI on GKE | LangGraph for real-time agents; Vertex AI Pipelines for batch ingestion jobs |
+| **Observability** | Cloud Trace + Langfuse (self-hosted on Cloud Run) | Arize Phoenix on GKE, LangSmith | Cloud Trace for infrastructure; Langfuse for LLM-specific span tracing and RAGAS integration |
+
+**Typical Hybrid RAG architecture on GCP:**
+```
+User query
+    ↓
+Cloud Run (query service)
+    ├─ text-embedding-004 → Vertex AI Vector Search (dense k=20)
+    ├─ Elasticsearch on GKE (BM25 k=20)
+    └─ RRF fusion → 20 candidates
+         ↓
+    Vertex AI ReRanker API → top 5 chunks
+         ↓
+    Gemini 1.5 Pro (generator)
+         ↓
+    Response + citations
+```
+
+---
+
 ## The Vertex AI RAG Landscape
 
 ```
@@ -413,6 +446,104 @@ request = UpsertDatapointsRequest(
     datapoints=datapoints
 )
 match_client.upsert_datapoints(request=request)
+```
+
+---
+
+## Vertex AI ReRanker API
+
+### Concept
+
+Vertex AI provides a managed cross-encoder reranker (`text-reranker@001`) that integrates with both the RAG Engine corpus and custom Vertex AI Vector Search indices. It accepts (query, document) pairs and returns a relevance score in [0, 1].
+
+**Impact of adding the reranker to a typical RAG pipeline:**
+
+| Metric | Before ReRanker (k=20, dense only) | After ReRanker (k=20 → top 5) |
+|---|---|---|
+| Recall@5 | 0.70 | 0.75 |
+| Precision@5 | 0.68 | 0.84 |
+| Faithfulness (downstream RAGAS) | 0.72 | 0.86 |
+| Latency added | — | ~80–150ms |
+
+Precision improvement is larger than recall improvement — the reranker primarily reduces noise rather than recovering missed documents.
+
+**Best practices:**
+- Over-retrieve at stage 1: set k=15–25 before reranking; narrowing from k=5 gives no room for the reranker to improve
+- Score threshold: filter documents with reranker score < 0.4 before passing to the LLM to avoid low-signal context
+- Combine with Matching Engine `restricts` (metadata filtering) before reranking to reduce latency
+
+### Code
+
+```python
+from vertexai.language_models import TextEmbeddingModel
+from google.cloud.aiplatform_v1 import RerankServiceClient
+
+# Vertex AI ReRanker via the Ranking API (us-central1)
+from google.cloud import discoveryengine_v1alpha as discoveryengine
+
+def vertex_rerank(
+    query: str,
+    candidates: list[str],
+    project_id: str,
+    location: str = "global",
+    top_n: int = 5
+) -> list[tuple[str, float]]:
+    """Rerank candidate documents using Vertex AI ReRanker API."""
+    client = discoveryengine.RankServiceClient()
+    
+    ranking_config = client.ranking_config_path(
+        project=project_id,
+        location=location,
+        ranking_config="default_ranking_config"
+    )
+    
+    records = [
+        discoveryengine.RankingRecord(id=str(i), content=doc)
+        for i, doc in enumerate(candidates)
+    ]
+    
+    request = discoveryengine.RankRequest(
+        ranking_config=ranking_config,
+        model="semantic-ranker-512@latest",
+        top_n=top_n,
+        query=query,
+        records=records,
+    )
+    
+    response = client.rank(request=request)
+    return [(candidates[int(r.id)], r.score) for r in response.records]
+
+
+# Full pipeline: Vector Search → ReRanker → Gemini
+def rag_with_reranker(
+    query: str,
+    project_id: str,
+    vector_endpoint,
+    top_k_retrieve: int = 20,
+    top_k_rerank: int = 5
+) -> str:
+    # Stage 1: dense retrieval
+    query_vec = embed_text([query])[0]
+    raw_results = vector_endpoint.find_neighbors(
+        deployed_index_id="knowledge_v1",
+        queries=[query_vec],
+        num_neighbors=top_k_retrieve
+    )
+    candidate_texts = [fetch_document_text(n.id) for n in raw_results[0]]
+    
+    # Stage 2: rerank
+    reranked = vertex_rerank(query, candidate_texts, project_id, top_n=top_k_rerank)
+    
+    # Filter low-confidence results
+    filtered = [(doc, score) for doc, score in reranked if score > 0.4]
+    context = "\n\n".join([doc for doc, _ in filtered])
+    
+    # Stage 3: generate
+    from vertexai.generative_models import GenerativeModel
+    model = GenerativeModel("gemini-1.5-flash-001")
+    return model.generate_content(
+        f"Context:\n{context}\n\nQuestion: {query}\nAnswer:"
+    ).text
 ```
 
 ---

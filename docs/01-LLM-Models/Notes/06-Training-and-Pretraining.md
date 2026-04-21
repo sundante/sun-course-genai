@@ -96,18 +96,53 @@ Example:
   ...continues until target vocab size
 ```
 
-**Comparing tokenizers:**
+**Tokenization algorithms — full comparison:**
 
-| Tokenizer | Algorithm | Used by | Vocab size |
-|-----------|-----------|---------|------------|
-| tiktoken (cl100k) | BPE | GPT-4, Claude | 100K |
-| SentencePiece BPE | BPE | LLaMA, Gemma | 32K–256K |
-| WordPiece | Greedy likelihood | BERT, DistilBERT | 30K |
-| Unigram | Probabilistic | T5, ALBERT | 32K |
+| Algorithm | Description | Characteristics | Used by | Pros | Cons |
+|-----------|-------------|-----------------|---------|------|------|
+| Whitespace | Splits on spaces | Fast, naive | Early NLP tools | Very simple | Poor for subword languages |
+| Character-level | Each char is a token | Fine-grained | Some toy/code models | Robust to OOV | Long sequences |
+| Word-level | Splits on words | Basic NLP | NLTK, SpaCy | Easy to read | Poor generalization |
+| BPE (Byte-Pair Encoding) | Merges most frequent subword pairs | Greedy, deterministic | GPT-2, RoBERTa, CodeBERT | Efficient, fast | Doesn't adapt well |
+| WordPiece | Probabilistic merges | Likelihood-based | BERT, DistilBERT | Better OOV handling | Slightly slower |
+| Unigram Language Model | Chooses most likely subword sequence | Probabilistic | ALBERT, T5, Gemini | Flexible, language-agnostic | More complex |
+| SentencePiece (BPE/Unigram) | Works on raw UTF-8 bytes | Multilingual models | T5, mT5, Gemini | No pre-tokenization needed | May be less readable |
+| Byte-Level BPE | Extends BPE to raw bytes | Includes spaces, emojis | GPT-2, GPT-Neo, GPT-J | No UNK tokens | Tokens may be unreadable |
+| SentencePiece (byte-level) | Uses bytes with Unigram | Language-agnostic | PaLM, Gemini | Works on all scripts | Needs detokenization mapping |
+| tiktoken (OpenAI) | GPT-custom BPE | Special tokens, efficient | GPT-3, GPT-4 | Very fast | Custom, undocumented |
 
-**SentencePiece (LLaMA, Gemma):** Works on raw bytes without pre-tokenization — handles all languages and code uniformly; no whitespace issues.
+**Key practical notes:**
+- **SentencePiece (LLaMA, Gemma):** Works on raw bytes without pre-tokenization — handles all languages and code uniformly; no whitespace issues.
+- **tiktoken (GPT-4):** Uses cl100k_base with a 100K vocabulary — larger vocab reduces token counts, improving efficiency for English and code.
+- **Multilingual/emoji-rich datasets:** Always use byte-level tokenization to avoid OOV.
+- **Training vs inference:** Tokenizer must match exactly — inconsistency causes silent failures.
 
-**tiktoken (GPT-4):** Uses cl100k_base with a 100K vocabulary — larger vocab reduces token counts, improving efficiency for English and code.
+**Tokenizer implementations across provider ecosystems:**
+
+| Provider | Tokenizer/Model | Algorithm | Notes |
+|----------|----------------|-----------|-------|
+| Hugging Face | BertTokenizer | WordPiece | For BERT and variants |
+| | GPT2Tokenizer | Byte-Level BPE | GPT-2, GPT-Neo |
+| | RobertaTokenizer | BPE | No space token splitting |
+| | T5Tokenizer | SentencePiece (Unigram) | Used in T5, mT5 |
+| | LlamaTokenizer | SentencePiece (BPE) | Used in LLaMA 1/2/3 |
+| | BloomTokenizer | Byte-Level BPE | For BLOOM |
+| GCP / Vertex AI | Gemini 1.5 | SentencePiece (Unigram, Byte-Level) | Google prefers SentencePiece |
+| | PaLM / T5 / mT5 | SentencePiece (Unigram) | Internal tokenizer tools |
+| AWS Bedrock | Claude (Anthropic) | BPE / Custom variant | Similar to GPT-2 tokenizer |
+| | Mistral / LLaMA | SentencePiece (BPE) | HF model hosted via Bedrock |
+| OpenAI | GPT-3, GPT-4 | tiktoken (custom BPE) | Based on GPT-2 tokenizer |
+| Meta | LLaMA 1/2/3 | SentencePiece (BPE) | Open, multilingual |
+| Anthropic | Claude 1/2/3 | BPE-like, tiktoken-compatible | Focused on safety tokenization |
+
+**Popular tokenization libraries:**
+
+| Library | Algorithms supported | Notes |
+|---------|---------------------|-------|
+| `transformers` (HuggingFace) | BPE, WordPiece, Unigram, SentencePiece | Easy integration |
+| `tokenizers` (HuggingFace) | Fast Rust-based tokenizers | Train your own |
+| `sentencepiece` | BPE, Unigram | Used by Google models |
+| `tiktoken` | GPT BPE | Used in OpenAI APIs |
 
 ---
 

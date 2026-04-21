@@ -270,6 +270,46 @@ Step 3: [A, E, C, D]  ← new request E fills B's slot immediately
 
 ---
 
+## Comprehensive Speed-Up Techniques Reference
+
+### Concept
+
+A consolidated reference of all major LLM inference and training speed-up techniques. Many are covered in depth elsewhere — this table gives you the full landscape for interviews.
+
+| Technique | How It Works | Speedup / Savings | Where Covered |
+|-----------|-------------|-------------------|---------------|
+| **Quantization** | Reduce weight/activation precision (FP16→INT8→INT4) | 2–4× memory, 1.5–3× latency | GPU & Hardware |
+| **KV-Cache Quantization** | Store KV cache in INT8/INT4 instead of FP16 | Reduces KV memory 2–4× | This file |
+| **Flash Attention** | Tiling + recomputation to avoid O(n²) memory — compute stays O(n²) but memory is O(n) | 2–4× memory, 2× speed | Attention Mechanisms |
+| **Speculative Decoding** | Small draft model proposes K tokens; large target verifies all in one pass | 2–3× decode speedup | This file |
+| **LoRA (at inference)** | Merged LoRA weights add zero latency; multiple adapters can share the same base | Zero overhead vs base | Fine-Tuning |
+| **Pruning** | Remove low-magnitude weights (unstructured) or entire heads/layers (structured). Structured pruning is inference-friendly; unstructured needs sparse hardware support. | 10–50% size, 10–30% speedup | — |
+| **Knowledge Distillation** | Train a smaller "student" model to mimic a larger "teacher" via soft probability targets (not just hard labels). Result: student achieves near-teacher quality at fraction of size. | 3–10× smaller model | — |
+| **Weight Sharing** | Share weight matrices across layers or sub-components (ALBERT uses cross-layer parameter sharing). Reduces model size without full distillation pipeline. | 2–4× smaller | — |
+| **Sparse Attention** | Replace full O(n²) attention with local windows, global tokens, or hash-based routing (Longformer, BigBird, Reformer) | O(n log n) or O(n) attention | Attention Mechanisms |
+| **Batching & Dynamic Batching** | Group multiple requests into one GPU pass; dynamic = fill slots as requests arrive/complete | 5–10× throughput | This file (continuous batching) |
+| **Model Serving Optimization** | Frameworks (vLLM, TGI, SGLang) combining paged attention, continuous batching, prefix caching in one stack | Combined 10–20× improvement | Production Deployment |
+| **Tensor Parallelism** | Split individual weight matrices across GPUs column/row-wise — each GPU holds a slice | Linear latency scaling with GPU count | GPU & Hardware |
+| **Pipeline Parallelism** | Assign different transformer layers to different GPUs — pipeline them with micro-batches | Enables models too large for one GPU | GPU & Hardware |
+| **Paged Attention** | Virtual memory for KV cache — non-contiguous blocks, eliminates fragmentation, enables prefix sharing | Near 100% GPU memory utilization | This file |
+| **Mixed Precision Inference** | Run forward pass in FP16/BF16 (fast matrix ops) while keeping master weights in FP32 for numerical stability. Modern GPUs have dedicated FP16/BF16 tensor cores. | 2× speed vs FP32, same quality as FP32 | GPU & Hardware |
+| **Early Exit / Token-Level Pruning** | Shallow layers output confident predictions early — skip remaining layers for "easy" tokens or inputs. Works best on classification; harder to implement for generation. | 20–50% compute reduction on easy inputs | — |
+
+**Most impactful combination in production:**
+```
+Quantization (INT8/INT4)          → halve memory
++ Flash Attention                 → efficient long context
++ Paged Attention (vLLM)          → max GPU utilization
++ Continuous batching             → max throughput
++ Speculative decoding (optional) → latency for interactive use
+```
+
+**Pruning vs Distillation — when to use each:**
+- **Pruning**: Already have a large model you want to compress; best for structured pruning (remove whole heads/layers); requires hardware that exploits sparsity for unstructured gains.
+- **Distillation**: Want a general-purpose smaller model trained from scratch with teacher guidance; better final quality than pruning at the same size; requires training pipeline.
+
+---
+
 ## Study Notes
 
 **Must-know for interviews:**

@@ -208,6 +208,20 @@ First-stage retrieval (ANN search) optimizes for speed using bi-encoders that pr
 - Re-ranking top-20: cross-encoder inference on 20 (query, doc) pairs = 80-200ms
 - Total: ~100-220ms — acceptable for most RAG systems
 
+**Bi-Encoder vs Cross-Encoder — deep dive:**
+
+| Dimension | Bi-Encoder (Dual Encoder) | Cross-Encoder |
+|---|---|---|
+| **Input encoding** | Query and document encoded independently into separate vectors | Query and document concatenated as one input: `[CLS] query [SEP] document [SEP]` |
+| **Precomputation** | Document embeddings computed offline and cached | Cannot precompute — requires the query at inference time |
+| **Speed** | Fast: ANN search on precomputed vectors (~5–15ms) | Slow: full model forward pass per (query, doc) pair (~5–10ms per pair; 100–200ms for 20 pairs) |
+| **Accuracy** | Good for broad recall; misses subtle contextual cues (negations, conditionals) | High precision; full token-level attention between query and document captures nuanced relevance |
+| **Scalability** | Scales to billions of documents (ANN index) | Not scalable to first-stage retrieval; limited to re-scoring ~20–50 candidates |
+| **Use case** | First-stage retrieval: cast a wide net efficiently | Second-stage reranking: precision filter over candidate set |
+| **Example models** | `text-embedding-004`, `BAAI/bge-m3`, `E5-mistral-7b` | `cross-encoder/ms-marco-MiniLM-L-6-v2`, `Cohere Rerank`, Vertex AI ReRanker |
+
+**Interview tip:** "Bi-encoders are efficient for broad retrieval but miss subtle contextual cues — a query like 'what causes X NOT to work' can retrieve documents about 'X works well' because the negation is lost in the aggregate embedding. Cross-encoders attend to every token in both query and document jointly, so they correctly score the negative. The two-stage pattern uses bi-encoders to recall 20 candidates cheaply, then cross-encoders to re-score those 20 with full attention — you get recall efficiency plus precision quality."
+
 **Cross-encoder models:**
 
 | Model | Notes |
@@ -217,8 +231,9 @@ First-stage retrieval (ANN search) optimizes for speed using bi-encoders that pr
 | `BAAI/bge-reranker-large` | Strong on Chinese + English |
 | `Cohere Rerank API` | Managed, multilingual, state-of-the-art |
 | `mixedbread-ai/mxbai-rerank-large-v1` | Strong on MTEB reranking benchmark |
+| `Vertex AI ReRanker API` | GCP-native, integrates with Matching Engine, `semantic-ranker-512@latest` |
 
-**Cohere Rerank** is the standard managed option for production — it handles multilingual inputs, scales automatically, and achieves state-of-the-art NDCG on the BEIR benchmark.
+**Cohere Rerank** is the standard managed option for non-GCP stacks. **Vertex AI ReRanker** is the GCP-native choice, covered in depth in [09-Vertex-AI-RAG.md](09-Vertex-AI-RAG.md).
 
 ### Code
 

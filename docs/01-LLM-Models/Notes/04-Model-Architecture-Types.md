@@ -189,18 +189,59 @@ A reference table for major model families you'll encounter in interviews and pr
 | GPT-2 | OpenAI | Decoder | 1K | First demo of large CLM |
 | GPT-3 | OpenAI | Decoder | 2K | 175B in-context learning |
 | GPT-4 / 4o | OpenAI | Decoder (MoE est.) | 128K | Multimodal, top-tier |
+| GPT-4.1 | OpenAI | Multimodal Transformer | 1M | Extended context, code + general |
 | LLaMA-2 | Meta | Decoder | 4K | Open weights, GQA (70B) |
 | LLaMA-3 / 3.1 | Meta | Decoder | 8K / 128K | GQA all sizes, 405B |
+| LLaMA-4 Scout | Meta | MoE Transformer | 10M | Ultra-long context, open source |
+| LLaMA-4 Maverick | Meta | MoE Transformer | 1M | Balanced capability/cost |
 | Gemma | Google | Decoder | 8K | Multi-query attention |
 | Gemma 2 | Google | Decoder | 8K | GQA + local+global attn |
+| Gemini 2.5 Pro | Google DeepMind | Multimodal Transformer | 1M | Complex reasoning, multimodal |
 | Mistral 7B | Mistral | Decoder | 32K | GQA + sliding window |
 | Mixtral 8x7B | Mistral | Decoder (MoE) | 32K | Top-2 MoE, 47B/13B active |
+| Mistral Magistral | Mistral | Dense/Sparse variants | 128K–256K | Cost-efficient reasoning |
 | Phi-3-mini | Microsoft | Decoder | 128K | 3.8B, textbook-quality data |
+| Qwen 3 | Alibaba Cloud | Hybrid sparse MoE | 262K–1M | Multilingual, Asian-language |
+| Command A | Cohere | Retrieval-optimized | 256K | RAG systems, enterprise search |
 | BERT-base | Google | Encoder | 512 | MLM + NSP, bidirectional |
 | RoBERTa | Meta | Encoder | 512 | Better BERT training |
 | DeBERTa-v3 | Microsoft | Encoder | 512 | Disentangled attention |
 | T5 / FLAN-T5 | Google | Enc-Dec | 512–2K | Text-to-text, instruction |
 | BART | Meta | Enc-Dec | 1K | Denoising pretraining |
+
+---
+
+## LLM Types by Modality
+
+### Concept
+
+Beyond architecture type, LLMs are also categorized by the **modalities they handle**. This affects model selection, embedding strategy, and system design.
+
+| Type | Description | Examples | Use Cases |
+|------|-------------|----------|-----------|
+| Text-Only | Trained on text corpora only | GPT-3, LLaMA, BERT, Falcon | General NLP, summarization, generation |
+| Multilingual | Trained on multilingual corpora | XLM-R, mT5, BLOOM, GPT-4 | Translation, cross-lingual search |
+| Multimodal | Input: image/video/audio + text | GPT-4o, Gemini 1.5, Kosmos-2, LLaVA | Image captioning, audio Q&A, OCR, document understanding |
+| Code | Specialized in programming languages | Codex, CodeLLaMA, CodeGemma, StarCoder | Code generation, completion, refactoring |
+| Speech-Text | Integrate speech recognition and synthesis | Whisper, SeamlessM4T | Transcription, speech translation |
+| Image/Vision | Image understanding and classification | ViT, ConvNeXT, DETR, Mask2Former | Object detection, segmentation, depth estimation |
+
+**Modality in system design:** When building a multi-modal pipeline (e.g., processing scanned PDFs + structured data + free text), you must choose whether to use a single multi-modal foundation model (simplicity, one context) or multiple specialized models (higher per-task accuracy, more complex orchestration). For RAG over images, multimodal embeddings (CLIP, Gemini Embeddings) are required — text-only embeddings cannot capture visual content.
+
+**Models by specific task (quick reference):**
+
+| Model | Task |
+|-------|------|
+| Wav2Vec2 | Audio classification, automatic speech recognition (ASR) |
+| Vision Transformer (ViT), ConvNeXT | Image classification |
+| DETR | Object detection |
+| Mask2Former | Image segmentation |
+| GLPN | Depth estimation |
+| BERT | Text classification, token classification, question answering |
+| GPT-2, LLaMA | Text generation |
+| BART, T5 | Summarization and translation |
+| Codex, CodeLLaMA | Code generation |
+| Whisper | Speech-to-text transcription |
 
 ---
 
@@ -278,6 +319,32 @@ for model_name in ["bert-base-uncased", "gpt2", "facebook/bart-large"]:
     config = AutoConfig.from_pretrained(model_name)
     print(f"{model_name}: {config.model_type} — {config.architectures}")
 ```
+
+---
+
+## 8 Types of LLMs Used in AI Agents
+
+### Concept
+
+Beyond the classic encoder/decoder taxonomy, modern AI agent systems draw from a richer vocabulary of specialized model types. These represent functional roles more than architecture classes.
+
+| Type | Full Name | What It Is | Key Examples | Primary Use in Agents |
+|------|-----------|-----------|-------------|----------------------|
+| **GPT** | Generative Pretrained Transformer | Standard autoregressive decoder-only LLM | GPT-4, LLaMA, Gemma | General reasoning, planning, text generation |
+| **MoE** | Mixture of Experts | Sparse routing — only top-K expert FFNs fire per token | Mixtral-8x7B, GPT-4 (est.), LLaMA 4 | Scale capacity without proportional compute cost |
+| **LRM** | Large Reasoning Model | LLM fine-tuned (via GRPO/RL) to produce long chain-of-thought reasoning traces before answering | DeepSeek-R1, OpenAI o1/o3, QwQ | Complex math, coding, multi-step logical deduction |
+| **VLM** | Vision-Language Model | Multi-stage model combining a vision encoder (ViT) with a language model; trained on image-text pairs | GPT-4o, Gemini, LLaVA, Qwen-VL | Document parsing, image Q&A, multimodal agent perception |
+| **SLM** | Small Language Model | Compact decoder-only model (1B–7B params) with GQA and efficient attention, deployable on edge/local | Phi-3-mini (3.8B), Gemma 2B, TinyLLaMA | On-device inference, latency-critical agent sub-tasks |
+| **LAM** | Large Action Model | LLM trained to produce structured actions (tool calls, API sequences, UI interactions) not just text | Browser-use, Claude Computer Use, OpenAI Operator | Agentic task execution, tool orchestration, UI automation |
+| **HLM** | Hierarchical Language Model | Two-LLM system: an item/task-level LLM models specifics; a user-level LLM models user behavior across sessions | Research architectures | Personalization, recommendation, sequential decision-making |
+| **LCM** | Large Concept Model | Operates in a learned concept space (not tokens); encodes input into concepts, reasons in that space, decodes back | Meta SONAR LCM (2025) | Language-agnostic reasoning, cross-lingual transfer |
+
+**Key distinctions for interviews:**
+- **LRM vs GPT:** Both are decoder-only, but LRM is trained with RL to output explicit reasoning steps (think-then-answer). GPT answers directly.
+- **VLM training stages:** (1) Pretrain vision encoder + LM separately; (2) Align vision→language with image-text pairs; (3) SFT on multi-task visual instruction data. The ViT and LM share a projection layer.
+- **SLM vs quantized LLM:** SLMs are architecturally designed small (GQA, RMSNorm, SwiGLU) — not just a compressed large model.
+- **LAM vs standard LLM with tools:** A LAM is specifically fine-tuned on action trajectories; a standard LLM uses tools via prompt engineering. LAMs produce more reliable action sequences.
+- **LCM:** Addresses the token-level limitation — instead of next-token prediction, LCMs predict the next concept embedding. This makes them language-agnostic by design.
 
 ---
 

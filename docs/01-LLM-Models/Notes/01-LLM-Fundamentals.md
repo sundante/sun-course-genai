@@ -114,6 +114,45 @@ The context window is the maximum number of tokens an LLM can process in a singl
 
 **Context is shared between input and output.** A 128K window with a 100K-token prompt leaves only 28K tokens for the response.
 
+**Context window scaling approaches — how modern models extend context:**
+
+| Approach | Description | Used by |
+|----------|-------------|---------|
+| Fixed Context | Choose max tokens at model design time (e.g., 2K, 8K) | Early GPTs, BERT |
+| Sliding Window / Chunking | Split input into overlapping windows (e.g., 512 tokens with 128 overlap) | RAG / long-doc QA |
+| Adaptive Context | Dynamically select relevant chunks based on task | Attention routing systems |
+| Sparse Attention | Fixed-size context but sparsified heads — reduces O(n²) cost | Longformer, BigBird, FlashAttention |
+| Memory-efficient Transformers | Linear attention or recurrent state instead of full attention | Performer, RWKV, Mamba |
+| Recurrence / Caching | Reuse past hidden states or token representations | LLaMA 2/3, RWKV, Gemini, GPT Turbo |
+| Retriever-Augmented (RAG) | Retrieve external chunks to keep active context short and focused | All RAG systems |
+| Compressed Context | Summarize long text, feed a compact version to the model | Hybrid long-doc systems |
+| RoPE Interpolation | Rescale rotary position embeddings to extend native context window | GPT-NeoX, Mistral 7B, Claude 3, LLaMA 2/3 |
+
+**Context window sizes in current models (2025/2026):**
+
+| Model | Context Length | How it's achieved |
+|-------|---------------|-------------------|
+| GPT-3.5 | 4K / 16K | Naive Transformer |
+| GPT-4 / GPT-4.1 | 128K / 1M | FlashAttention + chunking |
+| Claude 3 / Sonnet 4 | 200K | Sparse attention + retrieval + caching |
+| Gemini 2.5 Pro | 1M | Memory compression + long-context training |
+| LLaMA 4 Scout | 10M | MoE + extreme context training |
+| Mistral 7B | 32K (tested 64K) | RoPE interpolation |
+| Longformer | 4K–16K | Sparse local + global attention |
+| RWKV | Infinite (streaming) | RNN-like with token recurrence |
+| Mamba | Sub-quadratic | Attention-free state-space model |
+
+**Practical guidelines — choosing context window strategy:**
+
+| Use Case | Recommended Strategy |
+|----------|---------------------|
+| Small chatbot (FAQ, support) | 2K–4K context is sufficient |
+| Long documents (legal, medical, policy) | 8K–32K + retrieval or summarization |
+| Summarization of books or legal docs | RAG + chunking + re-ranking |
+| Code generation | 8K–16K (code needs larger context for multi-file awareness) |
+| Training from scratch | Trade off context size vs GPU memory (O(n²) attention cost) |
+| Local inference on laptop | Prefer 2K–4K with quantization |
+
 ---
 
 ### Sampling Parameters
