@@ -42,7 +42,8 @@ Deepen your expertise
 
 7. [Architecture Deep-Dive](Notes/07-Architecture-Deep-Dive.md) — Technical internals
 8. [Getting Started](Notes/08-Getting-Started.md) — Your hands-on guide
-9. [Interview Q&A](../Interview-Questions/04-MCP.md) — Questions you'll face
+9. [Q&A Review Bank](Notes/09-QA-Review-Bank.md) — 48 curated Q&A pairs
+10. [Interview Q&A](../Interview-Questions/04-MCP.md) — Quick-reference questions
 
 ---
 
@@ -58,7 +59,8 @@ Deepen your expertise
 | 6 | [Why It Matters](Notes/06-Why-MCP-Matters.md) | Strategic importance |
 | 7 | [Architecture Deep-Dive](Notes/07-Architecture-Deep-Dive.md) | Technical internals |
 | 8 | [Getting Started](Notes/08-Getting-Started.md) | Learning path & projects |
-| 9 | [Interview Q&A](../Interview-Questions/04-MCP.md) | Common questions |
+| 9 | [Q&A Review Bank](Notes/09-QA-Review-Bank.md) | 48 Q&A pairs, Easy → Hard |
+| 10 | [Interview Q&A](../Interview-Questions/04-MCP.md) | Quick-reference questions |
 
 ---
 
@@ -75,7 +77,8 @@ THE COMPLETE MCP LEARNING ARC
 6. IMPACT        → Understand why it matters
 7. ARCHITECTURE  → Deep-dive the internals
 8. EXECUTION     → Build your first project
-9. MASTERY       → Answer technical questions
+9. Q&A BANK      → 48 curated review questions
+10. MASTERY      → Answer technical questions
 ```
 
 ---

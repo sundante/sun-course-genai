@@ -150,7 +150,7 @@ Options:
 - [Definition →](02-Definition.md)
 - [Components →](04-Components.md)
 - [Capabilities →](05-Capabilities.md)
-- [Interview Q&A →](07-Interview-QA.md)
+- [Q&A Review Bank →](09-QA-Review-Bank.md)
 
 ---
 
@@ -167,4 +167,36 @@ Options:
 | Hands-On | Integration | 🔴 Not Started | |
 
 *Update this as you progress through the learning path...*
+
+---
+
+## Q&A Review Bank
+
+**Q1: What are the four phases of the MCP learning path and what does each accomplish?** `[Easy]`
+
+A: Phase 1 (Foundation, Week 1) covers the problem MCP solves, the definition, core components, and capabilities — building conceptual understanding before any code. Phase 2 (Deep Dive, Weeks 2-3) examines the spec in detail, explores the official repository, and studies reference implementations to understand how the protocol works in practice. Phase 3 (Hands-On, Weeks 4-5) involves setting up a dev environment, building a simple MCP server and client, and verifying the integration end-to-end. Phase 4 (Advanced, Week 6+) covers performance optimization, security hardening, connecting to real production data sources, and contributing to the community.
+
+---
+
+**Q2: What are the key steps in building a minimal MCP server from scratch?** `[Medium]`
+
+A: (1) Choose a language with an official SDK — Python is recommended for beginners due to SDK maturity and readability. (2) Initialize an MCP server object and register your tools and resources with their JSON schemas — the schema is what the LLM uses to know how to call the tool. (3) Implement each tool's handler: input validation, business logic, error handling, structured return value. (4) Configure transport — stdio for local development, HTTP for production deployment. (5) Start the server and connect it to an MCP-compatible host. The protocol handshake, capability negotiation, and message routing are handled by the SDK; you write application logic, not protocol code.
+
+---
+
+**Q3: What are the three most common debugging challenges when building MCP servers?** `[Medium]`
+
+A: (1) Transport misconfiguration — the client and server are using different transports or the subprocess isn't starting correctly; fix by testing the server standalone with a minimal test client before integrating with a full Host. (2) Schema mismatch — tool input schemas don't match what the LLM generates, causing validation failures; fix by manually testing tool invocations with sample inputs against the declared schema before going live. (3) Lifecycle failures — the server crashes before sending the `initialized` notification or drops the connection mid-session; fix by adding structured logging at every lifecycle event (initialize, initialized, each tool call) and verifying SDK version compatibility between client and server.
+
+---
+
+**Q4: When building a production MCP server, what security measures should you implement beyond basic functionality?** `[Hard]`
+
+A: (1) Authentication: remote servers require OAuth 2.0 or API key verification on every connection; stdio servers should validate that only authorized executables are launched. (2) Per-tool authorization: check the authenticated user's role against each tool before executing — don't rely on server-level access alone. (3) Input validation: validate all tool parameters against strict schemas before execution — the LLM generates inputs and can be manipulated by prompt injection to produce unexpected parameter values. (4) Output sanitization: strip credentials, PII, and excessive data from responses before returning them — the LLM doesn't need raw database rows. (5) Rate limiting: agentic systems invoke tools rapidly; implement per-session limits to prevent accidental or adversarial resource exhaustion. (6) Audit logging: record every tool invocation, requesting session, and result for compliance and incident investigation.
+
+---
+
+**Q5: How would you structure an MCP server that exposes both a PostgreSQL database and a BigQuery dataset through a single server instance?** `[Hard]`
+
+A: Define a unified tool namespace with source-parameterized tools: `query_postgres(sql)`, `query_bigquery(sql)`, `list_schemas(source)` where `source` distinguishes the backends. Register resources for each database's schema so the LLM can explore structure before querying (`postgres://schemas`, `bigquery://schemas`). Implement connection pooling for Postgres (reuse connections across tool calls) and service account authentication for BigQuery (credentials loaded at server startup, not per request). Apply query timeouts and row limits to all query tools to prevent runaway operations. Deploy as an HTTP server (not stdio) so multiple clients share the same connection pools rather than each spawning independent pools. Add a `cross-database-guide` Prompt to help the LLM understand which data lives in which source.
 
