@@ -2,7 +2,7 @@
 
 Four complete, end-to-end production-grade agentic systems. Each system combines multiple architectural patterns from [02 — Architecture Patterns](02-Architectures.md) into a realistic use case, implemented across all four frameworks.
 
-**Notes companion:** [06 — Agentic AI: System Design](../Notes/05-Agentic-System-Design.md) · [Evaluation & Observability](../Notes/06-Evaluation-and-Observability.md)
+← **Back to Concepts:** [Agentic System Design](../Notes/05-Agentic-System-Design.md) · [Evaluation & Observability](../Notes/06-Evaluation-and-Observability.md)
 
 ---
 

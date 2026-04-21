@@ -32,6 +32,18 @@ theme:
     - toc.integrate
     - content.code.copy
 
+markdown_extensions:
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - admonition
+  - tables
+
 plugins:
   - search
 
@@ -44,85 +56,92 @@ nav:
   - Home: index.md
   - LLM Models:
     - Overview: 01-LLM-Models/INDEX.md
-    - LLM Fundamentals: 01-LLM-Models/Notes/01-LLM-Fundamentals.md
-    - Transformer Architecture: 01-LLM-Models/Notes/02-Architecture.md
-    - Attention Mechanisms: 01-LLM-Models/Notes/03-Attention-Mechanisms.md
-    - Model Architecture Types: 01-LLM-Models/Notes/04-Model-Architecture-Types.md
-    - KV Cache & Inference: 01-LLM-Models/Notes/05-KV-Cache-and-Inference-Optimization.md
-    - Training & Pretraining: 01-LLM-Models/Notes/06-Training-and-Pretraining.md
-    - Fine-Tuning: 01-LLM-Models/Notes/07-Fine-Tuning.md
-    - GPU & Hardware: 01-LLM-Models/Notes/08-GPU-and-Hardware.md
-    - Failure Modes & Tricky Issues: 01-LLM-Models/Notes/09-Failure-Modes-and-Tricky-Issues.md
-    - Production Deployment: 01-LLM-Models/Notes/10-Production-Deployment.md
-    - Interview Q&A Bank: 01-LLM-Models/Notes/12-Interview-QA-Bank.md
+    - Concepts:
+      - LLM Fundamentals: 01-LLM-Models/Notes/01-LLM-Fundamentals.md
+      - Transformer Architecture: 01-LLM-Models/Notes/02-Architecture.md
+      - Attention Mechanisms: 01-LLM-Models/Notes/03-Attention-Mechanisms.md
+      - Model Architecture Types: 01-LLM-Models/Notes/04-Model-Architecture-Types.md
+      - KV Cache & Inference: 01-LLM-Models/Notes/05-KV-Cache-and-Inference-Optimization.md
+      - Training & Pretraining: 01-LLM-Models/Notes/06-Training-and-Pretraining.md
+      - Fine-Tuning: 01-LLM-Models/Notes/07-Fine-Tuning.md
+      - GPU & Hardware: 01-LLM-Models/Notes/08-GPU-and-Hardware.md
+      - Failure Modes & Tricky Issues: 01-LLM-Models/Notes/09-Failure-Modes-and-Tricky-Issues.md
+      - Production Deployment: 01-LLM-Models/Notes/10-Production-Deployment.md
+      - Interview Q&A Bank: 01-LLM-Models/Notes/12-Interview-QA-Bank.md
   - Prompt Engineering:
     - Overview: 02-Prompts/INDEX.md
-    - Prompt Basics: 02-Prompts/Notes/01-Prompt-Basics.md
-    - Core Techniques: 02-Prompts/Notes/02-Core-Techniques.md
-    - Advanced Techniques: 02-Prompts/Notes/03-Advanced-Techniques.md
-    - Prompts in Production: 02-Prompts/Notes/04-Prompt-Engineering-for-Production.md
-    - Prompt Optimization & Automation: 02-Prompts/Notes/05-Prompt-Optimization-and-Automation.md
-    - Interview Q&A Bank: 02-Prompts/Notes/06-Interview-QA-Bank.md
+    - Concepts:
+      - Prompt Basics: 02-Prompts/Notes/01-Prompt-Basics.md
+      - Core Techniques: 02-Prompts/Notes/02-Core-Techniques.md
+      - Advanced Techniques: 02-Prompts/Notes/03-Advanced-Techniques.md
+      - Prompts in Production: 02-Prompts/Notes/04-Prompt-Engineering-for-Production.md
+      - Prompt Optimization & Automation: 02-Prompts/Notes/05-Prompt-Optimization-and-Automation.md
+      - Interview Q&A Bank: 02-Prompts/Notes/06-Interview-QA-Bank.md
   - RAG:
     - Overview: 03-RAGs/INDEX.md
-    - RAG Fundamentals: 03-RAGs/Notes/01-RAG-Fundamentals.md
-    - Embeddings & Vector Stores: 03-RAGs/Notes/02-Embeddings-and-Vector-Stores.md
-    - Chunking & Indexing: 03-RAGs/Notes/03-Chunking-and-Indexing.md
-    - Retrieval Strategies: 03-RAGs/Notes/04-Retrieval-Strategies.md
-    - Advanced RAG Patterns: 03-RAGs/Notes/05-Advanced-RAG-Patterns.md
-    - Evaluation & Failure Modes: 03-RAGs/Notes/06-RAG-Evaluation-and-Failure-Modes.md
-    - RAG Types Taxonomy: 03-RAGs/Notes/07-RAG-Types-Taxonomy.md
-    - RAG System Design: 03-RAGs/Notes/08-RAG-System-Design.md
-    - Vertex AI RAG: 03-RAGs/Notes/09-Vertex-AI-RAG.md
-    - Production Deployment: 03-RAGs/Notes/10-Production-Deployment.md
-    - Scaling & LLM Issues: 03-RAGs/Notes/11-Scaling-and-LLM-Issues.md
-    - Q&A Review Bank: 03-RAGs/Notes/12-Interview-QA-Bank.md
+    - Concepts:
+      - RAG Fundamentals: 03-RAGs/Notes/01-RAG-Fundamentals.md
+      - Embeddings & Vector Stores: 03-RAGs/Notes/02-Embeddings-and-Vector-Stores.md
+      - Chunking & Indexing: 03-RAGs/Notes/03-Chunking-and-Indexing.md
+      - Retrieval Strategies: 03-RAGs/Notes/04-Retrieval-Strategies.md
+      - Advanced RAG Patterns: 03-RAGs/Notes/05-Advanced-RAG-Patterns.md
+      - Evaluation & Failure Modes: 03-RAGs/Notes/06-RAG-Evaluation-and-Failure-Modes.md
+      - RAG Types Taxonomy: 03-RAGs/Notes/07-RAG-Types-Taxonomy.md
+      - RAG System Design: 03-RAGs/Notes/08-RAG-System-Design.md
+      - Vertex AI RAG: 03-RAGs/Notes/09-Vertex-AI-RAG.md
+      - Production Deployment: 03-RAGs/Notes/10-Production-Deployment.md
+      - Scaling & LLM Issues: 03-RAGs/Notes/11-Scaling-and-LLM-Issues.md
+      - Q&A Review Bank: 03-RAGs/Notes/12-Interview-QA-Bank.md
   - MCP:
     - Overview: 04-MCP/INDEX.md
-    - The Problem: 04-MCP/Notes/01-The-Problem.md
-    - Definition: 04-MCP/Notes/02-Definition.md
-    - The Solution: 04-MCP/Notes/03-The-Solution.md
-    - Components: 04-MCP/Notes/04-Components.md
-    - Capabilities: 04-MCP/Notes/05-Capabilities.md
-    - Why It Matters: 04-MCP/Notes/06-Why-MCP-Matters.md
-    - Architecture Deep-Dive: 04-MCP/Notes/07-Architecture-Deep-Dive.md
-    - Getting Started: 04-MCP/Notes/08-Getting-Started.md
+    - Concepts:
+      - The Problem: 04-MCP/Notes/01-The-Problem.md
+      - Definition: 04-MCP/Notes/02-Definition.md
+      - The Solution: 04-MCP/Notes/03-The-Solution.md
+      - Components: 04-MCP/Notes/04-Components.md
+      - Capabilities: 04-MCP/Notes/05-Capabilities.md
+      - Why It Matters: 04-MCP/Notes/06-Why-MCP-Matters.md
+      - Architecture Deep-Dive: 04-MCP/Notes/07-Architecture-Deep-Dive.md
+      - Getting Started: 04-MCP/Notes/08-Getting-Started.md
   - Agents:
     - Overview: 05-Agents/INDEX.md
-    - Notes:
+    - Concepts:
       - Agent Fundamentals: 05-Agents/Notes/01-Agent-Fundamentals.md
       - Agent Patterns: 05-Agents/Notes/02-Agent-Patterns.md
-    - GCP ADK:
-      - Overview: 05-Agents/GCP-ADK/INDEX.md
-      - ADK Fundamentals: 05-Agents/GCP-ADK/01-ADK-Fundamentals.md
-      - Simple Agent: 05-Agents/GCP-ADK/02-Simple-Agent.md
-      - Complex Agent: 05-Agents/GCP-ADK/03-Complex-Agent.md
-    - LangChain:
-      - Overview: 05-Agents/LangChain/INDEX.md
-      - LangChain Fundamentals: 05-Agents/LangChain/01-LangChain-Fundamentals.md
-      - Simple Agent: 05-Agents/LangChain/02-Simple-Agent.md
-      - Complex Agent: 05-Agents/LangChain/03-Complex-Agent.md
-    - LangGraph:
-      - Overview: 05-Agents/LangGraph/INDEX.md
-      - LangGraph Fundamentals: 05-Agents/LangGraph/01-LangGraph-Fundamentals.md
-      - Simple Agent: 05-Agents/LangGraph/02-Simple-Agent.md
-      - Complex Agent: 05-Agents/LangGraph/03-Complex-Agent.md
-    - CrewAI:
-      - Overview: 05-Agents/CrewAI/INDEX.md
-      - CrewAI Fundamentals: 05-Agents/CrewAI/01-CrewAI-Fundamentals.md
-      - Simple Agent: 05-Agents/CrewAI/02-Simple-Agent.md
-      - Complex Agent: 05-Agents/CrewAI/03-Complex-Agent.md
     - Code Labs:
       - Agent Types: 05-Agents/CodeLabs/01-Agent-Types.md
+      - GCP ADK:
+        - Overview: 05-Agents/GCP-ADK/INDEX.md
+        - ADK Fundamentals: 05-Agents/GCP-ADK/01-ADK-Fundamentals.md
+        - Simple Agent: 05-Agents/GCP-ADK/02-Simple-Agent.md
+        - Complex Agent: 05-Agents/GCP-ADK/03-Complex-Agent.md
+      - LangChain:
+        - Overview: 05-Agents/LangChain/INDEX.md
+        - LangChain Fundamentals: 05-Agents/LangChain/01-LangChain-Fundamentals.md
+        - Simple Agent: 05-Agents/LangChain/02-Simple-Agent.md
+        - Complex Agent: 05-Agents/LangChain/03-Complex-Agent.md
+      - LangGraph:
+        - Overview: 05-Agents/LangGraph/INDEX.md
+        - LangGraph Fundamentals: 05-Agents/LangGraph/01-LangGraph-Fundamentals.md
+        - Simple Agent: 05-Agents/LangGraph/02-Simple-Agent.md
+        - Complex Agent: 05-Agents/LangGraph/03-Complex-Agent.md
+      - CrewAI:
+        - Overview: 05-Agents/CrewAI/INDEX.md
+        - CrewAI Fundamentals: 05-Agents/CrewAI/01-CrewAI-Fundamentals.md
+        - Simple Agent: 05-Agents/CrewAI/02-Simple-Agent.md
+        - Complex Agent: 05-Agents/CrewAI/03-Complex-Agent.md
   - Agentic AI:
     - Overview: 06-Agentic-AI/INDEX.md
-    - Notes:
+    - Concepts:
       - Agentic Concepts: 06-Agentic-AI/Notes/01-Agentic-Concepts.md
       - Architectural Patterns: 06-Agentic-AI/Notes/02-Architectural-Patterns.md
       - Design Patterns: 06-Agentic-AI/Notes/03-Design-Patterns.md
       - Multi-Agent Systems: 06-Agentic-AI/Notes/04-Multi-Agent-Systems.md
       - Agentic System Design: 06-Agentic-AI/Notes/05-Agentic-System-Design.md
       - Evaluation & Observability: 06-Agentic-AI/Notes/06-Evaluation-and-Observability.md
+    - System Designs:
+      - Insurance Claims Processor: 06-Agentic-AI/SystemDesigns/insurance-claims-processor.md
+      - Prior Authorization: 06-Agentic-AI/SystemDesigns/prior-authorization.md
     - Code Labs:
       - Architecture Patterns: 06-Agentic-AI/CodeLabs/02-Architectures.md
       - Agentic Systems: 06-Agentic-AI/CodeLabs/03-Agentic-Systems.md

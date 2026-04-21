@@ -2,7 +2,7 @@
 
 Build single agents from scratch across three complexity levels in all four frameworks. Each level adds a new capability layer on top of the previous.
 
-**Notes companion:** [05 — Agents](../INDEX.md)
+← **Back to Concepts:** [Agent Fundamentals](../Notes/01-Agent-Fundamentals.md) · [Agent Patterns](../Notes/02-Agent-Patterns.md)
 
 ---
 
