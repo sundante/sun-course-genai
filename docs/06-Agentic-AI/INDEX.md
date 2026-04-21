@@ -18,7 +18,7 @@ This section focuses on the *system-level* view: architectural patterns, design 
 | 4 | [Multi-Agent Systems](Notes/04-Multi-Agent-Systems.md) | Coordination, communication, state, resilience | ★★★ |
 | 5 | [Agentic System Design](Notes/05-Agentic-System-Design.md) | Production architecture, reliability, security, cost | ★★★ |
 | 6 | [Evaluation and Observability](Notes/06-Evaluation-and-Observability.md) | Trajectory eval, metrics, tracing, debugging | ★★★ |
-| 7 | [Interview Q&A](../Interview-Questions/06-Agentic-AI.md) | Conceptual, architecture, system design, evaluation | ★★★ |
+| 7 | [Interview Q&A](Notes/07-Interview-QA.md) | 40 questions across 8 domains — concepts, architecture, tool use, memory, multi-agent, evaluation, scaling | ★★★ |
 
 ## Relationship to Other Sections
 
@@ -30,7 +30,7 @@ This section focuses on the *system-level* view: architectural patterns, design 
 ## Learning Paths
 
 ### Path A — Full Progression (recommended for interview prep)
-Read chapters 1 → 2 → 3 → 4 → 5 → 6 in order, then do the Q&A. ~4–6 hours.
+Read chapters 1 → 2 → 3 → 4 → 5 → 6 in order, then work through [07-Interview-QA.md](Notes/07-Interview-QA.md). ~4–6 hours.
 
 ### Path B — Accelerated (familiar with agents already)
 Skip chapter 1, read 2 → 3 → 4, skim 5 and 6. ~2 hours.
