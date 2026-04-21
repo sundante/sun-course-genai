@@ -399,7 +399,7 @@ result = agent_system.get_result(task_id)
 
 ---
 
-## Interview Questions
+## Q&A Review Bank
 
 **Q1: Name the six layers of a production agentic system and their primary responsibilities.** `[Medium]`
 A: Interface Layer (API gateway, auth, input validation, async task queuing and result delivery), Orchestration Layer (workflow decomposition, agent assignment, dependency management, HITL gates, retry and error handling), Agent Pool (specialized stateless agents each with a fixed role, system prompt, model, and tool set), Tool Layer (external APIs, search, code execution, databases — each sandboxed and rate-limited), Memory Layer (short-term context window, working state in a database, long-term vector store, episodic event log), and Monitoring Layer (tracing, logging, cost tracking, alerting). Layer separation is what makes the system maintainable — changes in one layer don't break others.

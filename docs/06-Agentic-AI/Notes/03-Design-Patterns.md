@@ -418,7 +418,7 @@ Human: Timeout → Agent escalates to supervisor
 
 ---
 
-## Interview Questions
+## Q&A Review Bank
 
 **Q1: What is the ReAct pattern and why is it the default for most agentic tasks?** `[Easy]`
 A: ReAct (Reason + Act) interleaves explicit reasoning traces with tool calls: Thought → Action → Observation → Thought → ... The agent writes out its reasoning before each action, making its logic visible and keeping it on track. It's the default because it handles most general-purpose agentic tasks without requiring an explicit upfront plan, it's simple to implement, and the visible reasoning traces make debugging straightforward. Use something more complex (Plan-and-Execute, Tree of Thoughts) only when you have a specific reason — most tasks don't need it.

@@ -331,7 +331,7 @@ final_output = {
 
 ---
 
-## Interview Questions
+## Q&A Review Bank
 
 **Q1: What are the four reasons to go multi-agent, and what mistake do teams most often make when choosing this architecture?** `[Medium]`
 A: The four reasons are: Task Decomposition (the task has natural seams that benefit from focused sub-tasks), Specialization (different agents optimized with different prompts, models, and tools outperform a generalist), Parallelism (independent subtasks running concurrently reduce wall-clock time), and Fault Isolation (one agent's failure doesn't crash the whole system). The most common mistake is choosing multi-agent because it sounds more capable, without checking whether the overhead of coordination — extra LLM calls, state management, structured communication, error handling — actually produces better results than a well-designed single agent. Always measure whether the multi-agent version outperforms the single-agent version on your specific task before committing to the complexity.

@@ -1,4 +1,4 @@
-# Agentic AI — Interview Q&A Bank
+# Agentic AI — Q&A Review Bank
 
 70+ curated Q&A pairs covering the full Agentic AI curriculum.  
 Each answer is 3-5 sentences with specifics — not vague responses.  

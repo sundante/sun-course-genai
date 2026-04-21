@@ -134,7 +134,7 @@ Each layer solves a different problem. The skill in system design is knowing whi
 
 ---
 
-## Interview Questions
+## Q&A Review Bank
 
 **Q1: What is the fundamental difference between traditional AI and agentic AI?** `[Easy]`
 A: Traditional AI is reactive — given a single input, it produces a single output and stops. Agentic AI is proactive — given a goal, it decides what steps to take, executes them, observes results, and continues until the goal is met. The key shift is who holds the initiative: in traditional AI the human drives every step; in agentic AI the system drives the steps within a defined goal boundary. This difference is not just technical but architectural — agentic systems require planning, memory, tool use, and failure handling that single-turn systems don't need.

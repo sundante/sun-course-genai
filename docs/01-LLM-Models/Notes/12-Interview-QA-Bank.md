@@ -1,4 +1,4 @@
-# LLM Models — Interview Q&A Bank
+# LLM Models — Q&A Review Bank
 
 > 80+ curated Q&A pairs. Tags: `[Easy]` = conceptual recall, `[Medium]` = design decisions / tradeoffs, `[Hard]` = math-level, system design, or tricky edge cases.
 

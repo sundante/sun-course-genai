@@ -35,7 +35,7 @@ This section is structured to follow the historical development of the field:
 | 3 | [Advanced Techniques](Notes/03-Advanced-Techniques.md) | ToT, self-consistency, chaining, meta-prompting, L2M |
 | 4 | [Prompts in Production](Notes/04-Prompt-Engineering-for-Production.md) | Structured output, versioning, injection, evals, context management |
 | 5 | [Prompt Optimization & Automation](Notes/05-Prompt-Optimization-and-Automation.md) | APE, OPRO, DSPy, LLM-as-Judge, reasoning models |
-| 6 | [Interview Q&A Bank](Notes/06-Interview-QA-Bank.md) | 65+ questions, Easy → Staff-level |
+| 6 | [Q&A Review Bank](Notes/06-Interview-QA-Bank.md) | 65+ questions, Easy → Staff-level |
 
 ## Recommended Path
 
@@ -44,7 +44,7 @@ This section is structured to follow the historical development of the field:
 3. [Advanced Techniques](Notes/03-Advanced-Techniques.md) — extend your toolkit for complex tasks
 4. [Prompts in Production](Notes/04-Prompt-Engineering-for-Production.md) — real-world engineering concerns
 5. [Prompt Optimization & Automation](Notes/05-Prompt-Optimization-and-Automation.md) — scale beyond manual iteration
-6. [Interview Q&A Bank](Notes/06-Interview-QA-Bank.md) — consolidated review across all topics
+6. [Q&A Review Bank](Notes/06-Interview-QA-Bank.md) — consolidated review across all topics
 7. [Knowledge Check](../Interview-Questions/02-Prompt-Engineering.md) — concise Q&A for final review
 
 ## Navigation

@@ -381,7 +381,7 @@ Did the agent actually use the information it was given? Check whether the final
 
 ---
 
-## Interview Questions
+## Q&A Review Bank
 
 **Q1: Why is trajectory evaluation more important than final-answer evaluation for agentic systems?** `[Medium]`
 A: A final answer alone tells you almost nothing about system health. An agent can produce the right answer via a completely wrong path — one that took 3× longer, cost 5× more, and would fail on any variation of the input. Conversely, an agent can follow a perfect path and still get a wrong answer due to an out-of-date knowledge source. Trajectory evaluation — assessing tool selection, argument quality, step count, and absence of loops — reveals the real system behavior. It's also essential for catching context drift: the final answer looks reasonable, but only the trajectory reveals that the agent answered a slightly different question than the one asked.

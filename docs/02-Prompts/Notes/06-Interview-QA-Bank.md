@@ -1,4 +1,4 @@
-# Prompt Engineering — Interview Q&A Bank
+# Prompt Engineering — Q&A Review Bank
 
 A consolidated reference of 65+ questions covering fundamentals through advanced topics. Difficulty markers: `[E]` Easy, `[M]` Medium, `[H]` Hard, `[S]` Senior/Staff-level.
 

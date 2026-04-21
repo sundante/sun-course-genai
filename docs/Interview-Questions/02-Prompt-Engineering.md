@@ -1,6 +1,6 @@
 # Concept Review — Prompt Engineering
 
-Quick-reference Q&A for interview preparation. For in-depth treatment, see the [Interview Q&A Bank](../02-Prompts/Notes/06-Interview-QA-Bank.md).
+Quick-reference Q&A for interview preparation. For in-depth treatment, see the [Q&A Review Bank](../02-Prompts/Notes/06-Interview-QA-Bank.md).
 
 ---
 

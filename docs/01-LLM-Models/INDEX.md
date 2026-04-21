@@ -29,7 +29,7 @@
 | 9 | [Failure Modes & Tricky Issues](Notes/09-Failure-Modes-and-Tricky-Issues.md) | Catastrophic forgetting, lost in the middle, hallucination, sycophancy, repetition | Advanced |
 | 10 | [Production Deployment](Notes/10-Production-Deployment.md) | vLLM/TGI, latency budgets, prefix caching, token window workarounds, cost optimization | Advanced |
 | 11 | [Prompting Strategies](Notes/04-Prompting-Strategies.md) | Chat templates, CoT mechanics, system prompts, structured output, prompt injection | Intermediate |
-| 12 | [Interview Q&A Bank](Notes/12-Interview-QA-Bank.md) | 68+ Q&A pairs tagged Easy/Medium/Hard across all topics | All levels |
+| 12 | [Q&A Review Bank](Notes/12-Interview-QA-Bank.md) | 68+ Q&A pairs tagged Easy/Medium/Hard across all topics | All levels |
 
 ## Recommended Learning Paths
 
@@ -46,7 +46,7 @@
 3. [KV Cache & Inference](Notes/05-KV-Cache-and-Inference-Optimization.md) — increasingly asked in production roles
 4. [Fine-Tuning](Notes/07-Fine-Tuning.md) — LoRA math, RLHF vs DPO
 5. [GPU & Hardware](Notes/08-GPU-and-Hardware.md) — VRAM estimation questions are common
-6. [Interview Q&A Bank](Notes/12-Interview-QA-Bank.md) — drill all 68 questions
+6. [Q&A Review Bank](Notes/12-Interview-QA-Bank.md) — drill all 68 questions
 
 ### Path C: Production Engineering (Advanced)
 1. [KV Cache & Inference Optimization](Notes/05-KV-Cache-and-Inference-Optimization.md)
@@ -57,7 +57,7 @@
 ## Resources
 
 - [Gemma Handbook](../Resources/01-LLM-Models/Gemma-Handbook.pdf) — Google's Gemma open model reference
-- [Interview Q&A Bank](Notes/12-Interview-QA-Bank.md) — 68+ Q&A pairs in this module
+- [Q&A Review Bank](Notes/12-Interview-QA-Bank.md) — 68+ Q&A pairs in this module
 - [Cross-topic Interview Questions](../Interview-Questions/01-LLM-Models.md)
 
 ## Key Cross-References

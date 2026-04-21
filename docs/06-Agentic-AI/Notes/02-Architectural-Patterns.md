@@ -379,7 +379,7 @@ The orchestrator includes a debate step for high-stakes decisions: one subagent 
 
 ---
 
-## Interview Questions
+## Q&A Review Bank
 
 **Q1: What distinguishes an architectural pattern from a design pattern in agentic systems?** `[Easy]`
 A: An architectural pattern defines the structural blueprint — how many agents exist, how they relate to each other, and how control and information flow between them. A design pattern defines the behavior and logic of individual agents or agent interactions (e.g., how reflection works inside a single agent). The choice of architectural pattern is the first major system design decision; design patterns are applied within that structure. The same design pattern (e.g., Reflexion) can appear inside any architectural pattern (Pipeline, Orchestrator-Subagent, etc.).
