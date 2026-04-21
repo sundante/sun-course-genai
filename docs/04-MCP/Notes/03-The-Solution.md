@@ -1,44 +1,195 @@
-# 💡 The Solution (MCP)
+# The Solution: How MCP Works
 
-[← Back to Index](../INDEX.md)
-
-## How MCP Solves the Problem
-
-### Universal Open Standard
-MCP provides a **universal, open standard** for connecting AI systems with data sources, replacing fragmented integrations with a single protocol.
-
-### Key Benefits
-
-- **Simplified Integration:** Replace multiple custom implementations with one standardized protocol
-- **Reliability:** More reliable connections built on a proven standard
-- **Scalability:** Easier to scale across multiple data sources
-- **Consistency:** Uniform approach to AI-data integration
-
-### The Result
-
-A simpler, more reliable way to give AI systems access to the data they need.
+← **Back to Overview:** [MCP](../INDEX.md)
 
 ---
 
-## Impact Areas
+## The Core Idea
 
-### For Organizations
-- Reduced custom development time
-- Standardized data access patterns
-- Better security and compliance
-- Easier maintenance and updates
+MCP solves the M×N integration problem by introducing a **shared protocol layer** between AI applications and data sources.
 
-### For Developers
-- Clear, well-documented protocol
-- SDK and tools support
-- Community-driven improvements
-- Reduced integration overhead
+```
+BEFORE MCP                          WITH MCP
+──────────────────────              ──────────────────────────────────
+App A ──custom──→ Source 1          App A ──MCP client──┐
+App A ──custom──→ Source 2                               ├──→ Source 1 (MCP server)
+App B ──custom──→ Source 1          App B ──MCP client──┤
+App B ──custom──→ Source 2                               └──→ Source 2 (MCP server)
+
+M×N = 4 connectors                 M+N = 4 implementations, unlimited connections
+```
+
+Any client connects to any server. The protocol defines the contract both sides agree to.
 
 ---
 
-## Detailed Exploration
+## What the Protocol Defines
 
-*Add your detailed notes here as you learn more about MCP's implementation and practical applications...*
+MCP specifies six **primitive types** — the building blocks of all AI-data interaction. Three are exposed *by servers*, three are exposed *by clients*.
+
+### Server-Side Primitives (what servers offer)
+
+| Primitive | Who Controls | What It Is |
+|-----------|-------------|-----------|
+| **Tools** | Model-controlled | Executable functions the LLM can invoke |
+| **Resources** | App-controlled | Passive data the application surfaces |
+| **Prompts** | User-controlled | Reusable templates users explicitly select |
+
+### Client-Side Primitives (what clients offer back)
+
+| Primitive | Direction | What It Is |
+|-----------|-----------|-----------|
+| **Sampling** | Server → Host LLM | Server requests LLM text generation |
+| **Elicitation** | Server → User | Server requests structured user input |
+| **Roots** | Client → Server | Client exposes filesystem boundaries |
+
+The *controller* distinction matters: Tools are invoked autonomously by the LLM; Resources are included in context by the application; Prompts are triggered by explicit user action.
+
+---
+
+## Server-Side Primitives in Detail
+
+### Tools — Model-Controlled Actions
+
+Tools are functions the LLM *decides* to call. They have side effects and require explicit invocation intent.
+
+```
+Example tools:
+  search_web(query: string) → results
+  query_database(sql: string) → rows
+  send_email(to: string, subject: string, body: string) → confirmation
+  create_issue(title: string, body: string, labels: list) → issue_id
+```
+
+Tools answer: *"What can the AI do?"*
+
+### Resources — Application-Controlled Context
+
+Resources are data the **application** decides to include in the LLM's context — not the model, not the user. They're passive: reading them has no side effects.
+
+```
+Example resources:
+  file:///home/user/project/README.md   → file content
+  postgres://schema/users_table         → table schema
+  github://repos/my-org/my-repo         → repo metadata
+```
+
+Resources answer: *"What context does the AI have?"*
+
+### Prompts — User-Controlled Templates
+
+Prompts are parameterized templates users explicitly invoke (like slash commands). They shape the LLM's interaction pattern for a specific task.
+
+```
+Example prompts:
+  /summarize-pr(pr_number: int)
+  /write-test(function_name: string, language: string)
+  /analyze-log(log_file: string, error_type: string)
+```
+
+Prompts answer: *"How does the user invoke a structured workflow?"*
+
+---
+
+## Client-Side Primitives in Detail
+
+### Sampling — LLM Access for Servers
+
+Servers can request the Host's LLM to generate text. This makes servers **model-agnostic** — the server specifies preferences, the Host chooses the model.
+
+```
+Server → Client: "Please generate a summary of this document"
+Client → LLM: routes to whatever model the Host is running
+LLM → Client → Server: generated text
+```
+
+The server never knows which model was used. It works identically with Claude, GPT-4, or any local model.
+
+### Elicitation — Structured User Input
+
+Servers can pause and request structured information from the user via the Host. The user can accept (with data), decline, or cancel.
+
+```
+Server → Client: "Before deleting 50 records, confirm:
+                  { records_to_delete: int, confirm_backup: bool }"
+User   → Client: accept { records_to_delete: 50, confirm_backup: true }
+Client → Server: approved, proceed
+```
+
+### Roots — Filesystem Boundaries
+
+Clients expose `file://` URIs representing the directories the server is allowed to access. This scopes server access to declared workspace roots.
+
+```
+Client declares: file:///home/user/projects/my-app
+Server knows: only files under this path are in scope
+```
+
+---
+
+## The Security Model
+
+MCP's solution is not just about connectivity — it bakes security into the protocol:
+
+### Consent at Every Layer
+
+```
+User consent    → which servers can the Host connect to?
+App consent     → which capabilities does the Host declare?
+Elicitation     → does the user approve this specific server action?
+Tool call       → does the user see and approve this tool invocation?
+```
+
+### Principle of Least Disclosure
+
+- Resources return only what the server chooses to expose
+- Tool results contain only what's needed — not raw database rows
+- Roots limit filesystem access to declared boundaries
+- Capability negotiation limits what a server can even attempt
+
+### The Trust Hierarchy
+
+```
+Most trusted    User (highest authority)
+                ↓
+                Host (mediates all server interactions)
+                ↓
+                Client (executes protocol mechanics)
+                ↓
+Least trusted   Server (untrusted third-party code)
+```
+
+Servers are treated as untrusted third parties. Every capability they use must be explicitly granted by the Host.
+
+---
+
+## The M×N Reduction in Practice
+
+With MCP in place:
+
+- **1 MCP client implementation** connects to all existing and future servers
+- **1 MCP server implementation** works with all existing and future hosts
+- **No coordination required** between client developers and server developers
+- **Model upgrades** don't require server changes (Sampling keeps servers model-agnostic)
+- **New data sources** become available to all hosts simultaneously
+
+The math: 100 AI applications + 500 data sources = **600 implementations, 50,000 working connections**.
+
+Without MCP: 50,000 custom integrations — maintained, versioned, and debugged separately.
+
+---
+
+## What MCP Does Not Do
+
+MCP is a connectivity protocol, not an execution engine:
+
+| What MCP provides | What you still build |
+|-------------------|---------------------|
+| How tools are described and called | What the tools actually do |
+| How resources are accessed | What data the resources contain |
+| How the LLM requests generation | Which model to use and the prompting strategy |
+| A consent framework | The application's specific authorization policies |
+| A transport standard | The server's business logic |
 
 ---
 
@@ -51,30 +202,30 @@ A simpler, more reliable way to give AI systems access to the data they need.
 
 ## Q&A Review Bank
 
-**Q1: What is the core architectural shift MCP introduces compared to a world of custom integrations?** `[Easy]`
+**Q1: What are the three server-side primitives and what controls each one?** `[Easy]`
 
-A: MCP replaces one-off bilateral integrations with a hub-and-spoke model built on a shared protocol. Instead of Application A building a custom connector to Data Source X and Application B building its own separate connector to the same X, both applications use a standard MCP client that works with any MCP server. The shared protocol becomes the hub — integration complexity moves out of individual applications and into a one-time server implementation, which any number of clients can then consume without additional custom code.
-
----
-
-**Q2: What are the three MCP primitive types and how do they differ conceptually?** `[Medium]`
-
-A: Tools are executable functions that take input and produce output (e.g., `search_database(query)`) — they have side effects and represent agent actions. Resources are passive data sources the client can read without triggering logic (e.g., a file's content, a schema definition) — they're safe to read freely during planning. Prompts are reusable, parameterized templates that shape LLM behavior for a specific task — they're discovered via `prompts/list` and instantiated with arguments at runtime. The distinction matters operationally: Tools require authorization, Resources require access control, and Prompts require discoverability.
+A: Tools are model-controlled — the LLM autonomously decides when to invoke them based on task context. Resources are application-controlled — the host application decides which data to include in the LLM's context. Prompts are user-controlled — the user explicitly triggers them like slash commands. This three-way split is deliberate: it assigns clear authority to the right actor for each type of interaction, preventing the LLM from autonomously reading passive data (a Resource concern), or the application from automatically executing side-effecting operations (a Tool concern).
 
 ---
 
-**Q3: How does MCP improve reliability compared to maintaining a collection of custom integrations?** `[Medium]`
+**Q2: What is the Roots primitive and how does it limit server access?** `[Medium]`
 
-A: Custom integrations break silently when upstream APIs change auth schemes, response formats, or pagination — and each break requires finding and patching the specific connector, often discovered only when the production system fails. With MCP, when a data source changes its internal API, only the MCP server is updated; every application using it gets the fix automatically. Additionally, the protocol's lifecycle management — capability negotiation, reconnection handling, structured error codes — provides a standardized reliability layer that custom integrations must implement from scratch and frequently get wrong.
-
----
-
-**Q4: Why is a shared protocol more valuable at the ecosystem level than a better custom integration at the individual level?** `[Hard]`
-
-A: A better custom integration helps exactly one application-source pair; a shared protocol compounds across every future participant. If 100 applications and 200 data sources adopt MCP, the ecosystem gets 20,000 working connections from 300 total implementations — versus 20,000 if every pair built custom. No individual team can capture that value by optimizing their own connector. This is why TCP/IP, HTTP, and OAuth created more total value than any proprietary alternative: the standard itself becomes infrastructure that raises the capability floor for every participant, and MCP is betting the same dynamic applies to AI-data integration.
+A: Roots are `file://` URIs declared by the client that define the filesystem boundaries the server is permitted to access — typically the user's active project directories or workspaces. The server queries `roots/list` to discover which paths are in scope, and should restrict all file operations to paths under those roots. The client receives `notifications/roots/list_changed` when the workspace changes. This prevents a server from accessing files outside the user's intended scope — a server for a project at `/home/user/projects/app` cannot read `/home/user/.ssh/` unless that path is explicitly declared as a root.
 
 ---
 
-**Q5: How does MCP handle the security concern that Tools can have irreversible side effects?** `[Hard]`
+**Q3: Explain the MCP trust hierarchy and why Servers are at the bottom.** `[Medium]`
 
-A: MCP addresses this at multiple layers. The distinction between Tools and Resources enforces implicit consent: Resources are read-only by definition and don't require approval, while Tools represent agent actions that may be irreversible and must be explicitly invoked by the LLM in response to user intent. The Elicitation primitive lets a server pause execution and surface a confirmation dialog to the user before proceeding with sensitive operations — the Host mediates this gate and can refuse auto-approval based on policy. Hosts are also responsible for per-server permission models during setup, so users authorize which tools an application can access before any session begins.
+A: The trust hierarchy flows: User (highest) → Host → Client → Server (lowest). Servers are treated as untrusted third parties because they are arbitrary code, potentially authored by anyone and distributed through the open-source ecosystem. A server cannot use any capability the Host didn't explicitly declare during initialization; all server-initiated interactions with the user (Elicitation) and the LLM (Sampling) must pass through the Host, which can inspect and reject them. This design ensures that even a compromised or malicious server is constrained by what the Host permits — it cannot directly access the LLM, the user, or capabilities beyond its declared scope.
+
+---
+
+**Q4: How does the Sampling primitive achieve model-agnosticism for MCP servers?** `[Hard]`
+
+A: When a server needs LLM-generated text, it sends a `sampling/createMessage` request specifying messages and preferences (costPriority, speedPriority, intelligencePriority, and optional model name hints) — but never a specific model API endpoint or API key. The Host intercepts this request, selects the actual model based on its own configuration and the server's preferences, executes the generation, and returns the result to the server. The server never knows which model was used and never holds credentials. When the Host switches from Claude to GPT-4, every MCP server immediately runs against the new model without any server-side changes.
+
+---
+
+**Q5: What is the difference between a Tool error and a protocol error in MCP, and why does the distinction matter?** `[Hard]`
+
+A: A protocol error occurs when something goes wrong at the communication level — unknown method name, malformed JSON, server failure, timeout — and is returned as a JSON-RPC error object (with negative error codes like `-32602`). A Tool execution error is when the tool ran successfully from a protocol perspective but the business logic failed (e.g., "file not found", "permission denied", "query returned no results") — this is returned as a normal result with `isError: true` in the response body. The distinction matters because the LLM should treat protocol errors as communication failures (retry or escalate) but treat tool execution errors as informative results it can reason about — "the file wasn't found, so I should try a different path."
