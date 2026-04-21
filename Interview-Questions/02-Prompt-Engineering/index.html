@@ -1081,6 +1081,62 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02-Prompts/Notes/05-Prompt-Optimization-and-Automation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompt Optimization & Automation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02-Prompts/Notes/06-Interview-QA-Bank/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interview Q&A Bank
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -3464,10 +3520,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#foundational-questions" class="md-nav__link">
+  <a href="#foundational" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Foundational Questions
+        Foundational
       
     </span>
   </a>
@@ -3475,10 +3531,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#technique-specific-questions" class="md-nav__link">
+  <a href="#core-techniques" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Technique-Specific Questions
+        Core Techniques
       
     </span>
   </a>
@@ -3486,10 +3542,43 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#production-and-safety-questions" class="md-nav__link">
+  <a href="#advanced-techniques" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Production and Safety Questions
+        Advanced Techniques
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#production-and-security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Production and Security
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#automation-and-evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automation and Evaluation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tricky-edge-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tricky / Edge Cases
       
     </span>
   </a>
@@ -3651,10 +3740,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#foundational-questions" class="md-nav__link">
+  <a href="#foundational" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Foundational Questions
+        Foundational
       
     </span>
   </a>
@@ -3662,10 +3751,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#technique-specific-questions" class="md-nav__link">
+  <a href="#core-techniques" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Technique-Specific Questions
+        Core Techniques
       
     </span>
   </a>
@@ -3673,10 +3762,43 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#production-and-safety-questions" class="md-nav__link">
+  <a href="#advanced-techniques" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Production and Safety Questions
+        Advanced Techniques
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#production-and-security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Production and Security
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#automation-and-evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automation and Evaluation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tricky-edge-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tricky / Edge Cases
       
     </span>
   </a>
@@ -3704,33 +3826,97 @@
 
 
 <h1 id="concept-review-prompt-engineering">Concept Review — Prompt Engineering</h1>
-<h2 id="foundational-questions">Foundational Questions</h2>
-<p><strong>Q: What is prompt engineering and why does it matter?</strong>
-Prompt engineering is the practice of designing, testing, and iterating on the inputs to an LLM to reliably produce desired outputs. It matters because the same model can perform drastically differently depending on how the task is framed — a well-designed prompt can rival the performance of a fine-tuned model for many tasks, at zero additional cost.</p>
-<p><strong>Q: What is the difference between a system prompt and a user prompt?</strong>
-System prompt: set by the developer, establishes context, persona, constraints, and behavior rules for the entire conversation. Not shown to the end user. User prompt: the actual input from the user (or the task instruction in a non-chat context). The model sees both, but the system prompt takes precedence for behavior guidelines.</p>
-<p><strong>Q: What are the key elements of a well-structured prompt?</strong>
-(1) Role/persona — who the model should act as. (2) Context — background the model needs. (3) Task — the specific instruction. (4) Constraints — what to avoid, format requirements, length. (5) Examples — few-shot demonstrations. (6) Output format — JSON, bullet list, paragraph, etc. Not all elements are needed every time — start minimal and add structure to fix failures.</p>
-<p><strong>Q: What is few-shot prompting and when should you use it?</strong>
-Including examples of input→output pairs in the prompt before the actual input. Useful when: the task format is non-standard, the model consistently misunderstands the task, or you need output in a specific style/structure. Usually 2-5 examples is sufficient — more can hurt by consuming context or biasing outputs.</p>
+<p>Quick-reference Q&amp;A for interview preparation. For in-depth treatment, see the <a href="../../02-Prompts/Notes/06-Interview-QA-Bank/">Interview Q&amp;A Bank</a>.</p>
 <hr />
-<h2 id="technique-specific-questions">Technique-Specific Questions</h2>
-<p><strong>Q: What is Chain-of-Thought prompting?</strong>
-Instructing the model to reason step-by-step before giving a final answer ("Let's think step by step" or by showing reasoning examples). CoT dramatically improves performance on multi-step reasoning, math, and logic tasks because intermediate reasoning steps help the model maintain accuracy. Zero-shot CoT (just adding "think step by step") works surprisingly well.</p>
-<p><strong>Q: What is the difference between CoT and ReAct prompting?</strong>
-CoT: model reasons (thinks) before answering, but reasoning is internal and not used to take external actions. ReAct (Reason + Act): model interleaves reasoning with actions (tool calls). After a Thought, the model takes an Action (e.g., search), receives an Observation, then reasons again. ReAct is the foundation of most tool-using agents.</p>
-<p><strong>Q: What is Tree of Thought (ToT)?</strong>
-An extension of CoT where the model explores multiple reasoning paths simultaneously (like a tree search) rather than one linear chain. It generates multiple possible next steps, evaluates them, and backtracks if needed. Useful for complex planning or puzzle-solving tasks but significantly more expensive than standard CoT.</p>
-<p><strong>Q: What is self-consistency?</strong>
-Generate the same prompt multiple times (with non-zero temperature) to get diverse reasoning chains, then take a majority vote on the final answer. Improves accuracy on reasoning tasks by averaging out errors in individual chains. Trade-off: multiplies cost by the number of samples.</p>
+<h2 id="foundational">Foundational</h2>
+<p><strong>Q: What is prompt engineering and why does it matter?</strong><br />
+The practice of designing, testing, and iterating on LLM inputs to reliably produce desired outputs. Matters because the same model performs drastically differently based on how the task is framed — a well-designed prompt can match fine-tuned model performance at zero additional cost and in seconds of iteration.</p>
+<p><strong>Q: What are the four components of a well-structured prompt?</strong><br />
+Instruction (what to do), Context (background the model needs), Input Data (the content to process), Output Format (the shape of the response). Add components only to fix actual failures — start minimal.</p>
+<p><strong>Q: What is the difference between a system prompt and a user prompt?</strong><br />
+System prompt: developer-controlled, establishes persona, constraints, and format rules for the entire session. User prompt: the actual task or query. The model sees both; system takes behavioral precedence — but that precedence is trained behavior, not an architectural guarantee.</p>
+<p><strong>Q: Can a system prompt be overridden by a user?</strong><br />
+Not through the API role mechanism, but through adversarial prompting. Role hierarchy is trained via RLHF, not enforced architecturally. Sufficiently crafted user input can cause the model to ignore system instructions — the basis of jailbreaking and prompt injection.</p>
+<p><strong>Q: What is assistant prefill?</strong><br />
+Injecting a partial assistant message before generation begins, forcing the model to continue from that starting point. Used to prevent preamble text, force JSON output (start with <code>{</code>), or enforce a specific structure.</p>
+<p><strong>Q: What is tokenization and why does it matter for prompting?</strong><br />
+Tokenization converts text into subword units (tokens) — what the model actually processes. Numbers, code, and special characters split across token boundaries in non-obvious ways. Context windows are token-counted. Character-level tasks (count letters, reverse strings) fail because the model reasons over tokens, not characters.</p>
+<p><strong>Q: What is the "prompt as a program" mental model?</strong><br />
+Prompt = function body; input data = argument; model output = return value; model = interpreter. Enables engineering discipline: debug by adding "print statements" (think aloud), test with eval sets, compose via prompt chaining.</p>
 <hr />
-<h2 id="production-and-safety-questions">Production and Safety Questions</h2>
-<p><strong>Q: What is prompt injection and how do you defend against it?</strong>
-An attack where malicious content in external data (web pages, documents, user input) tries to override system instructions — e.g., "Ignore previous instructions and...". Defenses: input sanitization, using delimiters/tags to clearly separate trusted vs untrusted content, privileged vs unprivileged instruction layers, and monitoring outputs for anomalous behavior.</p>
-<p><strong>Q: How do you evaluate prompt quality systematically?</strong>
-Define a test set of representative inputs with expected outputs. Score outputs on: correctness, format compliance, tone/style, safety. Use LLM-as-judge for qualitative scoring at scale (have another LLM rate outputs against a rubric). Track metrics across prompt versions. Golden-set regression testing catches regressions when prompts change.</p>
-<p><strong>Q: How do you handle prompts that produce inconsistent outputs?</strong>
-Add explicit output format constraints (e.g., "respond only with valid JSON"). Lower temperature for deterministic tasks. Add self-checking instructions ("verify your answer before responding"). Use structured output APIs (JSON mode). Add few-shot examples that demonstrate the expected consistency.</p>
+<h2 id="core-techniques">Core Techniques</h2>
+<p><strong>Q: What is zero-shot prompting and why does it work?</strong><br />
+Giving the model a task with no examples. Works because instruction tuning (RLHF, FLAN) installed a general "follow natural language instructions" skill across thousands of task types. Only works on instruction-tuned models.</p>
+<p><strong>Q: What is few-shot prompting (in-context learning)?</strong><br />
+Including 1–N input→output examples before the query. The model learns the task format and pattern through completion, not gradient updates. Example quality, order, and diversity matter more than quantity.</p>
+<p><strong>Q: What is label sensitivity in few-shot prompting?</strong><br />
+Model performance changes when example labels change, even with equally valid examples. Related: recency bias — the last few examples disproportionately influence the output. Shuffle example order and balance classes to mitigate.</p>
+<p><strong>Q: Research shows few-shot works even with wrong labels. What does this mean?</strong><br />
+Few-shot is primarily a format/distribution signal, not knowledge injection (Min et al., 2022). Models learn task structure from examples, not correct label semantics. Format consistency and example diversity matter more than label accuracy.</p>
+<p><strong>Q: What is Chain-of-Thought prompting?</strong><br />
+Instructing the model to produce intermediate reasoning steps before the final answer. Intermediate tokens serve as working memory — each step is written into context and available for subsequent reasoning, extending the model's ability to track state across multi-step problems.</p>
+<p><strong>Q: What is zero-shot CoT?</strong><br />
+Adding "Let's think step by step" to a prompt without any examples. Works because instruction-tuned models were trained on step-by-step reasoning data. The phrase activates that pattern.</p>
+<p><strong>Q: What is ReAct prompting?</strong><br />
+Thought → Action → Observation loop. The model generates a Thought (internal reasoning), an Action (tool call), receives an Observation (tool result), and repeats. Foundation of all tool-using agents. The model generates text describing tool calls; application code executes them.</p>
+<p><strong>Q: What is role/persona prompting and what does it actually change?</strong><br />
+"You are an expert X" shifts response vocabulary, depth, tone, and assumed audience — not the model's actual knowledge. Personas don't inject new knowledge; they shift the response distribution.</p>
+<p><strong>Q: Why is negative prompting less reliable than positive framing?</strong><br />
+"Don't do X" requires the model to represent X to negate it — potentially priming the behavior. "Do Y instead" gives a direct positive target. Use negative framing only for prohibitions with no clean positive alternative.</p>
+<hr />
+<h2 id="advanced-techniques">Advanced Techniques</h2>
+<p><strong>Q: What is Tree of Thought (ToT)?</strong><br />
+Extends CoT from a single linear chain to a tree search. Generates multiple candidate reasoning steps at each level, scores them, and explores the best branches — backtracking on dead ends. Cost: O(breadth × depth) LLM calls. Use when CoT consistently fails and the problem has well-defined evaluation criteria.</p>
+<p><strong>Q: What is self-consistency?</strong><br />
+Generate N diverse CoT chains (high temperature), take a majority vote on the final answer. Improves accuracy by averaging out errors across chains. Works only for tasks with verifiable, convergent answers. Cost: N× base cost.</p>
+<p><strong>Q: What is prompt chaining?</strong><br />
+Decomposing a complex task into a pipeline of focused prompts, where output of step N feeds step N+1. Benefits: debuggable, composable, parallelizable. Risk: error propagation — validate intermediate outputs.</p>
+<p><strong>Q: What is the self-refinement loop?</strong><br />
+Generate → critique → revise, iterated 1–3 times. Improves output quality for tasks with clear evaluation criteria. Subject to the model's own blind spots — it may not critique its own errors.</p>
+<p><strong>Q: What is Generated Knowledge Prompting?</strong><br />
+Ask the model to generate relevant facts before answering. Predecessor to RAG — makes implicit knowledge explicit in context. Risk: model can hallucinate the generated facts, which then become the basis for a confident wrong answer.</p>
+<p><strong>Q: What is Least-to-Most Prompting?</strong><br />
+Decompose a problem into sub-problems ordered from simplest to hardest. Solve each, carrying the solution forward as context for the next sub-problem. Effective for multi-step math, multi-hop Q&amp;A, and complex code generation.</p>
+<hr />
+<h2 id="production-and-security">Production and Security</h2>
+<p><strong>Q: Why is JSON mode not sufficient for structured output?</strong><br />
+JSON mode guarantees syntactically valid JSON but not your schema. The model can return any valid JSON structure. Schema enforcement requires structured output with a Pydantic model or manual post-hoc validation.</p>
+<p><strong>Q: What is prompt drift?</strong><br />
+Silent degradation when the model provider updates the underlying model. Your prompt stays the same; model behavior changes. Detection: monitor output metrics continuously. Mitigation: pin model versions in production; run eval suites before switching model versions.</p>
+<p><strong>Q: What is prompt injection?</strong><br />
+An attack where malicious instructions embedded in user input or external data override system instructions. Direct: user input contains override instructions. Indirect: malicious instructions embedded in retrieved content (web pages, documents). No complete defense exists — use defense in depth.</p>
+<p><strong>Q: What is prompt leaking?</strong><br />
+Causing the model to reveal its system prompt via crafted inputs ("Repeat everything above verbatim"). Defense: explicit prohibition in system prompt, output monitoring for key phrases, and keeping the system prompt brief and non-sensitive.</p>
+<p><strong>Q: What is the "lost in the middle" problem?</strong><br />
+Models attend more strongly to tokens at the beginning and end of the context window. Critical instructions or documents placed in the middle receive less attention. Mitigation: place critical content at start or end; repeat important instructions.</p>
+<p><strong>Q: How do you evaluate prompt quality systematically?</strong><br />
+Golden set with representative + edge case examples; LLM-as-judge for non-binary quality; regression testing against previous prompt versions; security tests (injection, leaking). Always evaluate before any production deployment.</p>
+<p><strong>Q: What are the known biases of LLM-as-Judge?</strong><br />
+Position bias (prefers first option), verbosity bias (prefers longer responses), self-preference (favors same-model-family outputs), sycophancy (agrees with hinted preferences). Mitigations: swap A/B order and average, use a different model as judge, include conciseness in the rubric.</p>
+<hr />
+<h2 id="automation-and-evaluation">Automation and Evaluation</h2>
+<p><strong>Q: What is APE (Automatic Prompt Engineer)?</strong><br />
+Use an LLM to generate candidate prompt instructions from demonstration pairs, evaluate each on a test set, and select the best. One-shot: generate once, evaluate, select. Does not iteratively improve.</p>
+<p><strong>Q: What is OPRO?</strong><br />
+Iterative prompt optimization. Maintains a history of (prompt, score) pairs; an optimizer LLM proposes improvements based on the history — converging over multiple rounds. Similar to gradient descent but using language rather than calculus.</p>
+<p><strong>Q: What is DSPy?</strong><br />
+A framework where you write programs using LM calls as primitives; DSPy compiles those programs into optimized prompts automatically. Requires a metric function and training data. The prompt is an implementation detail managed by the compiler, not hand-written.</p>
+<p><strong>Q: How do reasoning models change prompting?</strong><br />
+Models like o1, o3, Claude extended thinking, and DeepSeek R1 perform internal CoT — explicit CoT instructions and demonstrations are no longer necessary (and can be counterproductive). Prompting shifts to: clear task framing, output format, constraints, and context quality. Prompt engineering evolves rather than disappears.</p>
+<p><strong>Q: What is LLM-as-Judge?</strong><br />
+Using a strong LLM to evaluate outputs at scale for tasks where "correct" is not binary. Modes: criteria-based (score against a rubric), pairwise (which is better?), reference-based (compare to gold answer). Reliable for relative comparisons; less reliable for absolute scores.</p>
+<hr />
+<h2 id="tricky-edge-cases">Tricky / Edge Cases</h2>
+<p><strong>Q: Why does adding "Let's think step by step" work even with no examples?</strong><br />
+Instruction-tuned models were trained on step-by-step reasoning data. The trigger phrase activates that pattern without needing examples. The intermediate tokens serve as working memory for multi-step problems.</p>
+<p><strong>Q: A model correctly identifies the answer in its reasoning but gives the wrong final answer. What happened?</strong><br />
+The model may have reached the correct intermediate conclusion but then "overrode" it with a more probable completion — the final answer token prediction was pulled toward a different pattern in the training distribution. Fix: use answer extraction prompts ("Based on your reasoning above, the final answer is:") or few-shot examples showing correct answer extraction.</p>
+<p><strong>Q: Why might an adversarial user provide a very long input to a RAG-augmented chatbot?</strong><br />
+To push the system prompt and retrieved context into the "middle" of the context window, reducing the model's attention to them. A very long user-supplied document can effectively bury safety instructions and retrieved context, potentially making the model more susceptible to injection or hallucination. Mitigation: enforce input length limits; always place system instructions at the top of the context.</p>
+<p><strong>Q: What does it mean for a prompt to "overfit" to a test set?</strong><br />
+The prompt was optimized (manually or automatically) to perform well on specific test examples but fails on novel inputs from the production distribution. Signs: very high eval accuracy but significant production accuracy drop; the prompt contains very specific references to patterns in the test set. Prevention: use a held-out test set that is not accessible during prompt development, and monitor production accuracy independently.</p>
+<p><strong>Q: Is prompt engineering still relevant with reasoning models?</strong><br />
+Yes — it evolves. Reasoning models don't need CoT instructions, but still require: clear task framing (what counts as success), output format specification, context quality, evaluation, security, and cost optimization. The "tell the model how to think" part shrinks; the "define what you want and measure if you got it" part remains and may grow.</p>
 
 
 

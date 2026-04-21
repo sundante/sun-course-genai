@@ -1044,6 +1044,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-evolution-arc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Evolution Arc
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#chapter-map" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1184,6 +1195,62 @@
     
   
     Prompts in Production
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Notes/05-Prompt-Optimization-and-Automation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prompt Optimization & Automation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Notes/06-Interview-QA-Bank/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interview Q&A Bank
   
 
     
@@ -3717,6 +3784,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-evolution-arc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Evolution Arc
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#chapter-map" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3771,11 +3849,21 @@
 
 <h1 id="02-prompt-engineering">02 — Prompt Engineering</h1>
 <h2 id="what-you-will-learn">What You Will Learn</h2>
-<p>Prompt engineering is the practice of designing inputs to language models to reliably produce the desired outputs. It is the first lever you pull when working with LLMs — before fine-tuning, before RAG, before agents.</p>
+<p>Prompt engineering is the practice of designing inputs to language models to reliably produce the desired outputs. It is the first lever you pull when working with LLMs — before fine-tuning, before RAG, before agents. It is also the fastest to iterate on: a prompt change takes seconds; retraining takes days.</p>
 <h2 id="why-it-comes-after-llms">Why It Comes After LLMs</h2>
-<p>You need to understand how LLMs process tokens and generate text (Topic 01) before you can reason about <em>why</em> certain prompt structures work. Prompt engineering is applied LLM knowledge.</p>
+<p>You need to understand how LLMs process tokens and generate text (Topic 01) before you can reason about <em>why</em> certain prompt structures work. Prompt engineering is applied LLM knowledge — tokenization explains why character-level tasks fail; attention explains why "lost in the middle" happens; instruction tuning explains why zero-shot prompting works at all.</p>
 <h2 id="why-it-comes-before-rag-and-agents">Why It Comes Before RAG and Agents</h2>
 <p>RAG pipelines and agents are built on top of prompts. The quality of your retrieval prompts, tool-use prompts, and system prompts directly determines system quality. Strong prompting fundamentals make everything downstream better.</p>
+<h2 id="the-evolution-arc">The Evolution Arc</h2>
+<p>This section is structured to follow the historical development of the field:</p>
+<pre><code>2020  Zero-shot / few-shot discovered (GPT-3)
+2022  Chain-of-Thought unlocks reasoning (Wei et al.)
+2022  ReAct connects models to tools (Yao et al.)
+2023  ToT, self-consistency — systematic search over reasoning space
+2023  Production concerns: injection, evals, versioning, structured output
+2024  DSPy, OPRO — automated prompt optimization
+2025  Reasoning models change the prompting paradigm
+</code></pre>
 <h2 id="chapter-map">Chapter Map</h2>
 <table>
 <thead>
@@ -3789,22 +3877,32 @@
 <tr>
 <td>1</td>
 <td><a href="../Notes/01-Prompt-Basics/">Prompt Basics</a></td>
-<td>Anatomy, system vs user, mental model</td>
+<td>Anatomy, system vs user, mental model, tokenization, temperature</td>
 </tr>
 <tr>
 <td>2</td>
 <td><a href="../Notes/02-Core-Techniques/">Core Techniques</a></td>
-<td>Zero-shot, few-shot, CoT, ReAct</td>
+<td>Zero-shot, few-shot, CoT, ReAct, role/persona</td>
 </tr>
 <tr>
 <td>3</td>
 <td><a href="../Notes/03-Advanced-Techniques/">Advanced Techniques</a></td>
-<td>ToT, self-consistency, meta-prompting</td>
+<td>ToT, self-consistency, chaining, meta-prompting, L2M</td>
 </tr>
 <tr>
 <td>4</td>
 <td><a href="../Notes/04-Prompt-Engineering-for-Production/">Prompts in Production</a></td>
-<td>Templates, versioning, injection, evals</td>
+<td>Structured output, versioning, injection, evals, context management</td>
+</tr>
+<tr>
+<td>5</td>
+<td><a href="../Notes/05-Prompt-Optimization-and-Automation/">Prompt Optimization &amp; Automation</a></td>
+<td>APE, OPRO, DSPy, LLM-as-Judge, reasoning models</td>
+</tr>
+<tr>
+<td>6</td>
+<td><a href="../Notes/06-Interview-QA-Bank/">Interview Q&amp;A Bank</a></td>
+<td>65+ questions, Easy → Staff-level</td>
 </tr>
 </tbody>
 </table>
@@ -3812,9 +3910,11 @@
 <ol>
 <li><a href="../Notes/01-Prompt-Basics/">Prompt Basics</a> — understand what a prompt actually is</li>
 <li><a href="../Notes/02-Core-Techniques/">Core Techniques</a> — learn the patterns used 90% of the time</li>
-<li><a href="../Notes/03-Advanced-Techniques/">Advanced Techniques</a> — extend your toolkit</li>
-<li><a href="../Notes/04-Prompt-Engineering-for-Production/">Prompts in Production</a> — real-world considerations</li>
-<li><a href="../../Interview-Questions/02-Prompt-Engineering/">Interview Q&amp;A</a> — consolidate and test</li>
+<li><a href="../Notes/03-Advanced-Techniques/">Advanced Techniques</a> — extend your toolkit for complex tasks</li>
+<li><a href="../Notes/04-Prompt-Engineering-for-Production/">Prompts in Production</a> — real-world engineering concerns</li>
+<li><a href="../Notes/05-Prompt-Optimization-and-Automation/">Prompt Optimization &amp; Automation</a> — scale beyond manual iteration</li>
+<li><a href="../Notes/06-Interview-QA-Bank/">Interview Q&amp;A Bank</a> — consolidated review across all topics</li>
+<li><a href="../../Interview-Questions/02-Prompt-Engineering/">Knowledge Check</a> — concise Q&amp;A for final review</li>
 </ol>
 <h2 id="navigation">Navigation</h2>
 <p><a href="../../01-LLM-Models/INDEX/">Previous: 01 — LLM Models</a> | <a href="../../03-RAGs/INDEX/">Next: 03 — RAGs</a></p>
