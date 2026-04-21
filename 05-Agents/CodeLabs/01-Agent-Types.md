@@ -2,7 +2,7 @@
 
 Build single agents from scratch across three complexity levels in all four frameworks. Each level adds a new capability layer on top of the previous.
 
-**Notes companion:** [05 — Agents](../05-Agents/INDEX.md)
+**Notes companion:** [05 — Agents](../INDEX.md)
 
 ---
 
@@ -73,10 +73,10 @@ Basic Gemini call         + Structured output         + Streaming
 
 ```bash
 # Start with the simplest ADK notebook
-jupyter notebook Codes/01-Agent-Types/ADK/01-simple/agent.ipynb
+jupyter notebook 05-Agents/CodeLabs/01-Agent-Types/ADK/01-simple/agent.ipynb
 
 # Or LangChain if you prefer
-jupyter notebook Codes/01-Agent-Types/LangChain/01-simple/agent.ipynb
+jupyter notebook 05-Agents/CodeLabs/01-Agent-Types/LangChain/01-simple/agent.ipynb
 ```
 
 After completing all four simple agents, compare: same task, four different approaches. The differences in state management, tool binding, and model calls become immediately apparent.
@@ -85,12 +85,12 @@ After completing all four simple agents, compare: same task, four different appr
 
 ## What to Read Alongside
 
-- [Agent Fundamentals](../05-Agents/Notes/01-Agent-Fundamentals.md) — the ReAct loop, tool use, memory types
-- [Agent Patterns](../05-Agents/Notes/02-Agent-Patterns.md) — planning and reflection patterns used at Level 3
-- Framework-specific deep-dives: [GCP ADK](../05-Agents/GCP-ADK/INDEX.md) · [LangChain](../05-Agents/LangChain/INDEX.md) · [LangGraph](../05-Agents/LangGraph/INDEX.md) · [CrewAI](../05-Agents/CrewAI/INDEX.md)
+- [Agent Fundamentals](../Notes/01-Agent-Fundamentals.md) — the ReAct loop, tool use, memory types
+- [Agent Patterns](../Notes/02-Agent-Patterns.md) — planning and reflection patterns used at Level 3
+- Framework-specific deep-dives: [GCP ADK](../GCP-ADK/INDEX.md) · [LangChain](../LangChain/INDEX.md) · [LangGraph](../LangGraph/INDEX.md) · [CrewAI](../CrewAI/INDEX.md)
 
 ---
 
 ## Next: Architecture Patterns
 
-Once you've built single agents, move to [02 — Architecture Patterns](02-Architectures.md) to see how multiple agents coordinate.
+Once you've built single agents, move to [02 — Architecture Patterns](../../06-Agentic-AI/CodeLabs/02-Architectures.md) to see how multiple agents coordinate.

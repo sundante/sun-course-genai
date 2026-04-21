@@ -33,8 +33,8 @@ AI agents are LLM-powered systems that can perceive their environment, reason ab
 
 | Section | What You'll Build | Link |
 |---------|------------------|------|
-| Agent Types | Simple → Intermediate → Complex agents across all 4 frameworks | [Codes/01-Agent-Types](../Codes/01-Agent-Types.md) |
-| Architecture Patterns | 7 multi-agent coordination patterns × 4 frameworks | [Codes/02-Architectures](../Codes/02-Architectures.md) |
+| Agent Types | Simple → Intermediate → Complex agents across all 4 frameworks | [CodeLabs — Agent Types](CodeLabs/01-Agent-Types.md) |
+| Architecture Patterns | 7 multi-agent coordination patterns × 4 frameworks | [CodeLabs — Architecture Patterns](../06-Agentic-AI/CodeLabs/02-Architectures.md) |
 
 ## Notes
 

@@ -2,7 +2,7 @@
 
 Four complete, end-to-end production-grade agentic systems. Each system combines multiple architectural patterns from [02 — Architecture Patterns](02-Architectures.md) into a realistic use case, implemented across all four frameworks.
 
-**Notes companion:** [06 — Agentic AI: System Design](../06-Agentic-AI/Notes/05-Agentic-System-Design.md) · [Evaluation & Observability](../06-Agentic-AI/Notes/06-Evaluation-and-Observability.md)
+**Notes companion:** [06 — Agentic AI: System Design](../Notes/05-Agentic-System-Design.md) · [Evaluation & Observability](../Notes/06-Evaluation-and-Observability.md)
 
 ---
 
@@ -41,7 +41,7 @@ execute, and adapt             review with synthesis
 | Patterns | Orchestrator-Subagent + Parallel + Reflexion |
 | Use case | Given a research question, spawn specialist sub-researchers in parallel, aggregate findings, reflect on quality, produce final report |
 | Complexity | Advanced |
-| Files | `Codes/03-Agentic-Systems/01-Research-Assistant/<Framework>/system.py` |
+| Files | `06-Agentic-AI/CodeLabs/03-Agentic-Systems/01-Research-Assistant/<Framework>/system.py` |
 
 **Architecture flow:**
 ```
@@ -66,7 +66,7 @@ Orchestrator (plans sub-tasks)
 | Patterns | Pipeline + Conditional Routing + HITL gate |
 | Use case | Ingest documents, classify by type, extract structured data, route to appropriate workflow, pause for human approval on low-confidence cases |
 | Complexity | Advanced |
-| Files | `Codes/03-Agentic-Systems/02-Document-Processor/<Framework>/system.py` |
+| Files | `06-Agentic-AI/CodeLabs/03-Agentic-Systems/02-Document-Processor/<Framework>/system.py` |
 
 **Architecture flow:**
 ```
@@ -94,7 +94,7 @@ Output store
 | Patterns | Plan-and-Execute + Feedback loop + Dynamic replanning |
 | Use case | Accept a high-level goal, decompose into an executable plan, run each step, evaluate results, and replan when steps fail or produce unexpected output |
 | Complexity | Advanced |
-| Files | `Codes/03-Agentic-Systems/03-Autonomous-Task-Planner/<Framework>/system.py` |
+| Files | `06-Agentic-AI/CodeLabs/03-Agentic-Systems/03-Autonomous-Task-Planner/<Framework>/system.py` |
 
 **Architecture flow:**
 ```
@@ -120,7 +120,7 @@ Goal achieved / report
 | Patterns | Parallel fan-out + Aggregation + Reflexion |
 | Use case | Submit code for review; multiple specialist reviewers (security, performance, readability, correctness) run in parallel; results aggregated; Reflexion loop ensures completeness |
 | Complexity | Advanced |
-| Files | `Codes/03-Agentic-Systems/04-Code-Review-System/<Framework>/system.py` |
+| Files | `06-Agentic-AI/CodeLabs/03-Agentic-Systems/04-Code-Review-System/<Framework>/system.py` |
 
 **Architecture flow:**
 ```
@@ -156,7 +156,7 @@ All 4 systems × all 4 frameworks = **16 total implementations**:
 
 These systems assume familiarity with individual patterns. Complete these first:
 
-1. [01 — Agent Types](01-Agent-Types.md) — at least the Complex level
+1. [01 — Agent Types](../../05-Agents/CodeLabs/01-Agent-Types.md) — at least the Complex level
 2. [02 — Architecture Patterns](02-Architectures.md) — at minimum: Parallel, Orchestrator-Subagent, Reflexion
 
 ---
@@ -165,16 +165,16 @@ These systems assume familiarity with individual patterns. Complete these first:
 
 ```bash
 # Start with Research Assistant in LangGraph (cleanest state model for this use case)
-python Codes/03-Agentic-Systems/01-Research-Assistant/LangGraph/system.py
+python 06-Agentic-AI/CodeLabs/03-Agentic-Systems/01-Research-Assistant/LangGraph/system.py
 
 # Or Code Review System in CrewAI (role-based structure fits naturally)
-python Codes/03-Agentic-Systems/04-Code-Review-System/CrewAI/system.py
+python 06-Agentic-AI/CodeLabs/03-Agentic-Systems/04-Code-Review-System/CrewAI/system.py
 ```
 
 ---
 
 ## What to Read Alongside
 
-- [Agentic System Design](../06-Agentic-AI/Notes/05-Agentic-System-Design.md) — production architecture, HITL design, reliability, cost
-- [Multi-Agent Systems](../06-Agentic-AI/Notes/04-Multi-Agent-Systems.md) — coordination protocols, shared state, failure modes
-- [Evaluation and Observability](../06-Agentic-AI/Notes/06-Evaluation-and-Observability.md) — how to evaluate these systems end-to-end
+- [Agentic System Design](../Notes/05-Agentic-System-Design.md) — production architecture, HITL design, reliability, cost
+- [Multi-Agent Systems](../Notes/04-Multi-Agent-Systems.md) — coordination protocols, shared state, failure modes
+- [Evaluation and Observability](../Notes/06-Evaluation-and-Observability.md) — how to evaluate these systems end-to-end

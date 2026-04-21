@@ -1,8 +1,8 @@
 # Code Labs — 02: Architecture Patterns
 
-Seven multi-agent coordination patterns, each implemented in all four frameworks using the same mock task. Builds directly on [01 — Agent Types](01-Agent-Types.md).
+Seven multi-agent coordination patterns, each implemented in all four frameworks using the same mock task. Builds directly on [01 — Agent Types](../../05-Agents/CodeLabs/01-Agent-Types.md).
 
-**Notes companion:** [06 — Agentic AI: Architectural Patterns](../06-Agentic-AI/Notes/02-Architectural-Patterns.md)
+**Notes companion:** [06 — Agentic AI: Architectural Patterns](../Notes/02-Architectural-Patterns.md)
 
 ---
 
@@ -30,19 +30,19 @@ Planner             Stage1→Stage2       Proposer            Agent
 
 | # | Pattern | Key Concept | When to Use | Notes Link |
 |---|---------|------------|-------------|-----------|
-| 01 | Sequential | A→B→C pipeline, output feeds next | Linear multi-step workflows | [Architectural Patterns](../06-Agentic-AI/Notes/02-Architectural-Patterns.md) |
-| 02 | Parallel | Fan-out + aggregate | Independent subtasks, reduce latency | [Architectural Patterns](../06-Agentic-AI/Notes/02-Architectural-Patterns.md) |
-| 03 | Hierarchical | Nested orchestration tiers | Complex delegation, team-of-teams | [Architectural Patterns](../06-Agentic-AI/Notes/02-Architectural-Patterns.md) |
-| 04 | Orchestrator-Subagent | Planner + specialized workers | Dynamic task decomposition | [Architectural Patterns](../06-Agentic-AI/Notes/02-Architectural-Patterns.md) |
-| 05 | Pipeline | Data-flow, no shared state | ETL-style transformation chains | [Architectural Patterns](../06-Agentic-AI/Notes/02-Architectural-Patterns.md) |
-| 06 | Adversarial Debate | Proposer vs Critic vs Judge | High-stakes decisions, quality gates | [Architectural Patterns](../06-Agentic-AI/Notes/02-Architectural-Patterns.md) |
-| 07 | Reflexion | Self-critique + iterative revision | Output quality, agentic planning | [Design Patterns](../06-Agentic-AI/Notes/03-Design-Patterns.md) |
+| 01 | Sequential | A→B→C pipeline, output feeds next | Linear multi-step workflows | [Architectural Patterns](../Notes/02-Architectural-Patterns.md) |
+| 02 | Parallel | Fan-out + aggregate | Independent subtasks, reduce latency | [Architectural Patterns](../Notes/02-Architectural-Patterns.md) |
+| 03 | Hierarchical | Nested orchestration tiers | Complex delegation, team-of-teams | [Architectural Patterns](../Notes/02-Architectural-Patterns.md) |
+| 04 | Orchestrator-Subagent | Planner + specialized workers | Dynamic task decomposition | [Architectural Patterns](../Notes/02-Architectural-Patterns.md) |
+| 05 | Pipeline | Data-flow, no shared state | ETL-style transformation chains | [Architectural Patterns](../Notes/02-Architectural-Patterns.md) |
+| 06 | Adversarial Debate | Proposer vs Critic vs Judge | High-stakes decisions, quality gates | [Architectural Patterns](../Notes/02-Architectural-Patterns.md) |
+| 07 | Reflexion | Self-critique + iterative revision | Output quality, agentic planning | [Design Patterns](../Notes/03-Design-Patterns.md) |
 
 ---
 
 ## Files by Pattern and Framework
 
-Each pattern lives in `Codes/02-Architectures/<pattern-name>/<Framework>/`:
+Each pattern lives in `06-Agentic-AI/CodeLabs/02-Architectures/<pattern-name>/<Framework>/`:
 
 | Pattern | LangChain | LangGraph | CrewAI | ADK |
 |---------|-----------|-----------|--------|-----|
@@ -87,19 +87,19 @@ Each pattern lives in `Codes/02-Architectures/<pattern-name>/<Framework>/`:
 
 ```bash
 # Start with Sequential in LangGraph (most readable)
-jupyter notebook Codes/02-Architectures/01-Sequential/LangGraph/sequential.ipynb
+jupyter notebook 06-Agentic-AI/CodeLabs/02-Architectures/01-Sequential/LangGraph/sequential.ipynb
 
 # Then compare the same pattern in CrewAI
-jupyter notebook Codes/02-Architectures/01-Sequential/CrewAI/sequential.ipynb
+jupyter notebook 06-Agentic-AI/CodeLabs/02-Architectures/01-Sequential/CrewAI/sequential.ipynb
 ```
 
 ---
 
 ## What to Read Alongside
 
-- [Architectural Patterns](../06-Agentic-AI/Notes/02-Architectural-Patterns.md) — conceptual deep-dive on all 8 patterns
-- [Design Patterns](../06-Agentic-AI/Notes/03-Design-Patterns.md) — tool-use, reflection, planning, routing
-- [Multi-Agent Systems](../06-Agentic-AI/Notes/04-Multi-Agent-Systems.md) — coordination, state management, failure modes
+- [Architectural Patterns](../Notes/02-Architectural-Patterns.md) — conceptual deep-dive on all 8 patterns
+- [Design Patterns](../Notes/03-Design-Patterns.md) — tool-use, reflection, planning, routing
+- [Multi-Agent Systems](../Notes/04-Multi-Agent-Systems.md) — coordination, state management, failure modes
 
 ---
 
