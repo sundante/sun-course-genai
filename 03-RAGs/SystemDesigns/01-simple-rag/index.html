@@ -10,31 +10,31 @@
       
       
       
-        <link rel="canonical" href="https://sundante.github.io/sun-course-genai/04-MCP/INDEX/">
+        <link rel="canonical" href="https://sundante.github.io/sun-course-genai/03-RAGs/SystemDesigns/01-simple-rag/">
       
       
-        <link rel="prev" href="../../03-RAGs/SystemDesigns/02-agentic-rag-hybrid/">
+        <link rel="prev" href="../../Notes/12-Interview-QA-Bank/">
       
       
-        <link rel="next" href="../Notes/01-The-Problem/">
+        <link rel="next" href="../02-agentic-rag-hybrid/">
       
       
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>Overview - GenAI Learning Curriculum</title>
+        <title>Simple RAG Pipeline - GenAI Learning Curriculum</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -53,7 +53,7 @@
       
     
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
   
@@ -88,7 +88,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#the-model-context-protocol" class="md-skip">
+        <a href="#system-design-simple-rag-pipeline" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +102,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="GenAI Learning Curriculum" class="md-header__button md-logo" aria-label="GenAI Learning Curriculum" data-md-component="logo">
+    <a href="../../.." title="GenAI Learning Curriculum" class="md-header__button md-logo" aria-label="GenAI Learning Curriculum" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -122,7 +122,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Overview
+              Simple RAG Pipeline
             
           </span>
         </div>
@@ -235,7 +235,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../.." class="md-tabs__link">
+      <a href="../../.." class="md-tabs__link">
         
   
   
@@ -256,7 +256,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../01-LLM-Models/INDEX/" class="md-tabs__link">
+        <a href="../../../01-LLM-Models/INDEX/" class="md-tabs__link">
           
   
   
@@ -276,31 +276,11 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../02-Prompts/INDEX/" class="md-tabs__link">
+        <a href="../../../02-Prompts/INDEX/" class="md-tabs__link">
           
   
   
   Prompt Engineering
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../../03-RAGs/INDEX/" class="md-tabs__link">
-          
-  
-  
-  RAG
 
         </a>
       </li>
@@ -318,7 +298,27 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
+        <a href="../../INDEX/" class="md-tabs__link">
+          
+  
+  
+  RAG
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../04-MCP/INDEX/" class="md-tabs__link">
           
   
   
@@ -338,7 +338,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../05-Agents/INDEX/" class="md-tabs__link">
+        <a href="../../../05-Agents/INDEX/" class="md-tabs__link">
           
   
   
@@ -358,7 +358,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../06-Agentic-AI/INDEX/" class="md-tabs__link">
+        <a href="../../../06-Agentic-AI/INDEX/" class="md-tabs__link">
           
   
   
@@ -378,7 +378,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../All_Questions/" class="md-tabs__link">
+        <a href="../../../All_Questions/" class="md-tabs__link">
           
   
   
@@ -414,7 +414,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="GenAI Learning Curriculum" class="md-nav__button md-logo" aria-label="GenAI Learning Curriculum" data-md-component="logo">
+    <a href="../../.." title="GenAI Learning Curriculum" class="md-nav__button md-logo" aria-label="GenAI Learning Curriculum" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -444,7 +444,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../.." class="md-nav__link">
+      <a href="../../.." class="md-nav__link">
         
   
   
@@ -525,7 +525,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../01-LLM-Models/INDEX/" class="md-nav__link">
+      <a href="../../../01-LLM-Models/INDEX/" class="md-nav__link">
         
   
   
@@ -607,7 +607,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../01-LLM-Models/Notes/01-LLM-Fundamentals/" class="md-nav__link">
+      <a href="../../../01-LLM-Models/Notes/01-LLM-Fundamentals/" class="md-nav__link">
         
   
   
@@ -635,7 +635,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../01-LLM-Models/Notes/02-Architecture/" class="md-nav__link">
+      <a href="../../../01-LLM-Models/Notes/02-Architecture/" class="md-nav__link">
         
   
   
@@ -663,7 +663,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../01-LLM-Models/Notes/03-Attention-Mechanisms/" class="md-nav__link">
+      <a href="../../../01-LLM-Models/Notes/03-Attention-Mechanisms/" class="md-nav__link">
         
   
   
@@ -691,7 +691,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../01-LLM-Models/Notes/04-Model-Architecture-Types/" class="md-nav__link">
+      <a href="../../../01-LLM-Models/Notes/04-Model-Architecture-Types/" class="md-nav__link">
         
   
   
@@ -719,7 +719,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../01-LLM-Models/Notes/05-KV-Cache-and-Inference-Optimization/" class="md-nav__link">
+      <a href="../../../01-LLM-Models/Notes/05-KV-Cache-and-Inference-Optimization/" class="md-nav__link">
         
   
   
@@ -747,7 +747,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../01-LLM-Models/Notes/06-Training-and-Pretraining/" class="md-nav__link">
+      <a href="../../../01-LLM-Models/Notes/06-Training-and-Pretraining/" class="md-nav__link">
         
   
   
@@ -775,7 +775,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../01-LLM-Models/Notes/07-Fine-Tuning/" class="md-nav__link">
+      <a href="../../../01-LLM-Models/Notes/07-Fine-Tuning/" class="md-nav__link">
         
   
   
@@ -803,7 +803,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../01-LLM-Models/Notes/08-GPU-and-Hardware/" class="md-nav__link">
+      <a href="../../../01-LLM-Models/Notes/08-GPU-and-Hardware/" class="md-nav__link">
         
   
   
@@ -831,7 +831,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../01-LLM-Models/Notes/09-Failure-Modes-and-Tricky-Issues/" class="md-nav__link">
+      <a href="../../../01-LLM-Models/Notes/09-Failure-Modes-and-Tricky-Issues/" class="md-nav__link">
         
   
   
@@ -859,7 +859,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../01-LLM-Models/Notes/10-Production-Deployment/" class="md-nav__link">
+      <a href="../../../01-LLM-Models/Notes/10-Production-Deployment/" class="md-nav__link">
         
   
   
@@ -887,7 +887,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../01-LLM-Models/Notes/12-Interview-QA-Bank/" class="md-nav__link">
+      <a href="../../../01-LLM-Models/Notes/12-Interview-QA-Bank/" class="md-nav__link">
         
   
   
@@ -984,7 +984,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../02-Prompts/INDEX/" class="md-nav__link">
+      <a href="../../../02-Prompts/INDEX/" class="md-nav__link">
         
   
   
@@ -1066,7 +1066,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../02-Prompts/Notes/01-Prompt-Basics/" class="md-nav__link">
+      <a href="../../../02-Prompts/Notes/01-Prompt-Basics/" class="md-nav__link">
         
   
   
@@ -1094,7 +1094,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../02-Prompts/Notes/02-Core-Techniques/" class="md-nav__link">
+      <a href="../../../02-Prompts/Notes/02-Core-Techniques/" class="md-nav__link">
         
   
   
@@ -1122,7 +1122,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../02-Prompts/Notes/03-Advanced-Techniques/" class="md-nav__link">
+      <a href="../../../02-Prompts/Notes/03-Advanced-Techniques/" class="md-nav__link">
         
   
   
@@ -1150,7 +1150,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../02-Prompts/Notes/04-Prompt-Engineering-for-Production/" class="md-nav__link">
+      <a href="../../../02-Prompts/Notes/04-Prompt-Engineering-for-Production/" class="md-nav__link">
         
   
   
@@ -1178,7 +1178,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../02-Prompts/Notes/05-Prompt-Optimization-and-Automation/" class="md-nav__link">
+      <a href="../../../02-Prompts/Notes/05-Prompt-Optimization-and-Automation/" class="md-nav__link">
         
   
   
@@ -1206,7 +1206,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../02-Prompts/Notes/06-Interview-QA-Bank/" class="md-nav__link">
+      <a href="../../../02-Prompts/Notes/06-Interview-QA-Bank/" class="md-nav__link">
         
   
   
@@ -1214,611 +1214,6 @@
     
   
     Q&A Review Bank
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
-        
-          
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    RAG
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    RAG
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../03-RAGs/INDEX/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Overview
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2" >
-        
-          
-          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Concepts
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_2">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Concepts
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../03-RAGs/Notes/01-RAG-Fundamentals/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    RAG Fundamentals
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../03-RAGs/Notes/02-Embeddings-and-Vector-Stores/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Embeddings & Vector Stores
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../03-RAGs/Notes/03-Chunking-and-Indexing/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Chunking & Indexing
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../03-RAGs/Notes/04-Retrieval-Strategies/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Retrieval Strategies
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../03-RAGs/Notes/05-Advanced-RAG-Patterns/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Advanced RAG Patterns
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../03-RAGs/Notes/06-RAG-Evaluation-and-Failure-Modes/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Evaluation & Failure Modes
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../03-RAGs/Notes/07-RAG-Types-Taxonomy/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    RAG Types Taxonomy
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../03-RAGs/Notes/08-RAG-System-Design/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    RAG System Design
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../03-RAGs/Notes/09-Vertex-AI-RAG/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Vertex AI RAG
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../03-RAGs/Notes/10-Production-Deployment/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Production Deployment
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../03-RAGs/Notes/11-Scaling-and-LLM-Issues/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Scaling & LLM Issues
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../03-RAGs/Notes/12-Interview-QA-Bank/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Q&A Review Bank
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_3" >
-        
-          
-          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    System Designs
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_3">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    System Designs
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../03-RAGs/SystemDesigns/01-simple-rag/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Simple RAG Pipeline
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../03-RAGs/SystemDesigns/02-agentic-rag-hybrid/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Agentic RAG — Hybrid Vector + Graph
   
 
     
@@ -1872,17 +1267,17 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
             
   
   
   <span class="md-ellipsis">
     
   
-    MCP
+    RAG
   
 
     
@@ -1893,12 +1288,12 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_5">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
   
-    MCP
+    RAG
   
 
           </label>
@@ -1908,37 +1303,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Overview
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../INDEX/" class="md-nav__link">
         
   
   
@@ -1954,176 +1322,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#a-complete-learning-reference-guide" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        A Complete Learning &amp; Reference Guide
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#welcome-to-your-mcp-masterclass" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Welcome to Your MCP Masterclass
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Welcome to Your MCP Masterclass">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#what-youll-learn" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What You'll Learn
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#your-learning-journey" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Your Learning Journey
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Your Learning Journey">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#start-here-choose-your-path" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Start Here — Choose Your Path
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Start Here — Choose Your Path">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#fundamentals" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Fundamentals
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#building-knowledge" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Building Knowledge
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#deep-dive-practice" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Deep Dive &amp; Practice
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#the-complete-chapter-list" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The Complete Chapter List
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#what-youll-master" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What You'll Master
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#other-resources" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Other Resources
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#navigation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Navigation
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -2154,10 +1352,864 @@
         
           
         
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concepts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Concepts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Notes/01-RAG-Fundamentals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Fundamentals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Notes/02-Embeddings-and-Vector-Stores/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Embeddings & Vector Stores
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Notes/03-Chunking-and-Indexing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chunking & Indexing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Notes/04-Retrieval-Strategies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retrieval Strategies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Notes/05-Advanced-RAG-Patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced RAG Patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Notes/06-RAG-Evaluation-and-Failure-Modes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evaluation & Failure Modes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Notes/07-RAG-Types-Taxonomy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG Types Taxonomy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Notes/08-RAG-System-Design/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RAG System Design
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Notes/09-Vertex-AI-RAG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vertex AI RAG
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Notes/10-Production-Deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Production Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Notes/11-Scaling-and-LLM-Issues/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scaling & LLM Issues
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Notes/12-Interview-QA-Bank/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Q&A Review Bank
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    System Designs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    System Designs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simple RAG Pipeline
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simple RAG Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#interview-problem-statement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interview Problem Statement
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#clarifying-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Clarifying Questions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-architecture-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        System Architecture Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#component-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Component Design
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Component Design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-document-ingestion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Document Ingestion
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-chunking-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Chunking Strategy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-embedding-vector-index" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Embedding + Vector Index
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-hybrid-retrieval-reranking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Hybrid Retrieval + Reranking
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Generation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gcp-services-map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GCP Services Map
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scalability-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scalability Considerations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Scalability Considerations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#throughput-1000-concurrent-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Throughput: 1,000 Concurrent Users
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corpus-scale-beyond-5m-documents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Corpus Scale: Beyond 5M Documents
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#freshness-near-real-time-updates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Freshness: Near-Real-Time Updates
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cost-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cost Optimization
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#failure-modes-and-mitigations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Failure Modes and Mitigations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#qa-review-bank" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q&amp;A Review Bank
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-agentic-rag-hybrid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agentic RAG — Hybrid Vector + Graph
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    MCP
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../04-MCP/INDEX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
         <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2" >
         
           
-          <label class="md-nav__link" for="__nav_5_2" id="__nav_5_2_label" tabindex="">
+          <label class="md-nav__link" for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
             
   
   
@@ -2193,7 +2245,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../Notes/01-The-Problem/" class="md-nav__link">
+      <a href="../../../04-MCP/Notes/01-The-Problem/" class="md-nav__link">
         
   
   
@@ -2221,7 +2273,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../Notes/02-Definition/" class="md-nav__link">
+      <a href="../../../04-MCP/Notes/02-Definition/" class="md-nav__link">
         
   
   
@@ -2249,7 +2301,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../Notes/03-The-Solution/" class="md-nav__link">
+      <a href="../../../04-MCP/Notes/03-The-Solution/" class="md-nav__link">
         
   
   
@@ -2277,7 +2329,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../Notes/04-Components/" class="md-nav__link">
+      <a href="../../../04-MCP/Notes/04-Components/" class="md-nav__link">
         
   
   
@@ -2305,7 +2357,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../Notes/05-Capabilities/" class="md-nav__link">
+      <a href="../../../04-MCP/Notes/05-Capabilities/" class="md-nav__link">
         
   
   
@@ -2333,7 +2385,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../Notes/06-Why-MCP-Matters/" class="md-nav__link">
+      <a href="../../../04-MCP/Notes/06-Why-MCP-Matters/" class="md-nav__link">
         
   
   
@@ -2361,7 +2413,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../Notes/07-Architecture-Deep-Dive/" class="md-nav__link">
+      <a href="../../../04-MCP/Notes/07-Architecture-Deep-Dive/" class="md-nav__link">
         
   
   
@@ -2389,7 +2441,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../Notes/08-Getting-Started/" class="md-nav__link">
+      <a href="../../../04-MCP/Notes/08-Getting-Started/" class="md-nav__link">
         
   
   
@@ -2417,7 +2469,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../Notes/09-QA-Review-Bank/" class="md-nav__link">
+      <a href="../../../04-MCP/Notes/09-QA-Review-Bank/" class="md-nav__link">
         
   
   
@@ -2514,7 +2566,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../05-Agents/INDEX/" class="md-nav__link">
+      <a href="../../../05-Agents/INDEX/" class="md-nav__link">
         
   
   
@@ -2596,7 +2648,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../05-Agents/Notes/01-Agent-Fundamentals/" class="md-nav__link">
+      <a href="../../../05-Agents/Notes/01-Agent-Fundamentals/" class="md-nav__link">
         
   
   
@@ -2624,7 +2676,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../05-Agents/Notes/02-Agent-Patterns/" class="md-nav__link">
+      <a href="../../../05-Agents/Notes/02-Agent-Patterns/" class="md-nav__link">
         
   
   
@@ -2714,7 +2766,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../05-Agents/CodeLabs/01-Agent-Types/" class="md-nav__link">
+      <a href="../../../05-Agents/CodeLabs/01-Agent-Types/" class="md-nav__link">
         
   
   
@@ -2796,7 +2848,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../05-Agents/GCP-ADK/INDEX/" class="md-nav__link">
+      <a href="../../../05-Agents/GCP-ADK/INDEX/" class="md-nav__link">
         
   
   
@@ -2824,7 +2876,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../05-Agents/GCP-ADK/01-ADK-Fundamentals/" class="md-nav__link">
+      <a href="../../../05-Agents/GCP-ADK/01-ADK-Fundamentals/" class="md-nav__link">
         
   
   
@@ -2852,7 +2904,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../05-Agents/GCP-ADK/02-Simple-Agent/" class="md-nav__link">
+      <a href="../../../05-Agents/GCP-ADK/02-Simple-Agent/" class="md-nav__link">
         
   
   
@@ -2880,7 +2932,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../05-Agents/GCP-ADK/03-Complex-Agent/" class="md-nav__link">
+      <a href="../../../05-Agents/GCP-ADK/03-Complex-Agent/" class="md-nav__link">
         
   
   
@@ -2970,7 +3022,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../05-Agents/LangChain/INDEX/" class="md-nav__link">
+      <a href="../../../05-Agents/LangChain/INDEX/" class="md-nav__link">
         
   
   
@@ -2998,7 +3050,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../05-Agents/LangChain/01-LangChain-Fundamentals/" class="md-nav__link">
+      <a href="../../../05-Agents/LangChain/01-LangChain-Fundamentals/" class="md-nav__link">
         
   
   
@@ -3026,7 +3078,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../05-Agents/LangChain/02-Simple-Agent/" class="md-nav__link">
+      <a href="../../../05-Agents/LangChain/02-Simple-Agent/" class="md-nav__link">
         
   
   
@@ -3054,7 +3106,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../05-Agents/LangChain/03-Complex-Agent/" class="md-nav__link">
+      <a href="../../../05-Agents/LangChain/03-Complex-Agent/" class="md-nav__link">
         
   
   
@@ -3144,7 +3196,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../05-Agents/LangGraph/INDEX/" class="md-nav__link">
+      <a href="../../../05-Agents/LangGraph/INDEX/" class="md-nav__link">
         
   
   
@@ -3172,7 +3224,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../05-Agents/LangGraph/01-LangGraph-Fundamentals/" class="md-nav__link">
+      <a href="../../../05-Agents/LangGraph/01-LangGraph-Fundamentals/" class="md-nav__link">
         
   
   
@@ -3200,7 +3252,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../05-Agents/LangGraph/02-Simple-Agent/" class="md-nav__link">
+      <a href="../../../05-Agents/LangGraph/02-Simple-Agent/" class="md-nav__link">
         
   
   
@@ -3228,7 +3280,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../05-Agents/LangGraph/03-Complex-Agent/" class="md-nav__link">
+      <a href="../../../05-Agents/LangGraph/03-Complex-Agent/" class="md-nav__link">
         
   
   
@@ -3318,7 +3370,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../05-Agents/CrewAI/INDEX/" class="md-nav__link">
+      <a href="../../../05-Agents/CrewAI/INDEX/" class="md-nav__link">
         
   
   
@@ -3346,7 +3398,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../05-Agents/CrewAI/01-CrewAI-Fundamentals/" class="md-nav__link">
+      <a href="../../../05-Agents/CrewAI/01-CrewAI-Fundamentals/" class="md-nav__link">
         
   
   
@@ -3374,7 +3426,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../05-Agents/CrewAI/02-Simple-Agent/" class="md-nav__link">
+      <a href="../../../05-Agents/CrewAI/02-Simple-Agent/" class="md-nav__link">
         
   
   
@@ -3402,7 +3454,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../05-Agents/CrewAI/03-Complex-Agent/" class="md-nav__link">
+      <a href="../../../05-Agents/CrewAI/03-Complex-Agent/" class="md-nav__link">
         
   
   
@@ -3507,7 +3559,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../06-Agentic-AI/INDEX/" class="md-nav__link">
+      <a href="../../../06-Agentic-AI/INDEX/" class="md-nav__link">
         
   
   
@@ -3589,7 +3641,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../06-Agentic-AI/Notes/01-Agentic-Concepts/" class="md-nav__link">
+      <a href="../../../06-Agentic-AI/Notes/01-Agentic-Concepts/" class="md-nav__link">
         
   
   
@@ -3617,7 +3669,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../06-Agentic-AI/Notes/02-Architectural-Patterns/" class="md-nav__link">
+      <a href="../../../06-Agentic-AI/Notes/02-Architectural-Patterns/" class="md-nav__link">
         
   
   
@@ -3645,7 +3697,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../06-Agentic-AI/Notes/03-Design-Patterns/" class="md-nav__link">
+      <a href="../../../06-Agentic-AI/Notes/03-Design-Patterns/" class="md-nav__link">
         
   
   
@@ -3673,7 +3725,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../06-Agentic-AI/Notes/04-Multi-Agent-Systems/" class="md-nav__link">
+      <a href="../../../06-Agentic-AI/Notes/04-Multi-Agent-Systems/" class="md-nav__link">
         
   
   
@@ -3701,7 +3753,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../06-Agentic-AI/Notes/05-Agentic-System-Design/" class="md-nav__link">
+      <a href="../../../06-Agentic-AI/Notes/05-Agentic-System-Design/" class="md-nav__link">
         
   
   
@@ -3729,7 +3781,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../06-Agentic-AI/Notes/06-Evaluation-and-Observability/" class="md-nav__link">
+      <a href="../../../06-Agentic-AI/Notes/06-Evaluation-and-Observability/" class="md-nav__link">
         
   
   
@@ -3757,7 +3809,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../06-Agentic-AI/Notes/07-Interview-QA-Bank/" class="md-nav__link">
+      <a href="../../../06-Agentic-AI/Notes/07-Interview-QA-Bank/" class="md-nav__link">
         
   
   
@@ -3847,7 +3899,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../06-Agentic-AI/SystemDesigns/insurance-claims-processor/" class="md-nav__link">
+      <a href="../../../06-Agentic-AI/SystemDesigns/insurance-claims-processor/" class="md-nav__link">
         
   
   
@@ -3875,7 +3927,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../06-Agentic-AI/SystemDesigns/prior-authorization/" class="md-nav__link">
+      <a href="../../../06-Agentic-AI/SystemDesigns/prior-authorization/" class="md-nav__link">
         
   
   
@@ -3965,7 +4017,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../06-Agentic-AI/CodeLabs/02-Architectures/" class="md-nav__link">
+      <a href="../../../06-Agentic-AI/CodeLabs/02-Architectures/" class="md-nav__link">
         
   
   
@@ -3993,7 +4045,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../06-Agentic-AI/CodeLabs/03-Agentic-Systems/" class="md-nav__link">
+      <a href="../../../06-Agentic-AI/CodeLabs/03-Agentic-Systems/" class="md-nav__link">
         
   
   
@@ -4090,7 +4142,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../All_Questions/" class="md-nav__link">
+      <a href="../../../All_Questions/" class="md-nav__link">
         
   
   
@@ -4118,7 +4170,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../Interview-Questions/INDEX/" class="md-nav__link">
+      <a href="../../../Interview-Questions/INDEX/" class="md-nav__link">
         
   
   
@@ -4146,7 +4198,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../Interview-Questions/01-LLM-Models/" class="md-nav__link">
+      <a href="../../../Interview-Questions/01-LLM-Models/" class="md-nav__link">
         
   
   
@@ -4174,7 +4226,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../Interview-Questions/02-Prompt-Engineering/" class="md-nav__link">
+      <a href="../../../Interview-Questions/02-Prompt-Engineering/" class="md-nav__link">
         
   
   
@@ -4202,7 +4254,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../Interview-Questions/03-RAGs/" class="md-nav__link">
+      <a href="../../../Interview-Questions/03-RAGs/" class="md-nav__link">
         
   
   
@@ -4230,7 +4282,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../Interview-Questions/04-MCP/" class="md-nav__link">
+      <a href="../../../Interview-Questions/04-MCP/" class="md-nav__link">
         
   
   
@@ -4258,7 +4310,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../Interview-Questions/05-Agents/" class="md-nav__link">
+      <a href="../../../Interview-Questions/05-Agents/" class="md-nav__link">
         
   
   
@@ -4286,7 +4338,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../Interview-Questions/06-Agentic-AI/" class="md-nav__link">
+      <a href="../../../Interview-Questions/06-Agentic-AI/" class="md-nav__link">
         
   
   
@@ -4334,135 +4386,520 @@
   
 
 
-<h1 id="the-model-context-protocol">The Model Context Protocol</h1>
-<h2 id="a-complete-learning-reference-guide"><em>A Complete Learning &amp; Reference Guide</em></h2>
+<h1 id="system-design-simple-rag-pipeline">System Design: Simple RAG Pipeline</h1>
+<blockquote>
+<p><strong>Domain:</strong> Enterprise Knowledge Base · <strong>Pattern:</strong> Naive → Production-Grade RAG</p>
+<p>← <a href="../../Notes/01-RAG-Fundamentals/">Back to RAG Concepts</a> | <a href="../../Notes/05-Advanced-RAG-Patterns/">Advanced RAG Patterns →</a></p>
+</blockquote>
 <hr />
-<h2 id="welcome-to-your-mcp-masterclass">Welcome to Your MCP Masterclass</h2>
-<p>You're about to embark on a comprehensive journey through the <strong>Model Context Protocol (MCP)</strong>—the open standard transforming how AI systems connect with data and tools.</p>
-<p>Whether you're a <strong>developer</strong> building AI applications, an <strong>engineer</strong> implementing integrations, or an <strong>enthusiast</strong> curious about the future of AI, this guide will take you from foundational concepts to practical implementation.</p>
-<h3 id="what-youll-learn">What You'll Learn</h3>
-<ul>
-<li>Understand the problem that MCP solves</li>
-<li>Master the architecture and core components</li>
-<li>Explore real-world capabilities and use cases</li>
-<li>Grasp the strategic importance of MCP adoption</li>
-<li>Build your first MCP server and integrations</li>
-<li>Ace technical interviews with confidence</li>
-</ul>
+<h2 id="interview-problem-statement">Interview Problem Statement</h2>
+<blockquote>
+<p><strong>"Design a production-grade RAG system that enables employees to query a company's internal knowledge base of 5 million documents (PDFs, Word, HTML) and receive accurate, cited answers in under 3 seconds at 1,000 concurrent users."</strong></p>
+</blockquote>
 <hr />
-<h2 id="your-learning-journey">Your Learning Journey</h2>
-<h3 id="start-here-choose-your-path">Start Here — Choose Your Path</h3>
-<h4 id="fundamentals">Fundamentals</h4>
-<p>Begin with the essentials</p>
-<ol>
-<li><a href="../Notes/01-The-Problem/">The Problem</a> — What does MCP solve?</li>
-<li><a href="../Notes/02-Definition/">Definition</a> — What is MCP exactly?</li>
-<li><a href="../Notes/03-The-Solution/">The Solution</a> — How it works</li>
-</ol>
-<h4 id="building-knowledge">Building Knowledge</h4>
-<p>Deepen your expertise</p>
-<ol>
-<li><a href="../Notes/04-Components/">Components</a> — The architecture</li>
-<li><a href="../Notes/05-Capabilities/">Capabilities</a> — Real-world uses</li>
-<li><a href="../Notes/06-Why-MCP-Matters/">Why It Matters</a> — Strategic value</li>
-</ol>
-<h4 id="deep-dive-practice">Deep Dive &amp; Practice</h4>
-<ol>
-<li><a href="../Notes/07-Architecture-Deep-Dive/">Architecture Deep-Dive</a> — Technical internals</li>
-<li><a href="../Notes/08-Getting-Started/">Getting Started</a> — Your hands-on guide</li>
-<li><a href="../Notes/09-QA-Review-Bank/">Q&amp;A Review Bank</a> — 48 curated Q&amp;A pairs</li>
-<li><a href="../../Interview-Questions/04-MCP/">Interview Q&amp;A</a> — Quick-reference questions</li>
-</ol>
-<hr />
-<h2 id="the-complete-chapter-list">The Complete Chapter List</h2>
+<h2 id="clarifying-questions">Clarifying Questions</h2>
 <table>
 <thead>
 <tr>
-<th>Chapter</th>
-<th>Title</th>
-<th>Focus</th>
+<th>Question</th>
+<th>Why It Matters</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>1</td>
-<td><a href="../Notes/01-The-Problem/">The Problem</a></td>
-<td>Problem identification</td>
+<td>What document types? (PDF, Word, HTML, scanned images?)</td>
+<td>Determines parsers needed — scanned PDFs require OCR (Document AI)</td>
 </tr>
 <tr>
-<td>2</td>
-<td><a href="../Notes/02-Definition/">Definition</a></td>
-<td>Architecture &amp; concepts</td>
+<td>Expected query types? (factual lookup, comparison, summarization?)</td>
+<td>Factual → top-3 chunks sufficient; summarization → may need 20+ chunks</td>
 </tr>
 <tr>
-<td>3</td>
-<td><a href="../Notes/03-The-Solution/">The Solution</a></td>
-<td>How MCP solves problems</td>
+<td>What is the acceptable hallucination rate? (0%? &lt;5%?)</td>
+<td>Drives need for guardrails, grounding checks, citation enforcement</td>
 </tr>
 <tr>
-<td>4</td>
-<td><a href="../Notes/04-Components/">Components</a></td>
-<td>Technical components</td>
+<td>Does freshness matter? (new docs within minutes, hours, or daily batch?)</td>
+<td>Real-time → streaming ingestion; batch is fine → scheduled pipelines</td>
 </tr>
 <tr>
-<td>5</td>
-<td><a href="../Notes/05-Capabilities/">Capabilities</a></td>
-<td>Use cases &amp; applications</td>
+<td>Is PII present in documents?</td>
+<td>Drives redaction pipeline before chunking and logging controls</td>
 </tr>
 <tr>
-<td>6</td>
-<td><a href="../Notes/06-Why-MCP-Matters/">Why It Matters</a></td>
-<td>Strategic importance</td>
+<td>Multi-language support needed?</td>
+<td>Affects embedding model choice (multilingual models vs. per-language indexes)</td>
 </tr>
 <tr>
-<td>7</td>
-<td><a href="../Notes/07-Architecture-Deep-Dive/">Architecture Deep-Dive</a></td>
-<td>Technical internals</td>
-</tr>
-<tr>
-<td>8</td>
-<td><a href="../Notes/08-Getting-Started/">Getting Started</a></td>
-<td>Learning path &amp; projects</td>
-</tr>
-<tr>
-<td>9</td>
-<td><a href="../Notes/09-QA-Review-Bank/">Q&amp;A Review Bank</a></td>
-<td>48 Q&amp;A pairs, Easy → Hard</td>
-</tr>
-<tr>
-<td>10</td>
-<td><a href="../../Interview-Questions/04-MCP/">Interview Q&amp;A</a></td>
-<td>Quick-reference questions</td>
+<td>Is the query population internal employees or external users?</td>
+<td>Security perimeter, auth model, and rate limiting design</td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h2 id="what-youll-master">What You'll Master</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>THE COMPLETE MCP LEARNING ARC
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>1. CONTEXT       → Understand the problem
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>2. DEFINITION    → Learn what MCP is
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>3. SOLUTION      → See how it solves problems
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>4. COMPONENTS    → Master the architecture
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>5. CAPABILITY    → Explore what&#39;s possible
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>6. IMPACT        → Understand why it matters
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>7. ARCHITECTURE  → Deep-dive the internals
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>8. EXECUTION     → Build your first project
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>9. Q&amp;A BANK      → 48 curated review questions
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>10. MASTERY      → Answer technical questions
+<h2 id="system-architecture-overview">System Architecture Overview</h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>┌──────────────────────────────────────────────────────────────────────────────┐
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>│                           INGESTION PIPELINE                                 │
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>│                                                                              │
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│  Cloud Storage (raw docs)                                                    │
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│       │                                                                      │
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│       ▼                                                                      │
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│  Cloud Run: Document Parser                                                  │
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>│  ┌─────────────────────────────────────────────────────────┐                │
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>│  │  PDF → Document AI (OCR + layout)                       │                │
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>│  │  Word/HTML → python-docx / BeautifulSoup                │                │
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>│  │  Output: cleaned text + metadata JSON                   │                │
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>│  └─────────────────────────────────────────────────────────┘                │
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>│       │                                                                      │
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>│       ▼                                                                      │
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>│  Cloud Tasks Queue (back-pressure management)                                │
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>│       │                                                                      │
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>│       ▼                                                                      │
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>│  Cloud Run: Chunker + Embedder                                               │
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>│  ┌─────────────────────────────────────────────────────────┐                │
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>│  │  Semantic chunking (512 tokens, 10% overlap)            │                │
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>│  │  Vertex AI text-embedding-005 → 768-dim vectors         │                │
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>│  │  Metadata: doc_id, chunk_id, source_url, date, section  │                │
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>│  └─────────────────────────────────────────────────────────┘                │
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>│       │                                                                      │
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>│       ├─────────────────────┬──────────────────────────────┤                │
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>│       ▼                     ▼                              ▼                │
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>│  Vertex AI Vector      AlloyDB (BM25         BigQuery (metadata            │
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>│  Search (ANN)          sparse index)         + eval logging)               │
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>└──────────────────────────────────────────────────────────────────────────────┘
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>┌──────────────────────────────────────────────────────────────────────────────┐
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>│                            QUERY PIPELINE                                    │
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>│                                                                              │
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>│  User Query                                                                  │
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>│       │                                                                      │
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>│       ▼                                                                      │
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>│  API Gateway → Cloud Run: Query Service                                      │
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>│  ┌─────────────────────────────────────────────────────────┐                │
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>│  │  1. Auth check (IAP or OAuth2)                          │                │
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>│  │  2. Query embedding (text-embedding-005)                │                │
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>│  │  3. Check Memorystore (Redis) semantic cache            │                │
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>│  └─────────────────────────────────────────────────────────┘                │
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>│                   │  (cache miss)                                            │
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>│                   ▼                                                          │
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>│  ┌─────────────────────────────────────────────────────────┐                │
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>│  │  HYBRID RETRIEVAL                                        │                │
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>│  │                                                          │                │
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>│  │  Dense:  Vertex AI Vector Search → top-20 chunks        │                │
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>│  │  Sparse: AlloyDB full-text (BM25) → top-20 chunks       │                │
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>│  │  Fusion: Reciprocal Rank Fusion → top-5                 │                │
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>│  │  Rerank: Vertex AI Reranker (cross-encoder) → top-3     │                │
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>│  └─────────────────────────────────────────────────────────┘                │
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>│                   │                                                          │
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>│                   ▼                                                          │
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>│  ┌─────────────────────────────────────────────────────────┐                │
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>│  │  GENERATION                                              │                │
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>│  │                                                          │                │
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>│  │  Prompt assembly: system + context + query              │                │
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>│  │  Vertex AI Gemini 1.5 Pro → answer + citations          │                │
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>│  │  Grounding check: Vertex AI Grounding API               │                │
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>│  │  Citation extraction: source_url per claim              │                │
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>│  └─────────────────────────────────────────────────────────┘                │
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>│                   │                                                          │
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>│                   ▼                                                          │
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>│  Response → User + log to BigQuery (for eval/feedback)                      │
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>└──────────────────────────────────────────────────────────────────────────────┘
 </code></pre></div>
 <hr />
-<h2 id="other-resources">Other Resources</h2>
-<ul>
-<li><a href="Implementation/">Implementation Examples</a> — Working code samples</li>
-<li><a href="../Resources/04-MCP/mcp-img-assets/">Image Assets</a> — Architecture diagrams</li>
-</ul>
+<h2 id="component-design">Component Design</h2>
+<h3 id="1-document-ingestion">1. Document Ingestion</h3>
+<p><strong>Trigger:</strong> New file lands in Cloud Storage bucket → Eventarc → Cloud Run parser job.</p>
+<p><strong>Parser decisions:</strong>
+- Native PDF (text layer present) → <code>pdfplumber</code> / <code>pypdf</code> — fast, no API cost
+- Scanned PDF / image PDFs → Document AI (Form Parser or Document OCR) — preserves layout, tables
+- Word/PPTX → <code>python-docx</code>, <code>python-pptx</code> — extract paragraphs + headings
+- HTML → <code>BeautifulSoup</code> with <code>boilerpy3</code> to strip navigation/ads</p>
+<p><strong>Metadata enriched at parse time:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">&quot;doc_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;uuid&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">&quot;source_path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;gs://bucket/hr/policies/pto-policy-v3.pdf&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;PTO Policy v3&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="nt">&quot;section&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Human Resources&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="nt">&quot;author&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;HR Team&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="nt">&quot;created_date&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2024-01-15&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="nt">&quot;last_modified&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2024-11-01&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span><span class="nt">&quot;language&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">  </span><span class="nt">&quot;page_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">12</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="p">}</span>
+</code></pre></div></p>
 <hr />
-<p><strong>Format:</strong> Modular, expandable Markdown guide
-<strong>Learning Style:</strong> Progressive, structured, practical
-<strong>Status:</strong> Active &amp; Growing</p>
-<h2 id="navigation">Navigation</h2>
-<p><a href="../../03-RAGs/INDEX/">Previous: 03 — RAGs</a> | <a href="../../05-Agents/INDEX/">Next: 05 — Agents</a></p>
+<h3 id="2-chunking-strategy">2. Chunking Strategy</h3>
+<p><strong>Why this matters:</strong> Chunk size is the single biggest quality lever in RAG.</p>
+<table>
+<thead>
+<tr>
+<th>Strategy</th>
+<th>Chunk Size</th>
+<th>Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fixed-token</td>
+<td>256–512 tokens</td>
+<td>Simple factual docs, uniform structure</td>
+</tr>
+<tr>
+<td>Semantic (sentence-boundary)</td>
+<td>Variable 200–600 tokens</td>
+<td>Prose documents, policies, articles</td>
+</tr>
+<tr>
+<td>Parent-child hierarchical</td>
+<td>Parent: 1024 / Child: 256</td>
+<td>When you need summary retrieval + precise citation</td>
+</tr>
+<tr>
+<td>Document-level</td>
+<td>Full doc</td>
+<td>Short docs (&lt;2k tokens), global summarization</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recommended for this system:</strong> Semantic chunking (512 token target, 50-token overlap) using <code>sentence-transformers</code> sentence boundary detection. Store both the child chunk (for retrieval) and a parent context window (±1 paragraph, for generation).</p>
+<hr />
+<h3 id="3-embedding-vector-index">3. Embedding + Vector Index</h3>
+<p><strong>Embedding model:</strong> <code>text-embedding-005</code> (Vertex AI)
+- 768 dimensions
+- Optimized for retrieval tasks
+- Batched at 250 docs/batch via Cloud Tasks</p>
+<p><strong>Index:</strong> Vertex AI Vector Search
+- Algorithm: ScaNN (Scalable Nearest Neighbor) — tree-AH hybrid
+- Recall target: 98% at top-10
+- Shards: 5 (5M docs ÷ 1M per shard)
+- Online updates enabled for near-real-time ingestion</p>
+<p><strong>Fallback sparse index:</strong> AlloyDB <code>tsvector</code> column + GIN index for BM25 keyword search. Critical for queries with rare proper nouns, product codes, and acronyms that embedding models underrepresent.</p>
+<hr />
+<h3 id="4-hybrid-retrieval-reranking">4. Hybrid Retrieval + Reranking</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Dense:  score_dense  = cosine_similarity(q_emb, chunk_emb)
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>Sparse: score_sparse = BM25(q_tokens, chunk_tokens)
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>RRF fusion:
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>  rrf_score(d) = Σ 1 / (k + rank_i(d))   where k=60
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>  Final ranking: top-5 by rrf_score
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>Reranker:
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>  Cross-encoder: Vertex AI Reranker API
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>  Input: (query, chunk_text) → relevance score 0–1
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>  Keep: top-3 chunks above threshold 0.4
+</code></pre></div>
+<p><strong>Why rerank after RRF?</strong> RRF is an unsupervised fusion — it can elevate lexically-matching but semantically-shallow chunks. A cross-encoder cross-attends between query and full chunk text and produces calibrated relevance scores.</p>
+<hr />
+<h3 id="5-generation">5. Generation</h3>
+<p><strong>Prompt template:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>You are a knowledgeable assistant for [Company] employees.
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>Answer the question below using ONLY the provided context.
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>If the answer is not in the context, say &quot;I don&#39;t have that information.&quot;
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>Cite each claim with [Source N] notation.
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>Context:
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>[1] {chunk_1_text} (Source: {source_url_1})
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>[2] {chunk_2_text} (Source: {source_url_2})
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>[3] {chunk_3_text} (Source: {source_url_3})
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>Question: {user_query}
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>Answer:
+</code></pre></div></p>
+<p><strong>Model:</strong> Gemini 1.5 Pro (128k context window — fits 3-10 chunks comfortably, no lost-in-middle risk at this scale)</p>
+<p><strong>Grounding check:</strong> Vertex AI Grounding API validates that each sentence in the answer is attributable to the provided context. Claims without grounding are flagged.</p>
+<hr />
+<h2 id="gcp-services-map">GCP Services Map</h2>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>GCP Service</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Raw document storage</td>
+<td>Cloud Storage</td>
+<td>Durable, cheap, Eventarc integration</td>
+</tr>
+<tr>
+<td>Document parsing (scanned)</td>
+<td>Document AI (OCR / Form Parser)</td>
+<td>Layout-aware OCR, table extraction</td>
+</tr>
+<tr>
+<td>Parse/chunk/embed jobs</td>
+<td>Cloud Run (CPU jobs)</td>
+<td>Serverless, scales to 0, 1000 concurrent</td>
+</tr>
+<tr>
+<td>Job queue / back-pressure</td>
+<td>Cloud Tasks</td>
+<td>Rate limits API calls, retries failures</td>
+</tr>
+<tr>
+<td>Embedding model</td>
+<td>Vertex AI text-embedding-005</td>
+<td>Low-latency, 768-dim, GCP-native</td>
+</tr>
+<tr>
+<td>Vector index</td>
+<td>Vertex AI Vector Search</td>
+<td>Managed ANN, online updates, SLA</td>
+</tr>
+<tr>
+<td>Keyword index</td>
+<td>AlloyDB for PostgreSQL (pgvector + tsvector)</td>
+<td>Hybrid: vector + BM25 in one store</td>
+</tr>
+<tr>
+<td>Reranker</td>
+<td>Vertex AI Reranker API</td>
+<td>Cross-encoder, no self-hosting overhead</td>
+</tr>
+<tr>
+<td>LLM generation</td>
+<td>Vertex AI Gemini 1.5 Pro</td>
+<td>128k context, grounding support</td>
+</tr>
+<tr>
+<td>Grounding validation</td>
+<td>Vertex AI Grounding API</td>
+<td>Attribution and hallucination guard</td>
+</tr>
+<tr>
+<td>Semantic cache</td>
+<td>Memorystore for Redis (7.x)</td>
+<td>Vector similarity cache on query embedding</td>
+</tr>
+<tr>
+<td>Auth</td>
+<td>Identity-Aware Proxy (IAP)</td>
+<td>Internal employee auth, no code changes</td>
+</tr>
+<tr>
+<td>API frontend</td>
+<td>API Gateway + Cloud Run</td>
+<td>Rate limiting, auth, versioning</td>
+</tr>
+<tr>
+<td>Logging</td>
+<td>Cloud Logging + BigQuery</td>
+<td>Structured logs, RAGAS eval dataset</td>
+</tr>
+<tr>
+<td>Monitoring</td>
+<td>Cloud Monitoring + Trace</td>
+<td>Latency percentiles, error rates</td>
+</tr>
+<tr>
+<td>CI/CD</td>
+<td>Cloud Build + Artifact Registry</td>
+<td>Automated embed pipeline deployments</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="scalability-considerations">Scalability Considerations</h2>
+<h3 id="throughput-1000-concurrent-users">Throughput: 1,000 Concurrent Users</h3>
+<p><strong>Bottleneck analysis:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Latency (P99)</th>
+<th>Parallelizable?</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Query embedding</td>
+<td>20ms</td>
+<td>Yes (stateless)</td>
+<td>Cloud Run autoscale</td>
+</tr>
+<tr>
+<td>Cache lookup</td>
+<td>5ms</td>
+<td>Yes</td>
+<td>Redis cluster mode</td>
+</tr>
+<tr>
+<td>Vector search</td>
+<td>80ms</td>
+<td>Yes</td>
+<td>Vector Search handles concurrency</td>
+</tr>
+<tr>
+<td>Sparse search</td>
+<td>30ms</td>
+<td>Yes</td>
+<td>AlloyDB read replicas</td>
+</tr>
+<tr>
+<td>Reranking</td>
+<td>50ms</td>
+<td>Yes (batched)</td>
+<td>Reranker API auto-scales</td>
+</tr>
+<tr>
+<td>Generation (Gemini)</td>
+<td>800–1500ms</td>
+<td>Yes</td>
+<td>Vertex AI handles quota per project</td>
+</tr>
+<tr>
+<td><strong>Total P99</strong></td>
+<td><strong>~2.5s</strong></td>
+<td>—</td>
+<td>Within 3s SLA</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Scaling levers:</strong>
+- Cloud Run: <code>--min-instances=10</code> to prevent cold starts under load
+- Memorystore: 10–20% of queries hit cache after 24h warm-up (semantic cache)
+- Vector Search: add shards as corpus grows beyond 5M docs
+- Gemini quota: request higher TPM limits via GCP support for production</p>
+<h3 id="corpus-scale-beyond-5m-documents">Corpus Scale: Beyond 5M Documents</h3>
+<table>
+<thead>
+<tr>
+<th>Corpus Size</th>
+<th>Vector Search Config</th>
+<th>Embedding Cost</th>
+<th>Strategy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&lt;1M</td>
+<td>Single shard, DiskANN</td>
+<td>Low</td>
+<td>Simple</td>
+</tr>
+<tr>
+<td>1M–10M</td>
+<td>5–10 shards, ScaNN</td>
+<td>Moderate</td>
+<td>Shard by department/domain</td>
+</tr>
+<tr>
+<td>10M–100M</td>
+<td>50+ shards + index versioning</td>
+<td>High</td>
+<td>Domain-specific sub-indexes + routing</td>
+</tr>
+<tr>
+<td>100M+</td>
+<td>Multi-index with pre-filter</td>
+<td>Very High</td>
+<td>Metadata filtering before ANN search</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Domain partitioning:</strong> Split indexes by department (HR, Legal, Engineering). Query router classifies department from query → hits targeted sub-index. Reduces search space 10x, improves recall.</p>
+<h3 id="freshness-near-real-time-updates">Freshness: Near-Real-Time Updates</h3>
+<p>Vertex AI Vector Search supports online index updates (upsert/delete) without reindexing. For batch ingestion of 100k docs/day:
+- Cloud Tasks queue with 50 concurrent workers
+- Each worker: parse → chunk → embed (batched 250/call) → upsert to Vector Search
+- Throughput: ~20k chunks/minute, 100k docs ingested within 2–3 hours</p>
+<h3 id="cost-optimization">Cost Optimization</h3>
+<table>
+<thead>
+<tr>
+<th>Lever</th>
+<th>Saving</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Semantic cache (Redis)</td>
+<td>15–20% LLM cost reduction</td>
+</tr>
+<tr>
+<td>Batch embedding during off-hours</td>
+<td>50% cheaper with committed use discounts</td>
+</tr>
+<tr>
+<td>Gemini Flash for simple factual queries</td>
+<td>5× cheaper than Pro, detect via query classifier</td>
+</tr>
+<tr>
+<td>Index compression (PQ in Vector Search)</td>
+<td>4× storage reduction, ~3% recall tradeoff</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="failure-modes-and-mitigations">Failure Modes and Mitigations</h2>
+<table>
+<thead>
+<tr>
+<th>Failure</th>
+<th>Symptom</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Hallucination</td>
+<td>Answer not grounded in context</td>
+<td>Grounding API check + fallback "I don't know"</td>
+</tr>
+<tr>
+<td>Retrieval miss</td>
+<td>Right doc exists but not returned</td>
+<td>Hybrid retrieval (sparse catches what dense misses)</td>
+</tr>
+<tr>
+<td>Chunk boundary splits key fact</td>
+<td>Incomplete context</td>
+<td>50-token overlap + parent-child retrieval</td>
+</tr>
+<tr>
+<td>Stale index</td>
+<td>New doc not yet indexed</td>
+<td>Show doc freshness timestamp; warn if &gt;24h old</td>
+</tr>
+<tr>
+<td>LLM context overflow</td>
+<td>Long docs exceed context window</td>
+<td>Chunk top-3 only; limit to 6k tokens context</td>
+</tr>
+<tr>
+<td>Toxic/injection query</td>
+<td>Prompt injection in user query</td>
+<td>Input sanitization + Vertex AI safety filters</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="qa-review-bank">Q&amp;A Review Bank</h2>
+<p><strong>Q1: A user complains that a critical answer "isn't in the system" even though you can manually find it in a document. What are the top 3 causes and how do you diagnose each?</strong> <code>[Hard]</code></p>
+<p>A: (1) <strong>Embedding model mismatch</strong> — the document uses domain-specific terminology (e.g., "SOX compliance audit cycle") that the embedding model encodes differently than the user's query ("financial audit timeline"). Diagnose by running the query against BM25 alone — if BM25 finds it but vector search doesn't, it's a semantic gap. Fix: domain-adapted embedding or expand query with HyDE. (2) <strong>Chunking boundary problem</strong> — the key fact spans two chunks and neither chunk alone contains enough context for a high similarity score. Diagnose by inspecting which chunk contains the sentence. Fix: increase overlap, or use parent-child retrieval where the parent chunk contains the full context. (3) <strong>Metadata filtering too aggressive</strong> — a pre-filter by department/date excluded the relevant document. Diagnose by running without filters. Fix: broaden filter logic or remove it for fallback queries.</p>
+<hr />
+<p><strong>Q2: Why is hybrid retrieval (dense + sparse) better than dense-only retrieval, and when does sparse search have a structural advantage?</strong> <code>[Medium]</code></p>
+<p>A: Dense (embedding) search excels at semantic similarity — it finds chunks that mean the same thing even with different words. Sparse (BM25) search excels at exact-match retrieval — it finds documents containing the exact query tokens, which is critical for product codes, acronyms, proper nouns, and rare technical terms that embedding models compress into similar vectors as related-but-wrong concepts. Example: query "CVE-2024-1234 vulnerability" — a dense model may retrieve general "vulnerability management" content; BM25 will pinpoint the exact CVE document because it exact-matches the token. Hybrid search with RRF combines both signals without requiring a learned fusion model, making it robust to distributional shifts in the query population.</p>
+<hr />
+<p><strong>Q3: How does the semantic cache work and what are the failure modes introduced by caching RAG responses?</strong> <code>[Hard]</code></p>
+<p>A: The semantic cache stores <code>(query_embedding → cached_response)</code> pairs in Redis. On each new query, its embedding is computed and a nearest-neighbor lookup in the cache checks whether a "similar enough" prior query has been answered (typically cosine similarity &gt; 0.95). If yes, the cached response is returned without hitting Vector Search or the LLM. Failure modes: (1) <strong>Stale cache</strong> — if the underlying document is updated after the cache entry was created, the cached answer is outdated. Fix: short TTL (1–4 hours) or invalidate on document update. (2) <strong>Similarity threshold too low</strong> — different questions get the same answer (e.g., "Who is the CEO?" vs "Who is the CFO?" may have embeddings close enough to hit the same cache entry). Fix: tighten threshold to 0.98+. (3) <strong>Cache pollution</strong> — rare or malicious queries poison cache slots. Fix: only cache queries above a minimum frequency threshold.</p>
+<hr />
+<p><strong>Q4: Design the latency budget for a 3-second P99 SLA. Which stage is the most dangerous and why?</strong> <code>[Hard]</code></p>
+<p>A: Budget breakdown: auth (20ms) → query embedding (20ms) → cache lookup (5ms) → vector search (80ms) → sparse search (30ms) → RRF fusion (5ms) → reranking (50ms) → prompt assembly (5ms) → Gemini generation (800–1500ms P99) → response serialization (10ms) = ~1.5–2.2s under normal load. The <strong>generation stage is most dangerous</strong> because it's the only stage that doesn't scale horizontally in a way you control — it depends on Gemini API P99 latency which can spike under shared infrastructure load. Mitigations: (1) semantic cache to skip generation for repeated queries; (2) Gemini Flash for short factual queries (3× faster); (3) streaming responses so users perceive faster response even if total latency is 3s; (4) timeout budget of 2s for generation with fallback to "Please try again."</p>
+<hr />
+<p><strong>Q5: A regulatory audit requires you to prove that every answer the system gave was grounded in a specific document version. How do you design for this?</strong> <code>[Hard]</code></p>
+<p>A: Three layers of auditability needed: (1) <strong>Document versioning</strong> — every document in Cloud Storage is versioned (Object Versioning enabled). Each chunk stores <code>doc_id + version_hash</code> as metadata. When a document is updated, old chunks are soft-deleted (marked <code>archived: true</code>) rather than deleted, so historical retrievals can be reconstructed. (2) <strong>Query logging</strong> — every query logs to BigQuery: <code>query_id, user_id, timestamp, query_text, retrieved_chunk_ids (with version_hash), prompt_sent_to_llm, llm_response, grounding_score</code>. This creates a complete audit trail. (3) <strong>Grounding verification</strong> — the Vertex AI Grounding API response includes which sentences are attributed to which source segments. This response is logged alongside the answer. An auditor can replay the query, retrieve the same versioned chunks, and verify the answer was derivable from those specific document versions.</p>
+<hr />
+<p><strong>Q6: Compare Vertex AI Vector Search vs. AlloyDB pgvector for this use case. When would you choose each?</strong> <code>[Medium]</code></p>
+<p>A: Vertex AI Vector Search is a dedicated ANN service — it handles billion-scale corpora, online index updates, and ~80ms P99 at scale with no operational overhead. It's the right choice when vector search is your primary query pattern and you need managed scaling. AlloyDB pgvector runs vector search as a PostgreSQL extension — you get SQL joins between vector results and structured metadata in the same query (e.g., <code>WHERE department = 'HR' AND cosine_similarity &gt; 0.8</code>). It's the right choice when your retrieval requires complex metadata joins, when corpus size is &lt;10M docs, or when you want hybrid BM25 + vector in one query. For this system: use both in tandem — Vector Search for high-throughput dense retrieval; AlloyDB for sparse BM25 and metadata-filtered lookups. The hybrid retrieval layer fuses results from both.</p>
+<hr />
+<p><strong>Q7: What is "lost-in-the-middle" and how do you mitigate it in this system?</strong> <code>[Medium]</code></p>
+<p>A: Lost-in-the-middle is the empirically-observed degradation in LLM attention on context chunks placed in the middle of a long context window — information in positions 2 through N-1 is less well-utilized than the first and last chunks. For a 3-chunk RAG context, this is minimal, but for 10+ chunks it significantly degrades answer quality. Mitigations: (1) <strong>Limit to 3–5 chunks</strong> — enforce a hard cap on context size, relying on the reranker to surface only the most relevant. (2) <strong>Positional priority</strong> — place the highest-relevance chunk first and second, not in the middle. (3) <strong>Summary-then-detail</strong> — prepend a 2-sentence summary of each chunk before the full text, giving the model anchor points. (4) <strong>Gemini 1.5 Pro's 128k window</strong> — while the problem exists, it's less severe in Gemini 1.5 than earlier models, which exhibited sharper degradation at the 4–8k mark.</p>
 
 
 
@@ -4500,7 +4937,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../../03-RAGs/SystemDesigns/02-agentic-rag-hybrid/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Agentic RAG — Hybrid Vector + Graph">
+          <a href="../../Notes/12-Interview-QA-Bank/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Q&amp;A Review Bank">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -4510,20 +4947,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Agentic RAG — Hybrid Vector + Graph
+                Q&A Review Bank
               </div>
             </div>
           </a>
         
         
           
-          <a href="../Notes/01-The-Problem/" class="md-footer__link md-footer__link--next" aria-label="Next: The Problem">
+          <a href="../02-agentic-rag-hybrid/" class="md-footer__link md-footer__link--next" aria-label="Next: Agentic RAG — Hybrid Vector + Graph">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                The Problem
+                Agentic RAG — Hybrid Vector + Graph
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -4560,10 +4997,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "toc.integrate", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "toc.integrate", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>
