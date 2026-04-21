@@ -1,5 +1,7 @@
 # LangChain
 
+← **Back to Overview:** [Agents](../INDEX.md)
+
 ## What Is LangChain
 
 LangChain is a framework for building LLM-powered applications using composable chains and agents. It provides abstractions for memory, tools, retrieval, and model integrations.

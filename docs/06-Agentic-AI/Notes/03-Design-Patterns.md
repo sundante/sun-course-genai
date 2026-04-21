@@ -415,3 +415,25 @@ Human: Timeout → Agent escalates to supervisor
 - Plan-and-Execute is particularly useful when HITL is required — you can show the human the plan and get approval before any action is taken.
 - Routing is often underestimated. A good router dramatically improves system performance by sending each input to the specialist that handles it best.
 - Multi-agent coordination is the hardest pattern to get right. Start with the simplest coordination mechanism (shared state via orchestrator) before introducing direct agent-to-agent communication.
+
+---
+
+## Interview Questions
+
+**Q1: What is the ReAct pattern and why is it the default for most agentic tasks?** `[Easy]`
+A: ReAct (Reason + Act) interleaves explicit reasoning traces with tool calls: Thought → Action → Observation → Thought → ... The agent writes out its reasoning before each action, making its logic visible and keeping it on track. It's the default because it handles most general-purpose agentic tasks without requiring an explicit upfront plan, it's simple to implement, and the visible reasoning traces make debugging straightforward. Use something more complex (Plan-and-Execute, Tree of Thoughts) only when you have a specific reason — most tasks don't need it.
+
+**Q2: Why does tool description quality matter as much as tool implementation quality?** `[Medium]`
+A: The tool description is part of the prompt — the LLM reads it to decide whether to use the tool and how to call it. A vague description ("Search products") gives the model no guidance on when to use the tool, what input format is expected, or what it will return. A good description specifies: what the tool does, when to use it, when NOT to use it, the input format, and the output format. A well-implemented tool with a poor description will be called at wrong times or with wrong arguments; a well-described tool is used correctly even in edge cases. Tool descriptions are LLM-facing documentation, not human-facing documentation.
+
+**Q3: When should you use an external evaluator rather than self-reflection?** `[Medium]`
+A: Use an external evaluator (a separate agent or a stronger model) when the task requires catching the model's own blind spots — the same model that generated an output will often fail to identify its own errors due to self-consistency bias (it will evaluate using the same flawed reasoning that produced the error). A stronger model as evaluator works because it has better reasoning; a different model works because it has different priors. Self-reflection is acceptable for tasks like stylistic revision where the model can improve on its own draft without needing to catch factual errors. For factual accuracy, security review, or adversarial analysis, always use a separate evaluator.
+
+**Q4: What is the difference between Plan-and-Execute and ReAct?** `[Medium]`
+A: ReAct interleaves reasoning and action — the agent decides what to do at each step based on the most recent observation, with no upfront plan. Plan-and-Execute separates planning from execution: the agent first produces a complete list of steps, then executes them in sequence, only returning to planning if a step fails (replanning). Plan-and-Execute is better when the full plan can be determined upfront, when HITL review of the plan before execution is required, or when the task has stable dependencies. ReAct is better when the right next step depends on the result of the previous step and can't be planned ahead. Most production systems use ReAct for dynamic tasks and Plan-and-Execute for structured workflows.
+
+**Q5: What must every Reflection loop have, and what happens without it?** `[Hard]`
+A: Every Reflection loop requires a termination condition: a quality score threshold the evaluator must award (e.g., 8/10), a specific criterion the evaluator must declare met (e.g., "APPROVED"), or a hard maximum iteration count. Without a termination condition, the loop runs indefinitely — the agent keeps revising, the evaluator keeps finding new issues, and cost grows without bound. In practice, always set a `max_iterations` even when you have a quality threshold as a safety net: an evaluator with an inconsistent rubric can reject every revision forever. Three conditions in combination (score threshold OR "no critical issues" OR max iterations = 3) is the standard pattern.
+
+**Q6: How does a confidence-gated HITL differ from a fixed HITL gate?** `[Hard]`
+A: A fixed HITL gate always pauses at a defined point — for example, "always get approval before sending any email." A confidence-gated HITL is conditional: the agent computes or estimates its confidence in the output, and routes to human review only when confidence falls below a threshold (e.g., <0.85 routes to queue, <0.60 routes directly to human). Confidence gating reduces human interruptions for routine high-confidence actions while still catching genuinely uncertain cases. The challenge is that LLM self-confidence estimates are unreliable — models are often confidently wrong. Calibrate confidence thresholds empirically against known error rates before deploying confidence gating in production.

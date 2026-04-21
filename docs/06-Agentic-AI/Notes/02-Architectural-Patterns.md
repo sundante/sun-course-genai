@@ -376,3 +376,25 @@ The orchestrator includes a debate step for high-stakes decisions: one subagent 
 - **Pipeline is the most reliable pattern** because it's statically defined and each stage has a clear interface. Use it when you can.
 - **Reflexion is expensive** — each iteration doubles the LLM calls. Use it only where quality justifies the cost.
 - HITL is **not a workaround** — it's a first-class architectural element. Design for it from the start, not as an afterthought.
+
+---
+
+## Interview Questions
+
+**Q1: What distinguishes an architectural pattern from a design pattern in agentic systems?** `[Easy]`
+A: An architectural pattern defines the structural blueprint — how many agents exist, how they relate to each other, and how control and information flow between them. A design pattern defines the behavior and logic of individual agents or agent interactions (e.g., how reflection works inside a single agent). The choice of architectural pattern is the first major system design decision; design patterns are applied within that structure. The same design pattern (e.g., Reflexion) can appear inside any architectural pattern (Pipeline, Orchestrator-Subagent, etc.).
+
+**Q2: When would you choose a Pipeline pattern over an Orchestrator-Subagent pattern?** `[Medium]`
+A: Choose Pipeline when the task naturally decomposes into sequential stages with well-defined input/output contracts, each stage can be implemented and tested independently, and the execution order is fixed at design time. Choose Orchestrator-Subagent when the decomposition is dynamic, subtasks can run in parallel, or different subtasks require different tools and expertise. Pipeline is the most reliable pattern because its behavior is statically defined and easy to reason about; Orchestrator-Subagent is more powerful but introduces coordination overhead. If you can model the task as a fixed ETL chain, Pipeline is almost always preferable.
+
+**Q3: What are the specific conditions that justify adding a Reflexion loop to your system?** `[Medium]`
+A: Three conditions must all be true: the output quality from a single pass is consistently insufficient for production use, there is a clear quality criterion that can be evaluated automatically (a rubric, test suite, or factual check), and the task's latency tolerance can absorb the extra LLM round-trips. You should also always set a `max_iterations` limit and use a different or stronger model as the evaluator to avoid self-consistency bias (the same model often fails to catch its own errors). If you can't define a stopping criterion, don't use Reflexion — you'll build an infinite loop.
+
+**Q4: Why is Orchestrator-Subagent the default production pattern, and what is its single biggest risk?** `[Hard]`
+A: It's the default because it maps naturally to how complex tasks decompose (one coordinator, multiple specialists), it makes HITL easy to implement (insert a gate in the orchestrator), it's easy to debug (one place holds all decisions and state), and it can run subagents in parallel for latency reduction. The single biggest risk is that the orchestrator is both a bottleneck and a single point of failure — all coordination and planning flows through one LLM, and if the orchestrator's reasoning degrades (context drift, hallucinated plan), the entire system fails. Mitigations: task ledger external to conversation history, explicit subagent output validation, and replanning logic when a subagent fails.
+
+**Q5: When does HITL become required rather than optional?** `[Medium]`
+A: HITL is required for irreversible actions (sending email, making payments, deleting data — these cannot be undone), when agent confidence is below a threshold, when regulated data (PII, financial, medical records) is involved, when compliance mandates human sign-off, and when the estimated cost or scope exceeds a defined risk threshold. HITL is optional for high-confidence, reversible, low-risk decisions. The key design principle: HITL that triggers too frequently becomes noise and gets ignored; reserve it for decisions where a human mistake is recoverable but an agent mistake is not.
+
+**Q6: Describe a scenario where you would combine three architectural patterns.** `[Hard]`
+A: A research and analysis system combines Orchestrator-Subagent + Parallel + Reflexion: the orchestrator decomposes "Prepare a competitive analysis of EV manufacturers" into subtasks and fans out to five parallel research agents (one per manufacturer) — that's Orchestrator-Subagent + Parallel. Each research agent has an internal Reflexion loop: it produces a structured research summary, an evaluator agent checks whether the data is complete and sourced, and the research agent revises if not. The orchestrator then synthesizes all five validated summaries into the final analysis. This combination achieves breadth (parallel), correctness (reflection), and coordination (orchestrator) in a single system.

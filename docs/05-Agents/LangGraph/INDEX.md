@@ -1,5 +1,7 @@
 # LangGraph
 
+← **Back to Overview:** [Agents](../INDEX.md)
+
 ## What Is LangGraph
 
 LangGraph extends LangChain with a graph-based execution model — agents are defined as nodes and edges in a directed graph, enabling cyclical workflows, persistent state, and fine-grained control over agent behavior.

@@ -131,3 +131,25 @@ Each layer solves a different problem. The skill in system design is knowing whi
 - The spectrum metaphor is more useful than a binary definition. When someone asks "is this agentic?", ask which of the four properties it has and to what degree.
 - Agentic systems are **harder to evaluate** than traditional AI. A wrong final answer is obvious; a subtly wrong intermediate step that compounds into a wrong final answer is not.
 - The biggest practical risk in agentic systems is **unintended action** — the system takes a real-world action (sends an email, deletes a file, makes an API call) that was not intended. HITL and bounded autonomy are the primary mitigations.
+
+---
+
+## Interview Questions
+
+**Q1: What is the fundamental difference between traditional AI and agentic AI?** `[Easy]`
+A: Traditional AI is reactive — given a single input, it produces a single output and stops. Agentic AI is proactive — given a goal, it decides what steps to take, executes them, observes results, and continues until the goal is met. The key shift is who holds the initiative: in traditional AI the human drives every step; in agentic AI the system drives the steps within a defined goal boundary. This difference is not just technical but architectural — agentic systems require planning, memory, tool use, and failure handling that single-turn systems don't need.
+
+**Q2: What are the four core properties of an agentic system?** `[Easy]`
+A: Goal-directed (the system pursues an objective, not just responds to input), Autonomous Action (takes real-world actions without human approval at each step), Extended Horizon (operates across multiple steps and sessions with persistent state), and Adaptive (adjusts its approach based on feedback and failure). Most real systems sit somewhere between fully agentic and fully traditional — the four properties describe a spectrum. When evaluating whether to use an agentic architecture, ask whether the task actually requires all four; over-engineering to "full agentic" when it's not needed adds cost and complexity.
+
+**Q3: Why isn't a RAG system considered agentic, even though it uses retrieval tools?** `[Medium]`
+A: A RAG system is Level 2 on the autonomy spectrum — it retrieves relevant context before generating, but it's still fundamentally reactive: one retrieval plus one generation per query. It doesn't decide what to do next based on results, can't take actions beyond answering, and has no extended horizon or goal-directed behavior. Agentic systems start at Level 3 (single agent) where an LLM can use tools in a loop, reason about results, and continue until a multi-step task is complete. RAG provides knowledge; agentic systems provide agency — the ability to decide and act.
+
+**Q4: What is "context drift" and why does it only appear in agentic systems?** `[Medium]`
+A: Context drift is the gradual degradation of an agent's reasoning quality as the context window fills with accumulated history — the agent starts losing track of the original goal and later reasoning contradicts earlier reasoning. It only appears in extended-horizon systems because a single-turn LLM never accumulates more than one round of context. In agentic systems, a task ledger (a separate structured record of the goal and remaining steps) is the primary mitigation — the goal is always retrievable even when the conversation history is long or summarized.
+
+**Q5: What does "bounded autonomy" mean and why is it essential in production?** `[Hard]`
+A: Bounded autonomy means placing explicit limits on an agent's ability to act: maximum steps, maximum wall-clock time, maximum cost, maximum number of retries, and a restricted set of permitted actions. Without these limits, agents can enter infinite retry loops, exhaust API quotas, accumulate runaway costs, or take unintended real-world actions. In production, every agent config should declare these limits explicitly, and when a limit is hit the agent should record partial results, set a status flag, and exit gracefully — not silently fail or continue indefinitely. Bounded autonomy is what separates a reliable production system from a demo that works in the happy path.
+
+**Q6: Why does moving up the autonomy spectrum reduce predictability, and how do you manage that tradeoff?** `[Hard]`
+A: Each level up the spectrum adds emergent behavior: the system makes more of its own decisions, meaning more paths through the state space are possible. A chatbot has one output per input. An agentic system can take dozens of different tool-call sequences to reach the same goal — and some of those sequences may be subtly wrong in ways that don't surface until production. You manage this tradeoff by investing in trajectory evaluation (evaluating the execution path, not just the final answer), HITL gates for high-risk decisions, and observability tooling (LangSmith, Langfuse) that captures every step for debugging. The goal isn't to eliminate unpredictability but to instrument it so failures are detectable and correctable.

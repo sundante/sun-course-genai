@@ -2,7 +2,7 @@
 
 Seven multi-agent coordination patterns, each implemented in all four frameworks using the same mock task. Builds directly on [01 — Agent Types](../../05-Agents/CodeLabs/01-Agent-Types.md).
 
-← **Back to Concepts:** [Architectural Patterns](../Notes/02-Architectural-Patterns.md)
+← **Back to Overview:** [Agentic AI](../INDEX.md) · **Back to Concepts:** [Architectural Patterns](../Notes/02-Architectural-Patterns.md)
 
 ---
 
