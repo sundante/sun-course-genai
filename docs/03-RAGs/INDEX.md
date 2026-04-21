@@ -41,6 +41,17 @@
 
 ---
 
+## System Designs
+
+End-to-end production system designs with GCP service mapping, scalability analysis, and interview-style Q&A.
+
+| # | Design | Pattern | Difficulty |
+|---|--------|---------|-----------|
+| SD-1 | [Simple RAG Pipeline](SystemDesigns/01-simple-rag.md) | Vector + BM25 hybrid, reranking, semantic cache | ★★★ |
+| SD-2 | [Agentic RAG — Hybrid Vector + Graph](SystemDesigns/02-agentic-rag-hybrid.md) | ReAct agent, Spanner Graph, multi-hop reasoning | ★★★★ |
+
+---
+
 ## Recommended Learning Paths
 
 ### Path A: First time through (full learning)
