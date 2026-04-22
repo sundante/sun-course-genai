@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://sundante.github.io/sun-course-genai/06-Agentic-AI/SystemsArchitecture/insurance-claims-processor/">
+        <link rel="canonical" href="https://sundante.github.io/sun-course-genai/06-Agentic-AI/SystemDesigns/smart-diagnostic-assistant-interview-answer-2/">
       
       
       
@@ -23,7 +23,7 @@
     
     
       
-        <title>Agentic System: Insurance Claims Processor - GenAI Learning Curriculum</title>
+        <title>Smart Diagnostic Assistant — Orchestrator-Subagent Architecture - GenAI Learning Curriculum</title>
       
     
     
@@ -84,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#agentic-system-insurance-claims-processor" class="md-skip">
+        <a href="#smart-diagnostic-assistant-orchestrator-subagent-architecture" class="md-skip">
           Skip to content
         </a>
       
@@ -118,7 +118,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Agentic System: Insurance Claims Processor
+              Smart Diagnostic Assistant — Orchestrator-Subagent Architecture
             
           </span>
         </div>
@@ -3778,7 +3778,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../SystemDesigns/insurance-claims-processor/" class="md-nav__link">
+      <a href="../insurance-claims-processor/" class="md-nav__link">
         
   
   
@@ -3806,7 +3806,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../SystemDesigns/prior-authorization/" class="md-nav__link">
+      <a href="../prior-authorization/" class="md-nav__link">
         
   
   
@@ -4265,11 +4265,64 @@
   
 
 
-<h1 id="agentic-system-insurance-claims-processor">Agentic System: Insurance Claims Processor</h1>
-<p><strong>Problem Statement:</strong> Design an agentic system that helps an insurance company process claims against their homeowner's policy more quickly.</p>
+<h1 id="smart-diagnostic-assistant-orchestrator-subagent-architecture">Smart Diagnostic Assistant — Orchestrator-Subagent Architecture</h1>
+<h2 id="alternative-design-version-2">Alternative Design: Version 2</h2>
+<blockquote>
+<p><strong>What this version adds:</strong> Replaces the monolithic Diagnostic Agent from Version 1 with an explicit
+Orchestrator-Subagent + Parallel Fan-out pattern. This demonstrates advanced multi-agent design judgment
+— the pattern that senior ML system design interviewers are specifically looking for.</p>
+</blockquote>
 <hr />
-<h2 id="clarifying-questions-asked-before-designing">Clarifying Questions (asked before designing)</h2>
-<p>The problem is intentionally vague. These questions must be answered before committing to a design:</p>
+<h2 id="how-id-open-this-in-an-interview-2-min">How I'd Open This in an Interview (2 min)</h2>
+<p>"Before I start drawing boxes, let me reframe what's actually hard here. Most candidates treat this as a
+RAG problem — retrieve from manuals, generate instructions, done. But there are three constraints that
+fundamentally change the architecture.</p>
+<p>First, the knowledge needed for one diagnostic comes from three completely different sources that require
+three different retrieval strategies: a graph database for machine history, a vector store for technical
+manuals, and a structured rule store for safety standards. You can't do those three well with a single
+retrieval agent.</p>
+<p>Second, safety is non-negotiable. In a factory, a wrong diagnostic instruction doesn't fail gracefully —
+it injures someone. That means safety validation has to be a separate, blocking stage, not something
+blended into generation.</p>
+<p>Third, those three retrieval operations are independent. They don't need each other's results. Running
+them sequentially is wasted latency.</p>
+<p>So the architecture I want to describe is an Orchestrator-Subagent flow with parallel fan-out:
+Input → Data Processing Agent → Orchestrator → [three parallel specialist agents] → Validator → Synthesizer.
+Let me walk through each stage."</p>
+<hr />
+<h2 id="why-orchestrator-subagent-is-the-right-pattern">Why Orchestrator-Subagent Is the Right Pattern</h2>
+<p>This isn't a reflexive choice. Let me show the decision:</p>
+<table>
+<thead>
+<tr>
+<th>Alternative Considered</th>
+<th>Why It Doesn't Fit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Single monolithic RAG agent</strong></td>
+<td>One retrieval strategy can't serve graph traversal + vector search + structured lookup. You'd end up with one mediocre agent instead of three excellent ones.</td>
+</tr>
+<tr>
+<td><strong>Pipeline (sequential)</strong></td>
+<td>The three fetch operations are fully independent. Sequential execution adds ~4–6s with zero benefit. Pipeline is right when step N needs step N-1's output.</td>
+</tr>
+<tr>
+<td><strong>Peer-to-peer multi-agent</strong></td>
+<td>No peer coordination needed. The fetch agents don't need to communicate with each other. Unnecessary complexity.</td>
+</tr>
+<tr>
+<td><strong>Orchestrator-Subagent + Parallel Fan-out</strong></td>
+<td>✅ Three independent specialists, run in parallel, results aggregated by a dedicated validator. Clean, explainable, and fast.</td>
+</tr>
+</tbody>
+</table>
+<p>The key property that makes Orchestrator-Subagent right: <strong>the sub-agents are independent</strong>. Legacy
+history, OEM manuals, and safety SOPs don't depend on each other. The Orchestrator can dispatch all
+three simultaneously and wait for all results.</p>
+<hr />
+<h2 id="clarifying-questions-5-min">Clarifying Questions (5 min)</h2>
 <table>
 <thead>
 <tr>
@@ -4279,423 +4332,812 @@
 </thead>
 <tbody>
 <tr>
-<td>What evidence does the claimant submit? (photos, videos, police reports, written descriptions?)</td>
-<td>Determines whether we need vision, audio transcription, or document parsing capabilities</td>
+<td>How many machine models?</td>
+<td>Drives knowledge base size and offline pre-generation scope. 300 models × ~50 common failures = 15,000 pre-generated guides.</td>
 </tr>
 <tr>
-<td>Which legacy systems must the agent interface with? (Claims Management System, CRM, policy DB?)</td>
-<td>Defines the integration surface — tools the agents need to call</td>
+<td>What format are the technical manuals?</td>
+<td>PDFs need Document AI ingestion. Structured HTML is simpler. Determines chunking strategy for Vector Search.</td>
 </tr>
 <tr>
-<td>Has an insurance assessor already visited the site?</td>
-<td>If yes, we have a structured assessment report; if no, the agent must infer damage from raw evidence alone</td>
+<td>What safety standards apply?</td>
+<td>IEC 62443 for industrial control systems, NFPA 70E for electrical — each requires different validation rules in the SOPs agent.</td>
 </tr>
 <tr>
-<td>What is the claim value threshold for auto-approval vs. mandatory human review?</td>
-<td>Sets the HITL escalation policy</td>
+<td>Does your machine registry distinguish new vs. well-documented equipment?</td>
+<td>Determines when the Orchestrator should skip the Legacy agent (new machines have no history).</td>
 </tr>
 <tr>
-<td>What data is available on past claims? (for fraud detection and cost benchmarking)</td>
-<td>Determines viability of RAG-based retrieval vs. fine-tuning</td>
+<td>What skill tiers do technicians have?</td>
+<td>Tier 1–3 system means the Orchestrator must validate authorization before dispatching agents — a failed authorization should stop everything immediately.</td>
+</tr>
+<tr>
+<td>Is there a CMMS (SAP PM, Maximo)?</td>
+<td>If yes, the Synthesizer needs to create a work order as a side effect. Changes output format.</td>
+</tr>
+<tr>
+<td>What's the WiFi coverage on the factory floor?</td>
+<td>If patchy, offline-first is required for 5s SLA. Determines whether pre-generated guides are a nice-to-have or a hard requirement.</td>
+</tr>
+<tr>
+<td>What languages?</td>
+<td>Multilingual output changes both the Synthesizer prompt and the offline cache size.</td>
 </tr>
 </tbody>
 </table>
+<p><strong>Assumed answers for this design:</strong> 300 machine models, PDF manuals (Document AI ingested), IEC 62443 +
+NFPA 70E, SAP PM integration required, ~30% of floor has dead WiFi zones, English + Spanish output.</p>
 <hr />
-<h2 id="system-architecture-overview">System Architecture Overview</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>┌──────────────────────────────────────────────────────────────────────┐
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>│                        CLAIMANT INTERFACE                             │
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>│         Web Portal / Mobile App / Phone (IVR + Transcription)        │
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│                                                                       │
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│   Submits: photos · videos · police report · written description     │
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>└──────────────────────────────┬───────────────────────────────────────┘
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>                               │
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>                               ▼
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>┌──────────────────────────────────────────────────────────────────────┐
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>│                    SECURITY &amp; INGESTION LAYER                         │
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>│                                                                       │
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>│   • PII Redaction: strip names, addresses, policy numbers from       │
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>│     evidence before passing to LLMs                                  │
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>│   • Prompt Injection Guard: sanitize free-text fields                │
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>│   • Fraudulent Imagery Detection: EXIF metadata check,              │
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>│     reverse image search for stock/recycled photos                   │
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>│   • Evidence stored in secure object store (encrypted at rest)       │
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>└──────────────────────────────┬───────────────────────────────────────┘
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>                               │  Sanitised claim package
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>                               ▼
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>┌──────────────────────────────────────────────────────────────────────┐
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>│                       ORCHESTRATOR AGENT                              │
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>│                                                                       │
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>│   Model: Multi-modal Foundation Model (e.g., Gemini / Claude)        │
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>│   Pattern: Plan → Dispatch → Reflect → Synthesize                    │
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>│                                                                       │
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>│   • Creates claim context window (shared state for all sub-agents)   │
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>│   • Dispatches to specialist sub-agents in parallel                  │
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>│   • Detects conflicts between sub-agent findings (see below)         │
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>│   • Applies escalation rules → routes to HITL or auto-decision       │
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>│   • Interfaces with legacy CMS and CRM via tool calls                │
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>└──────┬─────────────────┬──────────────────────┬───────────────────┬──┘
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>       │                 │                      │                   │
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>       ▼                 ▼                      ▼                   ▼
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>┌────────────┐   ┌────────────────┐   ┌─────────────────┐  ┌─────────────────┐
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>│  DAMAGE    │   │    POLICY      │   │  COST ESTIMATOR │  │  LEGACY SYSTEM  │
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>│  ANALYST   │   │   AUDITOR      │   │    (sub-task     │  │   CONNECTOR     │
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>│            │   │                │   │  of Synthesizer) │  │                 │
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>│ • Ingests  │   │ • Pulls active │   │ • Looks up       │  │ • Reads/writes  │
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>│   photos,  │   │   policy at    │   │   repair cost    │  │   Claims Mgmt   │
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>│   videos,  │   │   date of loss │   │   benchmarks     │  │   System (CMS)  │
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>│   reports  │   │ • Checks       │   │   from RAG DB    │  │ • Reads CRM for │
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>│ • Uses     │   │   coverage     │   │ • Applies        │  │   claimant      │
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>│   vision   │   │   limits,      │   │   ACV or RCV     │  │   history       │
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>│   model to │   │   deductibles, │   │   per policy     │  │ • Updates claim │
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>│   classify │   │   exclusions   │   │ • Produces       │  │   status in CMS │
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>│   damage:  │   │ • Flags gaps   │   │   itemised cost  │  │                 │
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>│   water /  │   │   in coverage  │   │   estimate       │  │                 │
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>│   fire /   │   │ • Returns      │   │ • Proposes       │  │                 │
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>│   impact   │   │   structured   │   │   settlement     │  │                 │
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>│ • Assesses │   │   policy       │   │   offer draft    │  │                 │
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>│   severity │   │   summary      │   │   for adjuster   │  │                 │
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>│   (minor / │   │                │   │                  │  │                 │
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>│   moderate │   │                │   │                  │  │                 │
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>│   /major)  │   │                │   │                  │  │                 │
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>└─────┬──────┘   └───────┬────────┘   └────────┬─────────┘  └────────┬────────┘
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>      │                  │                     │                     │
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>      └──────────────────┴──────────────┬──────┘                     │
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>                                        │                            │
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>                                        ▼                            │
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>┌──────────────────────────────────────────────────────────────────────────────┐
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>│                          SYNTHESIZER AGENT                                    │
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>│                                                                               │
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>│   Combines: damage classification + severity + policy coverage +             │
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>│             cost estimate + claimant history from CRM                        │
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>│                                                                               │
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>│   Outputs a structured recommendation with fraud risk score:                 │
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>│                                                                               │
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>│   ┌─────────────────────────────────────────────────────────────────────┐   │
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>│   │  RECOMMENDATION  │  CONDITIONS                                       │   │
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>│   ├─────────────────────────────────────────────────────────────────────┤   │
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>│   │  ✅ Approve Claim │  Damage confirmed · Covered · Fraud risk: LOW    │   │
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>│   │  ℹ️ Request Info  │  Evidence incomplete · Policy gap unclear        │   │
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>│   │  🔍 Dispatch      │  High severity · Fraud risk: MED/HIGH · Complex  │   │
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>│   │     Human         │  conflict between evidence and claimed damage    │   │
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>│   │     Assessor      │                                                   │   │
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>│   └─────────────────────────────────────────────────────────────────────┘   │
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>│                                                                               │
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>│   CONFLICT RESOLUTION LOGIC (built into Synthesizer):                        │
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>│   • Photo shows MINOR damage + text claims MAJOR → flag discrepancy,         │
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>│     downgrade recommendation, escalate to human adjuster                     │
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>│   • Date on EXIF metadata ≠ claimed date of loss → fraud flag raised        │
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>│   • Cost estimate far exceeds regional benchmark → soft flag + justification │
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>└──────────────────────────────┬────────────────────────────────────────────────┘
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>                               │
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>           ┌───────────────────┼───────────────────┐
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>           │                   │                   │
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>           ▼                   ▼                   ▼
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>    ✅ Auto-Approve       ℹ️ Request Info    🔍 Escalate to
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>    (HITL light-touch)    Claimant notified   Human Adjuster
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>    Adjuster sees         via portal;         Full package:
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>    summary + can         claim paused        damage report +
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>    override within                           policy summary +
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>    48hrs                                     settlement offer
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>                                              draft + fraud score
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>           │                   │                   │
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>           └───────────────────┴───────────────────┘
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>                               │
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>                               ▼
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>              ┌────────────────────────────────┐
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>              │        NOTIFICATION AGENT       │
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>              │                                │
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>              │  • Updates CMS claim status    │
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>              │  • Emails / SMS claimant       │
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>              │  • Triggers payment if approved│
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>              │  • Refers approved contractors │
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>              └────────────────────────────────┘
+<h2 id="scale-reality-check">Scale Reality Check</h2>
+<ul>
+<li><strong>5,000 technicians</strong>, not concurrent — peak load is <strong>~200–300 simultaneous queries</strong> during shift change</li>
+<li><strong>P99 target: &lt; 5 seconds</strong> — machine downtime costs $10k–$50k/hour, so every second matters</li>
+<li><strong>~300 machine models</strong>, ~5M total document chunks across all OEM manuals</li>
+<li><strong>~15,000 pre-generated offline guides</strong> (top-500 failure patterns × 30 machine families) at ~2GB per device</li>
+</ul>
+<p>At 200–300 concurrent queries, with 5s P99 budget, this is perfectly achievable with Cloud Run autoscaling
+— no exotic infrastructure needed.</p>
+<hr />
+<h2 id="full-architecture">Full Architecture</h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Technician Input (voice / QR scan / photo)
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>        ↓
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>┌──────────────────────────────────────────────────────────────┐
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│  STAGE 1: Data Processing Agent                               │
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│                                                               │
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│  Voice  ──→ Vertex AI Speech-to-Text ──→ problem description  │
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│  Photo  ──→ Gemini Vision API ─────────→ failure symptoms     │
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>│  QR Code ─→ Equipment Registry lookup ─→ machine context      │
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>│                                                               │
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>│  Output: EquipmentContext {                                   │
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>│    equipment_id, machine_model, location,                     │
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>│    failure_description, symptom_tags[],                       │
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>│    technician_id, skill_tier                                  │
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>│  }                                                            │
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>└──────────────────────────────┬───────────────────────────────┘
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>                               ↓
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>┌──────────────────────────────────────────────────────────────┐
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>│  STAGE 2: Orchestrator                                        │
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>│                                                               │
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>│  1. Classifies failure mode (Gemini Flash) + confidence score │
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>│  2. Authorization check: is tech&#39;s skill_tier sufficient?     │
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>│     → If no: return escalation immediately, skip all agents   │
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>│  3. Checks LOTO requirement for this failure class            │
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>│  4. Decides which agents to invoke:                           │
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>│     ┌─ SOPs &amp; Safety: ALWAYS                                  │
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>│     ├─ RAG Manual Fetch: ALWAYS                               │
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>│     └─ Legacy &amp; History: only if machine has repair history   │
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>│  5. Dispatches in parallel, holds shared state                │
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>│                                                               │
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>│  Shared state:                                                │
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>│  { equipment_id, failure_class, confidence,                   │
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>│    skill_tier, loto_required, agents_invoked[] }              │
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>└────────┬──────────────────┬──────────────────┬───────────────┘
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>         ↓ parallel         ↓ parallel         ↓ parallel
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>┌────────────────┐  ┌────────────────┐  ┌────────────────────┐
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>│  STAGE 3A      │  │  STAGE 3B      │  │  STAGE 3C          │
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>│  Legacy &amp;      │  │  RAG Manual    │  │  SOPs &amp; Safety     │
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>│  History Fetch │  │  Fetch Agent   │  │  Fetch Agent       │
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>│                │  │                │  │                    │
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>│ Spanner Graph: │  │ Vertex AI      │  │ Firestore:         │
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>│  machine →     │  │ Vector Search: │  │  LOTO procedures   │
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>│  failure mode  │  │  OEM manuals   │  │  IEC 62443 rules   │
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>│  → procedure   │  │  repair guides │  │  NFPA 70E reqs     │
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>│                │  │  parts catalog │  │  escalation limits │
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>│ BigQuery:      │  │                │  │  skill tier map    │
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>│  past repairs  │  │ Returns:       │  │                    │
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>│  MTTR history  │  │  top-k chunks  │  │ Returns:           │
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>│  tech notes    │  │  + source refs │  │  required safety   │
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>│                │  │  + confidence  │  │  steps, LOTO Y/N,  │
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>│ Returns:       │  │                │  │  escalation flags  │
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>│  similar cases │  │                │  │                    │
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>│  + outcomes    │  │                │  │                    │
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>└────────┬───────┘  └────────┬───────┘  └─────────┬──────────┘
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>         └──────────────┬────┘                     │
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>                        └───────────────┬───────────┘
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>                                        ↓ aggregate
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>┌──────────────────────────────────────────────────────────────┐
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>│  STAGE 4: Analyser, Validator &amp; Standards Enforcer            │
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>│                                                               │
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>│  Conflict resolution (hard precedence order):                 │
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>│    SOPs &amp; Safety  &gt;  Historical outcomes  &gt;  OEM Manual       │
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>│                                                               │
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>│  Validation checks (all blocking):                            │
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>│  ✓ LOTO completeness: if loto_required=true, Step 1 must be   │
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>│    lockout — non-negotiable, block synthesis if absent        │
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>│  ✓ Skill-tier authorization confirmed (second check)          │
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>│  ✓ IEC 62443 / NFPA 70E compliance                            │
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>│  ✓ Re-failure rate flag: if &gt;20% of similar past repairs      │
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>│    failed within 30 days → attach warning, don&#39;t suppress     │
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>│  ✓ Auto-escalation: voltage &gt;480V or confined space entry     │
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>│    → block synthesis, return escalation to supervisor         │
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>│                                                               │
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>│  Output: ValidatedDiagnosticContext {                         │
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>│    procedure_steps[], safety_steps[], parts_list[],           │
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>│    estimated_time_minutes, historical_success_rate,           │
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>│    sources[], escalation_required, warnings[]                 │
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>│  }                                                            │
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>└──────────────────────────────┬───────────────────────────────┘
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>                               ↓ (only if validation passed)
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>┌──────────────────────────────────────────────────────────────┐
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>│  STAGE 5: Synthesizer                                         │
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>│                                                               │
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>│  Generates (Gemini 1.5 Pro):                                  │
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>│  - Step-by-step repair procedure (mobile-optimized format)    │
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>│  - Safety warnings with regulatory citations                  │
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>│  - Parts list + quantities + SAP inventory status             │
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>│  - Time estimate from historical MTTR data                    │
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>│  - Source references (manual section + past repair IDs)       │
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>│  - Bilingual output (English + Spanish)                       │
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>│  - Offline-capable package (if technician&#39;s device on WiFi)   │
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>│                                                               │
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>│  Side effects:                                                │
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>│  - Creates SAP PM work order                                  │
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>│  - Logs event to BigQuery (for weekly feedback loop)          │
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>│  - Triggers parts pre-order if inventory &lt; threshold          │
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>└──────────────────────────────────────────────────────────────┘
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>                               ↓
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>              Technician receives diagnostic guide
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>              (online: real-time stream / offline: cached)
 </code></pre></div>
 <hr />
-<h2 id="agent-breakdown">Agent Breakdown</h2>
-<h3 id="1-orchestrator-agent">1. Orchestrator Agent</h3>
-<p><strong>Model:</strong> Multi-modal foundation model (e.g., Gemini 1.5 Pro or Claude) — chosen over separate NLP + Vision silos because a single model maintains coherent reasoning across text and image evidence without context loss between handoffs.</p>
-<table>
-<thead>
-<tr>
-<th>Responsibility</th>
-<th>Details</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Context management</td>
-<td>Creates and maintains the shared claim context window across all sub-agents</td>
-</tr>
-<tr>
-<td>Parallel dispatch</td>
-<td>Runs Damage Analyst + Policy Auditor + Legacy Connector simultaneously</td>
-</tr>
-<tr>
-<td>Conflict detection</td>
-<td>Compares sub-agent outputs for discrepancies before passing to Synthesizer</td>
-</tr>
-<tr>
-<td>Escalation logic</td>
-<td>Routes outcome to auto-approve, request-info, or human adjuster paths</td>
-</tr>
-<tr>
-<td>Legacy integration</td>
-<td>Tool calls to CMS (update claim status) and CRM (read claimant history)</td>
-</tr>
-</tbody>
-</table>
-<h3 id="2-damage-analyst">2. Damage Analyst</h3>
-<p><strong>Model:</strong> Multi-modal foundation model (same model as Orchestrator — no separate vision silo)
-<strong>Tools:</strong> Vision analysis, weather event API, EXIF metadata extractor</p>
-<ul>
-<li>Ingests all unstructured evidence: photos, videos, police reports, written descriptions</li>
-<li>Classifies damage <strong>type</strong>: water / fire / impact / theft / wind</li>
-<li>Classifies damage <strong>severity</strong>: minor / moderate / major / total loss</li>
-<li>Corroborates date and cause against weather records</li>
-<li>Flags if imagery metadata (EXIF timestamps, GPS) conflicts with the claim narrative</li>
-</ul>
-<h3 id="3-policy-auditor">3. Policy Auditor</h3>
-<p><strong>Model:</strong> LLM with RAG over policy documents
-<strong>Tools:</strong> Policy DB API, coverage rules engine</p>
-<ul>
-<li>Pulls the claimant's active policy at the exact date of loss</li>
-<li>Checks which perils are covered, deductibles, sub-limits (jewelry, electronics), exclusions</li>
-<li>Returns a structured policy summary the Synthesizer can reason over</li>
-<li>Does <strong>not</strong> make a coverage decision — it surfaces facts for the Synthesizer</li>
-</ul>
-<h3 id="4-cost-estimator-sub-task-within-synthesizer-flow">4. Cost Estimator (sub-task within Synthesizer flow)</h3>
-<p><strong>Tools:</strong> RAG over repair cost database (Xactimate / regional benchmarks), depreciation tables</p>
-<ul>
-<li>Retrieves comparable repair costs from a RAG database — avoids hallucinated cost estimates</li>
-<li>Applies ACV (Actual Cash Value) or RCV (Replacement Cost Value) per policy terms</li>
-<li>Produces an itemised cost estimate</li>
-<li>Drafts a preliminary settlement offer amount for the human adjuster to review</li>
-</ul>
-<h3 id="5-synthesizer-agent">5. Synthesizer Agent</h3>
-<p><strong>Model:</strong> LLM reasoning over structured inputs from all other agents</p>
-<p>Combines: damage type + severity + policy coverage + cost estimate + claimant history from CRM</p>
-<p>Outputs one of three structured recommendations with a <strong>fraud risk score (Low / Medium / High)</strong>:</p>
-<table>
-<thead>
-<tr>
-<th>Recommendation</th>
-<th>Trigger Conditions</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Approve Claim</strong></td>
-<td>Damage confirmed · Covered by policy · Cost reasonable · Fraud risk: Low</td>
-</tr>
-<tr>
-<td><strong>Request More Information</strong></td>
-<td>Evidence incomplete · Policy gap ambiguous · Claimant hasn't responded</td>
-</tr>
-<tr>
-<td><strong>Dispatch Human Assessor</strong></td>
-<td>High severity · Fraud risk Medium/High · Evidence-claim conflict detected</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Conflict Resolution Logic</strong> built into the Synthesizer:
-- Photo evidence shows <strong>minor</strong> damage but claimant text describes <strong>major</strong> loss → flag discrepancy, downgrade recommendation, require adjuster sign-off
-- EXIF date on photos does not match claimed date of loss → raise fraud flag
-- Cost estimate significantly exceeds regional benchmark → soft flag with justification required</p>
-<h3 id="6-legacy-system-connector">6. Legacy System Connector</h3>
-<p><strong>Tools:</strong> CMS API, CRM API</p>
-<ul>
-<li>Reads full claimant history from CRM (prior claims, disputes, payment history)</li>
-<li>Writes claim status updates back to the Claims Management System at each lifecycle transition</li>
-<li>Decouples agent logic from legacy system specifics — all agents interact through this connector</li>
-</ul>
-<h3 id="7-notification-agent">7. Notification Agent</h3>
-<p><strong>Tools:</strong> Email API, SMS gateway, customer portal CMS, contractor referral DB</p>
-<ul>
-<li>Sends status updates at each lifecycle transition</li>
-<li>Delivers decision letter and settlement offer to claimant</li>
-<li>Triggers payment processing for approved claims</li>
-<li>Provides list of approved contractors for repairs</li>
-</ul>
+<h2 id="stage-by-stage-detail">Stage-by-Stage Detail</h2>
+<h3 id="stage-1-data-processing-agent">Stage 1 — Data Processing Agent</h3>
+<p>The technician's input is messy and multimodal. This agent's only job is to normalize it into a clean,
+structured <code>EquipmentContext</code> object that every downstream agent can consume.</p>
+<p><strong>Why a separate agent?</strong> The Orchestrator shouldn't be parsing audio files. Clean separation of concerns
+means the Orchestrator always receives a structured object — it never sees raw voice or images.</p>
+<p><strong>Latency target:</strong> &lt; 500ms
+- Speech-to-Text: ~200ms for a 10-second voice clip
+- Gemini Vision: ~300ms for a single photo</p>
+<p><strong>What happens when input is ambiguous?</strong> If Gemini Vision returns <code>confidence &lt; 0.6</code> on the failure
+description, the Data Processing Agent asks the technician one clarifying question before producing the
+<code>EquipmentContext</code>. This adds latency but prevents the Orchestrator from misclassifying based on a blurry
+photo.</p>
 <hr />
-<h2 id="model-selection-build-vs-buy">Model Selection: Build vs. Buy</h2>
+<h3 id="stage-2-orchestrator">Stage 2 — Orchestrator</h3>
+<p>The Orchestrator is the control plane. It makes decisions; the sub-agents do retrieval.</p>
+<p><strong>Failure classification with Gemini Flash:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">classification_prompt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="s2">Equipment: </span><span class="si">{</span><span class="n">context</span><span class="o">.</span><span class="n">machine_model</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">context</span><span class="o">.</span><span class="n">equipment_id</span><span class="si">}</span><span class="s2">)</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="s2">Problem description: </span><span class="si">{</span><span class="n">context</span><span class="o">.</span><span class="n">failure_description</span><span class="si">}</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="s2">Symptom tags: </span><span class="si">{</span><span class="n">context</span><span class="o">.</span><span class="n">symptom_tags</span><span class="si">}</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="s2">Classify the failure mode from this list: </span><span class="si">{</span><span class="n">FAILURE_MODE_TAXONOMY</span><span class="si">}</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="s2">Return: </span><span class="si">{</span><span class="w"> </span><span class="s2">&quot;failure_class&quot;</span><span class="si">:</span><span class="s2"> str, &quot;confidence&quot;: float, &quot;loto_required&quot;: bool </span><span class="si">}</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="s2">&quot;&quot;&quot;</span>
+</code></pre></div>
+<p>If <code>confidence &lt; 0.75</code>, the Orchestrator invokes all three sub-agents (safe default) and flags the
+output for tech confirmation. This prevents a low-confidence classification from narrowing retrieval
+prematurely.</p>
+<p><strong>Dynamic agent selection:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">agents_to_invoke</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;sops_safety&quot;</span><span class="p">,</span> <span class="s2">&quot;rag_manual&quot;</span><span class="p">]</span>  <span class="c1"># always</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">if</span> <span class="n">equipment_registry</span><span class="o">.</span><span class="n">has_repair_history</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">equipment_id</span><span class="p">):</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">agents_to_invoke</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;legacy_history&quot;</span><span class="p">)</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="c1"># Dispatch in parallel</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="p">[</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="n">invoke_agent</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span> <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="n">agents_to_invoke</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="p">])</span>
+</code></pre></div>
+<p>Skipping the Legacy agent for new machines isn't just about latency — an empty Spanner query that returns
+"no history found" can confuse the Validator with an empty input. Cleaner to skip it entirely when the
+machine is new.</p>
+<hr />
+<h3 id="stage-3a-legacy-history-fetch-agent">Stage 3A — Legacy &amp; History Fetch Agent</h3>
+<p><strong>What it does:</strong> Finds similar past failures on the same machine (or same model family) and retrieves
+what procedures were used and what the outcomes were.</p>
+<p><strong>Why Spanner Graph?</strong> The knowledge structure is inherently relational:
+<code>machine → failure_mode → procedure → outcome → technician_notes</code>. Graph traversal is the natural
+retrieval strategy. Vector search would return semantically similar text, not structurally related failure
+chains.</p>
+<p><strong>Query pattern:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Find similar failures on same model in last 18 months</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="s2">GRAPH machine_repair_graph</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="s2">MATCH (m:Machine {model: $model})</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="s2">     -[:HAD_FAILURE]-&gt; (f:FailureEvent {class: $failure_class})</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="s2">     -[:USED_PROCEDURE]-&gt; (p:Procedure)</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="s2">     -[:PRODUCED_OUTCOME]-&gt; (o:Outcome)</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="s2">WHERE f.timestamp &gt; TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 18 MONTH)</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="s2">RETURN p.steps, o.success, o.mttr_minutes, o.technician_notes</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="s2">ORDER BY o.timestamp DESC</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="s2">LIMIT 10</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="s2">&quot;&quot;&quot;</span>
+</code></pre></div>
+<p><strong>What it returns:</strong> Top-10 most recent similar cases, each with procedure used, success/failure, MTTR,
+and technician notes. The Validator will use the success rate to flag if a procedure has a bad track record.</p>
+<hr />
+<h3 id="stage-3b-rag-manual-fetch-agent">Stage 3B — RAG Manual Fetch Agent</h3>
+<p><strong>What it does:</strong> Semantic search over the OEM technical manuals and repair guides for this machine model,
+returning the most relevant procedure sections.</p>
+<p><strong>Why Vertex AI Vector Search?</strong> The manuals are unstructured PDFs. Semantic similarity is the right
+retrieval strategy — "hydraulic pump cavitation" in the technician's description needs to match
+"cavitation in piston pump assemblies" in the manual. Keyword search would fail.</p>
+<p><strong>Retrieval strategy:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Hybrid: sparse (BM25) + dense (embedding) retrieval</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">query_embedding</span> <span class="o">=</span> <span class="n">embed_model</span><span class="o">.</span><span class="n">embed</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">failure_description</span><span class="p">)</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">results</span> <span class="o">=</span> <span class="n">vector_search</span><span class="o">.</span><span class="n">find_neighbors</span><span class="p">(</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">embedding</span><span class="o">=</span><span class="n">query_embedding</span><span class="p">,</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="nb">filter</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;machine_model = &#39;</span><span class="si">{</span><span class="n">context</span><span class="o">.</span><span class="n">machine_model</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="n">num_neighbors</span><span class="o">=</span><span class="mi">20</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="p">)</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="c1"># Re-rank by confidence + chunk recency (newer manual version wins)</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="n">top_chunks</span> <span class="o">=</span> <span class="n">reranker</span><span class="o">.</span><span class="n">rerank</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">failure_description</span><span class="p">,</span> <span class="n">top_k</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+</code></pre></div>
+<p><strong>Chunk size:</strong> 512 tokens. Smaller chunks increase precision (fewer irrelevant sentences retrieved).
+Overlap of 50 tokens preserves context across chunk boundaries.</p>
+<p><strong>What it returns:</strong> Top-5 chunks with source reference (manual name, section, page) and confidence score.
+If the top chunk confidence is &lt; 0.7, the Validator will flag this in the output.</p>
+<hr />
+<h3 id="stage-3c-sops-safety-fetch-agent">Stage 3C — SOPs &amp; Safety Fetch Agent</h3>
+<p><strong>What it does:</strong> Retrieves the relevant safety requirements, LOTO procedures, and regulatory constraints
+for this failure class and machine type.</p>
+<p><strong>Why Firestore, not vector search?</strong> Safety rules are structured, not fuzzy. "LOTO required for electrical
+failures on 480V systems" is a hard lookup, not a semantic search. Firestore gives consistent, predictable
+retrieval. Vector search would introduce non-determinism into safety-critical lookups — unacceptable.</p>
+<p><strong>Lookup pattern:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Structured safety rule lookup</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">safety_rules</span> <span class="o">=</span> <span class="n">firestore</span><span class="o">.</span><span class="n">collection</span><span class="p">(</span><span class="s2">&quot;safety_rules&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="s2">&quot;applicable_failure_classes&quot;</span><span class="p">,</span> <span class="s2">&quot;array_contains&quot;</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">failure_class</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="s2">&quot;machine_voltage_class&quot;</span><span class="p">,</span> <span class="s2">&quot;==&quot;</span><span class="p">,</span> <span class="n">equipment</span><span class="o">.</span><span class="n">voltage_class</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="n">loto_procedure</span> <span class="o">=</span> <span class="n">firestore</span><span class="o">.</span><span class="n">collection</span><span class="p">(</span><span class="s2">&quot;loto_procedures&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">document</span><span class="p">(</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">context</span><span class="o">.</span><span class="n">machine_model</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">context</span><span class="o">.</span><span class="n">failure_class</span><span class="si">}</span><span class="s2">&quot;</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="n">skill_tier_requirement</span> <span class="o">=</span> <span class="n">firestore</span><span class="o">.</span><span class="n">collection</span><span class="p">(</span><span class="s2">&quot;skill_tier_map&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">document</span><span class="p">(</span>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>    <span class="n">context</span><span class="o">.</span><span class="n">failure_class</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+</code></pre></div>
+<p><strong>What it returns:</strong> Required safety steps, LOTO procedure (if required), applicable regulatory standards,
+escalation thresholds, and minimum skill tier for this repair. This agent never returns "not found" —
+if there are no specific safety rules for a failure class, it returns the default safety baseline.</p>
+<hr />
+<h3 id="stage-4-analyser-validator-standards-enforcer">Stage 4 — Analyser, Validator &amp; Standards Enforcer</h3>
+<p>This is the most important stage. <strong>No procedure reaches the Synthesizer without passing validation.</strong></p>
+<p><strong>Why a separate stage and not part of the Synthesizer?</strong> In industrial systems, "generate then validate"
+is architecturally wrong. An LLM can generate a plausible-sounding procedure that subtly violates a
+safety standard. By the time the validator catches it post-generation, you've spent compute and time. And
+more importantly: you never want unsafe content to even reach the output pipeline, even briefly.
+Validate first. Synthesize only validated context.</p>
+<p><strong>Conflict resolution (strict precedence):</strong></p>
 <table>
 <thead>
 <tr>
-<th>Decision</th>
-<th>Choice</th>
+<th>Priority</th>
+<th>Source</th>
 <th>Rationale</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>NLP + Vision</td>
-<td><strong>Single multi-modal model</strong> (Gemini / Claude)</td>
-<td>Avoids context loss between separate NLP and vision silos; one model reasons coherently across text and image</td>
+<td>1st (highest)</td>
+<td>SOPs &amp; Safety Fetch</td>
+<td>Regulatory requirements are non-negotiable</td>
 </tr>
 <tr>
-<td>Build vs. fine-tune</td>
-<td><strong>General-purpose model + RAG</strong></td>
-<td>Start with a capable foundation model retrieving from a policy and cost database; fine-tune only once evidence shows generalisation failures at scale</td>
+<td>2nd</td>
+<td>Legacy &amp; History Fetch</td>
+<td>Real-world outcomes from the same machine &gt; theory</td>
 </tr>
 <tr>
-<td>RAG for cost data</td>
-<td><strong>RAG over Xactimate / regional benchmarks</strong></td>
-<td>Keeps cost estimates grounded in real data; avoids hallucination of repair costs</td>
+<td>3rd (lowest)</td>
+<td>RAG Manual Fetch</td>
+<td>OEM manuals may be outdated or generic</td>
 </tr>
 </tbody>
 </table>
-<hr />
-<h2 id="safety-human-centric-design">Safety &amp; Human-Centric Design</h2>
-<h3 id="human-in-the-loop-hitl">Human-in-the-Loop (HITL)</h3>
-<p>The agent is explicitly <strong>decision support</strong>, not a decision maker. The final approval always rests with a human adjuster:</p>
+<p>If the historical agent says "procedure A worked 90% of the time" and the SOPs agent says "procedure A
+requires LOTO Step 1 which was missing in past repairs", SOPs win. The Validator will note the discrepancy
+in the output and recommend a knowledge base update.</p>
+<p><strong>LLM-as-judge for semantic cross-validation (Gemini Flash):</strong></p>
+<p>Pure rule engines catch known violations. The LLM-as-judge catches semantic contradictions that rules
+can't encode — for example, the manual saying "remove power before servicing" while the SOPs agent
+notes "this circuit cannot be de-energized during operation due to redundancy requirements." A rule
+engine can't catch that. A cross-validation LLM prompt can.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">cross_validation_prompt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="s2">You are a safety engineer reviewing a proposed repair procedure.</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="s2">Manual procedure: </span><span class="si">{</span><span class="n">manual_procedure</span><span class="si">}</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="s2">Historical outcomes: </span><span class="si">{</span><span class="n">historical_context</span><span class="si">}</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="s2">Safety requirements: </span><span class="si">{</span><span class="n">safety_requirements</span><span class="si">}</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="s2">Identify any contradictions or safety gaps. Be specific.</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="s2">Return: </span><span class="si">{</span><span class="w"> </span><span class="s2">&quot;contradictions&quot;</span><span class="si">:</span><span class="s2"> [str], &quot;safety_gaps&quot;: [str], &quot;pass&quot;: bool </span><span class="si">}</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="s2">&quot;&quot;&quot;</span>
+</code></pre></div>
+<p><strong>Hard blocks (these always stop synthesis):</strong></p>
 <ul>
-<li><strong>Auto-approve path</strong>: Adjuster receives a summary and retains a 48-hour override window</li>
-<li><strong>Escalation path</strong>: Adjuster receives the full package — damage report, policy summary, cost estimate, fraud score, and a draft settlement offer to accept, modify, or reject</li>
+<li>LOTO required but no lockout step present in procedure</li>
+<li>Tech's skill tier below the minimum for this repair class</li>
+<li>Voltage &gt; 480V (requires Level 3 licensed electrician — escalate)</li>
+<li>Confined space entry required (requires permit and standby — escalate)</li>
+<li>SOPs agent returned an error or timed out (safety data unavailable = no synthesis)</li>
 </ul>
-<h3 id="conflict-resolution">Conflict Resolution</h3>
+<hr />
+<h3 id="stage-5-synthesizer">Stage 5 — Synthesizer</h3>
+<p>Only reaches this stage with a <code>ValidatedDiagnosticContext</code> that has passed all checks. Clean input,
+clean output.</p>
+<p><strong>Prompt structure:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">synthesis_prompt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="s2">You are generating a step-by-step diagnostic and repair guide for a factory technician.</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="s2">Equipment: </span><span class="si">{</span><span class="n">validated</span><span class="o">.</span><span class="n">machine_model</span><span class="si">}</span><span class="s2"> — </span><span class="si">{</span><span class="n">validated</span><span class="o">.</span><span class="n">failure_class</span><span class="si">}</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="s2">Technician skill tier: </span><span class="si">{</span><span class="n">validated</span><span class="o">.</span><span class="n">skill_tier</span><span class="si">}</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="s2">SAFETY REQUIREMENTS (non-negotiable, must appear first):</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="si">{</span><span class="n">validated</span><span class="o">.</span><span class="n">safety_steps</span><span class="si">}</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="s2">PROCEDURE (from validated sources):</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="si">{</span><span class="n">validated</span><span class="o">.</span><span class="n">procedure_steps</span><span class="si">}</span>
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="s2">HISTORICAL CONTEXT:</span>
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="s2">Success rate for this procedure: </span><span class="si">{</span><span class="n">validated</span><span class="o">.</span><span class="n">historical_success_rate</span><span class="si">}</span><span class="s2">%</span>
+<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="s2">Average completion time: </span><span class="si">{</span><span class="n">validated</span><span class="o">.</span><span class="n">estimated_time_minutes</span><span class="si">}</span><span class="s2"> min</span>
+<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="s2">Technician notes from past repairs: </span><span class="si">{</span><span class="n">validated</span><span class="o">.</span><span class="n">tech_notes_summary</span><span class="si">}</span>
+<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>
+<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="s2">PARTS REQUIRED:</span>
+<a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="si">{</span><span class="n">validated</span><span class="o">.</span><span class="n">parts_list</span><span class="si">}</span>
+<a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a>
+<a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a><span class="s2">SOURCES:</span>
+<a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a><span class="si">{</span><span class="n">validated</span><span class="o">.</span><span class="n">sources</span><span class="si">}</span>
+<a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a>
+<a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a><span class="s2">Generate a mobile-formatted guide. Use numbered steps. Safety warnings in ALL CAPS.</span>
+<a id="__codelineno-7-25" name="__codelineno-7-25" href="#__codelineno-7-25"></a><span class="s2">Include time estimate. Include parts list. Include source references at the bottom.</span>
+<a id="__codelineno-7-26" name="__codelineno-7-26" href="#__codelineno-7-26"></a><span class="s2">Output in English, then repeat in Spanish.</span>
+<a id="__codelineno-7-27" name="__codelineno-7-27" href="#__codelineno-7-27"></a><span class="s2">&quot;&quot;&quot;</span>
+</code></pre></div>
+<p><strong>Side effects (all async, non-blocking):</strong></p>
+<ul>
+<li>SAP PM work order creation (fire-and-forget, doesn't delay guide delivery)</li>
+<li>BigQuery diagnostic event log (for weekly feedback analysis)</li>
+<li>Parts pre-order trigger if inventory &lt; 2 units (Pub/Sub message to procurement system)</li>
+</ul>
+<hr />
+<h2 id="gcp-services-map">GCP Services Map</h2>
 <table>
 <thead>
 <tr>
-<th>Conflict Type</th>
-<th>System Response</th>
+<th>Agent / Stage</th>
+<th>Service</th>
+<th>Why</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Photo shows minor damage; text claims major</td>
-<td>Flag discrepancy · Downgrade recommendation · Escalate to adjuster</td>
+<td>Data Processing Agent</td>
+<td>Vertex AI Speech-to-Text</td>
+<td>Industry-leading accuracy for noisy factory environments</td>
 </tr>
 <tr>
-<td>EXIF timestamp ≠ claimed date of loss</td>
-<td>Raise fraud flag · Require adjuster review before any payout</td>
+<td>Data Processing Agent</td>
+<td>Gemini Vision API</td>
+<td>Multimodal failure symptom extraction</td>
 </tr>
 <tr>
-<td>Cost estimate &gt;&gt; regional benchmark</td>
-<td>Soft flag · Synthesizer must include justification in recommendation</td>
+<td>Data Processing Agent</td>
+<td>Firestore (equipment registry)</td>
+<td>Fast key-value lookup for machine context by QR code</td>
 </tr>
 <tr>
-<td>Policy exclusion partially applies</td>
-<td>Policy Auditor surfaces ambiguity · Synthesizer escalates rather than decides</td>
+<td>Orchestrator</td>
+<td>Gemini Flash (classification)</td>
+<td>Fast, cheap — failure classification is a classification task, not generation</td>
+</tr>
+<tr>
+<td>Orchestrator</td>
+<td>Vertex AI ADK or LangGraph on Cloud Run</td>
+<td>Agent framework for state management + parallel dispatch</td>
+</tr>
+<tr>
+<td>Legacy &amp; History Fetch</td>
+<td>Cloud Spanner</td>
+<td>Graph-capable, strongly consistent, globally distributed</td>
+</tr>
+<tr>
+<td>Legacy &amp; History Fetch</td>
+<td>BigQuery</td>
+<td>Analytical queries on repair history at scale</td>
+</tr>
+<tr>
+<td>RAG Manual Fetch</td>
+<td>Vertex AI Vector Search</td>
+<td>Managed ANN search over 5M document chunks</td>
+</tr>
+<tr>
+<td>RAG Manual Fetch</td>
+<td>Cloud Storage</td>
+<td>Stores document chunks + original PDFs</td>
+</tr>
+<tr>
+<td>SOPs &amp; Safety Fetch</td>
+<td>Firestore</td>
+<td>Structured safety rules with real-time consistency</td>
+</tr>
+<tr>
+<td>Analyser / Validator</td>
+<td>Cloud Run (rule engine)</td>
+<td>Deterministic safety checks, not LLM</td>
+</tr>
+<tr>
+<td>Analyser / Validator</td>
+<td>Gemini Flash (LLM-as-judge)</td>
+<td>Semantic contradiction detection</td>
+</tr>
+<tr>
+<td>Synthesizer</td>
+<td>Gemini 1.5 Pro</td>
+<td>Full procedure generation, long-context window</td>
+</tr>
+<tr>
+<td>Synthesizer</td>
+<td>SAP PM API</td>
+<td>Work order creation</td>
+</tr>
+<tr>
+<td>Synthesizer</td>
+<td>BigQuery (event log)</td>
+<td>Feedback loop data</td>
+</tr>
+<tr>
+<td>Offline delivery</td>
+<td>Cloud Storage + Cloud CDN</td>
+<td>Pre-generated guide cache delivery</td>
+</tr>
+<tr>
+<td>Offline delivery</td>
+<td>Firebase offline sync</td>
+<td>Device-local caching for dead-WiFi zones</td>
+</tr>
+<tr>
+<td>Observability</td>
+<td>Cloud Trace</td>
+<td>Distributed tracing across all 5 stages</td>
+</tr>
+<tr>
+<td>Observability</td>
+<td>Cloud Monitoring</td>
+<td>Latency, error rate, per-agent SLOs</td>
+</tr>
+<tr>
+<td>Knowledge ingestion</td>
+<td>Document AI</td>
+<td>PDF → structured chunks for Vector Search</td>
+</tr>
+<tr>
+<td>Knowledge ingestion</td>
+<td>Dataflow</td>
+<td>Batch ingestion pipeline for manual updates</td>
 </tr>
 </tbody>
 </table>
-<h3 id="security">Security</h3>
+<hr />
+<h2 id="latency-budget-breakdown">Latency Budget Breakdown</h2>
 <table>
 <thead>
 <tr>
-<th>Threat</th>
+<th>Stage</th>
+<th>Target</th>
+<th>Why Achievable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Data Processing Agent</td>
+<td>~500ms</td>
+<td>Speech-to-Text + Vision in parallel</td>
+</tr>
+<tr>
+<td>Orchestrator (classification)</td>
+<td>~400ms</td>
+<td>Gemini Flash, simple classification</td>
+</tr>
+<tr>
+<td>Orchestrator (dispatch overhead)</td>
+<td>~100ms</td>
+<td>Async dispatch, minimal compute</td>
+</tr>
+<tr>
+<td>Parallel sub-agents (slowest of 3)</td>
+<td>~1.5s</td>
+<td>Vector Search + graph query both under 1.5s at this scale</td>
+</tr>
+<tr>
+<td>Analyser / Validator</td>
+<td>~500ms</td>
+<td>Rule checks are fast; LLM-as-judge adds ~300ms</td>
+</tr>
+<tr>
+<td>Synthesizer</td>
+<td>~1.5s</td>
+<td>Gemini 1.5 Pro for ~500-token output</td>
+</tr>
+<tr>
+<td><strong>Total P99</strong></td>
+<td><strong>&lt; 5s</strong></td>
+<td>All stages sequential except fan-out</td>
+</tr>
+</tbody>
+</table>
+<p>The parallel fan-out in Stage 3 is the key latency win. Sequential execution of three agents would cost
+~4–5s for Stage 3 alone, blowing the budget. In parallel, Stage 3 costs only as long as the slowest
+individual agent.</p>
+<hr />
+<h2 id="interviewer-probes-strong-answers">Interviewer Probes — Strong Answers</h2>
+<table>
+<thead>
+<tr>
+<th>Probe</th>
+<th>Strong Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"How does the Orchestrator decide which agents to call?"</td>
+<td>Classification result + machine registry check. SOPs and RAG always. Legacy only if machine has repair history. If confidence &lt; 0.75, invoke all three regardless.</td>
+</tr>
+<tr>
+<td>"What's the conflict resolution protocol?"</td>
+<td>Strict precedence: SOPs &gt; History &gt; Manual. Documented, not emergent. Validator applies it deterministically, not via LLM judgment.</td>
+</tr>
+<tr>
+<td>"What happens if the SOPs agent is down?"</td>
+<td>Hard block. Safety data is required before synthesis. The system returns an escalation message, not a degraded answer.</td>
+</tr>
+<tr>
+<td>"What happens if the Legacy agent returns nothing?"</td>
+<td>Synthesizer generates from manual + SOPs only. Output notes "no historical data available for this failure pattern." Valid degraded mode.</td>
+</tr>
+<tr>
+<td>"Why not one big RAG agent over all three knowledge sources?"</td>
+<td>Each source requires a different retrieval strategy. Spanner needs graph traversal. Manuals need semantic vector search. SOPs need structured lookup. One agent doing all three poorly is worse than three agents each doing one thing well.</td>
+</tr>
+<tr>
+<td>"How do you prevent the Orchestrator from misclassifying and sending techs down the wrong path?"</td>
+<td>Confidence threshold (&lt; 0.75 = invoke all agents + flag). Post-repair feedback loop surfaces systematic misclassifications within one week. And the Validator catches procedure mismatches even when classification is off.</td>
+</tr>
+<tr>
+<td>"What's the state schema the Orchestrator holds?"</td>
+<td><code>{ equipment_id, machine_model, failure_class, confidence, skill_tier, loto_required, agents_invoked[], agent_results{}, timestamp }</code> — each agent writes to <code>agent_results</code> independently.</td>
+</tr>
+<tr>
+<td>"Why is the Validator a separate stage and not part of the Synthesizer?"</td>
+<td>Safety enforcement must happen before generation. "Generate then validate" is a safety anti-pattern in industrial settings. Validation also needs to see all three agent outputs simultaneously — the Synthesizer's scope is too narrow.</td>
+</tr>
+<tr>
+<td>"How does this handle a brand-new machine that just arrived on the floor?"</td>
+<td>Equipment registry shows no history. Orchestrator skips Legacy agent. RAG Manual Fetch retrieves from newly ingested OEM manuals. SOPs apply defaults for the machine class. Synthesizer generates from manuals + SOPs with explicit note that no historical data exists.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="trade-offs">Trade-offs</h2>
+<table>
+<thead>
+<tr>
+<th>Trade-off</th>
+<th>Decision Made</th>
+<th>Reasoning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Orchestrator-Subagent vs. single agent</td>
+<td>Orchestrator-Subagent</td>
+<td>Three different retrieval strategies require three specialized agents</td>
+</tr>
+<tr>
+<td>Parallel fan-out vs. sequential</td>
+<td>Parallel</td>
+<td>Agents are fully independent; sequential would add ~4s for no benefit</td>
+</tr>
+<tr>
+<td>Dynamic agent selection vs. always invoke all three</td>
+<td>Dynamic</td>
+<td>New machines have no history; invoking Legacy and getting empty results wastes latency and confuses Validator</td>
+</tr>
+<tr>
+<td>Validate before synthesize vs. validate after</td>
+<td>Before</td>
+<td>Industrial safety anti-pattern to generate first; validate before synthesis is non-negotiable</td>
+</tr>
+<tr>
+<td>LLM-as-judge vs. pure rule engine in Validator</td>
+<td>Hybrid</td>
+<td>Rules for known violations; LLM for semantic contradictions between sources</td>
+</tr>
+<tr>
+<td>Offline capability via pre-generation</td>
+<td>Pre-generate top-500 failure patterns per machine family</td>
+<td>5s P99 is impossible if WiFi required; factory floors have dead zones</td>
+</tr>
+<tr>
+<td>Gemini Flash for classification vs. Pro</td>
+<td>Flash</td>
+<td>Classification is a classification task — Pro capability not needed; Flash is 10× cheaper and faster</td>
+</tr>
+<tr>
+<td>Spanner Graph vs. Neo4j</td>
+<td>Spanner</td>
+<td>GCP-native, managed, ACID transactions, globally consistent; Neo4j would require separate management</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="failure-scenarios">Failure Scenarios</h2>
+<table>
+<thead>
+<tr>
+<th>Failure</th>
+<th>Impact</th>
 <th>Mitigation</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>PII exposure to LLMs</td>
-<td>PII redacted in Security Layer before any evidence reaches a model</td>
+<td>Legacy Fetch agent times out</td>
+<td>No historical context</td>
+<td>Synthesizer generates from manual + SOPs with "no historical data" note — valid degraded mode</td>
 </tr>
 <tr>
-<td>Prompt injection via free-text claim fields</td>
-<td>Input sanitisation in Security Layer; system prompt isolation</td>
+<td>RAG Manual Fetch returns confidence &lt; 0.7</td>
+<td>Weak procedural basis</td>
+<td>Validator attaches explicit low-confidence warning; Synthesizer adds supervisor review flag</td>
 </tr>
 <tr>
-<td>Fraudulent imagery (stock photos, recycled images)</td>
-<td>EXIF metadata check + reverse image search at ingestion</td>
+<td>SOPs agent unavailable</td>
+<td>Safety validation impossible</td>
+<td><strong>Hard block</strong> — return escalation to supervisor, do not attempt synthesis</td>
 </tr>
 <tr>
-<td>Adversarial image manipulation</td>
-<td>Perceptual hash comparison against known fraud imagery DB</td>
+<td>Orchestrator misclassifies failure (confidence &lt; 0.75)</td>
+<td>Wrong agents invoked</td>
+<td>Invoke all three agents regardless + require tech to confirm failure description before displaying output</td>
+</tr>
+<tr>
+<td>Validator finds conflicting safety data (unresolvable)</td>
+<td>Synthesis blocked</td>
+<td>Return escalation with conflict details — supervisor must manually resolve, system logs for knowledge base update</td>
+</tr>
+<tr>
+<td>Gemini 1.5 Pro (Synthesizer) slow or degraded</td>
+<td>Latency exceeds 5s</td>
+<td>Pre-generated offline guide served from cache (covers ~85% of common failures)</td>
+</tr>
+<tr>
+<td>SAP PM API fails</td>
+<td>Work order not created</td>
+<td>Synthesizer completes — work order failure logged to BigQuery for async retry. Guide delivery is not blocked by SAP.</td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h2 id="data-flow">Data Flow</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Claimant submits evidence
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>        │
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        ▼
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>Security Layer: PII redaction · prompt injection guard · image auth check
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        │
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        ▼
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>Orchestrator creates claim context window
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>        │
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>        ├──► [PARALLEL] Damage Analyst ──────► damage type + severity + flags
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>        ├──► [PARALLEL] Policy Auditor ──────► coverage summary + exclusions
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>        └──► [PARALLEL] Legacy Connector ───► claimant history from CRM
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>        │
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>        ▼ (all three complete)
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>Cost Estimator ──► itemised repair cost + draft settlement offer
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>        │
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>        ▼
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>Synthesizer ──► conflict detection ──► recommendation + fraud risk score
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>        │
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>   ┌────┴──────────┬──────────────────┐
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>   │               │                  │
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>Approve        Request Info      Dispatch Assessor
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>(HITL light)   (notify claimant) (full package to adjuster)
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>   │               │                  │
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>   └───────────────┴──────────────────┘
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>                   │
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>        Notification Agent ──► claimant + CMS update + payment trigger
-</code></pre></div>
-<hr />
-<h2 id="claim-state-machine">Claim State Machine</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>SUBMITTED ──► EVIDENCE_REVIEW ──► PENDING_INFO ──► EVIDENCE_REVIEW
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>                    │
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>                    ▼
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>             SYNTHESIZING
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>                    │
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>        ┌───────────┼────────────────┐
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>        │           │                │
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>   AUTO_APPROVED  AWAITING_INFO  AWAITING_ASSESSOR
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>        │                            │
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>        └────────────┬───────────────┘
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>                     │
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>               ADJUSTER_REVIEW
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>                     │
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>              ┌──────┴──────┐
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>           APPROVED       DENIED
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>              │               │
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>              └──────┬────────┘
-<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>                   CLOSED
-</code></pre></div>
-<hr />
-<h2 id="artifacts">Artifacts</h2>
+<h2 id="whats-different-from-version-1">What's Different from Version 1</h2>
 <table>
 <thead>
 <tr>
-<th>Artifact</th>
-<th>Location</th>
+<th>Aspect</th>
+<th>Version 1 (Monolithic Agent)</th>
+<th>Version 2 (Orchestrator-Subagent)</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>This architecture doc</td>
-<td><code>README.md</code></td>
+<td>Architecture pattern</td>
+<td>Single Diagnostic Agent with hybrid RAG</td>
+<td>Orchestrator + 3 specialist sub-agents + Validator</td>
 </tr>
 <tr>
-<td>Agent prompt designs</td>
-<td><code>artifacts/agent-prompts.md</code></td>
+<td>Retrieval</td>
+<td>One agent mixes graph + vector + structured lookup</td>
+<td>Each agent uses the optimal strategy for its knowledge type</td>
 </tr>
 <tr>
-<td>State machine definition</td>
-<td><code>artifacts/state-machine.md</code></td>
+<td>Safety enforcement</td>
+<td>Safety gates within the Diagnostic Agent</td>
+<td>Dedicated Validator stage — hard block before generation</td>
 </tr>
 <tr>
-<td>Tool schemas</td>
-<td><code>artifacts/tool-schemas.md</code></td>
+<td>Parallelism</td>
+<td>Sequential retrieval steps</td>
+<td>True parallel fan-out across all three knowledge agents</td>
 </tr>
 <tr>
-<td>Diagrams (Mermaid source)</td>
-<td><code>diagrams/</code></td>
+<td>Agent selection</td>
+<td>Fixed: always retrieve everything</td>
+<td>Dynamic: skip Legacy for new machines, confidence-gated</td>
+</tr>
+<tr>
+<td>Conflict resolution</td>
+<td>Implicit in single agent</td>
+<td>Explicit precedence: SOPs &gt; History &gt; Manual</td>
+</tr>
+<tr>
+<td>Failure graceful degradation</td>
+<td>Partial</td>
+<td>Explicit: each agent failure has a defined degraded mode</td>
+</tr>
+<tr>
+<td>Interview signal</td>
+<td>Competent</td>
+<td>Advanced — demonstrates Orchestrator-Subagent judgment</td>
+</tr>
+</tbody>
+</table>
+<p>Both versions produce the same end result. Version 2 is more complex to implement but is significantly
+more explainable, more reliable, and more defensible in a senior ML system design interview.</p>
+<hr />
+<h2 id="success-metrics">Success Metrics</h2>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Target</th>
+<th>How Measured</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>End-to-end P99 latency</td>
+<td>&lt; 5 seconds</td>
+<td>Cloud Trace, sampled per request</td>
+</tr>
+<tr>
+<td>Diagnostic accuracy (validated post-repair)</td>
+<td>≥ 92%</td>
+<td>Weekly BigQuery analysis of repair outcomes</td>
+</tr>
+<tr>
+<td>First-time fix rate</td>
+<td>≥ 75%</td>
+<td>SAP PM re-open rate within 7 days</td>
+</tr>
+<tr>
+<td>LOTO compliance rate</td>
+<td>100%</td>
+<td>Validator hard-block ensures this at the system level</td>
+</tr>
+<tr>
+<td>Validator block rate (conflicting safety data)</td>
+<td>&lt; 2%</td>
+<td>High rate indicates knowledge base gaps needing curation</td>
+</tr>
+<tr>
+<td>Sub-agent parallel execution overhead</td>
+<td>&lt; 100ms vs. slowest single agent</td>
+<td>Cloud Trace parallel span comparison</td>
+</tr>
+<tr>
+<td>Offline cache hit rate</td>
+<td>≥ 85%</td>
+<td>Firebase analytics — cache hit vs. miss per request</td>
+</tr>
+<tr>
+<td>SOPs agent availability</td>
+<td>≥ 99.9%</td>
+<td>Firestore SLA + Cloud Monitoring alerts</td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h2 id="next-steps">Next Steps</h2>
+<h2 id="pre-deployment-checklist">Pre-Deployment Checklist</h2>
 <ul>
-<li>[ ] Define prompts for Damage Analyst, Policy Auditor, and Synthesizer</li>
-<li>[ ] Specify tool schemas for CMS and CRM connectors</li>
-<li>[ ] Build RAG index over sample policy documents and repair cost data</li>
-<li>[ ] Prototype Synthesizer conflict resolution logic on sample claims</li>
-<li>[ ] Evaluate Gemini 1.5 Pro vs. Claude on multi-modal damage classification accuracy</li>
+<li>[ ] Knowledge base loaded: all 300 machine model manuals ingested via Document AI + Dataflow</li>
+<li>[ ] Spanner Graph schema validated: machine → failure → procedure → outcome paths correct</li>
+<li>[ ] Safety rules loaded: IEC 62443 + NFPA 70E rules in Firestore, reviewed by safety engineer</li>
+<li>[ ] Skill tier map complete: all failure classes mapped to required tier levels</li>
+<li>[ ] LOTO procedures loaded for all 300 models</li>
+<li>[ ] Orchestrator classification tested on 100+ historical failure descriptions (≥90% accuracy required)</li>
+<li>[ ] Validator tested against 50 synthetic conflicting-source scenarios</li>
+<li>[ ] Offline cache pre-generated for top-500 failure patterns</li>
+<li>[ ] SAP PM API integration tested in staging environment</li>
+<li>[ ] Cloud Trace configured with per-agent span labels</li>
+<li>[ ] Escalation paths tested: supervisor notification working end-to-end</li>
+<li>[ ] P99 latency load test at 300 concurrent requests passing &lt; 5s target</li>
 </ul>
 
 
