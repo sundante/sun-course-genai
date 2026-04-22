@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://sundante.github.io/sun-course-genai/06-Agentic-AI/Notes/03-Design-Patterns/">
+        <link rel="canonical" href="https://sundante.github.io/sun-course-genai/06-Agentic-AI/Notes/08-Multi-Agent-Systems/">
       
       
-        <link rel="prev" href="../02-Architectural-Patterns/">
+        <link rel="prev" href="../07-Design-Patterns/">
       
       
-        <link rel="next" href="../04-Multi-Agent-Systems/">
+        <link rel="next" href="../09-Agent-Frameworks/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Design Patterns - GenAI Learning Curriculum</title>
+        <title>Multi-Agent Systems - GenAI Learning Curriculum</title>
       
     
     
@@ -88,7 +88,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#agentic-design-patterns" class="md-skip">
+        <a href="#multi-agent-systems" class="md-skip">
           Skip to content
         </a>
       
@@ -122,7 +122,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Design Patterns
+              Multi-Agent Systems
             
           </span>
         </div>
@@ -3371,7 +3371,7 @@
   <span class="md-ellipsis">
     
   
-    Agentic Concepts
+    What Is an AI Agent
   
 
     
@@ -3392,7 +3392,119 @@
   
   
     <li class="md-nav__item">
-      <a href="../02-Architectural-Patterns/" class="md-nav__link">
+      <a href="../02-The-Agent-Loop/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Agent Loop
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-Tool-Use-and-Function-Calling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tool Use & Function Calling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-Memory-and-State/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Memory & State
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-Planning-and-Reasoning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planning & Reasoning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-Architectural-Patterns/" class="md-nav__link">
         
   
   
@@ -3400,6 +3512,34 @@
     
   
     Architectural Patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-Design-Patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Design Patterns
   
 
     
@@ -3436,7 +3576,7 @@
   <span class="md-ellipsis">
     
   
-    Design Patterns
+    Multi-Agent Systems
   
 
     
@@ -3454,7 +3594,7 @@
   <span class="md-ellipsis">
     
   
-    Design Patterns
+    Multi-Agent Systems
   
 
     
@@ -3480,33 +3620,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
+  <a href="#why-multi-agent" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Overview
+        Why Multi-Agent
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#tool-use-pattern" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Tool-Use Pattern
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Tool-Use Pattern">
+    <nav class="md-nav" aria-label="Why Multi-Agent">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#concept" class="md-nav__link">
+  <a href="#1-task-decomposition" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Concept
+        1. Task Decomposition
       
     </span>
   </a>
@@ -3514,10 +3643,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#designing-good-tools" class="md-nav__link">
+  <a href="#2-specialization" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Designing Good Tools
+        2. Specialization
       
     </span>
   </a>
@@ -3525,10 +3654,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tool-chaining" class="md-nav__link">
+  <a href="#3-parallelism" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tool Chaining
+        3. Parallelism
       
     </span>
   </a>
@@ -3536,21 +3665,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#error-handling-in-tool-loops" class="md-nav__link">
+  <a href="#4-fault-isolation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Error Handling in Tool Loops
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#code" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Code
+        4. Fault Isolation
       
     </span>
   </a>
@@ -3563,22 +3681,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#reflection-pattern" class="md-nav__link">
+  <a href="#coordination-strategies" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Reflection Pattern
+        Coordination Strategies
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Reflection Pattern">
+    <nav class="md-nav" aria-label="Coordination Strategies">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#concept_1" class="md-nav__link">
+  <a href="#centralized-orchestrator-controlled" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Concept
+        Centralized (Orchestrator-Controlled)
       
     </span>
   </a>
@@ -3586,10 +3704,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#variants" class="md-nav__link">
+  <a href="#decentralized-peer-to-peer" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Variants
+        Decentralized (Peer-to-Peer)
       
     </span>
   </a>
@@ -3597,43 +3715,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#when-to-use-reflection" class="md-nav__link">
+  <a href="#hybrid" class="md-nav__link">
     <span class="md-ellipsis">
       
-        When to Use Reflection
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#when-not-to-use-reflection" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        When NOT to Use Reflection
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#termination" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Termination
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#code_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Code
+        Hybrid
       
     </span>
   </a>
@@ -3646,22 +3731,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#planning-patterns" class="md-nav__link">
+  <a href="#communication-protocols-between-agents" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Planning Patterns
+        Communication Protocols Between Agents
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Planning Patterns">
+    <nav class="md-nav" aria-label="Communication Protocols Between Agents">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#concept_2" class="md-nav__link">
+  <a href="#message-passing" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Concept
+        Message Passing
       
     </span>
   </a>
@@ -3669,10 +3754,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#react-reason-act" class="md-nav__link">
+  <a href="#shared-state" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ReAct (Reason + Act)
+        Shared State
       
     </span>
   </a>
@@ -3680,21 +3765,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#plan-and-execute" class="md-nav__link">
+  <a href="#event-driven-pubsub" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Plan-and-Execute
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#tree-of-thoughts-tot" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Tree of Thoughts (ToT)
+        Event-Driven (Pub/Sub)
       
     </span>
   </a>
@@ -3707,22 +3781,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#multi-agent-coordination-pattern" class="md-nav__link">
+  <a href="#state-management" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Multi-Agent Coordination Pattern
+        State Management
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Multi-Agent Coordination Pattern">
+    <nav class="md-nav" aria-label="State Management">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#concept_3" class="md-nav__link">
+  <a href="#what-state-needs-to-contain" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Concept
+        What State Needs to Contain
       
     </span>
   </a>
@@ -3730,10 +3804,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#role-assignment" class="md-nav__link">
+  <a href="#checkpointing" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Role Assignment
+        Checkpointing
       
     </span>
   </a>
@@ -3741,10 +3815,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#communication-protocols" class="md-nav__link">
+  <a href="#context-summarization" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Communication Protocols
+        Context Summarization
       
     </span>
   </a>
@@ -3752,10 +3826,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#avoiding-coordination-failures" class="md-nav__link">
+  <a href="#task-ledger" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Avoiding Coordination Failures
+        Task Ledger
       
     </span>
   </a>
@@ -3768,22 +3842,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#routing-and-gating" class="md-nav__link">
+  <a href="#failure-modes-and-resilience" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Routing and Gating
+        Failure Modes and Resilience
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Routing and Gating">
+    <nav class="md-nav" aria-label="Failure Modes and Resilience">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#concept_4" class="md-nav__link">
+  <a href="#failure-mode-taxonomy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Concept
+        Failure Mode Taxonomy
       
     </span>
   </a>
@@ -3791,32 +3865,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#input-routing" class="md-nav__link">
+  <a href="#resilience-patterns" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Input Routing
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#confidence-gating" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Confidence Gating
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#hitl-gates" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        HITL Gates
+        Resilience Patterns
       
     </span>
   </a>
@@ -3866,14 +3918,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../04-Multi-Agent-Systems/" class="md-nav__link">
+      <a href="../09-Agent-Frameworks/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Multi-Agent Systems
+    Agent Frameworks
   
 
     
@@ -3894,7 +3946,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../05-Agentic-System-Design/" class="md-nav__link">
+      <a href="../10-Agentic-System-Design/" class="md-nav__link">
         
   
   
@@ -3922,7 +3974,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../06-Evaluation-and-Observability/" class="md-nav__link">
+      <a href="../11-Evaluation-and-Observability/" class="md-nav__link">
         
   
   
@@ -3950,7 +4002,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../07-Interview-QA-Bank/" class="md-nav__link">
+      <a href="../12-Interview-QA-Bank/" class="md-nav__link">
         
   
   
@@ -4533,400 +4585,293 @@
   
 
 
-<h1 id="agentic-design-patterns">Agentic Design Patterns</h1>
-<h2 id="overview">Overview</h2>
-<p>Design patterns are <strong>reusable solutions to recurring problems</strong> within agentic systems. Where architectural patterns define the structure (how many agents and how they relate), design patterns define the <strong>behavior and logic</strong> of individual agents and agent interactions.</p>
-<p>Five design patterns appear across almost all agentic systems:</p>
+<h1 id="multi-agent-systems">Multi-Agent Systems</h1>
+<h2 id="why-multi-agent">Why Multi-Agent</h2>
+<p>A single agent has hard limits. When a task pushes past those limits, the solution is to split the work across multiple agents. There are four distinct reasons to go multi-agent, each with different implications for system design.</p>
+<h3 id="1-task-decomposition">1. Task Decomposition</h3>
+<p>Some tasks are too complex to reason about holistically. A single agent trying to "build a full market analysis" will produce worse results than one agent that researches, one that structures findings, and one that writes — because each subtask requires focused attention.</p>
+<p>The key question: does the task have natural seams where it can be split? If splitting is forced and artificial, multi-agent adds overhead with no benefit.</p>
+<h3 id="2-specialization">2. Specialization</h3>
+<p>Different agents can be optimized for different tasks through prompt engineering, model selection, or tool sets.</p>
 <table>
 <thead>
 <tr>
-<th>Pattern</th>
-<th>Problem It Solves</th>
-<th>Core Mechanism</th>
+<th>Agent</th>
+<th>Specialization</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Tool-Use</td>
-<td>Agent needs capabilities beyond text generation</td>
-<td>LLM calls external functions and acts on results</td>
+<td>Research Agent</td>
+<td>Prompt tuned for systematic web search; access to search tools</td>
 </tr>
 <tr>
-<td>Reflection</td>
-<td>Single-pass outputs aren't good enough</td>
-<td>Agent critiques its own output and revises</td>
+<td>Code Agent</td>
+<td>Prompt tuned for Python; access to code execution sandbox</td>
 </tr>
 <tr>
-<td>Planning</td>
-<td>Complex goals need decomposition before execution</td>
-<td>Explicit plan produced before any action is taken</td>
+<td>Critic Agent</td>
+<td>Prompt tuned for adversarial analysis; no action tools</td>
 </tr>
 <tr>
-<td>Multi-Agent Coordination</td>
-<td>Tasks too complex for one agent</td>
-<td>Specialized agents collaborate via defined interfaces</td>
-</tr>
-<tr>
-<td>Routing and Gating</td>
-<td>Not all inputs need the same processing path</td>
-<td>Conditional logic determines the execution branch</td>
+<td>Summarizer</td>
+<td>Uses a smaller, faster model (cost optimization)</td>
 </tr>
 </tbody>
 </table>
+<p>Specialization improves quality: a focused agent outperforms a generalist on its specific task.</p>
+<h3 id="3-parallelism">3. Parallelism</h3>
+<p>Independent subtasks can run concurrently, reducing total wall-clock time. A system that runs 5 research agents in parallel completes in 1/5 the time of running them sequentially.</p>
+<p>This only applies to <strong>genuinely independent</strong> subtasks. Tasks with dependencies must still be sequential.</p>
+<h3 id="4-fault-isolation">4. Fault Isolation</h3>
+<p>When one agent fails, it fails in isolation. The orchestrator can retry that agent, substitute a fallback, or skip the subtask — without the whole system crashing. This is fundamentally different from a single agent where any failure terminates the entire task.</p>
 <hr />
-<h2 id="tool-use-pattern">Tool-Use Pattern</h2>
-<h3 id="concept">Concept</h3>
-<p>Tools extend an agent's capabilities beyond what an LLM can do with text alone: searching the web, reading files, executing code, calling APIs, querying databases. Without tools, an agent is a sophisticated text transformer. With tools, it can act on the world.</p>
-<p><strong>How tool use works:</strong>
-1. The LLM is given a list of available tools (name, description, parameter schema)
-2. When the LLM decides a tool is needed, it outputs a structured tool call (JSON)
-3. The framework intercepts the tool call, executes the function, and returns the result
-4. The LLM receives the tool result and continues reasoning</p>
-<p>This loop (reason → tool call → observe result → reason again) is the <strong>ReAct pattern</strong> at its core.</p>
-<h3 id="designing-good-tools">Designing Good Tools</h3>
-<p><strong>Write for the LLM, not just the implementation.</strong> The tool description is part of the prompt. The LLM reads it to decide whether to use this tool and how.</p>
-<table>
-<thead>
-<tr>
-<th>Good Tool Description</th>
-<th>Bad Tool Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>"Search the company product database. Use this when the user asks about product availability, pricing, or specifications. Input: product name or SKU. Output: product details dict."</td>
-<td>"Search products"</td>
-</tr>
-<tr>
-<td>"Get current weather for a city. Returns temperature in Celsius, conditions (sunny/cloudy/rain), and humidity. Do NOT use for historical weather."</td>
-<td>"Weather tool"</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Rules for tool design:</strong>
-- Each tool should do one thing well (single responsibility)
-- Parameter names and types should be self-evident
-- Return types should be consistent and predictable
-- Include error states in the return type (not just success)
-- Document when NOT to use the tool (prevents misuse)</p>
-<h3 id="tool-chaining">Tool Chaining</h3>
-<p>Tools can be chained — the output of one tool becomes the input to another. The LLM manages this chaining naturally within its reasoning loop.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>User: &quot;Summarize the latest earnings report for AAPL&quot;
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>Agent reasoning:
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>1. search_web(&quot;AAPL earnings report 2024&quot;) → returns URLs
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>2. read_url(&quot;https://apple.com/earnings/...&quot;) → returns raw text
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>3. extract_financials(raw_text) → returns structured data
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>4. [LLM synthesizes structured data into summary]
+<h2 id="coordination-strategies">Coordination Strategies</h2>
+<p>Coordination answers: how do agents decide what to do and in what order?</p>
+<h3 id="centralized-orchestrator-controlled">Centralized (Orchestrator-Controlled)</h3>
+<p>A single orchestrator holds the plan and assigns tasks to agents. Agents are workers — they execute assigned tasks and report results. They have no knowledge of the broader plan.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Orchestrator (has the plan)
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    → assigns task_A to Agent_1
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    → assigns task_B to Agent_2 (in parallel)
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    → waits for both results
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    → assigns task_C to Agent_3 (using results from A and B)
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    → synthesizes final output
 </code></pre></div>
-<h3 id="error-handling-in-tool-loops">Error Handling in Tool Loops</h3>
-<p>Tools fail. APIs return errors. The agent must handle these gracefully.</p>
-<p><strong>Patterns:</strong>
-- Return structured errors: <code>{"error": "rate_limit", "retry_after": 30}</code> — gives the LLM actionable information
-- Distinguish retryable from fatal errors in the tool response
-- Set a max tool call limit per task to prevent infinite retry loops
-- Log every tool call and result for debugging</p>
-<h3 id="code">Code</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">langchain_core.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">tool</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">langchain_google_genai</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChatGoogleGenerativeAI</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">langchain.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_tool_calling_agent</span><span class="p">,</span> <span class="n">AgentExecutor</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">langchain_core.prompts</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChatPromptTemplate</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="nd">@tool</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="k">def</span><span class="w"> </span><span class="nf">search_products</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Search the product catalog by name or description.</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="sd">    Use this when the user asks about product availability, pricing, or details.</span>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="sd">    Input: a product name, category, or description.</span>
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="sd">    Output: list of matching products with id, name, price, and stock.</span>
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    <span class="c1"># Mock product database</span>
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>    <span class="n">catalog</span> <span class="o">=</span> <span class="p">{</span>
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>        <span class="s2">&quot;laptop&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;LP001&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;ProBook Laptop&quot;</span><span class="p">,</span> <span class="s2">&quot;price&quot;</span><span class="p">:</span> <span class="mi">1299</span><span class="p">,</span> <span class="s2">&quot;stock&quot;</span><span class="p">:</span> <span class="mi">15</span><span class="p">},</span>
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>        <span class="s2">&quot;mouse&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;MS001&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Ergonomic Mouse&quot;</span><span class="p">,</span> <span class="s2">&quot;price&quot;</span><span class="p">:</span> <span class="mi">49</span><span class="p">,</span> <span class="s2">&quot;stock&quot;</span><span class="p">:</span> <span class="mi">200</span><span class="p">},</span>
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>        <span class="s2">&quot;keyboard&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;KB001&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Mechanical Keyboard&quot;</span><span class="p">,</span> <span class="s2">&quot;price&quot;</span><span class="p">:</span> <span class="mi">129</span><span class="p">,</span> <span class="s2">&quot;stock&quot;</span><span class="p">:</span> <span class="mi">45</span><span class="p">},</span>
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>    <span class="p">}</span>
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>    <span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">catalog</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">query</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">k</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span>
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;products&quot;</span><span class="p">:</span> <span class="n">results</span><span class="p">,</span> <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)}</span> <span class="k">if</span> <span class="n">results</span> <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="s2">&quot;no_results&quot;</span><span class="p">,</span> <span class="s2">&quot;query&quot;</span><span class="p">:</span> <span class="n">query</span><span class="p">}</span>
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="nd">@tool</span>
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="k">def</span><span class="w"> </span><span class="nf">check_order_status</span><span class="p">(</span><span class="n">order_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Check the status of a customer order by order ID.</span>
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="sd">    Use this when the user asks about their order status, shipping, or delivery.</span>
-<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="sd">    Input: order ID (format: ORD-XXXXXX).</span>
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="sd">    Output: order status, estimated delivery, and tracking info.</span>
-<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a><span class="sd">    Do NOT use for product searches — use search_products instead.</span>
-<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>    <span class="n">orders</span> <span class="o">=</span> <span class="p">{</span>
-<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>        <span class="s2">&quot;ORD-123456&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;shipped&quot;</span><span class="p">,</span> <span class="s2">&quot;delivery&quot;</span><span class="p">:</span> <span class="s2">&quot;2024-12-20&quot;</span><span class="p">,</span> <span class="s2">&quot;tracking&quot;</span><span class="p">:</span> <span class="s2">&quot;UPS-789&quot;</span><span class="p">},</span>
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>        <span class="s2">&quot;ORD-654321&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;processing&quot;</span><span class="p">,</span> <span class="s2">&quot;delivery&quot;</span><span class="p">:</span> <span class="s2">&quot;2024-12-22&quot;</span><span class="p">,</span> <span class="s2">&quot;tracking&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span>
-<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>    <span class="p">}</span>
-<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>    <span class="k">return</span> <span class="n">orders</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">order_id</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="s2">&quot;order_not_found&quot;</span><span class="p">,</span> <span class="s2">&quot;order_id&quot;</span><span class="p">:</span> <span class="n">order_id</span><span class="p">})</span>
-<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="n">llm</span> <span class="o">=</span> <span class="n">ChatGoogleGenerativeAI</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a><span class="n">tools</span> <span class="o">=</span> <span class="p">[</span><span class="n">search_products</span><span class="p">,</span> <span class="n">check_order_status</span><span class="p">]</span>
-<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>
-<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="n">prompt</span> <span class="o">=</span> <span class="n">ChatPromptTemplate</span><span class="o">.</span><span class="n">from_messages</span><span class="p">([</span>
-<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>    <span class="p">(</span><span class="s2">&quot;system&quot;</span><span class="p">,</span> <span class="s2">&quot;You are a helpful customer support agent. Use the available tools to assist customers.&quot;</span><span class="p">),</span>
-<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>    <span class="p">(</span><span class="s2">&quot;human&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{input}</span><span class="s2">&quot;</span><span class="p">),</span>
-<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>    <span class="p">(</span><span class="s2">&quot;placeholder&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{agent_scratchpad}</span><span class="s2">&quot;</span><span class="p">),</span>
-<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="p">])</span>
-<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>
-<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a><span class="n">agent</span> <span class="o">=</span> <span class="n">create_tool_calling_agent</span><span class="p">(</span><span class="n">llm</span><span class="p">,</span> <span class="n">tools</span><span class="p">,</span> <span class="n">prompt</span><span class="p">)</span>
-<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a><span class="n">executor</span> <span class="o">=</span> <span class="n">AgentExecutor</span><span class="p">(</span><span class="n">agent</span><span class="o">=</span><span class="n">agent</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="n">tools</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<p><strong>Advantages:</strong>
+- Easy to reason about — one place holds the plan state
+- Easy to debug — trace the orchestrator's decisions
+- Easy to add HITL — insert approval gate in the orchestrator</p>
+<p><strong>Disadvantages:</strong>
+- Orchestrator is a single point of failure
+- Orchestrator bottleneck — all coordination flows through one LLM
+- Doesn't scale to very large agent counts</p>
+<p><strong>Best for:</strong> Most production systems. Orchestrator-Subagent is the default pattern.</p>
+<h3 id="decentralized-peer-to-peer">Decentralized (Peer-to-Peer)</h3>
+<p>No orchestrator. Agents observe the shared state, determine what needs to be done, and execute. Coordination emerges from agent behavior, not explicit assignment.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Shared State: {todo: [task_A, task_B, task_C], done: [], results: {}}
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>Agent_1 sees task_A unclaimed → claims it → executes → writes result
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>Agent_2 sees task_B unclaimed → claims it → executes → writes result
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>Agent_3 waits for A and B → both done → executes task_C → writes result
 </code></pre></div>
+<p><strong>Advantages:</strong>
+- No single point of failure
+- Self-organizing — agents pick up work without assignment
+- Scales to many agents naturally</p>
+<p><strong>Disadvantages:</strong>
+- Harder to reason about — behavior emerges from agent interactions
+- Race conditions if agents don't use proper locking when claiming tasks
+- Difficult to implement HITL
+- Debugging is much harder</p>
+<p><strong>Best for:</strong> Distributed systems where fault tolerance is critical; research settings.</p>
+<h3 id="hybrid">Hybrid</h3>
+<p>Most large systems use a hybrid: a centralized orchestrator at the top level, with decentralized coordination within each team (a team lead delegates to its workers, who coordinate P2P).</p>
 <hr />
-<h2 id="reflection-pattern">Reflection Pattern</h2>
-<h3 id="concept_1">Concept</h3>
-<p>Reflection is the pattern where an agent evaluates its own output, identifies weaknesses, and uses that critique to produce a better output. It's the agentic equivalent of "draft, review, revise."</p>
-<p>The core insight: <strong>a second LLM call evaluating an output is often cheaper and more reliable than trying to get a perfect first pass.</strong> The LLM is better at judging text than producing perfect text on the first try.</p>
-<h3 id="variants">Variants</h3>
-<p><strong>Self-reflection (same model)</strong>
-The agent generates output, then is prompted to critique it in a separate call, then revises.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Pass 1: &quot;Write a market analysis for EV batteries&quot;
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>         → Draft analysis
+<h2 id="communication-protocols-between-agents">Communication Protocols Between Agents</h2>
+<p>How do agents pass information to each other?</p>
+<h3 id="message-passing">Message Passing</h3>
+<p>Each agent communicates via explicit message objects. The orchestrator routes messages between agents.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>Pass 2: &quot;Review this analysis. What claims are unsupported? What is missing? Be specific.&quot;
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>         → Critique: &quot;Missing competitive landscape section. Claim about market size cites no source.&quot;
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>Pass 3: &quot;Revise the analysis based on this critique: [critique]&quot;
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>         → Improved analysis
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nd">@dataclass</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="k">class</span><span class="w"> </span><span class="nc">AgentMessage</span><span class="p">:</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">sender</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">recipient</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="n">task_id</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    <span class="n">content</span><span class="p">:</span> <span class="nb">dict</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    <span class="n">message_type</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># &quot;task_assignment&quot;, &quot;result&quot;, &quot;error&quot;, &quot;query&quot;</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    <span class="n">timestamp</span><span class="p">:</span> <span class="nb">str</span>
 </code></pre></div>
-<p><strong>External evaluator (separate model or role)</strong>
-A separate agent or a stronger model acts as the evaluator. This avoids the self-consistency bias — the same model will often fail to catch its own errors.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Generator Agent → Draft → Evaluator Agent → Critique → Generator Agent → Revision
+<p><strong>Advantages:</strong> Explicit interfaces, auditable, typed
+<strong>Disadvantages:</strong> Verbose, requires message routing infrastructure</p>
+<h3 id="shared-state">Shared State</h3>
+<p>All agents read from and write to a shared state object. The state is the communication channel.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># LangGraph uses this approach — the state is the &quot;graph state&quot;</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">WorkflowState</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="n">goal</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">research_results</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">draft</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">critique</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">final_output</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="n">current_step</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="n">errors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
 </code></pre></div>
-<p><strong>Test-driven reflection</strong>
-For code generation: write tests first, run the generated code against tests, feed failures back as the critique.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>User: &quot;Write a function that sorts a list of dicts by a given key&quot;
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>Agent → generates code → runs unit tests → 2 tests fail
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>Agent → receives: &quot;test_empty_list failed: KeyError on empty list; test_missing_key failed: should return original list&quot;
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>Agent → revises code to handle edge cases → all tests pass
+<p><strong>Advantages:</strong> Simple to implement, natural for sequential pipelines
+<strong>Disadvantages:</strong> Requires careful design to prevent agents from overwriting each other; less explicit than message passing</p>
+<h3 id="event-driven-pubsub">Event-Driven (Pub/Sub)</h3>
+<p>Agents publish events and subscribe to events produced by other agents. No direct coupling between agents.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>Research Agent publishes: ResearchCompleted(results=[...])
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>Writing Agent subscribes to: ResearchCompleted → triggers when research is done
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>Critic Agent subscribes to: DraftCompleted → triggers when writing is done
 </code></pre></div>
-<h3 id="when-to-use-reflection">When to Use Reflection</h3>
-<ul>
-<li>When the first pass is consistently good but not production-quality</li>
-<li>When there's a verifiable quality criterion (test suite, rubric, factual check)</li>
-<li>When the output will be seen by users or acted upon directly</li>
-</ul>
-<h3 id="when-not-to-use-reflection">When NOT to Use Reflection</h3>
-<ul>
-<li>When the task is simple and one pass is sufficient (adds cost for no benefit)</li>
-<li>When you don't have a good stopping criterion (infinite loops are expensive)</li>
-<li>When latency is critical (each reflection adds a full LLM round-trip)</li>
-</ul>
-<h3 id="termination">Termination</h3>
-<p>Always define a termination condition:
-- Score above threshold (e.g., evaluator scores above 8/10)
-- No critical issues found (evaluator finds no "must fix" items)
-- Max iterations reached (e.g., 3 revision rounds maximum)</p>
-<h3 id="code_1">Code</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">langchain_google_genai</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChatGoogleGenerativeAI</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">langchain_core.messages</span><span class="w"> </span><span class="kn">import</span> <span class="n">HumanMessage</span><span class="p">,</span> <span class="n">SystemMessage</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">llm</span> <span class="o">=</span> <span class="n">ChatGoogleGenerativeAI</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="k">def</span><span class="w"> </span><span class="nf">reflect_and_revise</span><span class="p">(</span><span class="n">task</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">max_iterations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="c1"># Generate initial draft</span>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="n">draft</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">invoke</span><span class="p">([</span>
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>        <span class="n">SystemMessage</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="s2">&quot;You are a professional technical writer.&quot;</span><span class="p">),</span>
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>        <span class="n">HumanMessage</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="n">task</span><span class="p">)</span>
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>    <span class="p">])</span><span class="o">.</span><span class="n">content</span>
-<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>
-<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>    <span class="k">for</span> <span class="n">iteration</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iterations</span><span class="p">):</span>
-<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>        <span class="c1"># Evaluate the draft</span>
-<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>        <span class="n">critique</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">invoke</span><span class="p">([</span>
-<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>            <span class="n">SystemMessage</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;You are a strict technical editor.</span>
-<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="s2">            Evaluate the draft and list SPECIFIC issues in these categories:</span>
-<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a><span class="s2">            1. Factual errors or unsupported claims</span>
-<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="s2">            2. Missing important sections</span>
-<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a><span class="s2">            3. Unclear explanations</span>
-<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a><span class="s2">            Reply with &quot;APPROVED&quot; if no significant issues remain.&quot;&quot;&quot;</span><span class="p">),</span>
-<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a>            <span class="n">HumanMessage</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Draft to review:</span><span class="se">\n\n</span><span class="si">{</span><span class="n">draft</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a>        <span class="p">])</span><span class="o">.</span><span class="n">content</span>
-<a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a>
-<a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a>        <span class="k">if</span> <span class="s2">&quot;APPROVED&quot;</span> <span class="ow">in</span> <span class="n">critique</span><span class="p">:</span>
-<a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Approved after </span><span class="si">{</span><span class="n">iteration</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> iteration(s)&quot;</span><span class="p">)</span>
-<a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a>            <span class="k">break</span>
-<a id="__codelineno-5-28" name="__codelineno-5-28" href="#__codelineno-5-28"></a>
-<a id="__codelineno-5-29" name="__codelineno-5-29" href="#__codelineno-5-29"></a>        <span class="c1"># Revise based on critique</span>
-<a id="__codelineno-5-30" name="__codelineno-5-30" href="#__codelineno-5-30"></a>        <span class="n">draft</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">invoke</span><span class="p">([</span>
-<a id="__codelineno-5-31" name="__codelineno-5-31" href="#__codelineno-5-31"></a>            <span class="n">SystemMessage</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="s2">&quot;You are a professional technical writer revising based on editor feedback.&quot;</span><span class="p">),</span>
-<a id="__codelineno-5-32" name="__codelineno-5-32" href="#__codelineno-5-32"></a>            <span class="n">HumanMessage</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Original task: </span><span class="si">{</span><span class="n">task</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">Current draft:</span><span class="se">\n</span><span class="si">{</span><span class="n">draft</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">Editor critique:</span><span class="se">\n</span><span class="si">{</span><span class="n">critique</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">Revise the draft to address all critique points.&quot;</span><span class="p">)</span>
-<a id="__codelineno-5-33" name="__codelineno-5-33" href="#__codelineno-5-33"></a>        <span class="p">])</span><span class="o">.</span><span class="n">content</span>
-<a id="__codelineno-5-34" name="__codelineno-5-34" href="#__codelineno-5-34"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Iteration </span><span class="si">{</span><span class="n">iteration</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">: revised based on critique&quot;</span><span class="p">)</span>
-<a id="__codelineno-5-35" name="__codelineno-5-35" href="#__codelineno-5-35"></a>
-<a id="__codelineno-5-36" name="__codelineno-5-36" href="#__codelineno-5-36"></a>    <span class="k">return</span> <span class="n">draft</span>
-</code></pre></div>
+<p><strong>Advantages:</strong> Highly decoupled, good for asynchronous long-running systems
+<strong>Disadvantages:</strong> Complex to reason about, event ordering issues, harder to debug</p>
+<p><strong>Best for:</strong> Long-running background systems, async processing pipelines.</p>
 <hr />
-<h2 id="planning-patterns">Planning Patterns</h2>
-<h3 id="concept_2">Concept</h3>
-<p>Planning patterns separate the <strong>thinking</strong> (what to do) from the <strong>doing</strong> (doing it). Instead of reasoning and acting interleaved step-by-step, the agent first builds an explicit plan, then executes it.</p>
-<p>Planning is valuable when:
-- The task has complex dependencies between steps
-- The agent needs to communicate its approach before executing
-- You want to enable human review of the plan before committing to execution
-- The task requires backtracking or replanning when steps fail</p>
-<h3 id="react-reason-act">ReAct (Reason + Act)</h3>
-<p>ReAct is the most common planning pattern — it doesn't produce an explicit upfront plan but interleaves reasoning traces with actions.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Thought: I need to find the population of Tokyo. I&#39;ll use the search tool.
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>Action: search(&quot;Tokyo population 2024&quot;)
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>Observation: Tokyo population is approximately 13.9 million (city) or 37.4 million (metro area).
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>Thought: I have the city and metro figures. The question asks for the city population.
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>Action: [DONE — answer: 13.9 million]
-</code></pre></div>
-<p><strong>Why it works:</strong> Explicit reasoning traces make the agent's logic visible, which helps the LLM stay on track and makes debugging much easier.</p>
-<p><strong>When to use:</strong> Most general-purpose agentic tasks. ReAct is the default — use it unless you have a specific reason to choose another pattern.</p>
-<h3 id="plan-and-execute">Plan-and-Execute</h3>
-<p>The agent first produces a complete plan (a list of steps), then executes each step in order. The plan can be updated mid-execution if a step fails.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Phase 1 — Planning:
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>  Goal: &quot;Prepare a competitive analysis of EV battery manufacturers&quot;
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>  Plan:
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    Step 1: Search for top 5 EV battery manufacturers by market share
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    Step 2: For each manufacturer, find recent news and financials
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>    Step 3: Extract key metrics (revenue, growth rate, technology)
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>    Step 4: Compare across manufacturers in a structured table
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>    Step 5: Write executive summary
-<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>
-<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>Phase 2 — Execution:
-<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>  Execute Step 1 → result → Execute Step 2 → ...
-</code></pre></div>
-<p><strong>When to use:</strong>
-- Tasks where the full plan can be determined upfront
-- When human review of the plan before execution is desired
-- When steps have clear dependencies and the plan is relatively stable</p>
-<p><strong>Replanning:</strong> If a step fails, the executor returns the failure to the planner, which updates the remaining plan. This "plan → execute → replan if needed" loop is the most resilient form.</p>
-<h3 id="tree-of-thoughts-tot">Tree of Thoughts (ToT)</h3>
-<p>The agent explores multiple reasoning paths simultaneously (like a search tree), evaluating each path's quality before committing to one.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>Goal: &quot;Design a fault-tolerant data pipeline&quot;
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>Branch A: Event-driven (Kafka)
-<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>  → Evaluate: High throughput, complex ops — score: 7/10
-<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>
-<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>Branch B: Batch processing (Spark)
-<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>  → Evaluate: Simple ops, high latency — score: 5/10
-<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>
-<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>Branch C: Lambda architecture (both)
-<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>  → Evaluate: Best of both, complex to build — score: 8/10
-<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>
-<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>Select Branch C → Continue planning from there
-</code></pre></div>
-<p><strong>When to use:</strong> Complex decisions where the "right" first step isn't obvious and exploring alternatives before committing improves quality. Expensive — use only for high-stakes decisions.</p>
-<hr />
-<h2 id="multi-agent-coordination-pattern">Multi-Agent Coordination Pattern</h2>
-<h3 id="concept_3">Concept</h3>
-<p>When a task is too complex for one agent, you split it across multiple agents. Coordination defines how they work together without stepping on each other.</p>
-<h3 id="role-assignment">Role Assignment</h3>
-<p>Each agent has a clearly defined role: what it does, what it doesn't do, and what its inputs/outputs look like.</p>
-<p><strong>Good role definition:</strong>
-- <strong>Research Agent</strong>: Searches the web and returns structured summaries. Does NOT write or evaluate — only retrieves.
-- <strong>Writer Agent</strong>: Transforms structured research into prose. Does NOT research — only writes.
-- <strong>Critic Agent</strong>: Evaluates prose quality and factual consistency. Does NOT write — only critiques.</p>
-<p><strong>Why strict roles matter:</strong> When roles overlap, agents start doing each other's work and producing conflicting outputs. Clear role boundaries prevent this.</p>
-<h3 id="communication-protocols">Communication Protocols</h3>
-<p><strong>Structured messages:</strong> Agents communicate via typed, validated message formats rather than free-form text. This makes the interface explicit and prevents misinterpretation.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># Good: structured interface</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">ResearchResult</span><span class="p">:</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>    <span class="n">sources</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
-<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="n">findings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
-<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>    <span class="n">confidence</span><span class="p">:</span> <span class="nb">float</span>
-<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>    <span class="n">limitations</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
-<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>
-<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="c1"># Bad: free-form handoff</span>
-<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="s2">&quot;Here are the research results: [paragraph of unstructured text]&quot;</span>
-</code></pre></div>
-<p><strong>Shared state:</strong> All agents read from and write to a shared state object. Each agent reads what it needs, does its work, and writes its output back. The orchestrator coordinates access.</p>
-<p><strong>Message passing:</strong> Agents communicate via explicit message objects passed through the orchestrator. No agent talks to another agent directly — all communication goes through a defined channel.</p>
-<h3 id="avoiding-coordination-failures">Avoiding Coordination Failures</h3>
+<h2 id="state-management">State Management</h2>
+<p>State is what enables an agentic system to do more than a single-turn agent. Without persistent state, every step starts from scratch.</p>
+<h3 id="what-state-needs-to-contain">What State Needs to Contain</h3>
 <table>
 <thead>
 <tr>
-<th>Failure Mode</th>
-<th>Prevention</th>
+<th>State Component</th>
+<th>Purpose</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Agents overwrite each other's output</td>
-<td>Assign each agent a dedicated output key in shared state</td>
+<td>Conversation history</td>
+<td>Context for the LLM — what has been said and done</td>
 </tr>
 <tr>
-<td>Agent A waits for Agent B's output (deadlock)</td>
-<td>Define a clear execution order or use dependency resolution</td>
+<td>Tool results</td>
+<td>Outputs from previous tool calls</td>
 </tr>
 <tr>
-<td>Agent produces output in wrong format</td>
-<td>Define and validate output schemas; return error if validation fails</td>
+<td>Task ledger</td>
+<td>List of planned subtasks + their status (pending/done/failed)</td>
 </tr>
 <tr>
-<td>Agent calls another agent without permission</td>
-<td>Restrict inter-agent calls through the orchestrator only</td>
+<td>Intermediate outputs</td>
+<td>Partial results from each agent</td>
+</tr>
+<tr>
+<td>Error log</td>
+<td>What has failed and why (for replanning)</td>
+</tr>
+<tr>
+<td>Metadata</td>
+<td>Task ID, timestamp, agent IDs, cost counter</td>
 </tr>
 </tbody>
 </table>
+<h3 id="checkpointing">Checkpointing</h3>
+<p>Checkpointing serializes the full agent state to persistent storage at each step (or at defined intervals). If the system crashes, it restores from the last checkpoint and continues.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">save_checkpoint</span><span class="p">(</span><span class="n">state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">task_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">checkpoint</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;task_id&quot;</span><span class="p">:</span> <span class="n">task_id</span><span class="p">,</span> <span class="s2">&quot;step&quot;</span><span class="p">:</span> <span class="n">step</span><span class="p">,</span> <span class="s2">&quot;state&quot;</span><span class="p">:</span> <span class="n">state</span><span class="p">}</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;checkpoints/</span><span class="si">{</span><span class="n">task_id</span><span class="si">}</span><span class="s2">_step</span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2">.json&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">))</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="k">def</span><span class="w"> </span><span class="nf">load_latest_checkpoint</span><span class="p">(</span><span class="n">task_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    <span class="n">checkpoints</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;checkpoints&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">task_id</span><span class="si">}</span><span class="s2">_step*.json&quot;</span><span class="p">))</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">checkpoints</span><span class="p">:</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>        <span class="k">return</span> <span class="kc">None</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">checkpoints</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">read_text</span><span class="p">())</span>
+</code></pre></div>
+<p>LangGraph has built-in checkpointing via <code>MemorySaver</code> and <code>SqliteSaver</code> backends.</p>
+<h3 id="context-summarization">Context Summarization</h3>
+<p>Long-running agents accumulate conversation history that eventually exceeds the context window. Summarize older history to prevent this.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Step 1-10: Full history in context
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>Step 11: Summarize steps 1-5 into a compact summary; keep steps 6-11 in full
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>Step 16: Summarize steps 6-10 into a compact summary; keep steps 11-16 in full
+</code></pre></div>
+<p>The summary must preserve the key facts, decisions, and tool results — not just "some work was done."</p>
+<h3 id="task-ledger">Task Ledger</h3>
+<p>A task ledger is a structured record of planned subtasks, their status, and their outputs. It survives context summarization because it's a separate data structure, not embedded in conversation history.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nd">@dataclass</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">Subtask</span><span class="p">:</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>    <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    <span class="n">status</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># &quot;pending&quot;, &quot;in_progress&quot;, &quot;done&quot;, &quot;failed&quot;</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>    <span class="n">dependencies</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>  <span class="c1"># ids of subtasks that must complete first</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>    <span class="n">output</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>    <span class="n">error</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="nd">@dataclass</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="k">class</span><span class="w"> </span><span class="nc">TaskLedger</span><span class="p">:</span>
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>    <span class="n">task_id</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>    <span class="n">goal</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>    <span class="n">subtasks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Subtask</span><span class="p">]</span>
+<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>
+<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">next_executable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Subtask</span><span class="p">]:</span>
+<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>        <span class="n">done_ids</span> <span class="o">=</span> <span class="p">{</span><span class="n">t</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">subtasks</span> <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;done&quot;</span><span class="p">}</span>
+<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a>        <span class="k">return</span> <span class="p">[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">subtasks</span> <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;pending&quot;</span>
+<a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a>                <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">dep</span> <span class="ow">in</span> <span class="n">done_ids</span> <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">dependencies</span><span class="p">)]</span>
+</code></pre></div>
 <hr />
-<h2 id="routing-and-gating">Routing and Gating</h2>
-<h3 id="concept_4">Concept</h3>
-<p>Not all inputs need the same processing path. Routing sends each input to the appropriate handler based on its characteristics. Gating blocks execution until a condition is met.</p>
-<h3 id="input-routing">Input Routing</h3>
-<p>The router classifies the input and sends it to the appropriate agent or pipeline.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>Incoming request
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>    ↓
-<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>[Router Agent: classify intent]
-<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>    ├── &quot;billing question&quot; → [Billing Agent]
-<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>    ├── &quot;technical support&quot; → [Tech Support Agent]
-<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>    ├── &quot;general inquiry&quot; → [General Agent]
-<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>    └── &quot;escalation&quot; → [Human Support Queue]
+<h2 id="failure-modes-and-resilience">Failure Modes and Resilience</h2>
+<p>Multi-agent systems fail in ways that single agents don't. Understanding the failure modes is prerequisite to building resilient systems.</p>
+<h3 id="failure-mode-taxonomy">Failure Mode Taxonomy</h3>
+<p><strong>Cascading failure</strong>
+Agent A fails → passes error output to Agent B → Agent B produces bad output → Agent C receives bad input → system produces wrong final answer with no indication of failure.</p>
+<p><em>Prevention:</em> Each agent validates its inputs. Propagate errors explicitly, not silently. Have the orchestrator detect error outputs and halt or reroute.</p>
+<p><strong>Infinite loop</strong>
+Agent A produces output → Critic rejects it → Agent A revises → Critic rejects again → ... forever.</p>
+<p><em>Prevention:</em> Always set <code>max_iterations</code>. Track iteration count in state and terminate with a "max iterations reached" output rather than silently looping.</p>
+<p><strong>Context drift</strong>
+As conversation history grows, the agent starts losing track of the original goal. Later reasoning contradicts earlier reasoning.</p>
+<p><em>Prevention:</em> Keep the goal statement in a fixed position in the prompt (system message or beginning of each user message). Use a task ledger as the source of truth for what remains to be done.</p>
+<p><strong>Tool call hallucination</strong>
+Agent calls a tool with incorrect arguments (hallucinated parameter values), gets an error or unexpected result, and doesn't recognize that the tool result is wrong.</p>
+<p><em>Prevention:</em> Validate tool arguments before execution. Return structured errors that describe what went wrong. Log the actual tool call and result for debugging.</p>
+<p><strong>Agent deadlock</strong>
+Agent A is waiting for Agent B's output; Agent B is waiting for Agent A's output. Neither proceeds.</p>
+<p><em>Prevention:</em> Define a strict dependency graph upfront. Circular dependencies should be caught at design time. Each agent should have a timeout that triggers an error if its dependencies don't complete in time.</p>
+<p><strong>Conflicting agents</strong>
+Two agents independently reach different conclusions and both write to the same output field, with one overwriting the other.</p>
+<p><em>Prevention:</em> Use append-only state for intermediate results. Have the orchestrator or a synthesis agent explicitly merge conflicting outputs rather than last-write-wins.</p>
+<h3 id="resilience-patterns">Resilience Patterns</h3>
+<p><strong>Bounded autonomy</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">AGENT_LIMITS</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>    <span class="s2">&quot;max_steps&quot;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    <span class="s2">&quot;max_time_seconds&quot;</span><span class="p">:</span> <span class="mi">300</span><span class="p">,</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>    <span class="s2">&quot;max_cost_usd&quot;</span><span class="p">:</span> <span class="mf">0.50</span><span class="p">,</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>    <span class="s2">&quot;max_retries&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="p">}</span>
 </code></pre></div>
-<p><strong>Router design:</strong> The router is often a lightweight LLM call with a classification prompt. It doesn't need to solve the task — just route it correctly.</p>
-<h3 id="confidence-gating">Confidence Gating</h3>
-<p>The agent estimates its own confidence and routes to different handlers based on confidence level.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">confidence</span> <span class="o">=</span> <span class="n">evaluate_confidence</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>  <span class="c1"># 0.0 to 1.0</span>
-<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
-<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="k">if</span> <span class="n">confidence</span> <span class="o">&gt;</span> <span class="mf">0.85</span><span class="p">:</span>
-<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>    <span class="k">return</span> <span class="n">result</span>  <span class="c1"># High confidence: proceed automatically</span>
-<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="k">elif</span> <span class="n">confidence</span> <span class="o">&gt;</span> <span class="mf">0.60</span><span class="p">:</span>
-<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>    <span class="n">enqueue_for_review</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>  <span class="c1"># Medium: human review queue</span>
-<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="k">else</span><span class="p">:</span>
-<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>    <span class="n">escalate_to_human</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>  <span class="c1"># Low: route to human immediately</span>
+<p><strong>Idempotent actions</strong></p>
+<p>Design tools so that calling the same tool with the same arguments multiple times is safe.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nd">@tool</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">create_user</span><span class="p">(</span><span class="n">email</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a user. Safe to retry — returns existing user if already exists.&quot;&quot;&quot;</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="n">existing</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">find_one</span><span class="p">({</span><span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="n">email</span><span class="p">})</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>    <span class="k">if</span> <span class="n">existing</span><span class="p">:</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="n">existing</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span> <span class="s2">&quot;created&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>    <span class="n">new_user</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">insert</span><span class="p">({</span><span class="s2">&quot;email&quot;</span><span class="p">:</span> <span class="n">email</span><span class="p">})</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="n">new_user</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span> <span class="s2">&quot;created&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
 </code></pre></div>
-<h3 id="hitl-gates">HITL Gates</h3>
-<p>A HITL gate is a checkpoint that requires human approval before the agent proceeds with an irreversible or high-risk action.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>Agent plans to: &quot;Send invoice to client@company.com for $15,000&quot;
-<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>    ↓
-<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>HITL Gate triggered (irreversible action + dollar amount &gt; $10,000 threshold)
-<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>    ↓
-<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>Present to human: [action preview + justification + approve/reject]
-<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>    ↓
-<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>Human: Approve → Agent sends invoice
-<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>Human: Reject  → Agent aborts and reports reason
-<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>Human: Timeout → Agent escalates to supervisor
+<p><strong>Fallback agents</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_research_results</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>    <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>        <span class="k">return</span> <span class="n">primary_research_agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>    <span class="k">except</span> <span class="n">AgentError</span><span class="p">:</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>        <span class="k">return</span> <span class="n">fallback_research_agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>  <span class="c1"># simpler, more reliable</span>
+</code></pre></div>
+<p><strong>Graceful degradation</strong></p>
+<p>Return a partial result with metadata about what succeeded and failed, rather than returning nothing.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">final_output</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>    <span class="s2">&quot;research&quot;</span><span class="p">:</span> <span class="n">research_result</span> <span class="ow">or</span> <span class="s2">&quot;Research failed — see errors&quot;</span><span class="p">,</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>    <span class="s2">&quot;analysis&quot;</span><span class="p">:</span> <span class="n">analysis_result</span> <span class="ow">or</span> <span class="s2">&quot;Analysis skipped due to research failure&quot;</span><span class="p">,</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>    <span class="s2">&quot;errors&quot;</span><span class="p">:</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">errors</span><span class="p">],</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>    <span class="s2">&quot;completeness&quot;</span><span class="p">:</span> <span class="s2">&quot;partial&quot;</span> <span class="k">if</span> <span class="n">errors</span> <span class="k">else</span> <span class="s2">&quot;complete&quot;</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="p">}</span>
 </code></pre></div>
 <hr />
 <h2 id="study-notes">Study Notes</h2>
 <ul>
-<li>Tool-use is the foundation — every agentic system uses it. Master tool design (descriptions, schemas, error handling) before anything else.</li>
-<li>Reflection adds quality but adds cost and latency. Measure both. The improvement must justify the expense.</li>
-<li>Plan-and-Execute is particularly useful when HITL is required — you can show the human the plan and get approval before any action is taken.</li>
-<li>Routing is often underestimated. A good router dramatically improves system performance by sending each input to the specialist that handles it best.</li>
-<li>Multi-agent coordination is the hardest pattern to get right. Start with the simplest coordination mechanism (shared state via orchestrator) before introducing direct agent-to-agent communication.</li>
+<li>Multi-agent is not always better. The overhead of coordination (extra LLM calls, state management, error handling) is real. Measure whether the multi-agent version actually outperforms a well-designed single agent for your specific task.</li>
+<li>Start with <strong>centralized coordination</strong> (orchestrator-subagent). It's much easier to debug and reason about. Move to decentralized only if you have a specific reason.</li>
+<li>The task ledger pattern is underused. It gives you replanning capability for free — if the orchestrator knows what's been done and what remains, it can update the plan when something goes wrong.</li>
+<li>Every multi-agent system needs <strong>structured communication interfaces</strong> (typed outputs from each agent). Unstructured handoffs (agent A just returns a paragraph that agent B has to parse) are a major source of bugs.</li>
+<li>Design for failure from the start. Cascading failures are the most common production issue in multi-agent systems, and they're cheap to prevent if the defensive patterns are built in from day one.</li>
 </ul>
 <hr />
 <h2 id="qa-review-bank">Q&amp;A Review Bank</h2>
-<p><strong>Q1: What is the ReAct pattern and why is it the default for most agentic tasks?</strong> <code>[Easy]</code>
-A: ReAct (Reason + Act) interleaves explicit reasoning traces with tool calls: Thought → Action → Observation → Thought → ... The agent writes out its reasoning before each action, making its logic visible and keeping it on track. It's the default because it handles most general-purpose agentic tasks without requiring an explicit upfront plan, it's simple to implement, and the visible reasoning traces make debugging straightforward. Use something more complex (Plan-and-Execute, Tree of Thoughts) only when you have a specific reason — most tasks don't need it.</p>
-<p><strong>Q2: Why does tool description quality matter as much as tool implementation quality?</strong> <code>[Medium]</code>
-A: The tool description is part of the prompt — the LLM reads it to decide whether to use the tool and how to call it. A vague description ("Search products") gives the model no guidance on when to use the tool, what input format is expected, or what it will return. A good description specifies: what the tool does, when to use it, when NOT to use it, the input format, and the output format. A well-implemented tool with a poor description will be called at wrong times or with wrong arguments; a well-described tool is used correctly even in edge cases. Tool descriptions are LLM-facing documentation, not human-facing documentation.</p>
-<p><strong>Q3: When should you use an external evaluator rather than self-reflection?</strong> <code>[Medium]</code>
-A: Use an external evaluator (a separate agent or a stronger model) when the task requires catching the model's own blind spots — the same model that generated an output will often fail to identify its own errors due to self-consistency bias (it will evaluate using the same flawed reasoning that produced the error). A stronger model as evaluator works because it has better reasoning; a different model works because it has different priors. Self-reflection is acceptable for tasks like stylistic revision where the model can improve on its own draft without needing to catch factual errors. For factual accuracy, security review, or adversarial analysis, always use a separate evaluator.</p>
-<p><strong>Q4: What is the difference between Plan-and-Execute and ReAct?</strong> <code>[Medium]</code>
-A: ReAct interleaves reasoning and action — the agent decides what to do at each step based on the most recent observation, with no upfront plan. Plan-and-Execute separates planning from execution: the agent first produces a complete list of steps, then executes them in sequence, only returning to planning if a step fails (replanning). Plan-and-Execute is better when the full plan can be determined upfront, when HITL review of the plan before execution is required, or when the task has stable dependencies. ReAct is better when the right next step depends on the result of the previous step and can't be planned ahead. Most production systems use ReAct for dynamic tasks and Plan-and-Execute for structured workflows.</p>
-<p><strong>Q5: What must every Reflection loop have, and what happens without it?</strong> <code>[Hard]</code>
-A: Every Reflection loop requires a termination condition: a quality score threshold the evaluator must award (e.g., 8/10), a specific criterion the evaluator must declare met (e.g., "APPROVED"), or a hard maximum iteration count. Without a termination condition, the loop runs indefinitely — the agent keeps revising, the evaluator keeps finding new issues, and cost grows without bound. In practice, always set a <code>max_iterations</code> even when you have a quality threshold as a safety net: an evaluator with an inconsistent rubric can reject every revision forever. Three conditions in combination (score threshold OR "no critical issues" OR max iterations = 3) is the standard pattern.</p>
-<p><strong>Q6: How does a confidence-gated HITL differ from a fixed HITL gate?</strong> <code>[Hard]</code>
-A: A fixed HITL gate always pauses at a defined point — for example, "always get approval before sending any email." A confidence-gated HITL is conditional: the agent computes or estimates its confidence in the output, and routes to human review only when confidence falls below a threshold (e.g., &lt;0.85 routes to queue, &lt;0.60 routes directly to human). Confidence gating reduces human interruptions for routine high-confidence actions while still catching genuinely uncertain cases. The challenge is that LLM self-confidence estimates are unreliable — models are often confidently wrong. Calibrate confidence thresholds empirically against known error rates before deploying confidence gating in production.</p>
+<p><strong>Q1: What are the four reasons to go multi-agent, and what mistake do teams most often make when choosing this architecture?</strong> <code>[Medium]</code>
+A: The four reasons are: Task Decomposition (the task has natural seams that benefit from focused sub-tasks), Specialization (different agents optimized with different prompts, models, and tools outperform a generalist), Parallelism (independent subtasks running concurrently reduce wall-clock time), and Fault Isolation (one agent's failure doesn't crash the whole system). The most common mistake is choosing multi-agent because it sounds more capable, without checking whether the overhead of coordination — extra LLM calls, state management, structured communication, error handling — actually produces better results than a well-designed single agent. Always measure whether the multi-agent version outperforms the single-agent version on your specific task before committing to the complexity.</p>
+<p><strong>Q2: What is cascading failure in multi-agent systems and what are the two primary defenses?</strong> <code>[Hard]</code>
+A: Cascading failure is when Agent A fails and passes a bad output silently to Agent B, which produces a worse output, which is passed to Agent C — resulting in a wrong final answer with no visible error. The system appears to complete successfully while all downstream results are garbage. The two primary defenses are: (1) explicit error propagation — each agent validates its inputs and returns a typed error if they are malformed, rather than trying to process bad data; (2) orchestrator error detection — the orchestrator compares each subagent's output against expected structure before passing it downstream, halting or rerouting rather than blindly continuing. These defenses are cheap to implement at design time and expensive to retrofit after a production incident.</p>
+<p><strong>Q3: Compare centralized (orchestrator) vs decentralized (peer-to-peer) coordination.</strong> <code>[Medium]</code>
+A: Centralized: one orchestrator holds the plan and assigns tasks; agents are stateless workers with no knowledge of the broader plan. Advantages — easy to reason about, easy to debug (single trace), easy to add HITL gates. Disadvantages — orchestrator is a single point of failure and a bottleneck. Decentralized: agents observe shared state and self-assign work; coordination emerges from agent behavior. Advantages — no single point of failure, scales to many agents, self-organizing. Disadvantages — race conditions, harder to add HITL, much harder to debug. Use centralized for almost all production systems; use decentralized only when you have a specific fault-tolerance requirement and the team has experience debugging distributed systems.</p>
+<p><strong>Q4: What is a task ledger and why is it critical for long-running agentic systems?</strong> <code>[Hard]</code>
+A: A task ledger is a structured, external-to-context-window record of all planned subtasks, their status (pending/in-progress/done/failed), their dependencies, and their outputs. It's critical because conversation history eventually exceeds the context window and gets summarized or truncated — the task ledger is never summarized, so the agent always knows exactly what remains to be done and what has been completed. It also enables replanning: if a subtask fails, the orchestrator reads the ledger to determine what was completed, updates the remaining plan, and continues — without losing work done so far. The ledger is the difference between an agent that can recover from failure and one that has to start over from scratch.</p>
+<p><strong>Q5: What is an idempotent action and give an example of making a non-idempotent tool idempotent?</strong> <code>[Medium]</code>
+A: An idempotent action produces the same result whether executed once or multiple times with the same inputs. It's critical for agentic systems because agents retry on failure — if a tool creates a duplicate record each time it's called, retries cause data corruption. Example: a <code>create_user(email)</code> tool is non-idempotent by default (multiple calls create duplicate users). To make it idempotent: before inserting, check if a user with that email already exists; if yes, return the existing user record; if no, create and return the new user. The check-then-act pattern, upserts, and idempotency keys (unique per task+step token sent with each API request) are the standard implementation approaches.</p>
+<p><strong>Q6: Why do agents using event-driven (pub/sub) communication need special care compared to shared state?</strong> <code>[Hard]</code>
+A: Event-driven communication is highly decoupled — agents publish events and subscribe to events from others, with no direct coupling. This is ideal for long-running async systems and horizontal scaling. However, it introduces event ordering challenges (an agent may receive events out of order), duplicate event delivery (message brokers guarantee at-least-once delivery, not exactly-once), and complex debugging (there's no single trace to follow — you must reconstruct the sequence from distributed logs). You also lose the natural barrier checking of shared state (where you can easily see what's been written). Use event-driven when you need async processing, true decoupling, or need to fan out to many consumers; use shared state for simpler synchronous pipelines where debuggability is more important than decoupling.</p>
 
 
 
@@ -4964,7 +4909,7 @@ A: A fixed HITL gate always pauses at a defined point — for example, "always g
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../02-Architectural-Patterns/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Architectural Patterns">
+          <a href="../07-Design-Patterns/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Design Patterns">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -4974,20 +4919,20 @@ A: A fixed HITL gate always pauses at a defined point — for example, "always g
                 Previous
               </span>
               <div class="md-ellipsis">
-                Architectural Patterns
+                Design Patterns
               </div>
             </div>
           </a>
         
         
           
-          <a href="../04-Multi-Agent-Systems/" class="md-footer__link md-footer__link--next" aria-label="Next: Multi-Agent Systems">
+          <a href="../09-Agent-Frameworks/" class="md-footer__link md-footer__link--next" aria-label="Next: Agent Frameworks">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Multi-Agent Systems
+                Agent Frameworks
               </div>
             </div>
             <div class="md-footer__button md-icon">
