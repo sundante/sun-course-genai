@@ -232,6 +232,317 @@ class TaskLedger:
 
 ---
 
+## Central State Management Patterns
+
+The "State Management" section above describes *what* state contains. This section covers *how* to design the state object so multiple agents can share it without conflict — a distinction that becomes critical in production.
+
+### The Naive State Passing Problem
+
+The most common beginner mistake in multi-agent systems is chaining state between agents:
+
+```python
+# The naive pattern — quickly becomes a nightmare
+order_data = order_agent.create_order(...)
+inventory_data = inventory_agent.check_stock(order_data)
+payment_data = payment_agent.process_payment(order_data, inventory_data)
+shipping_data = shipping_agent.ship_order(order_data, inventory_data, payment_data)
+```
+
+This creates **tight coupling**: every new agent needs data from all previous agents. Adding a fifth agent means updating the signatures of agents three and four. The system is brittle — a change to `order_data`'s schema breaks every downstream agent.
+
+The alternative: all agents read from and write to a **shared central state object** they all own equally.
+
+### The Agent-as-Tool State Conflict
+
+A subtler problem appears when agents are composed using the "agent as tool" pattern — where a specialist agent is wrapped as a callable tool for an orchestrator:
+
+```python
+@tool
+def specialist_agent_tool(query: str) -> str:
+    specialist = Agent(system_prompt="You are a specialist...", tools=[update_inventory])
+    return str(specialist(query))
+
+orchestrator = Agent(tools=[specialist_agent_tool, update_inventory])
+```
+
+If both the orchestrator and the specialist share tools that modify the same state, **the framework cannot determine which agent's state to update**. The orchestrator's view of state diverges from the specialist's view, producing silent data corruption. This is one of the most common sources of hard-to-reproduce bugs in production multi-agent systems.
+
+The fix: route all state mutations through a single shared state object that exists outside any individual agent's scope.
+
+---
+
+### Pattern 1: Orchestrator State (Simple, Centralised)
+
+**Best for:** Small teams, simple workflows, rapid prototyping, 1–3 agents.
+
+All tools are attached to a single orchestrator agent. Because there is only one agent, there is only one state object. No coordination logic needed — the orchestrator's state is the central store.
+
+```python
+from dataclasses import dataclass, field
+from typing import Any
+
+class CentralState:
+    """Single source of truth — lives outside any agent."""
+    def __init__(self):
+        self._store: dict[str, Any] = {}
+
+    def set(self, key: str, value: Any):
+        self._store[key] = value
+
+    def get(self, key: str, default: Any = None) -> Any:
+        return self._store.get(key, default)
+
+    def update(self, key: str, updates: dict):
+        current = self._store.get(key, {})
+        current.update(updates)
+        self._store[key] = current
+
+# One shared state instance, injected into every tool
+state = CentralState()
+
+def create_order(order_id: str, customer_id: str, items: list[str]) -> str:
+    order = {"order_id": order_id, "customer_id": customer_id,
+             "items": items, "status": "created"}
+    state.set(f"order:{order_id}", order)
+    state.set("current_order_id", order_id)
+    return f"Order {order_id} created"
+
+def check_inventory() -> str:
+    order_id = state.get("current_order_id")
+    order = state.get(f"order:{order_id}")
+    order["inventory_checked"] = True
+    order["total"] = sum(10 for _ in order["items"])  # simplified pricing
+    state.set(f"order:{order_id}", order)
+    return f"Inventory confirmed. Total: ${order['total']}"
+
+def process_payment() -> str:
+    order_id = state.get("current_order_id")
+    state.update(f"order:{order_id}", {"status": "paid", "payment_ok": True})
+    return f"Payment processed for order {order_id}"
+```
+
+```
+Data flow:
+
+[All tools] → read/write → [CentralState]
+                                  ↑
+                         [Orchestrator Agent]
+                           (single agent,
+                            all tools attached)
+```
+
+**Pros:** Zero coordination overhead, easy to debug (one state object, one agent), no state conflicts possible.  
+**Cons:** Single point of failure; doesn't scale past 5–6 tools before the agent's context gets crowded.
+
+---
+
+### Pattern 2: Global State Manager (Scalable, Flexible)
+
+**Best for:** Medium complexity, multiple specialized agents, production systems.
+
+A dedicated state management class lives outside all agents. Each agent gets its own role and tool set, but all tools read from and write to the same shared manager instance. No agent owns the state — they all borrow it.
+
+```python
+from dataclasses import dataclass, field
+from typing import Dict, List, Any
+import threading
+
+class GlobalOrderState:
+    """Thread-safe shared state manager for the order pipeline."""
+
+    def __init__(self):
+        self._lock = threading.Lock()
+        self.orders: Dict[str, Dict[str, Any]] = {}
+        self.inventory: Dict[str, int] = {"laptop": 10, "mouse": 50, "keyboard": 30}
+        self.current_order_id: str | None = None
+
+    def create_order(self, order_id: str, customer_id: str, items: List[str]) -> dict:
+        with self._lock:
+            order = {"order_id": order_id, "customer_id": customer_id,
+                     "items": items, "status": "created", "total": 0}
+            self.orders[order_id] = order
+            self.current_order_id = order_id
+            return order
+
+    def reserve_inventory(self, order_id: str) -> bool:
+        with self._lock:
+            order = self.orders[order_id]
+            for item in order["items"]:
+                if self.inventory.get(item, 0) <= 0:
+                    return False
+            for item in order["items"]:
+                self.inventory[item] -= 1
+            order["inventory_checked"] = True
+            order["total"] = sum(len(item) * 10 for item in order["items"])
+            return True
+
+    def mark_paid(self, order_id: str):
+        with self._lock:
+            self.orders[order_id]["status"] = "paid"
+
+    def mark_shipped(self, order_id: str, tracking: str):
+        with self._lock:
+            self.orders[order_id].update({"status": "shipped", "tracking": tracking})
+
+# One shared instance — created once, imported everywhere
+global_state = GlobalOrderState()
+
+# Tools for each agent — they all close over global_state
+def create_order_tool(order_id: str, customer_id: str, items: str) -> str:
+    items_list = [i.strip() for i in items.split(",")]
+    global_state.create_order(order_id, customer_id, items_list)
+    return f"Order {order_id} created for {customer_id}"
+
+def check_inventory_tool() -> str:
+    order_id = global_state.current_order_id
+    if global_state.reserve_inventory(order_id):
+        return f"Inventory reserved. Total: ${global_state.orders[order_id]['total']}"
+    return "Error: insufficient inventory"
+
+def process_payment_tool() -> str:
+    order_id = global_state.current_order_id
+    global_state.mark_paid(order_id)
+    return f"Payment confirmed for order {order_id}"
+
+# Specialized agents — each has a focused role and tool set
+order_agent     = Agent(name="order_agent",     tools=[create_order_tool])
+inventory_agent = Agent(name="inventory_agent", tools=[check_inventory_tool])
+payment_agent   = Agent(name="payment_agent",   tools=[process_payment_tool])
+```
+
+```
+Data flow:
+
+[order_agent]    → tools → ─┐
+[inventory_agent]→ tools → ─┤→ [GlobalOrderState] ← single source of truth
+[payment_agent]  → tools → ─┘
+```
+
+**Pros:** Loose coupling between agents; adding a new agent requires only a new tool that closes over `global_state`, no changes to existing agents; thread-safe; easy to unit test state logic in isolation.  
+**Cons:** More initial setup; requires explicit thread-safety (locking); the global singleton can become a bottleneck at very high concurrency — at that scale, move to a distributed store (Redis, DynamoDB).
+
+---
+
+### Pattern 3: Event-Driven State (Advanced, Reactive)
+
+**Best for:** Complex workflows, audit/compliance requirements, systems needing automatic side effects on state changes.
+
+An event bus decouples state producers from state consumers. Agents publish events when they change state; other components react to those events automatically. This is the multi-agent equivalent of Redux middleware or database triggers.
+
+```python
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Callable, Dict, List, Any
+import logging
+
+class OrderEvent(Enum):
+    CREATED           = "order.created"
+    INVENTORY_RESERVED = "order.inventory_reserved"
+    PAYMENT_PROCESSED  = "order.payment_processed"
+    SHIPPED           = "order.shipped"
+    FAILED            = "order.failed"
+
+@dataclass
+class Event:
+    event_type: OrderEvent
+    data: Dict[str, Any]
+    source_agent: str
+
+class EventBus:
+    """Lightweight synchronous event bus with full audit trail."""
+
+    def __init__(self):
+        self._listeners: Dict[OrderEvent, List[Callable]] = {}
+        self.history: List[Event] = []   # append-only audit log
+
+    def subscribe(self, event_type: OrderEvent, handler: Callable):
+        self._listeners.setdefault(event_type, []).append(handler)
+
+    def publish(self, event: Event):
+        self.history.append(event)
+        logging.info(f"[EVENT] {event.event_type.value} from {event.source_agent}")
+        for handler in self._listeners.get(event.event_type, []):
+            handler(event)
+
+class ReactiveOrderState:
+    def __init__(self, bus: EventBus):
+        self.bus = bus
+        self.orders: Dict[str, Dict[str, Any]] = {}
+        self.notifications: List[str] = []
+
+        # Wire up automatic reactions
+        bus.subscribe(OrderEvent.CREATED,            self._on_order_created)
+        bus.subscribe(OrderEvent.INVENTORY_RESERVED, self._on_inventory_reserved)
+        bus.subscribe(OrderEvent.PAYMENT_PROCESSED,  self._on_payment_processed)
+        bus.subscribe(OrderEvent.FAILED,             self._on_order_failed)
+
+    # State mutations — always publish an event after changing state
+    def create_order(self, order_id: str, customer_id: str, items: list, source: str):
+        order = {"order_id": order_id, "customer_id": customer_id,
+                 "items": items, "status": "created"}
+        self.orders[order_id] = order
+        self.bus.publish(Event(OrderEvent.CREATED, {"order": order}, source))
+        return order
+
+    def reserve_inventory(self, order_id: str, source: str) -> bool:
+        # ... inventory logic ...
+        self.orders[order_id]["status"] = "inventory_reserved"
+        self.bus.publish(Event(OrderEvent.INVENTORY_RESERVED,
+                               {"order_id": order_id, "available": True}, source))
+        return True
+
+    # Automatic side effects (reactions)
+    def _on_order_created(self, event: Event):
+        order = event.data["order"]
+        self.notifications.append(f"[{order['order_id']}] Order created — pipeline started")
+
+    def _on_inventory_reserved(self, event: Event):
+        self.notifications.append(f"[{event.data['order_id']}] Inventory locked — proceed to payment")
+
+    def _on_payment_processed(self, event: Event):
+        self.notifications.append(f"[{event.data['order_id']}] Payment confirmed — scheduling shipment")
+
+    def _on_order_failed(self, event: Event):
+        order_id = event.data["order_id"]
+        self.orders[order_id]["status"] = "failed"
+        self.notifications.append(f"[{order_id']}] FAILED: {event.data.get('reason', 'unknown')}")
+
+bus   = EventBus()
+state = ReactiveOrderState(bus)
+```
+
+```
+Data flow:
+
+[order_agent]    → state.create_order()   → publishes OrderEvent.CREATED
+                                                    ↓
+                                          EventBus dispatches to subscribers
+                                                    ↓
+                                          ReactiveOrderState._on_order_created()
+                                          → appends to audit log
+                                          → triggers next-stage notification
+```
+
+**Pros:** Complete audit trail in `bus.history` for free; side effects are automatic and consistent; agents are completely decoupled — they only know about events, not each other; easy to add new reactions without modifying existing code.  
+**Cons:** Harder to debug (no single linear trace — reconstruct from event history); risk of event loops if a handler publishes the same event it handles; event ordering requires careful design in distributed deployments.
+
+---
+
+### Choosing a State Pattern
+
+| | Orchestrator State | Global State Manager | Event-Driven State |
+|---|---|---|---|
+| **Agents** | 1 (all tools on one agent) | 2–10 specialized agents | Many agents, many side effects |
+| **Coupling** | None (one agent) | Loose (via shared object) | Very loose (via events only) |
+| **Audit trail** | Manual | Manual | Built-in (event history) |
+| **Thread safety** | Automatic | Explicit locking needed | Event bus serializes writes |
+| **Debugging** | Trivial | Moderate | Hard (reconstruct from events) |
+| **When to use** | MVP, prototyping, ≤ 3 tools | Production pipeline, clear roles | Compliance, reactive side effects, async workflows |
+
+**Progression rule:** Start with Orchestrator State. When you have more than 3 specialized agents, move to Global State Manager. Add the event bus only when you need an audit trail or automatic side effects that would otherwise require each agent to call downstream systems explicitly.
+
+---
+
 ## Failure Modes and Resilience
 
 Multi-agent systems fail in ways that single agents don't. Understanding the failure modes is prerequisite to building resilient systems.
@@ -350,3 +661,9 @@ A: An idempotent action produces the same result whether executed once or multip
 
 **Q6: Why do agents using event-driven (pub/sub) communication need special care compared to shared state?** `[Hard]`
 A: Event-driven communication is highly decoupled — agents publish events and subscribe to events from others, with no direct coupling. This is ideal for long-running async systems and horizontal scaling. However, it introduces event ordering challenges (an agent may receive events out of order), duplicate event delivery (message brokers guarantee at-least-once delivery, not exactly-once), and complex debugging (there's no single trace to follow — you must reconstruct the sequence from distributed logs). You also lose the natural barrier checking of shared state (where you can easily see what's been written). Use event-driven when you need async processing, true decoupling, or need to fan out to many consumers; use shared state for simpler synchronous pipelines where debuggability is more important than decoupling.
+
+**Q7: What is the "agent-as-tool state conflict" and how does central state management solve it?** `[Hard]`
+A: The agent-as-tool state conflict occurs when a specialist agent is wrapped as a callable tool for an orchestrator, and both the orchestrator and the specialist have tools that mutate the same state. Because each agent maintains its own isolated state object, the two agents end up with divergent views of the world — one writes to its own state, the other writes to its own state, and neither sees the other's changes. This produces silent data corruption that is very hard to reproduce because it only manifests when specific tool call sequences occur. Central state management solves this by moving the authoritative state outside both agents entirely — into a shared Python object (Global State Manager pattern) or event bus (Event-Driven pattern). Tools close over the shared object; neither the orchestrator nor the specialist owns the state, so there is no conflict regardless of call order.
+
+**Q8: When should you move from the Global State Manager pattern to the Event-Driven pattern?** `[Medium]`
+A: Move to Event-Driven when you need three things the Global State Manager cannot cleanly provide: (1) Automatic side effects — when a state change in one part of the system must trigger actions in other parts and you don't want every agent to manually call downstream systems; the event bus fires handlers automatically on state transitions. (2) Built-in audit trail — every state mutation is represented as an immutable event in the bus history, giving you a complete, timestamped record of what happened and who caused it; this is often a compliance or regulatory requirement. (3) Complete decoupling for large teams — agents don't need to know about each other, only about events; adding a new agent means subscribing to existing events, not modifying existing agents. Stay with Global State Manager if you don't need any of these three — event-driven systems are significantly harder to debug and the added complexity is only justified when the benefits are actively needed.

@@ -2,7 +2,7 @@
 
 Four complete, end-to-end production-grade agentic systems. Each system combines multiple architectural patterns from [02 — Architecture Patterns](02-Architectures.md) into a realistic use case, implemented across all four frameworks.
 
-← **Back to Overview:** [Agentic AI](../INDEX.md) · **Back to Concepts:** [Agentic System Design](../Notes/05-Agentic-System-Design.md) · [Evaluation & Observability](../Notes/06-Evaluation-and-Observability.md)
+← **Back to Overview:** [Agentic AI](../INDEX.md) · **Back to Concepts:** [Agentic System Design](../Notes/10-Agentic-System-Design.md) · [Evaluation & Observability](../Notes/11-Evaluation-and-Observability.md)
 
 ---
 
@@ -175,6 +175,6 @@ python 06-Agentic-AI/CodeLabs/03-Agentic-Systems/04-Code-Review-System/CrewAI/sy
 
 ## What to Read Alongside
 
-- [Agentic System Design](../Notes/05-Agentic-System-Design.md) — production architecture, HITL design, reliability, cost
-- [Multi-Agent Systems](../Notes/04-Multi-Agent-Systems.md) — coordination protocols, shared state, failure modes
-- [Evaluation and Observability](../Notes/06-Evaluation-and-Observability.md) — how to evaluate these systems end-to-end
+- [Agentic System Design](../Notes/10-Agentic-System-Design.md) — production architecture, HITL design, reliability, cost
+- [Multi-Agent Systems](../Notes/08-Multi-Agent-Systems.md) — coordination protocols, shared state, failure modes
+- [Evaluation and Observability](../Notes/11-Evaluation-and-Observability.md) — how to evaluate these systems end-to-end

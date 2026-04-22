@@ -111,7 +111,7 @@ Four production-style systems, each × 4 frameworks:
 2. [RAG](03-RAGs/INDEX.md) — all 12 notes
 3. [Agent Fundamentals](05-Agents/Notes/01-Agent-Fundamentals.md)
 4. [Agentic Concepts](06-Agentic-AI/Notes/01-Agentic-Concepts.md)
-5. [Architectural Patterns](06-Agentic-AI/Notes/02-Architectural-Patterns.md)
+5. [Architectural Patterns](06-Agentic-AI/Notes/06-Architectural-Patterns.md)
 6. [All Q&A — Knowledge Check](All_Questions.md)
 
 ### Path C — Hands-On Engineering
@@ -130,7 +130,7 @@ Four production-style systems, each × 4 frameworks:
 6. [Agent Fundamentals](05-Agents/Notes/01-Agent-Fundamentals.md) → [Agent Patterns](05-Agents/Notes/02-Agent-Patterns.md)
 7. [LangGraph Fundamentals](05-Agents/LangGraph/01-LangGraph-Fundamentals.md) ← pick one framework
 8. [Agent Types Code Lab](05-Agents/CodeLabs/01-Agent-Types.md)
-9. [Agentic Concepts](06-Agentic-AI/Notes/01-Agentic-Concepts.md) → [Architectural Patterns](06-Agentic-AI/Notes/02-Architectural-Patterns.md)
+9. [Agentic Concepts](06-Agentic-AI/Notes/01-Agentic-Concepts.md) → [Architectural Patterns](06-Agentic-AI/Notes/06-Architectural-Patterns.md)
 10. [Architecture Patterns Code Lab](06-Agentic-AI/CodeLabs/02-Architectures.md)
 11. [All Q&A — Knowledge Check](All_Questions.md)
 

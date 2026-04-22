@@ -2,7 +2,7 @@
 
 Seven multi-agent coordination patterns, each implemented in all four frameworks using the same mock task. Builds directly on [01 — Agent Types](../../05-Agents/CodeLabs/01-Agent-Types.md).
 
-← **Back to Overview:** [Agentic AI](../INDEX.md) · **Back to Concepts:** [Architectural Patterns](../Notes/02-Architectural-Patterns.md)
+← **Back to Overview:** [Agentic AI](../INDEX.md) · **Back to Concepts:** [Architectural Patterns](../Notes/06-Architectural-Patterns.md)
 
 ---
 
@@ -30,13 +30,13 @@ Planner             Stage1→Stage2       Proposer            Agent
 
 | # | Pattern | Key Concept | When to Use | Notes Link |
 |---|---------|------------|-------------|-----------|
-| 01 | Sequential | A→B→C pipeline, output feeds next | Linear multi-step workflows | [Architectural Patterns](../Notes/02-Architectural-Patterns.md) |
-| 02 | Parallel | Fan-out + aggregate | Independent subtasks, reduce latency | [Architectural Patterns](../Notes/02-Architectural-Patterns.md) |
-| 03 | Hierarchical | Nested orchestration tiers | Complex delegation, team-of-teams | [Architectural Patterns](../Notes/02-Architectural-Patterns.md) |
-| 04 | Orchestrator-Subagent | Planner + specialized workers | Dynamic task decomposition | [Architectural Patterns](../Notes/02-Architectural-Patterns.md) |
-| 05 | Pipeline | Data-flow, no shared state | ETL-style transformation chains | [Architectural Patterns](../Notes/02-Architectural-Patterns.md) |
-| 06 | Adversarial Debate | Proposer vs Critic vs Judge | High-stakes decisions, quality gates | [Architectural Patterns](../Notes/02-Architectural-Patterns.md) |
-| 07 | Reflexion | Self-critique + iterative revision | Output quality, agentic planning | [Design Patterns](../Notes/03-Design-Patterns.md) |
+| 01 | Sequential | A→B→C pipeline, output feeds next | Linear multi-step workflows | [Architectural Patterns](../Notes/06-Architectural-Patterns.md) |
+| 02 | Parallel | Fan-out + aggregate | Independent subtasks, reduce latency | [Architectural Patterns](../Notes/06-Architectural-Patterns.md) |
+| 03 | Hierarchical | Nested orchestration tiers | Complex delegation, team-of-teams | [Architectural Patterns](../Notes/06-Architectural-Patterns.md) |
+| 04 | Orchestrator-Subagent | Planner + specialized workers | Dynamic task decomposition | [Architectural Patterns](../Notes/06-Architectural-Patterns.md) |
+| 05 | Pipeline | Data-flow, no shared state | ETL-style transformation chains | [Architectural Patterns](../Notes/06-Architectural-Patterns.md) |
+| 06 | Adversarial Debate | Proposer vs Critic vs Judge | High-stakes decisions, quality gates | [Architectural Patterns](../Notes/06-Architectural-Patterns.md) |
+| 07 | Reflexion | Self-critique + iterative revision | Output quality, agentic planning | [Design Patterns](../Notes/07-Design-Patterns.md) |
 
 ---
 
@@ -97,9 +97,9 @@ jupyter notebook 06-Agentic-AI/CodeLabs/02-Architectures/01-Sequential/CrewAI/se
 
 ## What to Read Alongside
 
-- [Architectural Patterns](../Notes/02-Architectural-Patterns.md) — conceptual deep-dive on all 8 patterns
-- [Design Patterns](../Notes/03-Design-Patterns.md) — tool-use, reflection, planning, routing
-- [Multi-Agent Systems](../Notes/04-Multi-Agent-Systems.md) — coordination, state management, failure modes
+- [Architectural Patterns](../Notes/06-Architectural-Patterns.md) — conceptual deep-dive on all 8 patterns
+- [Design Patterns](../Notes/07-Design-Patterns.md) — tool-use, reflection, planning, routing
+- [Multi-Agent Systems](../Notes/08-Multi-Agent-Systems.md) — coordination, state management, failure modes
 
 ---
 
