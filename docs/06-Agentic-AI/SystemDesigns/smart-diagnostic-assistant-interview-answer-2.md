@@ -1,9 +1,8 @@
 # Smart Diagnostic Assistant — Orchestrator-Subagent Architecture
 ## Alternative Design: Version 2
 
-> **What this version adds:** Replaces the monolithic Diagnostic Agent from Version 1 with an explicit
-> Orchestrator-Subagent + Parallel Fan-out pattern. This demonstrates advanced multi-agent design judgment
-> — the pattern that senior ML system design interviewers are specifically looking for.
+> **Role:** Senior Platform Architect / AI Practice Lead
+> **Question:** "A global automotive manufacturer wants to equip their 5,000 factory floor technicians with a Smart Diagnostic Assistant on phone or tablet. When a machine breaks down, the technician should be able to use the app to get step-by-step repair instructions. Design the end-to-end architecture."
 
 ---
 
