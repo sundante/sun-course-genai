@@ -2,7 +2,7 @@
 
 > **Domain:** Life Sciences / Enterprise Knowledge Graph · **Pattern:** Agentic RAG + Graph Traversal + Multi-hop Reasoning
 >
-> ← [Back to RAG Concepts](../Notes/05-Advanced-RAG-Patterns.md) | [Simple RAG Design ←](01-simple-rag.md)
+> ← [Back to RAG Concepts](../Notes/05-RAG-Types-and-Advanced-Patterns.md) | [Simple RAG Design ←](01-simple-rag.md)
 
 ---
 

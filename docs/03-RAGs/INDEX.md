@@ -30,14 +30,13 @@
 | 2 | [Embeddings and Vector Stores](Notes/02-Embeddings-and-Vector-Stores.md) | Embedding math, cosine vs dot vs euclidean, HNSW/IVF/PQ, vector DB comparison | ★★★ |
 | 3 | [Chunking and Indexing](Notes/03-Chunking-and-Indexing.md) | Fixed/semantic/hierarchical chunking, parent-child, metadata filtering | ★★☆ |
 | 4 | [Retrieval Strategies](Notes/04-Retrieval-Strategies.md) | BM25 math, hybrid search, RRF formula, reranking, HyDE, MMR | ★★★ |
-| 5 | [Advanced RAG Patterns](Notes/05-Advanced-RAG-Patterns.md) | Self-RAG, FLARE, GraphRAG, Agentic RAG, CRAG, multi-query, compression | ★★★ |
+| 5 | [RAG Types & Advanced Patterns](Notes/05-RAG-Types-and-Advanced-Patterns.md) | Naive→Modular→Agentic evolution; Self-RAG, FLARE, GraphRAG, CRAG, Multimodal | ★★★ |
 | 6 | [Evaluation and Failure Modes](Notes/06-RAG-Evaluation-and-Failure-Modes.md) | RAGAS metrics/formulas, LLM-as-Judge, tracing, A/B testing | ★★★ |
-| 7 | [RAG Types Taxonomy](Notes/07-RAG-Types-Taxonomy.md) | Naive → Advanced → Modular → Agentic → GraphRAG → Multimodal | ★★☆ |
-| 8 | [RAG System Design](Notes/08-RAG-System-Design.md) | Production architecture, latency budgets, caching, scaling 100M docs | ★★★ |
-| 9 | [Vertex AI RAG](Notes/09-Vertex-AI-RAG.md) | Vertex AI Search, RAG Engine, Grounding API, Vector Search, AlloyDB | ★★★ |
-| 10 | [Production Deployment](Notes/10-Production-Deployment.md) | Cloud Run vs GKE, monitoring, CI/CD eval gates, security, PII | ★★★ |
-| 11 | [Scaling and LLM Issues](Notes/11-Scaling-and-LLM-Issues.md) | Hallucination types, lost-in-the-middle, context management, prompt injection | ★★★ |
-| 12 | [Q&A Review Bank](Notes/12-Interview-QA-Bank.md) | 80+ Q&A pairs: fundamentals → system design → GCP → production debugging | ★★★ |
+| 7 | [RAG System Design](Notes/08-RAG-System-Design.md) | Production architecture, latency budgets, caching, scaling 100M docs | ★★★ |
+| 8 | [Vertex AI RAG](Notes/09-Vertex-AI-RAG.md) | Vertex AI Search, RAG Engine, Grounding API, Vector Search, AlloyDB | ★★★ |
+| 9 | [Production Deployment](Notes/10-Production-Deployment.md) | Cloud Run vs GKE, monitoring, CI/CD eval gates, security, PII | ★★★ |
+| 10 | [Scaling and LLM Issues](Notes/11-Scaling-and-LLM-Issues.md) | Hallucination types, lost-in-the-middle, context management, prompt injection | ★★★ |
+| 11 | [Q&A Review Bank](Notes/12-Interview-QA-Bank.md) | 80+ Q&A pairs: fundamentals → system design → GCP → production debugging | ★★★ |
 
 ---
 
@@ -55,12 +54,12 @@ End-to-end production system designs with GCP service mapping, scalability analy
 ## Recommended Learning Paths
 
 ### Path A: First time through (full learning)
-1. [RAG Types Taxonomy](Notes/07-RAG-Types-Taxonomy.md) — mental map first
+1. [RAG Types & Advanced Patterns](Notes/05-RAG-Types-and-Advanced-Patterns.md) — mental map first (taxonomy section)
 2. [RAG Fundamentals](Notes/01-RAG-Fundamentals.md) — why RAG exists
 3. [Embeddings and Vector Stores](Notes/02-Embeddings-and-Vector-Stores.md) — the retrieval engine
 4. [Chunking and Indexing](Notes/03-Chunking-and-Indexing.md) — the quality bottleneck
 5. [Retrieval Strategies](Notes/04-Retrieval-Strategies.md) — improve recall and precision
-6. [Advanced RAG Patterns](Notes/05-Advanced-RAG-Patterns.md) — production-grade patterns
+6. [RAG Types & Advanced Patterns](Notes/05-RAG-Types-and-Advanced-Patterns.md) — production-grade patterns (full read)
 7. [Evaluation and Failure Modes](Notes/06-RAG-Evaluation-and-Failure-Modes.md) — measure and debug
 8. [RAG System Design](Notes/08-RAG-System-Design.md) — interview system design depth
 9. [Vertex AI RAG](Notes/09-Vertex-AI-RAG.md) — GCP-specific knowledge
@@ -69,17 +68,16 @@ End-to-end production system designs with GCP service mapping, scalability analy
 12. [Q&A Review Bank](Notes/12-Interview-QA-Bank.md) — final consolidation
 
 ### Path B: Accelerated Deep Dive (4–5 hours)
-1. [RAG Types Taxonomy](Notes/07-RAG-Types-Taxonomy.md) — quick mental map (30 min)
+1. [RAG Types & Advanced Patterns](Notes/05-RAG-Types-and-Advanced-Patterns.md) — taxonomy + GraphRAG, Self-RAG (60 min)
 2. [Retrieval Strategies](Notes/04-Retrieval-Strategies.md) — BM25 + hybrid math (45 min)
 3. [RAG System Design](Notes/08-RAG-System-Design.md) — system design depth (60 min)
-4. [Advanced RAG Patterns](Notes/05-Advanced-RAG-Patterns.md) — GraphRAG, Self-RAG (45 min)
-5. [Vertex AI RAG](Notes/09-Vertex-AI-RAG.md) — GCP specifics (30 min)
-6. [Q&A Review Bank](Notes/12-Interview-QA-Bank.md) — all 80 Q&A pairs (90 min)
+4. [Vertex AI RAG](Notes/09-Vertex-AI-RAG.md) — GCP specifics (30 min)
+5. [Q&A Review Bank](Notes/12-Interview-QA-Bank.md) — all 80 Q&A pairs (90 min)
 
 ### Path C: Weak spots only
 - System design → [08-RAG-System-Design.md](Notes/08-RAG-System-Design.md)
 - Retrieval math → [04-Retrieval-Strategies.md](Notes/04-Retrieval-Strategies.md)
-- Advanced patterns → [05-Advanced-RAG-Patterns.md](Notes/05-Advanced-RAG-Patterns.md)
+- Advanced patterns + taxonomy → [05-RAG-Types-and-Advanced-Patterns.md](Notes/05-RAG-Types-and-Advanced-Patterns.md)
 - Vertex AI / GCP → [09-Vertex-AI-RAG.md](Notes/09-Vertex-AI-RAG.md)
 
 ---

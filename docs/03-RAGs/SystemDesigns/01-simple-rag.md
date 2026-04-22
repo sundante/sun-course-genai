@@ -2,7 +2,7 @@
 
 > **Domain:** Enterprise Knowledge Base · **Pattern:** Naive → Production-Grade RAG
 >
-> ← [Back to RAG Concepts](../Notes/01-RAG-Fundamentals.md) | [Advanced RAG Patterns →](../Notes/05-Advanced-RAG-Patterns.md)
+> ← [Back to RAG Concepts](../Notes/01-RAG-Fundamentals.md) | [RAG Types & Advanced Patterns →](../Notes/05-RAG-Types-and-Advanced-Patterns.md)
 
 ---
 
