@@ -8,16 +8,16 @@ RAG failures fall into three categories: retrieval failures, generation failures
 
 ```
 RAG Failure Taxonomy
-├── Retrieval Failures
-│   ├── Wrong chunks retrieved (relevance failure)
-│   ├── Relevant chunks not retrieved (recall failure)  
-│   ├── Correct chunks retrieved but wrong order (ranking failure)
-│   └── No chunks retrieved (index/query failure)
 ├── Generation Failures
 │   ├── Hallucination despite context (faithfulness failure)
 │   ├── Ignoring retrieved context (context utilization failure)
 │   ├── Verbatim copying without synthesis (over-reliance)
 │   └── Lost in the middle (position bias)
+├── Retrieval Failures
+│   ├── Wrong chunks retrieved (relevance failure)
+│   ├── Relevant chunks not retrieved (recall failure)  
+│   ├── Correct chunks retrieved but wrong order (ranking failure)
+│   └── No chunks retrieved (index/query failure)
 └── Pipeline Failures
     ├── Chunk boundary bisects key information (chunking failure)
     ├── Index is stale (freshness failure)
