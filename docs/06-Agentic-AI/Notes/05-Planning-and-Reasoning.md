@@ -1,5 +1,9 @@
 # Planning and Reasoning
 
+← **Back to Overview:** [Agentic AI](../INDEX.md)
+
+---
+
 ## Why Planning Matters
 
 A purely reactive agent takes one step at a time, deciding what to do based only on the most recent observation. This works for simple tasks. It breaks for complex ones.

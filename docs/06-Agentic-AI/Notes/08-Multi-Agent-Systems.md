@@ -1,5 +1,9 @@
 # Multi-Agent Systems
 
+← **Back to Overview:** [Agentic AI](../INDEX.md)
+
+---
+
 ## Why Multi-Agent
 
 A single agent has hard limits. When a task pushes past those limits, the solution is to split the work across multiple agents. There are four distinct reasons to go multi-agent, each with different implications for system design.

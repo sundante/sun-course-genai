@@ -1,5 +1,9 @@
 # Tool Use and Function Calling
 
+← **Back to Overview:** [Agentic AI](../INDEX.md)
+
+---
+
 ## What Tools Give Agents
 
 A large language model, on its own, is a text transformer. It reads tokens and produces tokens. It cannot check today's stock price, write to a database, send an email, or run code. Everything it "knows" is baked into its weights from training.

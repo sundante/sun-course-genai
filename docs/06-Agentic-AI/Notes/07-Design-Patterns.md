@@ -1,5 +1,9 @@
 # Agentic Design Patterns
 
+← **Back to Overview:** [Agentic AI](../INDEX.md)
+
+---
+
 ## Overview
 
 Design patterns are **reusable solutions to recurring problems** within agentic systems. Where architectural patterns define the structure (how many agents and how they relate), design patterns define the **behavior and logic** of individual agents and agent interactions.

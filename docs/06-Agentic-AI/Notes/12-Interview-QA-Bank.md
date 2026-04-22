@@ -1,5 +1,9 @@
 # Agentic AI — Q&A Review Bank
 
+← **Back to Overview:** [Agentic AI](../INDEX.md)
+
+---
+
 70+ curated Q&A pairs covering the full Agentic AI curriculum.  
 Each answer is 3-5 sentences with specifics — not vague responses.  
 Tags: `[Easy]` = conceptual, `[Medium]` = design decisions, `[Hard]` = system design / deep technical.

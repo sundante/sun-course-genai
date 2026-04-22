@@ -1,5 +1,9 @@
 # The Agent Loop
 
+← **Back to Overview:** [Agentic AI](../INDEX.md)
+
+---
+
 ## What Makes an Agent an Agent
 
 A chatbot takes one input and produces one output, then stops. It cannot take actions, observe results, or decide what to do next.

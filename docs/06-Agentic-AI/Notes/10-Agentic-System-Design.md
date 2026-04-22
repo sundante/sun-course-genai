@@ -1,5 +1,9 @@
 # Agentic System Design
 
+← **Back to Overview:** [Agentic AI](../INDEX.md)
+
+---
+
 ## Production Architecture
 
 A production agentic system is not just agents and tools — it is a layered architecture where each layer has a distinct responsibility. Getting the layers right is what separates a reliable system from a fragile demo.

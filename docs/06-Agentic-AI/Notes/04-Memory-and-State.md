@@ -1,5 +1,9 @@
 # Memory and State
 
+← **Back to Overview:** [Agentic AI](../INDEX.md)
+
+---
+
 ## Why Agents Need Memory
 
 A single-turn LLM call has no memory. Every call starts fresh. This is fine for answering a question, but an agent working on a multi-step task needs to remember what it has done, what it has learned, and what remains.

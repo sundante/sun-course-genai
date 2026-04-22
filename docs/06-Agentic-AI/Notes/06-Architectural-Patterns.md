@@ -1,5 +1,9 @@
 # Agentic Architectural Patterns
 
+← **Back to Overview:** [Agentic AI](../INDEX.md)
+
+---
+
 ## Overview
 
 An architectural pattern defines the **structural blueprint** of an agentic system — how many agents there are, how they relate to each other, and how control and information flow between them. Choosing the right pattern is the first major system design decision.

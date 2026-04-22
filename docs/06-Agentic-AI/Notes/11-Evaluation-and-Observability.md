@@ -1,5 +1,9 @@
 # Evaluation and Observability
 
+← **Back to Overview:** [Agentic AI](../INDEX.md)
+
+---
+
 ## Why Agent Evaluation Is Different
 
 Evaluating a single-turn LLM is straightforward: does the output match what you expect? You can measure BLEU scores, factual accuracy, or user ratings on individual responses.

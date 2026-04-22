@@ -28,7 +28,7 @@
 | 8 | [GPU & Hardware](Notes/08-GPU-and-Hardware.md) | VRAM estimation, quantization (INT8/INT4/AWQ/NF4), tensor/pipeline/ZeRO parallelism | Advanced |
 | 9 | [Failure Modes & Tricky Issues](Notes/09-Failure-Modes-and-Tricky-Issues.md) | Catastrophic forgetting, lost in the middle, hallucination, sycophancy, repetition | Advanced |
 | 10 | [Production Deployment](Notes/10-Production-Deployment.md) | vLLM/TGI, latency budgets, prefix caching, token window workarounds, cost optimization | Advanced |
-| 11 | [Prompting Strategies](Notes/04-Prompting-Strategies.md) | Chat templates, CoT mechanics, system prompts, structured output, prompt injection | Intermediate |
+| 11 | [Prompting Strategies](Notes/11-Prompting-Strategies.md) | Chat templates, CoT mechanics, system prompts, structured output, prompt injection | Intermediate |
 | 12 | [Q&A Review Bank](Notes/12-Interview-QA-Bank.md) | 68+ Q&A pairs tagged Easy/Medium/Hard across all topics | All levels |
 
 ## Recommended Learning Paths
@@ -38,7 +38,7 @@
 2. [Transformer Architecture](Notes/02-Architecture.md) — understand the building blocks
 3. [Attention Mechanisms](Notes/03-Attention-Mechanisms.md) — understand the core operation
 4. [Model Architecture Types](Notes/04-Model-Architecture-Types.md) — understand the landscape
-5. [Prompting Strategies](Notes/04-Prompting-Strategies.md) — understand how to interact with models
+5. [Prompting Strategies](Notes/11-Prompting-Strategies.md) — understand how to interact with models
 
 ### Path B: Interview Preparation (Accelerated)
 1. [LLM Fundamentals](Notes/01-LLM-Fundamentals.md) + [Transformer Architecture](Notes/02-Architecture.md) in parallel
