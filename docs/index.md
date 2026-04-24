@@ -3,19 +3,15 @@
 > Self-paced, beginner-to-advanced coverage of the full modern GenAI stack —  
 > from foundational language models through fully autonomous agentic systems.
 
-**[★ Star on GitHub](https://github.com/sundante/sun-course-genai)** · **[Live Site](https://sundante.github.io/sun-course-genai)**
-
 ---
 
 ## The Stack
 
 Every layer builds on the one before it:
 
-```
-01 LLMs  →  02 Prompts  →  03 RAG  →  04 MCP  →  05 Agents  →  06 Agentic AI
+[01 LLMs](01-LLM-Models/INDEX.md) → [02 Prompts](02-Prompts/INDEX.md) → [03 RAG](03-RAGs/INDEX.md) → [04 MCP](04-MCP/INDEX.md) → [05 Agents](05-Agents/INDEX.md) → [06 Agentic AI](06-Agentic-AI/INDEX.md)
 
-Engine       Interface      Memory     Protocol     Actors        Systems
-```
+*Engine · Interface · Memory · Protocol · Actors · Systems*
 
 | Layer | What it does |
 |-------|-------------|
