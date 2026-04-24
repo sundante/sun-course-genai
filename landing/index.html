@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sun — AI Engineer</title>
+  <meta name="description" content="Suryaprakash Singh — AI-first engineer. GenAI curriculum, agentic architectures, production ML." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Tokens ───────────────────────────────── */
+    :root {
+      --yellow:     #FFDA47;
+      --yellow-dk:  #E8C200;
+      --yellow-dim: rgba(255, 218, 71, 0.13);
+      --yellow-bdr: rgba(255, 218, 71, 0.38);
+      --bg:         #fafaf9;
+      --surface:    #ffffff;
+      --text:       #111111;
+      --muted:      #666666;
+      --dark:       #111111;
+      --dark-deep:  #0a0a0a;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── NAV ──────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2.5rem;
+      height: 54px;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--yellow-bdr);
+    }
+
+    .nav-brand {
+      display: flex; align-items: center; gap: 0.5rem;
+      text-decoration: none;
+    }
+
+    .nav-logo {
+      width: 28px; height: 28px;
+      background: var(--yellow);
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.82rem; color: #111111; font-weight: 800;
+    }
+
+    .nav-name {
+      font-size: 0.88rem; font-weight: 700;
+      color: var(--text); letter-spacing: -0.2px;
+    }
+
+    .nav-links {
+      display: flex; align-items: center; gap: 1.6rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      text-decoration: none; color: var(--muted);
+      font-size: 0.78rem; font-weight: 500;
+      transition: color 0.15s;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-pill {
+      background: var(--yellow) !important;
+      color: #111111 !important;
+      padding: 0.32rem 0.85rem;
+      border-radius: 5px;
+      font-weight: 700 !important;
+      font-size: 0.74rem !important;
+      transition: background 0.15s !important;
+    }
+
+    .nav-pill:hover { background: var(--yellow-dk) !important; color: #111111 !important; }
+
+    /* ── HERO ─────────────────────────────────── */
+    .hero {
+      min-height: calc(100vh - 54px);
+      display: flex; flex-direction: column;
+      position: relative; overflow: hidden;
+      background: #ffffff;
+    }
+
+    .hero-blob {
+      position: absolute; border-radius: 50%; pointer-events: none;
+    }
+
+    .hero-blob-1 {
+      width: 560px; height: 560px;
+      background: radial-gradient(circle, rgba(255,218,71,0.2) 0%, transparent 70%);
+      top: -140px; right: -120px;
+    }
+
+    .hero-blob-2 {
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(255,218,71,0.12) 0%, transparent 70%);
+      bottom: 60px; left: -60px;
+    }
+
+    .hero-body {
+      flex: 1;
+      display: flex; align-items: center; justify-content: center;
+      padding: 5rem 2.5rem 4rem;
+      position: relative; z-index: 1;
+    }
+
+    .hero-inner { max-width: 660px; text-align: center; }
+
+    .hero-pill {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      background: var(--yellow-dim);
+      border: 1px solid var(--yellow-bdr);
+      color: #7a6000;
+      font-size: 0.68rem; font-weight: 700;
+      letter-spacing: 0.7px; text-transform: uppercase;
+      padding: 0.26rem 0.72rem;
+      border-radius: 100px;
+      margin-bottom: 1.8rem;
+    }
+
+    .pill-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--yellow-dk);
+      animation: blink 2s ease-in-out infinite;
+    }
+
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+    .hero-name {
+      font-size: clamp(3rem, 9vw, 5.5rem);
+      font-weight: 800;
+      letter-spacing: -2.5px;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+
+    .hero-name span {
+      display: inline-block;
+      background: linear-gradient(135deg, #c49600, #FFDA47 60%, #E8C200);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-role {
+      font-size: 0.88rem; font-weight: 500;
+      color: var(--muted); margin-bottom: 0.8rem;
+    }
+
+    .hero-role strong { color: var(--text); font-weight: 600; }
+
+    .hero-desc {
+      font-size: 0.83rem; color: var(--muted);
+      max-width: 460px; margin: 0 auto 2rem;
+      line-height: 1.75;
+    }
+
+    .hero-actions {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.65rem; flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      padding: 0.58rem 1.25rem;
+      border-radius: 6px;
+      font-size: 0.78rem; font-weight: 700;
+      text-decoration: none;
+      transition: all 0.15s;
+      cursor: pointer; border: none;
+      letter-spacing: 0.1px;
+    }
+
+    .btn-primary {
+      background: var(--yellow);
+      color: #111111;
+    }
+
+    .btn-primary:hover {
+      background: var(--yellow-dk);
+      transform: translateY(-1px);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid rgba(0,0,0,0.12);
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--yellow-dk);
+      color: var(--text);
+      background: var(--yellow-dim);
+    }
+
+    /* ── STATS ────────────────────────────────── */
+    .stats {
+      border-top: 1px solid var(--yellow-bdr);
+      background: rgba(255,255,255,0.7);
+      display: flex; justify-content: center; flex-wrap: wrap;
+      position: relative; z-index: 1;
+    }
+
+    .stat {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 0.95rem 2.4rem;
+      border-right: 1px solid var(--yellow-bdr);
+    }
+
+    .stat:last-child { border-right: none; }
+
+    .stat-n {
+      font-size: 1.4rem; font-weight: 800;
+      color: #111111; letter-spacing: -1px;
+    }
+
+    .stat-l {
+      font-size: 0.65rem; font-weight: 600;
+      color: var(--muted); letter-spacing: 0.5px;
+      text-transform: uppercase; margin-top: 0.05rem;
+    }
+
+    /* ── SECTIONS ─────────────────────────────── */
+    section { padding: 5rem 2.5rem; }
+    .inner  { max-width: 1020px; margin: 0 auto; }
+
+    .eyebrow {
+      display: inline-block;
+      font-size: 0.65rem; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase;
+      color: #7a6000;
+      background: var(--yellow-dim);
+      border: 1px solid var(--yellow-bdr);
+      padding: 0.2rem 0.6rem;
+      border-radius: 100px;
+      margin-bottom: 0.85rem;
+    }
+
+    .sec-title {
+      font-size: 1.5rem; font-weight: 700;
+      letter-spacing: -0.5px; color: var(--text);
+      line-height: 1.25; margin-bottom: 0.45rem;
+    }
+
+    .sec-sub {
+      font-size: 0.82rem; color: var(--muted);
+      max-width: 500px; line-height: 1.7;
+      margin-bottom: 2rem;
+    }
+
+    /* ── CURRICULUM CARD ──────────────────────── */
+    #curriculum { background: var(--bg); }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.05);
+    }
+
+    .card-head {
+      background: #111111;
+      padding: 2rem 2.2rem;
+      position: relative; overflow: hidden;
+    }
+
+    .card-head::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 80% 50%, rgba(255,218,71,0.1) 0%, transparent 60%);
+    }
+
+    .card-eyebrow {
+      font-size: 0.65rem; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase;
+      color: #FFDA47; margin-bottom: 0.4rem;
+      position: relative; z-index: 1;
+    }
+
+    .card-title {
+      font-size: 1.3rem; font-weight: 700;
+      color: #fff; letter-spacing: -0.4px;
+      line-height: 1.3;
+      position: relative; z-index: 1;
+    }
+
+    .card-title em {
+      font-style: normal;
+      background: linear-gradient(90deg, #FFDA47, #ffe880);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .card-desc {
+      font-size: 0.78rem; color: rgba(255,255,255,0.5);
+      margin-top: 0.45rem; line-height: 1.65;
+      position: relative; z-index: 1;
+    }
+
+    .chips {
+      display: flex; gap: 0.38rem; flex-wrap: wrap;
+      margin-top: 1rem; position: relative; z-index: 1;
+    }
+
+    .chip {
+      background: rgba(255,218,71,0.1);
+      border: 1px solid rgba(255,218,71,0.22);
+      color: rgba(255,218,71,0.85);
+      font-size: 0.64rem; font-weight: 600;
+      letter-spacing: 0.4px; text-transform: uppercase;
+      padding: 0.2rem 0.52rem;
+      border-radius: 100px;
+    }
+
+    .card-body { padding: 1.75rem 2.2rem; }
+
+    .topic-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 0.65rem;
+      margin-bottom: 1.6rem;
+    }
+
+    .topic {
+      display: flex; align-items: flex-start; gap: 0.6rem;
+      padding: 0.8rem 0.95rem;
+      background: var(--bg);
+      border: 1px solid rgba(0,0,0,0.07);
+      border-radius: 9px;
+      text-decoration: none; color: inherit;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .topic:hover {
+      border-color: var(--yellow-dk);
+      background: var(--yellow-dim);
+    }
+
+    .topic-n {
+      width: 22px; height: 22px; flex-shrink: 0;
+      background: var(--yellow-dim);
+      border: 1px solid var(--yellow-bdr);
+      border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.62rem; font-weight: 800;
+      color: #7a6000;
+    }
+
+    .topic-label { font-size: 0.77rem; font-weight: 600; color: var(--text); }
+    .topic-sub   { font-size: 0.68rem; color: var(--muted); margin-top: 0.08rem; }
+
+    .card-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 0.75rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid rgba(0,0,0,0.07);
+    }
+
+    .card-footer-note { font-size: 0.76rem; color: var(--muted); }
+    .card-footer-note strong { color: var(--text); }
+
+    /* ── ABOUT ────────────────────────────────── */
+    #about { background: #111111; }
+    #about .sec-title { color: #ffffff; }
+    #about .sec-sub   { color: rgba(255,255,255,0.45); }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem; align-items: start;
+    }
+
+    .about-copy {
+      font-size: 0.82rem; color: rgba(255,255,255,0.6);
+      line-height: 1.8; margin-bottom: 0.9rem;
+    }
+
+    .about-copy strong { color: #FFDA47; font-weight: 600; }
+
+    .skill-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 1.1rem; }
+
+    .stag {
+      background: rgba(255,218,71,0.08);
+      border: 1px solid rgba(255,218,71,0.18);
+      color: rgba(255,218,71,0.75);
+      font-size: 0.68rem; font-weight: 500;
+      padding: 0.22rem 0.55rem;
+      border-radius: 100px;
+    }
+
+    .manifesto {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,218,71,0.12);
+      border-radius: 11px;
+      padding: 1.5rem;
+    }
+
+    .m-row {
+      display: flex; gap: 0.65rem;
+      margin-bottom: 1rem; align-items: flex-start;
+    }
+
+    .m-row:last-child { margin-bottom: 0; }
+
+    .m-icon {
+      width: 26px; height: 26px; flex-shrink: 0;
+      background: rgba(255,218,71,0.08);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.82rem;
+    }
+
+    .m-text { font-size: 0.78rem; color: rgba(255,255,255,0.55); line-height: 1.65; }
+    .m-text strong { color: rgba(255,255,255,0.88); font-weight: 600; }
+
+    /* ── FOOTER ───────────────────────────────── */
+    footer {
+      background: #0a0a0a;
+      padding: 2rem 2.5rem 1.5rem;
+      border-top: 1px solid rgba(255,218,71,0.12);
+    }
+
+    .foot-inner {
+      max-width: 1020px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 1rem;
+    }
+
+    .foot-brand { display: flex; align-items: center; gap: 0.55rem; }
+
+    .foot-logo {
+      width: 28px; height: 28px;
+      background: var(--yellow);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.78rem; color: #111111; font-weight: 800;
+    }
+
+    .foot-name { color: rgba(255,255,255,0.75); font-size: 0.8rem; font-weight: 600; }
+    .foot-role { color: rgba(255,255,255,0.3); font-size: 0.7rem; }
+
+    .foot-links { display: flex; gap: 1.3rem; list-style: none; }
+
+    .foot-links a {
+      color: rgba(255,255,255,0.35);
+      text-decoration: none; font-size: 0.74rem;
+      transition: color 0.15s;
+    }
+
+    .foot-links a:hover { color: #FFDA47; }
+
+    .foot-copy {
+      width: 100%; text-align: center;
+      font-size: 0.68rem; color: rgba(255,255,255,0.18);
+      padding-top: 1.3rem; margin-top: 0.9rem;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+
+    /* ── Responsive ───────────────────────────── */
+    @media (max-width: 680px) {
+      nav { padding: 0 1.25rem; }
+      .nav-links { display: none; }
+      .hero-body { padding: 3.5rem 1.5rem 3rem; }
+      section { padding: 3.5rem 1.5rem; }
+      .stat { padding: 0.8rem 1.4rem; }
+      .card-head, .card-body { padding: 1.4rem; }
+      .about-grid { grid-template-columns: 1fr; gap: 2rem; }
+      footer { padding: 1.75rem 1.5rem 1.2rem; }
+      .topic-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav aria-label="Main navigation">
+  <a href="#" class="nav-brand">
+    <div class="nav-logo">☀</div>
+    <span class="nav-name">Sun</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#curriculum">Curriculum</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="https://github.com/sundante/sun-course-genai" target="_blank" rel="noopener">★ GitHub</a></li>
+    <li><a href="https://sunmintz.com/" target="_blank" rel="noopener">sunmintz.com ↗</a></li>
+    <li>
+      <a href="https://sundante.github.io/sun-course-genai"
+         target="_blank" rel="noopener" class="nav-pill">Open Curriculum →</a>
+    </li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-blob hero-blob-1"></div>
+  <div class="hero-blob hero-blob-2"></div>
+
+  <div class="hero-body">
+    <div class="hero-inner">
+      <div class="hero-pill">
+        <span class="pill-dot"></span>
+        AI-First Engineer · Building in public
+      </div>
+
+      <h1 class="hero-name"><span>Sun</span></h1>
+
+      <p class="hero-role">
+        <strong>Suryaprakash Singh</strong> &mdash; making intelligent systems that actually work
+      </p>
+
+      <p class="hero-desc">
+        Full-stack AI engineer focused on production GenAI — RAG pipelines, agentic systems,
+        multi-agent orchestration, and the full modern LLM stack. Open curriculum, open source.
+      </p>
+
+      <div class="hero-actions">
+        <a href="https://sundante.github.io/sun-course-genai"
+           target="_blank" rel="noopener" class="btn btn-primary">
+          ☀ GenAI Curriculum
+        </a>
+        <a href="https://sunmintz.com/"
+           target="_blank" rel="noopener" class="btn btn-primary">
+          sunmintz.com ↗
+        </a>
+        <a href="https://github.com/sundante/sun-course-genai"
+           target="_blank" rel="noopener" class="btn btn-ghost">
+          ★ Star on GitHub
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><span class="stat-n">6</span><span class="stat-l">Topics</span></div>
+    <div class="stat"><span class="stat-n">150+</span><span class="stat-l">Q&amp;A Cards</span></div>
+    <div class="stat"><span class="stat-n">4</span><span class="stat-l">Frameworks</span></div>
+    <div class="stat"><span class="stat-n">7</span><span class="stat-l">Arch Patterns</span></div>
+    <div class="stat"><span class="stat-n">∞</span><span class="stat-l">Free</span></div>
+  </div>
+</header>
+
+<!-- CURRICULUM -->
+<section id="curriculum">
+  <div class="inner">
+    <span class="eyebrow">Featured Project</span>
+    <h2 class="sec-title">GenAI Learning Curriculum</h2>
+    <p class="sec-sub">
+      A structured, beginner-to-production curriculum covering every layer of the modern GenAI stack —
+      built for engineers who want depth, not hype.
+    </p>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-eyebrow">Open Curriculum · 2025</div>
+        <h3 class="card-title">The Full <em>GenAI Stack</em></h3>
+        <p class="card-desc">
+          LLMs → Prompts → RAG → MCP → Agents → Agentic AI.
+          Every layer builds on the last. Notes, code labs, Q&amp;A banks — all free.
+        </p>
+        <div class="chips">
+          <span class="chip">LangChain</span>
+          <span class="chip">LangGraph</span>
+          <span class="chip">Google ADK</span>
+          <span class="chip">CrewAI</span>
+          <span class="chip">Vertex AI</span>
+          <span class="chip">MCP</span>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="topic-grid">
+          <a href="https://sundante.github.io/sun-course-genai/01-LLM-Models/INDEX/"
+             target="_blank" rel="noopener" class="topic">
+            <div class="topic-n">01</div>
+            <div>
+              <div class="topic-label">LLM Models</div>
+              <div class="topic-sub">Transformers · KV Cache · Fine-tuning · GPU</div>
+            </div>
+          </a>
+          <a href="https://sundante.github.io/sun-course-genai/02-Prompts/INDEX/"
+             target="_blank" rel="noopener" class="topic">
+            <div class="topic-n">02</div>
+            <div>
+              <div class="topic-label">Prompt Engineering</div>
+              <div class="topic-sub">Zero-shot · CoT · Meta-prompting · Production</div>
+            </div>
+          </a>
+          <a href="https://sundante.github.io/sun-course-genai/03-RAGs/INDEX/"
+             target="_blank" rel="noopener" class="topic">
+            <div class="topic-n">03</div>
+            <div>
+              <div class="topic-label">RAG</div>
+              <div class="topic-sub">Embeddings · Chunking · Retrieval · Vertex AI</div>
+            </div>
+          </a>
+          <a href="https://sundante.github.io/sun-course-genai/04-MCP/INDEX/"
+             target="_blank" rel="noopener" class="topic">
+            <div class="topic-n">04</div>
+            <div>
+              <div class="topic-label">MCP</div>
+              <div class="topic-sub">Protocol · Components · Architecture</div>
+            </div>
+          </a>
+          <a href="https://sundante.github.io/sun-course-genai/05-Agents/INDEX/"
+             target="_blank" rel="noopener" class="topic">
+            <div class="topic-n">05</div>
+            <div>
+              <div class="topic-label">Agents</div>
+              <div class="topic-sub">ADK · LangChain · LangGraph · CrewAI</div>
+            </div>
+          </a>
+          <a href="https://sundante.github.io/sun-course-genai/06-Agentic-AI/INDEX/"
+             target="_blank" rel="noopener" class="topic">
+            <div class="topic-n">06</div>
+            <div>
+              <div class="topic-label">Agentic AI</div>
+              <div class="topic-sub">Multi-agent · Patterns · Evaluation</div>
+            </div>
+          </a>
+        </div>
+
+        <div class="card-footer">
+          <p class="card-footer-note">
+            <strong>150+ Q&amp;A cards</strong> · 4 code lab frameworks · system design deep-dives
+          </p>
+          <a href="https://sundante.github.io/sun-course-genai"
+             target="_blank" rel="noopener" class="btn btn-primary">
+            Open Full Curriculum →
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="inner">
+    <div class="about-grid">
+      <div>
+        <span class="eyebrow" style="color:#FFDA47; background:rgba(255,218,71,0.08); border-color:rgba(255,218,71,0.18);">
+          Who I am
+        </span>
+        <h2 class="sec-title">Engineering AI systems from the ground up</h2>
+        <p class="about-copy">
+          I'm <strong>Suryaprakash</strong> — Sun. I build AI systems that go to production:
+          RAG pipelines, agentic orchestrators, multi-agent networks, and the evaluation
+          infrastructure that keeps them honest.
+        </p>
+        <p class="about-copy">
+          I made this curriculum because I couldn't find one that covered the <strong>full stack</strong> —
+          not just API calls, but the architecture, the tradeoffs, the failure modes,
+          and the actual code across every major framework.
+        </p>
+        <div class="skill-tags">
+          <span class="stag">LangGraph</span>
+          <span class="stag">LangChain</span>
+          <span class="stag">Google ADK</span>
+          <span class="stag">Vertex AI</span>
+          <span class="stag">RAG</span>
+          <span class="stag">MCP</span>
+          <span class="stag">Agentic Systems</span>
+          <span class="stag">Python</span>
+        </div>
+      </div>
+
+      <div class="manifesto">
+        <div class="m-row">
+          <div class="m-icon">⚡</div>
+          <div class="m-text">
+            <strong>AI-First means architecture-first.</strong>
+            Every system starts with the agent loop, memory strategy, and tool boundaries — not the model call.
+          </div>
+        </div>
+        <div class="m-row">
+          <div class="m-icon">🔬</div>
+          <div class="m-text">
+            <strong>Depth beats breadth.</strong>
+            One well-understood pattern ships more value than ten half-understood ones.
+          </div>
+        </div>
+        <div class="m-row">
+          <div class="m-icon">🌐</div>
+          <div class="m-text">
+            <strong>Open everything.</strong>
+            Notes, code, Q&amp;A banks, system designs — free, in public, forever.
+          </div>
+        </div>
+        <div class="m-row">
+          <div class="m-icon">☀</div>
+          <div class="m-text">
+            <strong>Sun — सूर्य — source of energy.</strong>
+            Build tools that make people brighter.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-inner">
+    <div class="foot-brand">
+      <div class="foot-logo">☀</div>
+      <div>
+        <div class="foot-name">Suryaprakash Singh</div>
+        <div class="foot-role">AI Engineer · Open Curriculum</div>
+      </div>
+    </div>
+    <ul class="foot-links">
+      <li><a href="https://sundante.github.io/sun-course-genai" target="_blank" rel="noopener">Curriculum</a></li>
+      <li><a href="https://sunmintz.com/" target="_blank" rel="noopener">sunmintz.com</a></li>
+      <li><a href="https://github.com/sundante/sun-course-genai" target="_blank" rel="noopener">★ GitHub</a></li>
+    </ul>
+  </div>
+  <div class="foot-copy">
+    Built in public · सूर्य · Solar Yellow ·
+    <a href="https://github.com/sundante/sun-course-genai" target="_blank" rel="noopener"
+       style="color:rgba(255,218,71,0.35); text-decoration:none;">star the repo ★</a>
+  </div>
+</footer>
+
+</body>
+</html>

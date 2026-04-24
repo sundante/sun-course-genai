@@ -2,7 +2,7 @@
 ## Alternative Design: Version 2
 
 > **Role:** Senior Platform Architect / AI Practice Lead
-> **Question:** "A global automotive manufacturer wants to equip their 5,000 factory floor technicians with a Smart Diagnostic Assistant on phone or tablet. When a machine breaks down, the technician should be able to use the app to get step-by-step repair instructions. Design the end-to-end architecture."
+> **Question:** "A global automotive manufacturer wants to equip their factory floor technicians with a Smart Diagnostic Assistant on phone or tablet. When a machine breaks down, the technician should be able to use the app to get repair instructions. Design the end-to-end architecture."
 
 ---
 
