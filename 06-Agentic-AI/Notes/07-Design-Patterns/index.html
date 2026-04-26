@@ -72,6 +72,14 @@
     
     
 
+<!-- Open Graph / social card -->
+<meta property="og:title"       content="Learn AI: Generative AI to Agentic AI" />
+<meta property="og:description" content="A structured curriculum covering the full AI stack — from foundational LLMs and Generative AI through fully autonomous Agentic systems." />
+<meta property="og:image"       content="https://learngenai.sunmintz.com/assets/social-card.png" />
+<meta property="og:url"         content="https://learngenai.sunmintz.com/" />
+<meta property="og:type"        content="website" />
+<meta name="twitter:card"       content="summary_large_image" />
+<meta name="twitter:image"      content="https://learngenai.sunmintz.com/assets/social-card.png" />
 <!-- Supabase JS client -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
@@ -508,6 +516,117 @@ body.su-gated .md-content {
 /* Colored left edge on mode buttons — mirrors content block bars */
 .aud-btn[data-mode="tech"] { border-left: 3px solid #FFDA47; }
 .aud-btn[data-mode="biz"]  { border-left: 3px solid #3b82f6; }
+</style>
+
+<style>
+/* ── Feedback FAB ─────────────────────────────────────────────────────────── */
+#fb-fab-wrap {
+  position: fixed;
+  bottom: 4.2rem;
+  right: 1.5rem;
+  z-index: 7999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+}
+
+#fb-fab {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.32rem 0.7rem;
+  background: #111111;
+  border: 1.5px solid rgba(255,218,71,0.4);
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: rgba(255,255,255,0.65);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+  white-space: nowrap;
+}
+
+#fb-fab-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.65);
+  margin-right: 0.1rem;
+}
+
+.fb-fab-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.82rem;
+  padding: 0.08rem 0.12rem;
+  border-radius: 4px;
+  line-height: 1;
+  transition: transform 0.12s, background 0.12s;
+}
+.fb-fab-btn:hover { transform: scale(1.25); }
+.fb-fab-btn.fb-fab-active { background: rgba(255,218,71,0.18); border-radius: 4px; }
+
+#fb-popup {
+  display: none;
+  background: var(--md-default-bg-color, #ffffff);
+  border: 1.5px solid rgba(255,218,71,0.3);
+  border-radius: 10px;
+  padding: 0.85rem 0.95rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  width: 210px;
+}
+#fb-popup.fb-popup-open { display: block; }
+#fb-popup p {
+  font-size: 0.72rem;
+  color: var(--md-default-fg-color--light, #666);
+  margin: 0 0 0.4rem;
+  line-height: 1.45;
+}
+#fb-popup-msg {
+  width: 100%;
+  min-height: 54px;
+  padding: 0.38rem 0.52rem;
+  border-radius: 6px;
+  border: 1.5px solid rgba(0,0,0,0.12);
+  font-size: 0.72rem;
+  font-family: inherit;
+  background: #f6f5f2;
+  color: #111;
+  resize: none;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.14s;
+}
+#fb-popup-msg:focus { border-color: #FFDA47; }
+#fb-popup-msg::placeholder { color: rgba(0,0,0,0.35); }
+#fb-popup-submit {
+  margin-top: 0.38rem;
+  width: 100%;
+  padding: 0.3rem 0;
+  background: #111;
+  color: #FFDA47;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.71rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.14s;
+}
+#fb-popup-submit:hover { background: #333; }
+#fb-popup-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Dark mode */
+[data-md-color-scheme="slate"] #fb-popup {
+  box-shadow: 0 8px 32px rgba(0,0,0,0.38);
+}
+[data-md-color-scheme="slate"] #fb-popup-msg {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.13);
+  color: #fff;
+}
+[data-md-color-scheme="slate"] #fb-popup-msg::placeholder { color: rgba(255,255,255,0.3); }
 </style>
 
   </head>
@@ -6564,6 +6683,104 @@ A: A fixed HITL gate always pauses at a defined point — for example, "always g
   if (typeof document$ !== 'undefined') {
     document$.subscribe(injectBar);
   }
+}());
+</script>
+<script>
+/* ── Feedback FAB ──────────────────────────────────────────────────────────── */
+(function () {
+  var SUPABASE_URL = 'https://olprnrenlhgaaeihsyui.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_GJQFADdrqN3gKKnXe3jQ8w_1RaLLqnU';
+  var TABLE        = 'page_feedback';
+  var fb_client;
+
+  function getSlug()  { return window.location.pathname.replace(/\/$/, '') || '/'; }
+  function fbKey()    { return 'fb_v1_' + getSlug(); }
+  function hasVoted() { return !!localStorage.getItem(fbKey()); }
+  function markVoted(){ localStorage.setItem(fbKey(), '1'); }
+
+  function buildFAB() {
+    var wrap = document.createElement('div');
+    wrap.id = 'fb-fab-wrap';
+
+    if (hasVoted()) {
+      wrap.innerHTML =
+        '<div id="fb-fab"><span id="fb-fab-label">&#10003; Thanks!</span></div>';
+      return wrap;
+    }
+
+    wrap.innerHTML =
+      '<div id="fb-popup">' +
+        '<p>Any suggestions or corrections?<br>' +
+        '<span style="opacity:0.5;font-size:0.67rem">optional — hit Send to skip</span></p>' +
+        '<textarea id="fb-popup-msg" placeholder="What could be improved or added?"></textarea>' +
+        '<button id="fb-popup-submit">Send feedback</button>' +
+      '</div>' +
+      '<div id="fb-fab">' +
+        '<span id="fb-fab-label">Helpful?</span>' +
+        '<button class="fb-fab-btn" id="fb-btn-up" title="Yes, helpful">&#128077;</button>' +
+        '<button class="fb-fab-btn" id="fb-btn-down" title="Needs work">&#128078;</button>' +
+      '</div>';
+
+    var popup     = wrap.querySelector('#fb-popup');
+    var submitBtn = wrap.querySelector('#fb-popup-submit');
+    var msgEl     = wrap.querySelector('#fb-popup-msg');
+    var rating    = null;
+
+    function selectRating(r) {
+      rating = r;
+      wrap.querySelectorAll('.fb-fab-btn').forEach(function (b) { b.classList.remove('fb-fab-active'); });
+      wrap.querySelector('#fb-btn-' + r).classList.add('fb-fab-active');
+      popup.classList.add('fb-popup-open');
+    }
+
+    wrap.querySelector('#fb-btn-up').addEventListener('click',   function () { selectRating('up'); });
+    wrap.querySelector('#fb-btn-down').addEventListener('click',  function () { selectRating('down'); });
+
+    submitBtn.addEventListener('click', function () {
+      if (!rating) return;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending…';
+      var message = (msgEl.value || '').trim();
+
+      function finish() {
+        markVoted();
+        wrap.innerHTML =
+          '<div id="fb-fab"><span id="fb-fab-label">&#10003; Thanks!</span></div>';
+      }
+
+      if (fb_client) {
+        fb_client.from(TABLE).insert({
+          page_slug: getSlug(),
+          rating:    rating,
+          message:   message || null
+        }).then(finish, finish);
+      } else {
+        finish();
+      }
+    });
+
+    document.addEventListener('click', function (e) {
+      if (popup && !e.target.closest('#fb-fab-wrap')) {
+        popup.classList.remove('fb-popup-open');
+      }
+    });
+
+    return wrap;
+  }
+
+  function injectFAB() {
+    var old = document.getElementById('fb-fab-wrap');
+    if (old) old.remove();
+    if (!document.querySelector('article.md-content__inner')) return;
+    document.body.appendChild(buildFAB());
+  }
+
+  if (window.supabase) {
+    try { fb_client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch (e) {}
+  }
+
+  document.addEventListener('DOMContentLoaded', injectFAB);
+  if (typeof document$ !== 'undefined') { document$.subscribe(injectFAB); }
 }());
 </script>
 
