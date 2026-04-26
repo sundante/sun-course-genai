@@ -1,3 +1,10 @@
+---
+template: home.html
+hide:
+  - navigation
+  - toc
+---
+
 # GenAI Learning Curriculum
 
 > Self-paced, beginner-to-advanced coverage of the full modern GenAI stack —  
