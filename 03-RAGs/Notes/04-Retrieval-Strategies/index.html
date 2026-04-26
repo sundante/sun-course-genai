@@ -230,104 +230,15 @@
   color: #fff;
 }
 
-/* Topics — tag picker */
-.su-tp { position: relative; }
-.su-tp-field {
-  min-height: 2.4rem;
-  padding: 0.35rem 0.55rem 0.35rem 0.7rem;
-  border-radius: 7px;
-  border: 1.5px solid rgba(0,0,0,0.13);
-  font-family: inherit;
-  background: #f6f5f2;
-  cursor: pointer;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.3rem;
-  transition: border-color 0.14s, box-shadow 0.14s;
-  outline: none;
-}
-.su-tp.su-tp-open .su-tp-field,
-.su-tp-field:focus {
-  border-color: #FFDA47;
-  box-shadow: 0 0 0 3px rgba(255,218,71,0.22);
-}
-.su-tp-ph {
-  font-size: 0.81rem;
-  color: rgba(0,0,0,0.38);
-  flex: 1;
-  pointer-events: none;
-}
-.su-tp-ph span { opacity: 0.7; font-weight: 400; }
-.su-tp-arrow {
-  font-size: 0.6rem;
-  opacity: 0.4;
-  margin-left: auto;
-  flex-shrink: 0;
-  transition: transform 0.15s;
-  align-self: center;
-}
-.su-tp.su-tp-open .su-tp-arrow { transform: rotate(180deg); }
-
-/* Selected chips */
-.su-tp-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.22rem;
-  padding: 0.12rem 0.42rem;
-  background: #FFDA47;
-  color: #111;
-  border-radius: 4px;
-  font-size: 0.72rem;
+/* Field labels */
+.su-label {
+  font-size: 0.76rem;
   font-weight: 600;
-  white-space: nowrap;
+  color: var(--md-default-fg-color--light, #555);
+  display: block;
+  margin-bottom: 0.18rem;
 }
-.su-tp-chip-x {
-  cursor: pointer;
-  opacity: 0.55;
-  font-size: 0.85rem;
-  line-height: 1;
-}
-.su-tp-chip-x:hover { opacity: 1; }
-
-/* Dropdown panel */
-.su-tp-panel {
-  display: none;
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0; right: 0;
-  background: var(--md-default-bg-color, #fff);
-  border: 1.5px solid rgba(255,218,71,0.45);
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-  z-index: 200;
-  overflow: hidden;
-}
-.su-tp.su-tp-open .su-tp-panel { display: block; }
-.su-tp-item {
-  padding: 0.42rem 0.75rem;
-  font-size: 0.8rem;
-  cursor: pointer;
-  color: var(--md-default-fg-color, #111);
-  transition: background 0.1s;
-  user-select: none;
-}
-.su-tp-item:hover { background: rgba(255,218,71,0.14); }
-.su-tp-empty {
-  padding: 0.55rem 0.75rem;
-  font-size: 0.78rem;
-  color: rgba(0,0,0,0.38);
-  text-align: center;
-}
-
-[data-md-color-scheme="slate"] .su-tp-field {
-  background: rgba(255,255,255,0.07);
-  border-color: rgba(255,255,255,0.13);
-}
-[data-md-color-scheme="slate"] .su-tp-ph { color: rgba(255,255,255,0.32); }
-[data-md-color-scheme="slate"] .su-tp-item { color: rgba(255,255,255,0.85); }
-[data-md-color-scheme="slate"] .su-tp-item:hover { background: rgba(255,218,71,0.1); }
-[data-md-color-scheme="slate"] .su-tp-empty { color: rgba(255,255,255,0.35); }
+[data-md-color-scheme="slate"] .su-label { color: rgba(255,255,255,0.5); }
 
 /* Lighter placeholder text on selects */
 #su-form select.su-ph { color: rgba(0,0,0,0.38); }
@@ -5952,27 +5863,10 @@ A: MMR (Maximal Marginal Relevance) selects documents greedily: the first docume
 
   var client, isAuthed = false, injected = false;
 
-  var COUNTRIES = [
-    'Afghanistan','Argentina','Australia','Austria','Bangladesh','Belgium',
-    'Brazil','Canada','Chile','China','Colombia','Czech Republic','Denmark',
-    'Egypt','Ethiopia','Finland','France','Germany','Ghana','Greece',
-    'Hong Kong SAR','Hungary','India','Indonesia','Iran','Ireland','Israel',
-    'Italy','Japan','Kenya','Malaysia','Mexico','Netherlands','New Zealand',
-    'Nigeria','Norway','Pakistan','Peru','Philippines','Poland','Portugal',
-    'Romania','Russia','Saudi Arabia','Singapore','South Africa','South Korea',
-    'Spain','Sri Lanka','Sweden','Switzerland','Taiwan','Thailand','Turkey',
-    'Ukraine','United Arab Emirates','United Kingdom','United States',
-    'Vietnam','Other'
-  ];
-
   /* ── Inject widget HTML into DOM ── */
   function inject() {
     if (injected) return;
     injected = true;
-
-    var cOpts = COUNTRIES.map(function (c) {
-      return '<option value="' + c + '">' + c + '</option>';
-    }).join('');
 
     var el = document.createElement('div');
     el.innerHTML = [
@@ -5985,55 +5879,37 @@ A: MMR (Maximal Marginal Relevance) selects documents greedily: the first docume
             '<p id="su-sub">Be the first to know when new modules, code labs, and study guides drop.</p>',
           '</div>',
           '<form id="su-form" novalidate>',
-            '<p style="font-size:0.7rem;color:var(--md-default-fg-color--light,#888);margin:0 0 0.5rem;text-align:right;">All fields required</p>',
-            '<input type="text"  id="su-name"  placeholder="Full name" required />',
-            '<input type="email" id="su-email" placeholder="Email address" required />',
-            '<div class="su-row">',
-              '<select id="su-role" required>',
-                '<option value="">Role</option>',
-                '<option>Student</option><option>Engineer</option><option>Manager</option>',
-                '<option>Researcher</option><option>Recruiter</option><option>Other</option>',
-              '</select>',
-              '<select id="su-profession" required>',
-                '<option value="">Profession</option>',
-                '<option>Data Scientist</option><option>ML Engineer</option>',
-                '<option>Software Engineer</option><option>Product Manager</option>',
-                '<option>Recruiter</option><option>Educator</option>',
-                '<option>Student</option><option>Other</option>',
-              '</select>',
-            '</div>',
-            '<div class="su-row">',
-              '<select id="su-bg" required>',
-                '<option value="">Background</option>',
-                '<option>Technical</option><option>Non-Technical</option>',
-              '</select>',
-              '<select id="su-age" required>',
-                '<option value="">Age range</option>',
-                '<option>Under 18</option><option>18–24</option><option>25–34</option>',
-                '<option>35–44</option><option>45–54</option><option>55+</option>',
-              '</select>',
-            '</div>',
-            '<div class="su-tp" id="su-tp-topics">',
-              '<div class="su-tp-field" id="su-tp-field" tabindex="0">',
-                '<div id="su-tp-chips"></div>',
-                '<span class="su-tp-ph" id="su-tp-ph">Topics of interest</span>',
-                '<span class="su-tp-arrow">▾</span>',
-              '</div>',
-              '<div class="su-tp-panel" id="su-tp-panel"></div>',
-              '<input type="hidden" id="su-topics-val" />',
-            '</div>',
-            '<div class="su-row">',
-              '<select id="su-country" required><option value="">Country</option>' + cOpts + '</select>',
-              '<input type="text" id="su-city" placeholder="City" required />',
-            '</div>',
+            '<label class="su-label" for="su-name">Name <span style="opacity:0.5;font-size:0.9em">(optional)</span></label>',
+            '<input type="text" id="su-name" placeholder="Your name" autocomplete="name" />',
+            '<label class="su-label" for="su-email">Email <span style="color:#c0392b">*</span></label>',
+            '<input type="email" id="su-email" placeholder="you@example.com" autocomplete="email" required />',
+            '<label class="su-label" for="su-role">Your role</label>',
+            '<select id="su-role">',
+              '<option value="">Select...</option>',
+              '<option value="student">Student / Learner</option>',
+              '<option value="engineer">Software Engineer</option>',
+              '<option value="data">Data Scientist / ML Engineer</option>',
+              '<option value="product">Product Manager</option>',
+              '<option value="founder">Founder / Entrepreneur</option>',
+              '<option value="other">Other</option>',
+            '</select>',
+            '<label class="su-label" for="su-bg">Background</label>',
+            '<select id="su-bg">',
+              '<option value="">Select...</option>',
+              '<option value="technical">Technical</option>',
+              '<option value="non-technical">Non-technical</option>',
+              '<option value="mixed">Mixed / Transitioning</option>',
+            '</select>',
+            '<label class="su-label" for="su-country">Country</label>',
+            '<input type="text" id="su-country" placeholder="e.g. India" autocomplete="country-name" />',
             '<div id="su-err"></div>',
-            '<button type="submit" id="su-btn">Keep Learning →</button>',
-            '<p class="su-fine">No spam &middot; Magic link login &middot; Unsubscribe anytime</p>',
+            '<button type="submit" id="su-btn">Subscribe →</button>',
+            '<p class="su-fine">No spam &middot; Unsubscribe anytime</p>',
           '</form>',
           '<div id="su-ok">',
-            '<div class="su-ok-icon">&#10003;</div>',
-            '<h3>You\'re in.</h3>',
-            '<p>Check your inbox for a magic link &mdash; no password ever needed.</p>',
+            '<div class="su-ok-icon">&#128231;</div>',
+            '<h3>Check your inbox!</h3>',
+            '<p>Click the confirmation link we sent to complete your subscription.</p>',
             '<button id="su-ok-continue" type="button">Continue learning &rarr;</button>',
           '</div>',
         '</div>',
@@ -6051,69 +5927,6 @@ A: MMR (Maximal Marginal Relevance) selects documents greedily: the first docume
     document.getElementById('su-overlay').addEventListener('click', function (e) {
       if (e.target === this) closeModal();
     });
-
-    /* tag-picker topics */
-    (function () {
-      var ALL     = ['LLMs','Prompt Engineering','RAGs','MCP','Agents','Agentic AI'];
-      var chosen  = [];
-      var wrap    = document.getElementById('su-tp-topics');
-      var field   = document.getElementById('su-tp-field');
-      var chipsEl = document.getElementById('su-tp-chips');
-      var ph      = document.getElementById('su-tp-ph');
-      var panel   = document.getElementById('su-tp-panel');
-      var hidden  = document.getElementById('su-topics-val');
-
-      function renderPanel() {
-        var avail = ALL.filter(function (t) { return chosen.indexOf(t) === -1; });
-        panel.innerHTML = '';
-        if (!avail.length) {
-          panel.innerHTML = '<div class="su-tp-empty">All topics selected</div>';
-          return;
-        }
-        avail.forEach(function (t) {
-          var d = document.createElement('div');
-          d.className = 'su-tp-item';
-          d.textContent = t;
-          d.addEventListener('click', function (e) { e.stopPropagation(); pick(t); });
-          panel.appendChild(d);
-        });
-      }
-
-      function renderChips() {
-        chipsEl.innerHTML = '';
-        chosen.forEach(function (t) {
-          var chip = document.createElement('span');
-          chip.className = 'su-tp-chip';
-          chip.innerHTML = t + ' <span class="su-tp-chip-x">&times;</span>';
-          chip.querySelector('.su-tp-chip-x').addEventListener('click', function (e) {
-            e.stopPropagation();
-            unpick(t);
-          });
-          chipsEl.appendChild(chip);
-        });
-        ph.style.display = chosen.length ? 'none' : '';
-        hidden.value = chosen.join(',');
-      }
-
-      function pick(t) {
-        if (chosen.indexOf(t) === -1) { chosen.push(t); renderChips(); renderPanel(); }
-      }
-      function unpick(t) {
-        chosen = chosen.filter(function (s) { return s !== t; });
-        renderChips();
-        renderPanel();
-      }
-
-      field.addEventListener('click', function () {
-        var open = wrap.classList.toggle('su-tp-open');
-        if (open) renderPanel();
-      });
-      document.addEventListener('click', function (e) {
-        if (!e.target.closest('#su-tp-topics')) wrap.classList.remove('su-tp-open');
-      });
-
-      renderChips();
-    }());
 
     /* lighter placeholder for selects */
     document.querySelectorAll('#su-form select').forEach(function (sel) {
@@ -6160,73 +5973,49 @@ A: MMR (Maximal Marginal Relevance) selects documents greedily: the first docume
   /* ── Form submission ── */
   async function onSubmit(e) {
     e.preventDefault();
-    var name  = document.getElementById('su-name').value.trim();
-    var email = document.getElementById('su-email').value.trim();
-
-    var role       = document.getElementById('su-role').value;
-    var profession = document.getElementById('su-profession').value;
-    var bg         = document.getElementById('su-bg').value;
-    var age        = document.getElementById('su-age').value;
-    var topics     = document.getElementById('su-topics-val').value;
-    var country    = document.getElementById('su-country').value;
-    var city       = document.getElementById('su-city').value.trim();
-
-    if (!name)                                              { showErr('Please enter your name.'); return; }
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('Please enter a valid email address.'); return; }
-    if (!role)                                              { showErr('Please select your role.'); return; }
-    if (!profession)                                        { showErr('Please select your profession.'); return; }
-    if (!bg)                                                { showErr('Please select your background type.'); return; }
-    if (!age)                                               { showErr('Please select your age range.'); return; }
-    if (!topics)                                            { showErr('Please select at least one topic of interest.'); return; }
-    if (!country)                                           { showErr('Please select your country.'); return; }
-    if (!city)                                              { showErr('Please enter your city.'); return; }
+    var name    = (document.getElementById('su-name').value    || '').trim() || null;
+    var email   = (document.getElementById('su-email').value   || '').trim();
+    var role    = document.getElementById('su-role').value     || null;
+    var bg      = document.getElementById('su-bg').value       || null;
+    var country = (document.getElementById('su-country').value || '').trim() || null;
 
     clearErr();
 
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showErr('Please enter a valid email address.');
+      return;
+    }
+
     var btn = document.getElementById('su-btn');
     btn.disabled = true;
-    btn.textContent = 'Sending magic link…';
+    btn.textContent = 'Subscribing…';
 
     try {
-      var res = await client.auth.signInWithOtp({
-        email: email,
-        options: {
-          emailRedirectTo: window.location.href,
-          data: {
-            name:            name,
-            role:            document.getElementById('su-role').value,
-            profession:      document.getElementById('su-profession').value,
-            background_type: document.getElementById('su-bg').value,
-            age_range:       document.getElementById('su-age').value,
-            topics:          topics,
-            city:            city,
-            country:         country,
-            course_name:     COURSE
-          }
-        }
-      });
-      if (res.error) throw res.error;
+      if (!client) throw new Error('Client not ready — please refresh and try again.');
 
-      /* best-effort profile insert — fire and forget, never blocks the UX */
-      client.from('profiles').insert({
+      /* Insert subscriber row (unconfirmed — confirmed=true when they click the link) */
+      await client.from('subscribers').insert({
         email:           email,
         name:            name,
         role:            role,
-        profession:      profession,
         background_type: bg,
-        age_range:       age,
-        topics:          topics,
-        city:            city,
         country:         country,
-        course_name:     COURSE
-      }).then(null, function (err) { console.error('[profiles insert]', err); });
+        source:          window.location.pathname
+      });
+
+      /* Send confirmation email via magic link (uses SMTP + custom template) */
+      var res = await client.auth.signInWithOtp({
+        email: email,
+        options: { emailRedirectTo: window.location.origin }
+      });
+      if (res.error) throw res.error;
 
       document.getElementById('su-form').style.display = 'none';
       document.getElementById('su-ok').classList.add('su-on');
     } catch (err) {
       showErr(err.message || 'Something went wrong. Please try again.');
       btn.disabled = false;
-      btn.textContent = 'Keep Learning →';
+      btn.textContent = 'Subscribe →';
     }
   }
 
@@ -6275,6 +6064,14 @@ A: MMR (Maximal Marginal Relevance) selects documents greedily: the first docume
         localStorage.removeItem(IC_KEY);
         localStorage.removeItem(DISMISS_KEY);
         hideGate();
+
+        /* Mark subscriber as confirmed when they click the magic link */
+        if (session.user && session.user.email) {
+          client.from('subscribers')
+            .update({ confirmed: true })
+            .eq('email', session.user.email)
+            .then(null, function (err) { console.error('[subscribers confirm]', err); });
+        }
       }
     });
 
