@@ -504,6 +504,10 @@ body.su-gated .md-content {
   border-color: #FFDA47 !important;
   color: #111111 !important;
 }
+
+/* Colored left edge on mode buttons — mirrors content block bars */
+.aud-btn[data-mode="tech"] { border-left: 3px solid #FFDA47; }
+.aud-btn[data-mode="biz"]  { border-left: 3px solid #3b82f6; }
 </style>
 
   </head>
@@ -6141,7 +6145,7 @@ Softmax is <code>exp(x_i) / Σ exp(x_j)</code>. With large magnitude differences
         '<div class="aud-btns">' +
           '<button class="aud-btn' + (mode === 'all'  ? ' aud-btn--active' : '') + '" data-mode="all">All</button>' +
           '<button class="aud-btn' + (mode === 'tech' ? ' aud-btn--active' : '') + '" data-mode="tech">Technical</button>' +
-          '<button class="aud-btn' + (mode === 'biz'  ? ' aud-btn--active' : '') + '" data-mode="biz">Business</button>' +
+          '<button class="aud-btn' + (mode === 'biz'  ? ' aud-btn--active' : '') + '" data-mode="biz">Non-Technical</button>' +
         '</div>';
       bar.querySelectorAll('.aud-btn').forEach(function (btn) {
         btn.addEventListener('click', function () { setMode(btn.dataset.mode); });
@@ -6150,10 +6154,10 @@ Softmax is <code>exp(x_i) / Σ exp(x_j)</code>. With large magnitude differences
       bar.innerHTML =
         '<span class="aud-bar-label">View as</span>' +
         '<div class="aud-btns">' +
-          '<button class="aud-btn aud-btn--active" disabled>Technical</button>' +
-          '<button class="aud-btn" disabled>Business</button>' +
+          '<button class="aud-btn aud-btn--active" data-mode="tech" disabled>Technical</button>' +
+          '<button class="aud-btn" data-mode="biz" disabled>Non-Technical</button>' +
         '</div>' +
-        '<span class="aud-soon">Business view coming soon for this section</span>';
+        '<span class="aud-soon">Non-Technical view coming soon for this section</span>';
     }
     return bar;
   }
