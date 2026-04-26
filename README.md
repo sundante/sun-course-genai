@@ -1,6 +1,6 @@
-# GenAI Learning Curriculum
+# Learn AI: Generative AI to Agentic AI
 
-A structured, beginner-to-advanced curriculum covering the full modern GenAI stack — from foundational LLMs through autonomous agentic systems — with prose notes, code labs, and interview Q&A.
+A structured, beginner-to-advanced curriculum covering the full AI stack — from foundational LLMs and Generative AI through fully autonomous Agentic systems — with prose notes, code labs, and interview Q&A.
 
 **Live site:** [sundante.github.io/sun-course-genai](https://sundante.github.io/sun-course-genai)
 

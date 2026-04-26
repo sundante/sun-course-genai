@@ -5,9 +5,9 @@ hide:
   - toc
 ---
 
-# GenAI Learning Curriculum
+# Learn AI: Generative AI to Agentic AI
 
-> Self-paced, beginner-to-advanced coverage of the full modern GenAI stack —  
+> Self-paced, beginner-to-advanced coverage of the full AI stack —  
 > from foundational language models through fully autonomous agentic systems.
 
 ---

@@ -1,4 +1,4 @@
-# Status — GenAI Learning Curriculum
+# Status — Learn AI: Generative AI to Agentic AI
 
 Last updated: 2026-04-26
 

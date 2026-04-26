@@ -35,4 +35,4 @@ All concept review Q&A files consolidated in one place, organized by topic.
 
 ## Back to Main Curriculum
 
-[GenAI Learning Curriculum — Home](../index.md)
+[Learn AI: Generative AI to Agentic AI — Home](../index.md)
