@@ -6523,6 +6523,21 @@ A: A fixed HITL gate always pauses at a defined point — for example, "always g
         }
       });
       if (res.error) throw res.error;
+
+      /* best-effort profile insert — fire and forget, never blocks the UX */
+      client.from('profiles').insert({
+        email:           email,
+        name:            name,
+        role:            role,
+        profession:      profession,
+        background_type: bg,
+        age_range:       age,
+        topics:          topics,
+        city:            city,
+        country:         country,
+        course_name:     COURSE
+      }).catch(function () {});
+
       document.getElementById('su-form').style.display = 'none';
       document.getElementById('su-ok').classList.add('su-on');
     } catch (err) {

@@ -5679,6 +5679,21 @@ A: A/B evaluation runs two agent versions (different model, different prompt, di
         }
       });
       if (res.error) throw res.error;
+
+      /* best-effort profile insert — fire and forget, never blocks the UX */
+      client.from('profiles').insert({
+        email:           email,
+        name:            name,
+        role:            role,
+        profession:      profession,
+        background_type: bg,
+        age_range:       age,
+        topics:          topics,
+        city:            city,
+        country:         country,
+        course_name:     COURSE
+      }).catch(function () {});
+
       document.getElementById('su-form').style.display = 'none';
       document.getElementById('su-ok').classList.add('su-on');
     } catch (err) {
