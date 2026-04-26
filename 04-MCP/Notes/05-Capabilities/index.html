@@ -619,6 +619,23 @@ body.su-gated .md-content {
 #fb-popup-submit:hover { background: #333; }
 #fb-popup-submit:disabled { opacity: 0.5; cursor: not-allowed; }
 
+#fb-popup-email {
+  width: 100%;
+  padding: 0.38rem 0.52rem;
+  border-radius: 6px;
+  border: 1.5px solid rgba(0,0,0,0.12);
+  font-size: 0.72rem;
+  font-family: inherit;
+  background: #f6f5f2;
+  color: #111;
+  outline: none;
+  box-sizing: border-box;
+  margin-top: 0.4rem;
+  transition: border-color 0.14s;
+}
+#fb-popup-email:focus { border-color: #FFDA47; }
+#fb-popup-email::placeholder { color: rgba(0,0,0,0.35); }
+
 /* Dark mode */
 [data-md-color-scheme="slate"] #fb-popup {
   box-shadow: 0 8px 32px rgba(0,0,0,0.38);
@@ -629,6 +646,8 @@ body.su-gated .md-content {
   color: #fff;
 }
 [data-md-color-scheme="slate"] #fb-popup-msg::placeholder { color: rgba(255,255,255,0.3); }
+[data-md-color-scheme="slate"] #fb-popup-email { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.13); color: #fff; }
+[data-md-color-scheme="slate"] #fb-popup-email::placeholder { color: rgba(255,255,255,0.3); }
 </style>
 
   </head>
@@ -6574,16 +6593,24 @@ body.su-gated .md-content {
       '<path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>' +
       '</svg>';
 
+    var xSvg =
+      '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true" style="flex-shrink:0">' +
+      '<path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.261 5.635 5.903-5.635zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>' +
+      '</svg>';
+
     var cta = document.createElement("div");
     cta.className = "sun-header-cta";
     cta.innerHTML =
       '<a href="https://sunmintz.com/" target="_blank" rel="noopener" class="sun-hbtn sun-hbtn--primary">' +
-        sunSvg + ' sunmintz.com' +
+        sunSvg + ' a sunmintz initiative' +
       '</a>' +
       '<span class="sun-author-group">' +
         '<span class="sun-author-label">Author</span>' +
         '<a href="https://www.linkedin.com/in/suryaprakash-s-singh/" target="_blank" rel="noopener" class="sun-hbtn sun-hbtn--icon" aria-label="LinkedIn">' +
           linkedinSvg +
+        '</a>' +
+        '<a href="https://x.com/sunsindante" target="_blank" rel="noopener" class="sun-hbtn sun-hbtn--icon" aria-label="X / Twitter">' +
+          xSvg +
         '</a>' +
         '<a href="https://github.com/sundante" target="_blank" rel="noopener" class="sun-hbtn sun-hbtn--icon" aria-label="GitHub profile">' +
           githubSvg +
@@ -7051,44 +7078,22 @@ body.su-gated .md-content {
 <script>
 /* ── Feedback FAB ──────────────────────────────────────────────────────────── */
 (function () {
-  var TABLE       = 'page_feedback';
-  var PENDING_KEY = 'fb_pending';
+  var TABLE = 'page_feedback';
 
-  function getSlug()          { return window.location.pathname.replace(/\/$/, '') || '/'; }
-  function fbKey(slug)        { return 'fb_v1_' + (slug || getSlug()); }
-  function hasVoted(slug)     { return !!localStorage.getItem(fbKey(slug)); }
-  function markVoted(slug)    { localStorage.setItem(fbKey(slug), '1'); }
-
-  function getClient()        { return window.suAuth || null; }
-
-  function getSession(cb) {
-    var c = getClient();
-    if (!c) { cb(null); return; }
-    c.auth.getSession().then(function (res) {
-      cb(res.data && res.data.session ? res.data.session : null);
-    }, function () { cb(null); });
-  }
+  function getSlug()       { return window.location.pathname.replace(/\/$/, '') || '/'; }
+  function fbKey()         { return 'fb_v1_' + getSlug(); }
+  function hasVoted()      { return !!localStorage.getItem(fbKey()); }
+  function markVoted()     { localStorage.setItem(fbKey(), '1'); }
+  function getClient()     { return window.suAuth || null; }
 
   function doInsert(payload) {
     var c = getClient();
-    if (!c) return;
+    if (!c) { markVoted(); return; }
     c.from(TABLE).insert(payload).then(function () {
-      markVoted(payload.page_slug);
-      localStorage.removeItem(PENDING_KEY);
+      markVoted();
     }, function (err) {
       console.error('[feedback insert]', err);
-      localStorage.removeItem(PENDING_KEY);
     });
-  }
-
-  /* submit pending feedback saved before auth redirect */
-  function flushPending(session) {
-    var raw = localStorage.getItem(PENDING_KEY);
-    if (!raw) return;
-    try {
-      var p = JSON.parse(raw);
-      doInsert({ page_slug: p.slug, rating: p.rating, message: p.message || null, user_id: session.user.id });
-    } catch (e) { localStorage.removeItem(PENDING_KEY); }
   }
 
   function buildFAB() {
@@ -7102,9 +7107,10 @@ body.su-gated .md-content {
 
     wrap.innerHTML =
       '<div id="fb-popup">' +
-        '<p id="fb-popup-msg-label">Any suggestions or corrections?<br>' +
-        '<span style="opacity:0.5;font-size:0.67rem">optional — hit Send to skip</span></p>' +
+        '<p>Any suggestions or corrections?<br>' +
+        '<span style="opacity:0.5;font-size:0.67rem">all fields optional</span></p>' +
         '<textarea id="fb-popup-msg" placeholder="What could be improved or added?"></textarea>' +
+        '<input id="fb-popup-email" type="email" placeholder="Your email (optional)" />' +
         '<button id="fb-popup-submit">Send feedback</button>' +
       '</div>' +
       '<div id="fb-fab">' +
@@ -7116,6 +7122,7 @@ body.su-gated .md-content {
     var popup     = wrap.querySelector('#fb-popup');
     var submitBtn = wrap.querySelector('#fb-popup-submit');
     var msgEl     = wrap.querySelector('#fb-popup-msg');
+    var emailEl   = wrap.querySelector('#fb-popup-email');
     var rating    = null;
 
     function selectRating(r) {
@@ -7125,27 +7132,20 @@ body.su-gated .md-content {
       popup.classList.add('fb-popup-open');
     }
 
-    wrap.querySelector('#fb-btn-up').addEventListener('click',   function () { selectRating('up'); });
-    wrap.querySelector('#fb-btn-down').addEventListener('click',  function () { selectRating('down'); });
+    wrap.querySelector('#fb-btn-up').addEventListener('click',  function () { selectRating('up'); });
+    wrap.querySelector('#fb-btn-down').addEventListener('click', function () { selectRating('down'); });
 
     submitBtn.addEventListener('click', function () {
       if (!rating) return;
-      var message = (msgEl.value || '').trim();
-
-      getSession(function (session) {
-        if (session) {
-          /* authenticated — submit with user_id */
-          submitBtn.disabled = true;
-          submitBtn.textContent = 'Sending…';
-          doInsert({ page_slug: getSlug(), rating: rating, message: message || null, user_id: session.user.id });
-          wrap.innerHTML = '<div id="fb-fab"><span id="fb-fab-label">&#10003; Thanks!</span></div>';
-        } else {
-          /* not authenticated — save pending, open signup modal */
-          localStorage.setItem(PENDING_KEY, JSON.stringify({ slug: getSlug(), rating: rating, message: message || null }));
-          popup.classList.remove('fb-popup-open');
-          if (window.suOpenModal) window.suOpenModal();
-        }
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending…';
+      doInsert({
+        page_slug: getSlug(),
+        rating:    rating,
+        message:   (msgEl.value || '').trim() || null,
+        email:     (emailEl.value || '').trim() || null
       });
+      wrap.innerHTML = '<div id="fb-fab"><span id="fb-fab-label">&#10003; Thanks!</span></div>';
     });
 
     document.addEventListener('click', function (e) {
@@ -7162,21 +7162,7 @@ body.su-gated .md-content {
     document.body.appendChild(buildFAB());
   }
 
-  /* after sign-in (including magic link redirect) flush any pending feedback */
-  function watchAuth() {
-    var c = getClient();
-    if (!c) return;
-    c.auth.onAuthStateChange(function (event, session) {
-      if (event === 'SIGNED_IN' && session) flushPending(session);
-    });
-    /* also check immediately on load (magic link redirect lands here authed) */
-    getSession(function (session) { if (session) flushPending(session); });
-  }
-
-  document.addEventListener('DOMContentLoaded', function () {
-    injectFAB();
-    watchAuth();
-  });
+  document.addEventListener('DOMContentLoaded', injectFAB);
   if (typeof document$ !== 'undefined') { document$.subscribe(injectFAB); }
 }());
 </script>
