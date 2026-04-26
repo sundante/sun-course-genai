@@ -135,7 +135,7 @@
   border: 1.5px solid rgba(255,218,71,0.3);
 }
 
-/* Close button (voluntary opens only) */
+/* Close button — always visible */
 #su-close {
   position: absolute;
   top: 1rem;
@@ -148,11 +148,10 @@
   border-radius: 5px;
   color: var(--md-default-fg-color--light, #888);
   cursor: pointer;
-  display: none;
+  display: block;
   transition: background 0.12s;
 }
 #su-close:hover { background: rgba(0,0,0,0.07); }
-#su-modal.su-voluntary #su-close { display: block; }
 
 /* Header */
 .su-hdr { margin-bottom: 1.4rem; }
@@ -387,8 +386,23 @@
 #su-ok p {
   font-size: 0.83rem;
   color: var(--md-default-fg-color--light, #555);
-  margin: 0;
+  margin: 0 0 1rem;
 }
+#su-ok-continue {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  background: #FFDA47;
+  color: #111111;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.87rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.14s;
+  letter-spacing: -0.01em;
+}
+#su-ok-continue:hover { background: #E8C200; }
 
 /* Content gate: blur main content area */
 body.su-gated .md-content {
@@ -5976,11 +5990,13 @@ A: At task start: query semantic memory (vector search) for knowledge relevant t
    credentials from https://app.supabase.com → Settings → API
    ──────────────────────────────────────────────────────────────────────── */
 (function () {
-  var SUPABASE_URL = 'YOUR_SUPABASE_URL';        // e.g. https://xxxx.supabase.co
-  var SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';   // "anon public" key
-  var COURSE       = 'GenAI Curriculum';
-  var GATE_AT      = 5;   // number of page views before gate shows
-  var VIEWS_KEY    = 'genai_pv';
+  var SUPABASE_URL = 'https://olprnrenlhgaaeihsyui.supabase.co';        // e.g. https://xxxx.supabase.co
+  var SUPABASE_KEY = 'sb_publishable_GJQFADdrqN3gKKnXe3jQ8w_1RaLLqnU';   // "anon public" key
+  var COURSE      = 'GenAI Curriculum';
+  var GATE_AT     = 5;                 // clicks before gate shows
+  var IC_KEY      = 'genai_ic';        // interaction click count
+  var DISMISS_KEY = 'genai_dismissed'; // timestamp of last dismissal
+  var COOL_DAYS   = 30;                // days of free browsing after dismissal
 
   var client, isAuthed = false, injected = false;
 
@@ -6065,6 +6081,7 @@ A: At task start: query semantic memory (vector search) for knowledge relevant t
             '<div class="su-ok-icon">&#10003;</div>',
             '<h3>You\'re in.</h3>',
             '<p>Check your inbox for a magic link &mdash; no password ever needed.</p>',
+            '<button id="su-ok-continue" type="button">Continue learning &rarr;</button>',
           '</div>',
         '</div>',
       '</div>',
@@ -6076,11 +6093,10 @@ A: At task start: query semantic memory (vector search) for knowledge relevant t
     /* bind events */
     document.getElementById('su-fab').addEventListener('click', openVoluntary);
     document.getElementById('su-close').addEventListener('click', closeModal);
+    document.getElementById('su-ok-continue').addEventListener('click', closeModal);
     document.getElementById('su-form').addEventListener('submit', onSubmit);
     document.getElementById('su-overlay').addEventListener('click', function (e) {
-      if (e.target === this && document.getElementById('su-modal').classList.contains('su-voluntary')) {
-        closeModal();
-      }
+      if (e.target === this) closeModal();
     });
 
     /* tag-picker topics */
@@ -6176,6 +6192,11 @@ A: At task start: query semantic memory (vector search) for knowledge relevant t
 
   function closeModal() {
     document.getElementById('su-overlay').classList.remove('su-open');
+    document.body.classList.remove('su-gated');
+    if (!isAuthed) {
+      localStorage.setItem(DISMISS_KEY, String(Date.now()));
+      localStorage.setItem(IC_KEY, '0');
+    }
   }
 
   function hideGate() {
@@ -6252,22 +6273,26 @@ A: At task start: query semantic memory (vector search) for knowledge relevant t
     el.classList.remove('su-on');
   }
 
-  /* ── Gate check (runs on each page view) ── */
+  /* ── Gate check — session + cool-down only, no counter increment ── */
   async function checkGate() {
-    if (!client) return;
+    if (!client || isAuthed) return;
     var sess = await client.auth.getSession();
     isAuthed = !!(sess.data && sess.data.session);
     if (isAuthed) { hideGate(); return; }
 
-    var v = parseInt(localStorage.getItem(VIEWS_KEY) || '0') + 1;
-    localStorage.setItem(VIEWS_KEY, String(v));
-    if (v >= GATE_AT) openGate();
+    var dismissed = parseInt(localStorage.getItem(DISMISS_KEY) || '0');
+    if (dismissed) {
+      var daysSince = (Date.now() - dismissed) / 86400000;
+      if (daysSince < COOL_DAYS) return;       // still in cool-down
+      localStorage.removeItem(DISMISS_KEY);     // cool-down expired — reset
+      localStorage.setItem(IC_KEY, '0');
+    }
   }
 
   /* ── Init ── */
   function init() {
-    inject(); // always show the button regardless of Supabase state
-    window.suOpenModal = openVoluntary; // expose for home page CTA buttons
+    inject();
+    window.suOpenModal = openVoluntary;
 
     if (!window.supabase || SUPABASE_URL === 'YOUR_SUPABASE_URL') return;
 
@@ -6278,17 +6303,26 @@ A: At task start: query semantic memory (vector search) for knowledge relevant t
     client.auth.onAuthStateChange(function (event, session) {
       if (event === 'SIGNED_IN' && session) {
         isAuthed = true;
-        localStorage.setItem(VIEWS_KEY, '0');
+        localStorage.removeItem(IC_KEY);
+        localStorage.removeItem(DISMISS_KEY);
         hideGate();
       }
     });
 
     checkGate();
 
-    /* Re-run gate check on MkDocs Material instant navigation */
-    if (typeof document$ !== 'undefined') {
-      document$.subscribe(function () { checkGate(); });
-    }
+    /* Click-interaction counter — fires on every click except modal + FAB */
+    document.addEventListener('click', function (e) {
+      if (isAuthed) return;
+      if (e.target.closest('#su-overlay') || e.target.closest('#su-fab')) return;
+
+      var dismissed = parseInt(localStorage.getItem(DISMISS_KEY) || '0');
+      if (dismissed && (Date.now() - dismissed) / 86400000 < COOL_DAYS) return;
+
+      var ic = parseInt(localStorage.getItem(IC_KEY) || '0') + 1;
+      localStorage.setItem(IC_KEY, String(ic));
+      if (ic >= GATE_AT) openGate();
+    }, true);
   }
 
   document.addEventListener('DOMContentLoaded', init);
