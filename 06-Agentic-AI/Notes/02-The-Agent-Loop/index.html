@@ -6127,15 +6127,15 @@ A: Sequential calls execute one tool, wait for the result, then call the next �
     try {
       if (!client) throw new Error('Client not ready — please refresh and try again.');
 
-      /* Insert subscriber row (unconfirmed — confirmed=true when they click the link) */
-      await client.from('subscribers').insert({
+      /* Upsert subscriber row — no duplicate, preserves confirmed status on re-subscribe */
+      await client.from('subscribers').upsert({
         email:           email,
         name:            name,
         role:            role,
         background_type: bg,
         country:         country,
         source:          window.location.pathname
-      });
+      }, { onConflict: 'email' });
 
       /* Send confirmation email via magic link (uses SMTP + custom template) */
       var res = await client.auth.signInWithOtp({
