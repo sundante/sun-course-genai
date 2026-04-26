@@ -6507,8 +6507,13 @@ A: Decomposition quality determines the quality of everything downstream — a b
     if (!inner) return;
 
     var githubSvg =
-      '<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true" style="flex-shrink:0">' +
+      '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true" style="flex-shrink:0">' +
       '<path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>' +
+      '</svg>';
+
+    var linkedinSvg =
+      '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true" style="flex-shrink:0">' +
+      '<path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>' +
       '</svg>';
 
     var sunSvg =
@@ -6523,9 +6528,15 @@ A: Decomposition quality determines the quality of everything downstream — a b
       '<a href="https://sunmintz.com/" target="_blank" rel="noopener" class="sun-hbtn sun-hbtn--primary">' +
         sunSvg + ' sunmintz.com' +
       '</a>' +
-      '<a href="https://github.com/sundante/sun-course-genai" target="_blank" rel="noopener" class="sun-hbtn">' +
-        githubSvg + ' GitHub' +
-      '</a>';
+      '<span class="sun-author-group">' +
+        '<span class="sun-author-label">Author</span>' +
+        '<a href="https://www.linkedin.com/in/suryaprakash-s-singh/" target="_blank" rel="noopener" class="sun-hbtn sun-hbtn--icon" aria-label="LinkedIn">' +
+          linkedinSvg +
+        '</a>' +
+        '<a href="https://github.com/sundante" target="_blank" rel="noopener" class="sun-hbtn sun-hbtn--icon" aria-label="GitHub profile">' +
+          githubSvg +
+        '</a>' +
+      '</span>';
 
     var search = inner.querySelector(".md-search");
     if (search) {
@@ -6584,6 +6595,7 @@ A: Decomposition quality determines the quality of everything downstream — a b
             '<p id="su-sub">Be the first to know when new modules, code labs, and study guides drop.</p>',
           '</div>',
           '<form id="su-form" novalidate>',
+            '<p style="font-size:0.7rem;color:var(--md-default-fg-color--light,#888);margin:0 0 0.5rem;text-align:right;">All fields required</p>',
             '<input type="text"  id="su-name"  placeholder="Full name" required />',
             '<input type="email" id="su-email" placeholder="Email address" required />',
             '<div class="su-row">',
@@ -6817,7 +6829,7 @@ A: Decomposition quality determines the quality of everything downstream — a b
         city:            city,
         country:         country,
         course_name:     COURSE
-      }).then(null, function () {});
+      }).then(null, function (err) { console.error('[profiles insert]', err); });
 
       document.getElementById('su-form').style.display = 'none';
       document.getElementById('su-ok').classList.add('su-on');
@@ -6864,6 +6876,7 @@ A: Decomposition quality determines the quality of everything downstream — a b
 
     try {
       client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      window.suAuth = client;
     } catch (e) { return; }
 
     client.auth.onAuthStateChange(function (event, session) {
@@ -6986,29 +6999,58 @@ A: Decomposition quality determines the quality of everything downstream — a b
 <script>
 /* ── Feedback FAB ──────────────────────────────────────────────────────────── */
 (function () {
-  var SUPABASE_URL = 'https://olprnrenlhgaaeihsyui.supabase.co';
-  var SUPABASE_KEY = 'sb_publishable_GJQFADdrqN3gKKnXe3jQ8w_1RaLLqnU';
-  var TABLE        = 'page_feedback';
-  var fb_client;
+  var TABLE       = 'page_feedback';
+  var PENDING_KEY = 'fb_pending';
 
-  function getSlug()  { return window.location.pathname.replace(/\/$/, '') || '/'; }
-  function fbKey()    { return 'fb_v1_' + getSlug(); }
-  function hasVoted() { return !!localStorage.getItem(fbKey()); }
-  function markVoted(){ localStorage.setItem(fbKey(), '1'); }
+  function getSlug()          { return window.location.pathname.replace(/\/$/, '') || '/'; }
+  function fbKey(slug)        { return 'fb_v1_' + (slug || getSlug()); }
+  function hasVoted(slug)     { return !!localStorage.getItem(fbKey(slug)); }
+  function markVoted(slug)    { localStorage.setItem(fbKey(slug), '1'); }
+
+  function getClient()        { return window.suAuth || null; }
+
+  function getSession(cb) {
+    var c = getClient();
+    if (!c) { cb(null); return; }
+    c.auth.getSession().then(function (res) {
+      cb(res.data && res.data.session ? res.data.session : null);
+    }, function () { cb(null); });
+  }
+
+  function doInsert(payload) {
+    var c = getClient();
+    if (!c) return;
+    c.from(TABLE).insert(payload).then(function () {
+      markVoted(payload.page_slug);
+      localStorage.removeItem(PENDING_KEY);
+    }, function (err) {
+      console.error('[feedback insert]', err);
+      localStorage.removeItem(PENDING_KEY);
+    });
+  }
+
+  /* submit pending feedback saved before auth redirect */
+  function flushPending(session) {
+    var raw = localStorage.getItem(PENDING_KEY);
+    if (!raw) return;
+    try {
+      var p = JSON.parse(raw);
+      doInsert({ page_slug: p.slug, rating: p.rating, message: p.message || null, user_id: session.user.id });
+    } catch (e) { localStorage.removeItem(PENDING_KEY); }
+  }
 
   function buildFAB() {
     var wrap = document.createElement('div');
     wrap.id = 'fb-fab-wrap';
 
     if (hasVoted()) {
-      wrap.innerHTML =
-        '<div id="fb-fab"><span id="fb-fab-label">&#10003; Thanks!</span></div>';
+      wrap.innerHTML = '<div id="fb-fab"><span id="fb-fab-label">&#10003; Thanks!</span></div>';
       return wrap;
     }
 
     wrap.innerHTML =
       '<div id="fb-popup">' +
-        '<p>Any suggestions or corrections?<br>' +
+        '<p id="fb-popup-msg-label">Any suggestions or corrections?<br>' +
         '<span style="opacity:0.5;font-size:0.67rem">optional — hit Send to skip</span></p>' +
         '<textarea id="fb-popup-msg" placeholder="What could be improved or added?"></textarea>' +
         '<button id="fb-popup-submit">Send feedback</button>' +
@@ -7036,31 +7078,26 @@ A: Decomposition quality determines the quality of everything downstream — a b
 
     submitBtn.addEventListener('click', function () {
       if (!rating) return;
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Sending…';
       var message = (msgEl.value || '').trim();
 
-      function finish() {
-        markVoted();
-        wrap.innerHTML =
-          '<div id="fb-fab"><span id="fb-fab-label">&#10003; Thanks!</span></div>';
-      }
-
-      if (fb_client) {
-        fb_client.from(TABLE).insert({
-          page_slug: getSlug(),
-          rating:    rating,
-          message:   message || null
-        }).then(finish, finish);
-      } else {
-        finish();
-      }
+      getSession(function (session) {
+        if (session) {
+          /* authenticated — submit with user_id */
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Sending…';
+          doInsert({ page_slug: getSlug(), rating: rating, message: message || null, user_id: session.user.id });
+          wrap.innerHTML = '<div id="fb-fab"><span id="fb-fab-label">&#10003; Thanks!</span></div>';
+        } else {
+          /* not authenticated — save pending, open signup modal */
+          localStorage.setItem(PENDING_KEY, JSON.stringify({ slug: getSlug(), rating: rating, message: message || null }));
+          popup.classList.remove('fb-popup-open');
+          if (window.suOpenModal) window.suOpenModal();
+        }
+      });
     });
 
     document.addEventListener('click', function (e) {
-      if (popup && !e.target.closest('#fb-fab-wrap')) {
-        popup.classList.remove('fb-popup-open');
-      }
+      if (popup && !e.target.closest('#fb-fab-wrap')) popup.classList.remove('fb-popup-open');
     });
 
     return wrap;
@@ -7073,11 +7110,21 @@ A: Decomposition quality determines the quality of everything downstream — a b
     document.body.appendChild(buildFAB());
   }
 
-  if (window.supabase) {
-    try { fb_client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch (e) {}
+  /* after sign-in (including magic link redirect) flush any pending feedback */
+  function watchAuth() {
+    var c = getClient();
+    if (!c) return;
+    c.auth.onAuthStateChange(function (event, session) {
+      if (event === 'SIGNED_IN' && session) flushPending(session);
+    });
+    /* also check immediately on load (magic link redirect lands here authed) */
+    getSession(function (session) { if (session) flushPending(session); });
   }
 
-  document.addEventListener('DOMContentLoaded', injectFAB);
+  document.addEventListener('DOMContentLoaded', function () {
+    injectFAB();
+    watchAuth();
+  });
   if (typeof document$ !== 'undefined') { document$.subscribe(injectFAB); }
 }());
 </script>
