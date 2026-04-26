@@ -139,6 +139,22 @@ label[for="__palette"]    { order: 3; }
   background: rgba(255,218,71,0.1);
 }
 
+/* ── Right TOC — rename "Table of contents" → "On this page" ────────────── */
+.md-nav--secondary .md-nav__title {
+  font-size: 0 !important;
+  letter-spacing: 0 !important;
+}
+.md-nav--secondary .md-nav__title .md-nav__icon { display: none; }
+.md-nav--secondary .md-nav__title::after {
+  content: "On this page";
+  display: block;
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--md-default-fg-color--light, #888);
+}
+
 /* ── Sidebar nav ─────────────────────────────────────────────────────────── */
 .md-nav__link:hover {
   color: #7a6000 !important;
@@ -438,68 +454,97 @@ label[for="__palette"]    { order: 3; }
   border-color: #E8C200 !important;
 }
 
-/* ── Startup typography ───────────────────────────────────────────────────── */
-body,
-.md-typeset {
-  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+/* ── Typography ───────────────────────────────────────────────────────────── */
+/* Use html .md-typeset to win Material's specificity (it uses html .md-typeset) */
+
+:root {
+  --md-typeset-font-size: 0.8rem;
+}
+
+body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
-.md-typeset {
-  font-size: 0.83rem;
-  line-height: 1.68;
-  letter-spacing: -0.005em;
-}
-
-.md-typeset h1 {
-  font-size: 1.5rem;
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  line-height: 1.15;
-}
-
-.md-typeset h2 {
-  font-size: 1.05rem;
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  margin-top: 1.8rem;
-}
-
-.md-typeset h3 {
-  font-size: 0.88rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-.md-typeset h4 {
+html .md-typeset {
   font-size: 0.8rem;
+  line-height: 1.65;
+  letter-spacing: normal;
+  color: #1c1c1c;
+}
+
+[data-md-color-scheme="slate"] html .md-typeset,
+html [data-md-color-scheme="slate"] .md-typeset {
+  color: rgba(255,255,255,0.88);
+}
+
+html .md-typeset h1 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin-bottom: 0.5rem;
+}
+
+html .md-typeset h2 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  margin-top: 1.8rem;
+  margin-bottom: 0.4rem;
+}
+
+html .md-typeset h3 {
+  font-size: 0.825rem;
+  font-weight: 600;
+  letter-spacing: normal;
+  margin-top: 1.3rem;
+  margin-bottom: 0.25rem;
+}
+
+html .md-typeset h4 {
+  font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.07em;
   color: #888888;
+  margin-top: 1rem;
 }
 
-[data-md-color-scheme="slate"] .md-typeset h4 {
-  color: rgba(255,255,255,0.45);
+[data-md-color-scheme="slate"] html .md-typeset h4,
+html [data-md-color-scheme="slate"] .md-typeset h4 {
+  color: rgba(255,255,255,0.4);
 }
 
-.md-typeset p,
-.md-typeset li {
-  font-size: 0.83rem;
-  line-height: 1.72;
+html .md-typeset p,
+html .md-typeset li {
+  font-size: 0.8rem;
+  line-height: 1.7;
 }
 
-/* Tighter nav sidebar text */
+html .md-typeset blockquote {
+  font-size: 0.8rem;
+  border-left: 3px solid #FFDA47;
+  color: #555555;
+}
+
+[data-md-color-scheme="slate"] html .md-typeset blockquote,
+html [data-md-color-scheme="slate"] .md-typeset blockquote {
+  color: rgba(255,255,255,0.5);
+}
+
+/* Sidebar nav */
 .md-nav__item .md-nav__link {
-  font-size: 0.76rem;
-  letter-spacing: -0.005em;
+  font-size: 0.74rem;
+  letter-spacing: normal;
 }
 
 .md-nav__title {
-  font-size: 0.68rem !important;
+  font-size: 0.63rem !important;
   font-weight: 700;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 

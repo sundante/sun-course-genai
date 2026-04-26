@@ -71,6 +71,340 @@
 
     
     
+
+<!-- Supabase JS client -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+/* ── Signup widget — Solar Yellow theme ─────────────────────────────────── */
+
+/* Floating action button */
+#su-fab {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 8000;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.32rem 0.75rem;
+  background: #111111;
+  color: #FFDA47;
+  border: 1.5px solid #FFDA47;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+#su-fab:hover {
+  background: #FFDA47;
+  color: #111111;
+  box-shadow: 0 3px 14px rgba(0,0,0,0.22);
+}
+
+/* Modal backdrop */
+#su-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(0,0,0,0.68);
+  backdrop-filter: blur(3px);
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+#su-overlay.su-open { display: flex; }
+
+/* Modal card — adapts to MkDocs light/dark mode */
+#su-modal {
+  position: relative;
+  background: var(--md-default-bg-color, #ffffff);
+  color: var(--md-default-fg-color, #111111);
+  border-radius: 14px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+  border: 1.5px solid rgba(255,218,71,0.3);
+}
+
+/* Close button (voluntary opens only) */
+#su-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  line-height: 1;
+  padding: 0.2rem 0.4rem;
+  border-radius: 5px;
+  color: var(--md-default-fg-color--light, #888);
+  cursor: pointer;
+  display: none;
+  transition: background 0.12s;
+}
+#su-close:hover { background: rgba(0,0,0,0.07); }
+#su-modal.su-voluntary #su-close { display: block; }
+
+/* Header */
+.su-hdr { margin-bottom: 1.4rem; }
+.su-hdr-icon { font-size: 1.5rem; display: block; margin-bottom: 0.35rem; }
+#su-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin: 0 0 0.35rem;
+  color: var(--md-default-fg-color, #111111) !important;
+  border: none !important;
+  padding: 0 !important;
+  line-height: 1.25;
+}
+#su-sub {
+  font-size: 0.83rem;
+  color: var(--md-default-fg-color--light, #555);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Form layout */
+#su-form { display: flex; flex-direction: column; gap: 0.65rem; }
+
+.su-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+/* Input / select base */
+#su-form input,
+#su-form select {
+  width: 100%;
+  padding: 0.52rem 0.7rem;
+  border-radius: 7px;
+  border: 1.5px solid rgba(0,0,0,0.13);
+  font-size: 0.81rem;
+  font-family: inherit;
+  background: #f6f5f2;
+  color: #111111;
+  outline: none;
+  transition: border-color 0.14s, box-shadow 0.14s;
+  appearance: none;
+  -webkit-appearance: none;
+}
+#su-form input:focus,
+#su-form select:focus {
+  border-color: #FFDA47;
+  box-shadow: 0 0 0 3px rgba(255,218,71,0.22);
+}
+#su-form input::placeholder { color: rgba(0,0,0,0.4); }
+
+/* Dark mode overrides */
+[data-md-color-scheme="slate"] #su-form input,
+[data-md-color-scheme="slate"] #su-form select {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.13);
+  color: #ffffff;
+}
+[data-md-color-scheme="slate"] #su-form input::placeholder {
+  color: rgba(255,255,255,0.35);
+}
+[data-md-color-scheme="slate"] #su-form select option {
+  background: #1c1c1c;
+  color: #fff;
+}
+
+/* Topics — tag picker */
+.su-tp { position: relative; }
+.su-tp-field {
+  min-height: 2.4rem;
+  padding: 0.35rem 0.55rem 0.35rem 0.7rem;
+  border-radius: 7px;
+  border: 1.5px solid rgba(0,0,0,0.13);
+  font-family: inherit;
+  background: #f6f5f2;
+  cursor: pointer;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+  transition: border-color 0.14s, box-shadow 0.14s;
+  outline: none;
+}
+.su-tp.su-tp-open .su-tp-field,
+.su-tp-field:focus {
+  border-color: #FFDA47;
+  box-shadow: 0 0 0 3px rgba(255,218,71,0.22);
+}
+.su-tp-ph {
+  font-size: 0.81rem;
+  color: rgba(0,0,0,0.38);
+  flex: 1;
+  pointer-events: none;
+}
+.su-tp-ph span { opacity: 0.7; font-weight: 400; }
+.su-tp-arrow {
+  font-size: 0.6rem;
+  opacity: 0.4;
+  margin-left: auto;
+  flex-shrink: 0;
+  transition: transform 0.15s;
+  align-self: center;
+}
+.su-tp.su-tp-open .su-tp-arrow { transform: rotate(180deg); }
+
+/* Selected chips */
+.su-tp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+  padding: 0.12rem 0.42rem;
+  background: #FFDA47;
+  color: #111;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.su-tp-chip-x {
+  cursor: pointer;
+  opacity: 0.55;
+  font-size: 0.85rem;
+  line-height: 1;
+}
+.su-tp-chip-x:hover { opacity: 1; }
+
+/* Dropdown panel */
+.su-tp-panel {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0; right: 0;
+  background: var(--md-default-bg-color, #fff);
+  border: 1.5px solid rgba(255,218,71,0.45);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  z-index: 200;
+  overflow: hidden;
+}
+.su-tp.su-tp-open .su-tp-panel { display: block; }
+.su-tp-item {
+  padding: 0.42rem 0.75rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  color: var(--md-default-fg-color, #111);
+  transition: background 0.1s;
+  user-select: none;
+}
+.su-tp-item:hover { background: rgba(255,218,71,0.14); }
+.su-tp-empty {
+  padding: 0.55rem 0.75rem;
+  font-size: 0.78rem;
+  color: rgba(0,0,0,0.38);
+  text-align: center;
+}
+
+[data-md-color-scheme="slate"] .su-tp-field {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.13);
+}
+[data-md-color-scheme="slate"] .su-tp-ph { color: rgba(255,255,255,0.32); }
+[data-md-color-scheme="slate"] .su-tp-item { color: rgba(255,255,255,0.85); }
+[data-md-color-scheme="slate"] .su-tp-item:hover { background: rgba(255,218,71,0.1); }
+[data-md-color-scheme="slate"] .su-tp-empty { color: rgba(255,255,255,0.35); }
+
+/* Lighter placeholder text on selects */
+#su-form select.su-ph { color: rgba(0,0,0,0.38); }
+[data-md-color-scheme="slate"] #su-form select.su-ph { color: rgba(255,255,255,0.32); }
+
+/* Submit button */
+#su-btn {
+  width: 100%;
+  padding: 0.68rem 1rem;
+  background: #FFDA47;
+  color: #111111;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.87rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.14s;
+  margin-top: 0.2rem;
+  letter-spacing: -0.01em;
+}
+#su-btn:hover { background: #E8C200; }
+#su-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.su-fine {
+  text-align: center;
+  font-size: 0.71rem;
+  color: var(--md-default-fg-color--light, #aaa);
+  margin: 0;
+}
+
+/* Error message */
+#su-err {
+  display: none;
+  font-size: 0.78rem;
+  color: #c0392b;
+  background: rgba(192,57,43,0.08);
+  border-radius: 6px;
+  padding: 0.5rem 0.7rem;
+}
+#su-err.su-on { display: block; }
+
+/* Success state */
+#su-ok { display: none; text-align: center; padding: 0.75rem 0; }
+#su-ok.su-on { display: block; }
+.su-ok-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: #FFDA47;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+#su-ok h3 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  margin: 0 0 0.4rem;
+  letter-spacing: -0.02em;
+  color: var(--md-default-fg-color, #111) !important;
+  border: none !important;
+  padding: 0 !important;
+}
+#su-ok p {
+  font-size: 0.83rem;
+  color: var(--md-default-fg-color--light, #555);
+  margin: 0;
+}
+
+/* Content gate: blur main content area */
+body.su-gated .md-content {
+  filter: blur(5px);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  #su-modal { padding: 1.5rem 1.1rem; border-radius: 10px; }
+  .su-row { grid-template-columns: 1fr; }
+  #su-fab { bottom: 1rem; right: 1rem; font-size: 0.68rem; padding: 0.28rem 0.65rem; }
+}
+</style>
+
   </head>
   
   
@@ -417,9 +751,7 @@
   
 
 
-  
-
-<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="GenAI Learning Curriculum" class="md-nav__button md-logo" aria-label="GenAI Learning Curriculum" data-md-component="logo">
       
@@ -4426,6 +4758,87 @@
               </div>
             
             
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#foundational-concepts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Foundational Concepts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#classification-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Classification Questions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture Questions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#training-and-fine-tuning-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Training and Fine-Tuning Questions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#practical-application-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Practical Application Questions
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
           
           
             <div class="md-content" data-md-component="content">
@@ -4631,7 +5044,7 @@ LLMs generate plausible-sounding text, not factually correct text — there's no
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.footer", "navigation.instant", "navigation.tracking", "search.highlight", "search.suggest", "search.share", "toc.integrate", "content.code.copy", "content.code.annotate", "announce.dismiss"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.footer", "navigation.instant", "navigation.tracking", "search.highlight", "search.suggest", "search.share", "content.code.copy", "content.code.annotate", "announce.dismiss"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
 
@@ -4639,6 +5052,7 @@ LLMs generate plausible-sounding text, not factually correct text — there's no
       
     
 <script>
+  /* ── Header CTA buttons (existing) ── */
   document.addEventListener("DOMContentLoaded", function () {
     var inner = document.querySelector(".md-header__inner");
     if (!inner) return;
@@ -4661,7 +5075,7 @@ LLMs generate plausible-sounding text, not factually correct text — there's no
         sunSvg + ' sunmintz.com' +
       '</a>' +
       '<a href="https://github.com/sundante/sun-course-genai" target="_blank" rel="noopener" class="sun-hbtn">' +
-        githubSvg + ' Star' +
+        githubSvg + ' GitHub' +
       '</a>';
 
     var search = inner.querySelector(".md-search");
@@ -4671,6 +5085,321 @@ LLMs generate plausible-sounding text, not factually correct text — there's no
       inner.appendChild(cta);
     }
   });
+</script>
+<script>
+/* ── Signup widget + content gate ─────────────────────────────────────────
+   SETUP: replace the two placeholder values below with your Supabase project
+   credentials from https://app.supabase.com → Settings → API
+   ──────────────────────────────────────────────────────────────────────── */
+(function () {
+  var SUPABASE_URL = 'YOUR_SUPABASE_URL';        // e.g. https://xxxx.supabase.co
+  var SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';   // "anon public" key
+  var COURSE       = 'GenAI Curriculum';
+  var GATE_AT      = 5;   // number of page views before gate shows
+  var VIEWS_KEY    = 'genai_pv';
+
+  var client, isAuthed = false, injected = false;
+
+  var COUNTRIES = [
+    'Afghanistan','Argentina','Australia','Austria','Bangladesh','Belgium',
+    'Brazil','Canada','Chile','China','Colombia','Czech Republic','Denmark',
+    'Egypt','Ethiopia','Finland','France','Germany','Ghana','Greece',
+    'Hong Kong SAR','Hungary','India','Indonesia','Iran','Ireland','Israel',
+    'Italy','Japan','Kenya','Malaysia','Mexico','Netherlands','New Zealand',
+    'Nigeria','Norway','Pakistan','Peru','Philippines','Poland','Portugal',
+    'Romania','Russia','Saudi Arabia','Singapore','South Africa','South Korea',
+    'Spain','Sri Lanka','Sweden','Switzerland','Taiwan','Thailand','Turkey',
+    'Ukraine','United Arab Emirates','United Kingdom','United States',
+    'Vietnam','Other'
+  ];
+
+  /* ── Inject widget HTML into DOM ── */
+  function inject() {
+    if (injected) return;
+    injected = true;
+
+    var cOpts = COUNTRIES.map(function (c) {
+      return '<option value="' + c + '">' + c + '</option>';
+    }).join('');
+
+    var el = document.createElement('div');
+    el.innerHTML = [
+      '<div id="su-overlay">',
+        '<div id="su-modal">',
+          '<button id="su-close" aria-label="Close">&times;</button>',
+          '<div class="su-hdr">',
+            '<span class="su-hdr-icon">✦</span>',
+            '<h2 id="su-title">Stay in the loop</h2>',
+            '<p id="su-sub">Free forever — be the first to know when new modules, code labs, and study guides drop.</p>',
+          '</div>',
+          '<form id="su-form" novalidate>',
+            '<input type="text"  id="su-name"  placeholder="Full name *" required />',
+            '<input type="email" id="su-email" placeholder="Email address *" required />',
+            '<div class="su-row">',
+              '<select id="su-role">',
+                '<option value="">Role (optional)</option>',
+                '<option>Student</option><option>Engineer</option><option>Manager</option>',
+                '<option>Researcher</option><option>Recruiter</option><option>Other</option>',
+              '</select>',
+              '<select id="su-profession">',
+                '<option value="">Profession (optional)</option>',
+                '<option>Data Scientist</option><option>ML Engineer</option>',
+                '<option>Software Engineer</option><option>Product Manager</option>',
+                '<option>Recruiter</option><option>Educator</option>',
+                '<option>Student</option><option>Other</option>',
+              '</select>',
+            '</div>',
+            '<div class="su-row">',
+              '<select id="su-bg">',
+                '<option value="">Background (optional)</option>',
+                '<option>Technical</option><option>Non-Technical</option>',
+              '</select>',
+              '<select id="su-age">',
+                '<option value="">Age range (optional)</option>',
+                '<option>Under 18</option><option>18–24</option><option>25–34</option>',
+                '<option>35–44</option><option>45–54</option><option>55+</option>',
+              '</select>',
+            '</div>',
+            '<div class="su-tp" id="su-tp-topics">',
+              '<div class="su-tp-field" id="su-tp-field" tabindex="0">',
+                '<div id="su-tp-chips"></div>',
+                '<span class="su-tp-ph" id="su-tp-ph">Topics of interest <span>(optional)</span></span>',
+                '<span class="su-tp-arrow">▾</span>',
+              '</div>',
+              '<div class="su-tp-panel" id="su-tp-panel"></div>',
+              '<input type="hidden" id="su-topics-val" />',
+            '</div>',
+            '<div class="su-row">',
+              '<select id="su-country" required><option value="">Country *</option>' + cOpts + '</select>',
+              '<input type="text" id="su-city" placeholder="City (optional)" />',
+            '</div>',
+            '<div id="su-err"></div>',
+            '<button type="submit" id="su-btn">Get free access →</button>',
+            '<p class="su-fine">Free forever &middot; No spam &middot; Magic link login</p>',
+          '</form>',
+          '<div id="su-ok">',
+            '<div class="su-ok-icon">&#10003;</div>',
+            '<h3>You\'re in.</h3>',
+            '<p>Check your inbox for a magic link &mdash; no password ever needed.</p>',
+          '</div>',
+        '</div>',
+      '</div>',
+      '<button id="su-fab">✦ Stay Updated</button>'
+    ].join('');
+
+    document.body.appendChild(el);
+
+    /* bind events */
+    document.getElementById('su-fab').addEventListener('click', openVoluntary);
+    document.getElementById('su-close').addEventListener('click', closeModal);
+    document.getElementById('su-form').addEventListener('submit', onSubmit);
+    document.getElementById('su-overlay').addEventListener('click', function (e) {
+      if (e.target === this && document.getElementById('su-modal').classList.contains('su-voluntary')) {
+        closeModal();
+      }
+    });
+
+    /* tag-picker topics */
+    (function () {
+      var ALL     = ['LLMs','Prompt Engineering','RAGs','MCP','Agents','Agentic AI'];
+      var chosen  = [];
+      var wrap    = document.getElementById('su-tp-topics');
+      var field   = document.getElementById('su-tp-field');
+      var chipsEl = document.getElementById('su-tp-chips');
+      var ph      = document.getElementById('su-tp-ph');
+      var panel   = document.getElementById('su-tp-panel');
+      var hidden  = document.getElementById('su-topics-val');
+
+      function renderPanel() {
+        var avail = ALL.filter(function (t) { return chosen.indexOf(t) === -1; });
+        panel.innerHTML = '';
+        if (!avail.length) {
+          panel.innerHTML = '<div class="su-tp-empty">All topics selected</div>';
+          return;
+        }
+        avail.forEach(function (t) {
+          var d = document.createElement('div');
+          d.className = 'su-tp-item';
+          d.textContent = t;
+          d.addEventListener('click', function (e) { e.stopPropagation(); pick(t); });
+          panel.appendChild(d);
+        });
+      }
+
+      function renderChips() {
+        chipsEl.innerHTML = '';
+        chosen.forEach(function (t) {
+          var chip = document.createElement('span');
+          chip.className = 'su-tp-chip';
+          chip.innerHTML = t + ' <span class="su-tp-chip-x">&times;</span>';
+          chip.querySelector('.su-tp-chip-x').addEventListener('click', function (e) {
+            e.stopPropagation();
+            unpick(t);
+          });
+          chipsEl.appendChild(chip);
+        });
+        ph.style.display = chosen.length ? 'none' : '';
+        hidden.value = chosen.join(',');
+      }
+
+      function pick(t) {
+        if (chosen.indexOf(t) === -1) { chosen.push(t); renderChips(); renderPanel(); }
+      }
+      function unpick(t) {
+        chosen = chosen.filter(function (s) { return s !== t; });
+        renderChips();
+        renderPanel();
+      }
+
+      field.addEventListener('click', function () {
+        var open = wrap.classList.toggle('su-tp-open');
+        if (open) renderPanel();
+      });
+      document.addEventListener('click', function (e) {
+        if (!e.target.closest('#su-tp-topics')) wrap.classList.remove('su-tp-open');
+      });
+
+      renderChips();
+    }());
+
+    /* lighter placeholder for selects */
+    document.querySelectorAll('#su-form select').forEach(function (sel) {
+      function upd() { sel.classList.toggle('su-ph', !sel.value); }
+      sel.addEventListener('change', upd);
+      upd();
+    });
+  }
+
+  /* ── Modal helpers ── */
+  function openGate() {
+    document.body.classList.add('su-gated');
+    var m = document.getElementById('su-modal');
+    m.classList.remove('su-voluntary');
+    document.getElementById('su-title').textContent = "You're on a roll.";
+    document.getElementById('su-sub').textContent =
+      "Create your free account to keep reading — and get early access to new modules, code labs, and study guides as they drop.";
+    document.getElementById('su-overlay').classList.add('su-open');
+  }
+
+  function openVoluntary() {
+    var m = document.getElementById('su-modal');
+    m.classList.add('su-voluntary');
+    document.getElementById('su-title').textContent = 'Stay in the loop';
+    document.getElementById('su-sub').textContent =
+      'Free forever — be the first to know when new modules, code labs, and study guides drop.';
+    document.getElementById('su-overlay').classList.add('su-open');
+  }
+
+  function closeModal() {
+    document.getElementById('su-overlay').classList.remove('su-open');
+  }
+
+  function hideGate() {
+    document.body.classList.remove('su-gated');
+    document.getElementById('su-overlay').classList.remove('su-open');
+  }
+
+  /* ── Form submission ── */
+  async function onSubmit(e) {
+    e.preventDefault();
+    var name  = document.getElementById('su-name').value.trim();
+    var email = document.getElementById('su-email').value.trim();
+
+    var country = document.getElementById('su-country').value;
+    if (!name)    { showErr('Please enter your name.'); return; }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showErr('Please enter a valid email address.');
+      return;
+    }
+    if (!country) { showErr('Please select your country.'); return; }
+
+    clearErr();
+    var topics = document.getElementById('su-topics-val').value;
+
+    var btn = document.getElementById('su-btn');
+    btn.disabled = true;
+    btn.textContent = 'Sending magic link…';
+
+    try {
+      var res = await client.auth.signInWithOtp({
+        email: email,
+        options: {
+          emailRedirectTo: window.location.href,
+          data: {
+            name:            name,
+            role:            document.getElementById('su-role').value,
+            profession:      document.getElementById('su-profession').value,
+            background_type: document.getElementById('su-bg').value,
+            age_range:       document.getElementById('su-age').value,
+            topics:          topics,
+            city:            document.getElementById('su-city').value.trim(),
+            country:         document.getElementById('su-country').value,
+            course_name:     COURSE
+          }
+        }
+      });
+      if (res.error) throw res.error;
+      document.getElementById('su-form').style.display = 'none';
+      document.getElementById('su-ok').classList.add('su-on');
+    } catch (err) {
+      showErr(err.message || 'Something went wrong. Please try again.');
+      btn.disabled = false;
+      btn.textContent = 'Get free access →';
+    }
+  }
+
+  function showErr(msg) {
+    var el = document.getElementById('su-err');
+    el.textContent = msg;
+    el.classList.add('su-on');
+  }
+  function clearErr() {
+    var el = document.getElementById('su-err');
+    el.textContent = '';
+    el.classList.remove('su-on');
+  }
+
+  /* ── Gate check (runs on each page view) ── */
+  async function checkGate() {
+    if (!client) return;
+    var sess = await client.auth.getSession();
+    isAuthed = !!(sess.data && sess.data.session);
+    if (isAuthed) { hideGate(); return; }
+
+    var v = parseInt(localStorage.getItem(VIEWS_KEY) || '0') + 1;
+    localStorage.setItem(VIEWS_KEY, String(v));
+    if (v >= GATE_AT) openGate();
+  }
+
+  /* ── Init ── */
+  function init() {
+    inject(); // always show the button regardless of Supabase state
+    window.suOpenModal = openVoluntary; // expose for home page CTA buttons
+
+    if (!window.supabase || SUPABASE_URL === 'YOUR_SUPABASE_URL') return;
+
+    try {
+      client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    } catch (e) { return; }
+
+    client.auth.onAuthStateChange(function (event, session) {
+      if (event === 'SIGNED_IN' && session) {
+        isAuthed = true;
+        localStorage.setItem(VIEWS_KEY, '0');
+        hideGate();
+      }
+    });
+
+    checkGate();
+
+    /* Re-run gate check on MkDocs Material instant navigation */
+    if (typeof document$ !== 'undefined') {
+      document$.subscribe(function () { checkGate(); });
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+})();
 </script>
 
   </body>
