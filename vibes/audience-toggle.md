@@ -1,109 +1,74 @@
-# Plan: Audience Toggle — Business / Technical / Both
+# Audience Toggle — SHIPPED ✓
 
-## Context
-The curriculum is currently written for a technical audience only. The goal is to make
-it accessible to both technical and non-technical (business) readers on the same page,
-using a persistent 3-way toggle. No color coding — content just appears or disappears
-based on the selected mode. Pilot scope: LLM Fundamentals page only.
+## What Was Built
+A persistent 3-way "View as" toggle bar on every content page, letting readers
+filter content by audience without leaving the page.
 
----
-
-## User Decisions
-- Content: I write both versions (business + technical) for LLM Fundamentals
-- Toggle placement: Sticky bar at the top of the content area (not in global header)
-- Granularity: Block-level — entire H3/H2 subsections tagged, not individual paragraphs
+**Toggle:** `All | Technical | Non-Technical`
+**Pilot page with full content:** LLM Fundamentals
+**All other pages:** locked to Technical, "Non-Technical view coming soon" message
 
 ---
 
-## How It Works
+## Final Design Decisions
 
-### Content tagging in Markdown (HTML divs with `markdown="1"`)
+| Decision | Choice | Reason |
+|----------|--------|--------|
+| Label for plain-language mode | Non-Technical | Inclusive — works for PMs, students, recruiters, execs |
+| Default mode | All | Shows everything on first visit |
+| Toggle placement | Sticky bar, top of content area | Always accessible while scrolling |
+| Content granularity | Block-level (H2/H3 sections) | Simpler to author and maintain |
+| Visual markers | Colored left-edge border on content blocks | Consistent with admonition pattern |
+| Mode persistence | localStorage (`genai_mode`) | Survives navigation and refresh |
+
+---
+
+## Color System
+
+| Color | Meaning |
+|-------|---------|
+| Yellow (`#FFDA47`) left border | Technical content block |
+| Blue (`#3b82f6`) left border | Non-Technical content block |
+
+Button left edges mirror content block colors — self-describing, no separate legend needed.
+
+---
+
+## How Content Is Tagged
+
+In any `.md` file, wrap sections in audience divs:
+
 ```html
 <div class="audience-biz" markdown="1">
-Plain-language explanation using real-world analogy.
-No jargon — accessible to a PM, recruiter, or exec.
+Plain-language explanation — no jargon, real-world analogies.
 </div>
 
 <div class="audience-tech" markdown="1">
-### Original technical depth
-Full technical content: math, code, internals, tradeoffs.
+### Concept
+Full technical depth: math, code, internals, tradeoffs.
 </div>
 ```
-Untagged content (tables, summaries, key takeaways) is always shown in all modes.
 
-### CSS show/hide via body class
-```css
-/* All (default) — everything visible */
-/* Technical mode */
-body.mode-tech .audience-biz { display: none; }
-/* Business mode */
-body.mode-biz  .audience-tech { display: none; }
-```
-
-### Toggle bar UI
-```
-┌─────────────────────────────────────────────────┐
-│  View as:  [ All ]  [ Technical ]  [ Business ]  │  ← sticky, top of content
-└─────────────────────────────────────────────────┘
-# LLM Fundamentals
-content...
-```
-- Persisted in `localStorage` as `genai_mode` (`all` | `tech` | `biz`)
-- Default: `all`
-- Re-applied on every SPA navigation (Material's `document$` subscribe)
+Untagged content (tables, key takeaways, comparison sections) is always visible in all modes.
 
 ---
 
-## Files to Edit
+## Files Changed
 
-### 1. `mkdocs.yml`
-Add two markdown extensions (needed for `markdown="1"` inside HTML divs):
-```yaml
-markdown_extensions:
-  - attr_list
-  - md_in_html
-  # ... existing extensions unchanged
-```
-
-### 2. `docs/overrides/main.html`
-Add inside `{% block extrahead %}`:
-- CSS for `.su-audience-bar`, `.su-aud-btn`, `.su-aud-btn.active`
-- Sticky bar styles: `position: sticky; top: 56px; z-index: 100`
-
-Add inside `{% block scripts %}`:
-- JS IIFE that:
-  1. Reads `genai_mode` from localStorage on init, applies body class
-  2. Injects the toggle bar DOM into `.md-content__inner` on each page
-  3. Handles button clicks → updates body class + localStorage
-  4. Uses `document$.subscribe()` to re-inject on SPA navigation
-
-### 3. `docs/stylesheets/extra.css`
-Add:
-```css
-body.mode-tech .audience-biz { display: none; }
-body.mode-biz  .audience-tech { display: none; }
-```
-
-### 4. `docs/01-LLM-Models/Notes/01-LLM-Fundamentals.md`
-Rewrite with tagged blocks for each major section:
-
-| Section | Business block content | Tech block |
-|---------|----------------------|------------|
-| What Is an LLM | "Think of it like a very sophisticated autocomplete..." | Existing: next-token predictor, autoregressive generation |
-| Tokens | "AI reads in chunks, not words — affects cost and quirky behavior" | Existing: BPE internals, arithmetic failures, tiktoken code |
-| Context Window | "Every AI has a working memory limit — bigger = more expensive" | Existing: O(n²) math, scaling approaches table |
-| Sampling Parameters | "You can tune how predictable or creative the AI's answers are" | Existing: softmax/logits, top-p/top-k math |
-| Types of LLMs | "Three types: generators, classifiers, translators — generators won" | Existing: decoder/encoder/seq2seq architecture details |
-| Open Source vs Proprietary | Keep as-is (table already accessible) — untagged | Keep as-is — untagged |
-| Study Notes | Keep as-is — untagged | Keep as-is — untagged |
+| File | What Changed |
+|------|-------------|
+| `mkdocs.yml` | Added `attr_list` + `md_in_html` extensions |
+| `docs/overrides/main.html` | Toggle bar CSS + JS (sticky, SPA-aware, localStorage) |
+| `docs/stylesheets/extra.css` | `body.mode-tech/biz` show/hide rules + left-border styles |
+| `docs/01-LLM-Models/Notes/01-LLM-Fundamentals.md` | Full rewrite with `audience-biz` + `audience-tech` blocks |
 
 ---
 
-## Verification
-1. `mkdocs serve` locally
-2. Open LLM Fundamentals — default shows everything (All mode)
-3. Click Technical → business blocks disappear, all technical depth remains
-4. Click Business → code blocks, math sections disappear, only plain-language content shows
-5. Navigate to another page and back — toggle state persists (localStorage)
-6. Refresh page — toggle state still active
-7. Check dark mode — toggle bar adapts to Material dark theme
+## Extending to New Pages
+
+To add Non-Technical support to any page:
+1. Add `PILOT_SEG` detection in `buildBar()` JS OR generalize the pilot check
+2. Wrap sections in `<div class="audience-biz" markdown="1">` and `<div class="audience-tech" markdown="1">`
+3. Write the plain-language version for each major section
+
+LLM Fundamentals is the reference implementation.
