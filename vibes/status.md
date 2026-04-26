@@ -31,27 +31,66 @@ Last updated: 2026-04-26
 
 ## Site Features
 
-### Audience Toggle (shipped 2026-04-26)
+### Audience Toggle
 - 3-way toggle: **All / Technical / Non-Technical** — sticky bar on every content page
 - Pilot with full dual content: `01-LLM-Models/Notes/01-LLM-Fundamentals.md`
 - All other pages: locked to Technical with "Non-Technical coming soon" message
-- Yellow left bar = Technical content · Blue left bar = Non-Technical content
-- Persisted in `localStorage` across navigation and refresh
-- See `vibes/audience-toggle.md` for full implementation notes
+- Yellow left border = Technical content · Blue left border = Non-Technical content
+- Persisted in `localStorage` (`genai_mode`) across navigation and refresh
 
-### Signup & Auth (shipped 2026-04-26)
-- Supabase magic-link signup modal
-- Fields: name, email, role, profession, background, age, topics, country, city
-- Tag-picker chip UI for topics of interest
+**Authoring — tagging content blocks:**
+```html
+<div class="audience-biz" markdown="1">
+Plain-language explanation — no jargon, real-world analogies.
+</div>
+
+<div class="audience-tech" markdown="1">
+Full technical depth: math, code, internals, tradeoffs.
+</div>
+```
+Untagged content is always visible in all modes. LLM Fundamentals is the reference implementation.
+
+### Email Subscription
+- Supabase `subscribers` table: `name, email, role, background_type, country, source, confirmed`
+- Modal form: name (optional), email (required), role, background, country
+- On submit → insert to `subscribers` (confirmed: false) → magic link via SMTP for confirmation
+- On magic link click → `onAuthStateChange` fires → `confirmed = true`
 - Smart interaction gate: shows after 5 clicks, 30-day cool-down after dismissal
-- FAB button: "Stay Updated" (bottom-right, always visible)
+- FAB button: "✦ Stay Updated" (fixed bottom-right, always visible)
 - Close (×) always visible — users are never blocked from content
 
+### Page Feedback FAB
+- Fixed bottom-right, above the Stay Updated button
+- 👍 / 👎 rating → opens popup with optional message + optional email
+- Submits to Supabase `page_feedback` table: `page_slug, rating, message, email`
+- localStorage deduplication per page — collapses to "✓ Thanks!" after voting
+- No auth required
+
+### Header
+- "a sunmintz initiative" button → sunmintz.com
+- Author group: LinkedIn · X (@sunsindante) · GitHub (sundante)
+
+### Social / OG
+- Open Graph + Twitter card meta tags on all pages
+- Social card image: `/assets/social-card.png`
+- Hero banner on home page using same image
+
 ### Design
-- Theme: MkDocs Material, custom Solar Yellow (`#FFDA47`) + white/dark
+- Theme: MkDocs Material, Solar Yellow (`#FFDA47`) + black/white
 - Font: Inter (text), JetBrains Mono (code)
-- Right-side TOC renamed "On this page"
-- Custom header with GitHub + sunmintz.com CTAs
+- Custom header CTAs (header CTA injected via JS on DOMContentLoaded)
+
+---
+
+## Supabase Tables
+
+| Table | Purpose | Key columns |
+|-------|---------|-------------|
+| `subscribers` | Email subscription list | email, name, role, background_type, country, source, confirmed |
+| `page_feedback` | Per-page feedback | page_slug, rating, message, email |
+| `auth.users` | Auth identities (Supabase built-in) | email, created_at |
+
+RLS enabled on both custom tables. Anon insert policies in place.
 
 ---
 
