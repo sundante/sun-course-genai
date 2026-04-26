@@ -419,6 +419,93 @@ body.su-gated .md-content {
 }
 </style>
 
+<style>
+/* ── Audience toggle bar ──────────────────────────────────────────────────── */
+.aud-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+  padding: 0.28rem 0.75rem;
+  margin: 0 0 1.5rem;
+  background: var(--md-default-bg-color, #fff);
+  border: 1.5px solid rgba(255,218,71,0.35);
+  border-radius: 6px;
+  position: sticky;
+  top: 3.8rem;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.aud-bar-label {
+  font-size: 0.63rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--md-default-fg-color--light, #888);
+  white-space: nowrap;
+}
+
+.aud-btns {
+  display: flex;
+  gap: 0.2rem;
+}
+
+.aud-btn {
+  padding: 0.15rem 0.55rem;
+  border-radius: 4px;
+  border: 1.5px solid rgba(0,0,0,0.12);
+  background: transparent;
+  font-size: 0.68rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  color: var(--md-default-fg-color--light, #666);
+  transition: border-color 0.14s, color 0.14s, background 0.14s;
+  line-height: 1.5;
+}
+
+.aud-btn:hover:not(:disabled) {
+  border-color: #FFDA47;
+  color: var(--md-default-fg-color, #111);
+}
+
+.aud-btn--active {
+  background: #FFDA47 !important;
+  border-color: #FFDA47 !important;
+  color: #111111 !important;
+}
+
+.aud-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.aud-soon {
+  font-size: 0.63rem;
+  color: var(--md-default-fg-color--light, #999);
+  font-style: italic;
+}
+
+[data-md-color-scheme="slate"] .aud-bar {
+  border-color: rgba(255,218,71,0.2);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.22);
+}
+[data-md-color-scheme="slate"] .aud-btn {
+  border-color: rgba(255,255,255,0.14);
+  color: rgba(255,255,255,0.45);
+}
+[data-md-color-scheme="slate"] .aud-btn:hover:not(:disabled) {
+  border-color: #FFDA47;
+  color: #ffffff;
+}
+[data-md-color-scheme="slate"] .aud-btn--active {
+  background: #FFDA47 !important;
+  border-color: #FFDA47 !important;
+  color: #111111 !important;
+}
+</style>
+
   </head>
   
   
@@ -6163,6 +6250,95 @@ A: Sequential calls execute one tool, wait for the result, then call the next �
 
   document.addEventListener('DOMContentLoaded', init);
 })();
+</script>
+<script>
+/* ── Audience toggle ───────────────────────────────────────────────────────── */
+(function () {
+  var MODE_KEY  = 'genai_mode';
+  var PILOT_SEG = '01-LLM-Fundamentals';
+
+  function isPilot() {
+    return window.location.pathname.indexOf(PILOT_SEG) !== -1;
+  }
+
+  function getMode() {
+    return localStorage.getItem(MODE_KEY) || 'all';
+  }
+
+  function applyMode(mode) {
+    document.body.classList.remove('mode-all', 'mode-tech', 'mode-biz');
+    if (mode === 'tech') document.body.classList.add('mode-tech');
+    if (mode === 'biz')  document.body.classList.add('mode-biz');
+  }
+
+  function setMode(mode) {
+    localStorage.setItem(MODE_KEY, mode);
+    applyMode(mode);
+    document.querySelectorAll('.aud-btn[data-mode]').forEach(function (btn) {
+      btn.classList.toggle('aud-btn--active', btn.dataset.mode === mode);
+    });
+  }
+
+  function buildBar() {
+    var bar = document.createElement('div');
+    bar.id = 'aud-bar';
+    bar.className = 'aud-bar';
+
+    if (isPilot()) {
+      var mode = getMode();
+      bar.innerHTML =
+        '<span class="aud-bar-label">View as</span>' +
+        '<div class="aud-btns">' +
+          '<button class="aud-btn' + (mode === 'all'  ? ' aud-btn--active' : '') + '" data-mode="all">All</button>' +
+          '<button class="aud-btn' + (mode === 'tech' ? ' aud-btn--active' : '') + '" data-mode="tech">Technical</button>' +
+          '<button class="aud-btn' + (mode === 'biz'  ? ' aud-btn--active' : '') + '" data-mode="biz">Business</button>' +
+        '</div>';
+      bar.querySelectorAll('.aud-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () { setMode(btn.dataset.mode); });
+      });
+    } else {
+      bar.innerHTML =
+        '<span class="aud-bar-label">View as</span>' +
+        '<div class="aud-btns">' +
+          '<button class="aud-btn aud-btn--active" disabled>Technical</button>' +
+          '<button class="aud-btn" disabled>Business</button>' +
+        '</div>' +
+        '<span class="aud-soon">Business view coming soon for this section</span>';
+    }
+    return bar;
+  }
+
+  function injectBar() {
+    var old = document.getElementById('aud-bar');
+    if (old) old.remove();
+
+    /* only inject on content pages — skip the home page */
+    var inner = document.querySelector('.md-content__inner');
+    if (!inner) return;
+    var article = document.querySelector('article.md-content__inner');
+    if (!article) return;
+
+    article.insertBefore(buildBar(), article.firstChild);
+
+    /* apply correct body class for this page */
+    if (isPilot()) {
+      applyMode(getMode());
+    } else {
+      document.body.classList.remove('mode-all', 'mode-tech', 'mode-biz');
+    }
+  }
+
+  /* apply saved mode immediately to avoid flash */
+  if (isPilot()) applyMode(getMode());
+
+  /* initial load */
+  document.addEventListener('DOMContentLoaded', injectBar);
+
+  /* SPA navigation — Material's document$ observable */
+  if (typeof document$ !== 'undefined') {
+    document$.subscribe(injectBar);
+  }
+}());
 </script>
 
   </body>

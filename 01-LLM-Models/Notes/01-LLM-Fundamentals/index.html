@@ -419,6 +419,93 @@ body.su-gated .md-content {
 }
 </style>
 
+<style>
+/* ── Audience toggle bar ──────────────────────────────────────────────────── */
+.aud-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+  padding: 0.28rem 0.75rem;
+  margin: 0 0 1.5rem;
+  background: var(--md-default-bg-color, #fff);
+  border: 1.5px solid rgba(255,218,71,0.35);
+  border-radius: 6px;
+  position: sticky;
+  top: 3.8rem;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.aud-bar-label {
+  font-size: 0.63rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--md-default-fg-color--light, #888);
+  white-space: nowrap;
+}
+
+.aud-btns {
+  display: flex;
+  gap: 0.2rem;
+}
+
+.aud-btn {
+  padding: 0.15rem 0.55rem;
+  border-radius: 4px;
+  border: 1.5px solid rgba(0,0,0,0.12);
+  background: transparent;
+  font-size: 0.68rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  color: var(--md-default-fg-color--light, #666);
+  transition: border-color 0.14s, color 0.14s, background 0.14s;
+  line-height: 1.5;
+}
+
+.aud-btn:hover:not(:disabled) {
+  border-color: #FFDA47;
+  color: var(--md-default-fg-color, #111);
+}
+
+.aud-btn--active {
+  background: #FFDA47 !important;
+  border-color: #FFDA47 !important;
+  color: #111111 !important;
+}
+
+.aud-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.aud-soon {
+  font-size: 0.63rem;
+  color: var(--md-default-fg-color--light, #999);
+  font-style: italic;
+}
+
+[data-md-color-scheme="slate"] .aud-bar {
+  border-color: rgba(255,218,71,0.2);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.22);
+}
+[data-md-color-scheme="slate"] .aud-btn {
+  border-color: rgba(255,255,255,0.14);
+  color: rgba(255,255,255,0.45);
+}
+[data-md-color-scheme="slate"] .aud-btn:hover:not(:disabled) {
+  border-color: #FFDA47;
+  color: #ffffff;
+}
+[data-md-color-scheme="slate"] .aud-btn--active {
+  background: #FFDA47 !important;
+  border-color: #FFDA47 !important;
+  color: #111111 !important;
+}
+</style>
+
   </head>
   
   
@@ -1183,23 +1270,6 @@ body.su-gated .md-content {
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Open Source vs Proprietary">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#concept_5" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Concept
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -5087,23 +5157,6 @@ body.su-gated .md-content {
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Open Source vs Proprietary">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#concept_5" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Concept
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
         <li class="md-nav__item">
@@ -5139,6 +5192,17 @@ body.su-gated .md-content {
 
 <h1 id="llm-fundamentals">LLM Fundamentals</h1>
 <h2 id="what-is-a-large-language-model">What Is a Large Language Model</h2>
+<div class="audience-biz">
+<p>Think of an LLM as an incredibly well-read assistant. It has absorbed a significant fraction of all text ever written — books, articles, code, research papers, conversations — and learned the statistical patterns of how ideas connect and how language flows.</p>
+<p>When you ask it something, it doesn't search a database or look facts up. It generates a response one word at a time, predicting what should come next based on those learned patterns. Every capability you see — summarizing contracts, writing code, answering questions, translating languages — emerges from this single mechanism running at massive scale.</p>
+<p><strong>What this means in practice:</strong></p>
+<ul>
+<li>LLMs are generative, not retrieval-based — they can confidently state things that are wrong (hallucination). If you need reliable facts, pair the LLM with a retrieval system (see <a href="../../../03-RAGs/INDEX/">RAG</a>).</li>
+<li>"Large" means trained on a lot of data with a lot of parameters — more scale generally means better results, but also more cost.</li>
+<li>An LLM is not a knowledge base with citations. It encodes patterns, not verified facts.</li>
+</ul>
+</div>
+<div class="audience-tech">
 <h3 id="concept">Concept</h3>
 <p>A Large Language Model is a neural network trained to predict the next token given a sequence of preceding tokens. That is the <em>entire</em> job description. Every capability — summarization, coding, reasoning, translation — emerges from doing this one thing at massive scale on diverse data.</p>
 <p>This framing matters for interviews. An LLM is <strong>not</strong>:
@@ -5157,9 +5221,23 @@ body.su-gated .md-content {
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Step 3: model predicts end-of-sequence token → stop
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>Output: &quot;The capital of France is Paris.&quot;
 </code></pre></div>
+</div>
 <hr />
 <h2 id="key-concepts-tokens-context-temperature">Key Concepts: Tokens, Context, Temperature</h2>
 <h3 id="tokens">Tokens</h3>
+<div class="audience-biz">
+<p>AI models don't read text the way you do. They break everything into small chunks called <strong>tokens</strong> — roughly 3–5 characters each, about ¾ of an English word.</p>
+<p>This matters for two practical reasons:</p>
+<p><strong>1. Cost.</strong> APIs bill per token. A 10-page document is roughly 3,000–5,000 tokens. A back-and-forth conversation accumulates fast. Understanding token counts helps you budget API costs accurately.</p>
+<p><strong>2. Quirky behavior.</strong> Because the model sees token patterns — not actual characters or numbers — it can struggle with tasks that seem trivial:</p>
+<ul>
+<li>Counting letters in a word ("How many r's in 'strawberry'?") — it never sees individual characters</li>
+<li>Comparing numbers like 9.11 vs 9.9 — digits are tokenized individually, not as numeric values</li>
+<li>Spelling unusual names — rare words get split into pieces the model hasn't seen combined</li>
+</ul>
+<p>When an AI gives a surprisingly bad answer to a simple question, token boundaries are often the culprit.</p>
+</div>
+<div class="audience-tech">
 <h3 id="concept_1">Concept</h3>
 <p>LLMs operate on <strong>tokens</strong> — subword units produced by a tokenizer — not characters or words. Understanding tokens is critical for cost estimation, context window management, and debugging unexpected model behavior.</p>
 <p><strong>How BPE tokenization works:</strong>
@@ -5202,8 +5280,20 @@ body.su-gated .md-content {
 <a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">LLaMA-3 tokens: </span><span class="si">{</span><span class="n">llama_tok</span><span class="o">.</span><span class="n">tokenize</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 <a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;LLaMA-3 count: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">llama_tok</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">sample</span><span class="p">))</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </code></pre></div>
+</div>
 <hr />
 <h3 id="context-window">Context Window</h3>
+<div class="audience-biz">
+<p>Every AI model has a working memory limit called the <strong>context window</strong>. Think of it as a whiteboard: everything you want the AI to consider — your question, the document you uploaded, the conversation history so far — must fit on that whiteboard.</p>
+<p><strong>What this means in practice:</strong></p>
+<ul>
+<li><strong>Long documents need special handling.</strong> A 200-page legal contract won't fit in most context windows. You either need to summarize sections, split the document, or use a retrieval system (RAG) to pull in only the relevant parts.</li>
+<li><strong>Cost scales with size.</strong> The AI has to compare every piece of information against every other piece — so a larger context window costs significantly more to run. This is why large-context API calls are priced higher.</li>
+<li><strong>Memory doesn't persist between sessions.</strong> Each new conversation starts blank. The AI has no memory of past conversations unless you explicitly provide them in the prompt.</li>
+</ul>
+<p>Context window sizes vary widely — from a few thousand words (small chatbots) to over a million words (Gemini 2.5 Pro). Bigger isn't always better; very long contexts can cause the model to lose focus on information buried in the middle.</p>
+</div>
+<div class="audience-tech">
 <h3 id="concept_2">Concept</h3>
 <p>The context window is the maximum number of tokens an LLM can process in a single forward pass — input + output combined. It is a hard architectural limit.</p>
 <p><strong>Why context windows are bounded:</strong>
@@ -5400,8 +5490,41 @@ body.su-gated .md-content {
 </tr>
 </tbody>
 </table>
+</div>
 <hr />
 <h3 id="sampling-parameters">Sampling Parameters</h3>
+<div class="audience-biz">
+<p>When you build or configure an AI product, you can tune how predictable or creative its responses are. The main dial is called <strong>temperature</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Temperature setting</th>
+<th>Effect</th>
+<th>When to use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Low (0.0–0.3)</td>
+<td>Consistent, focused, predictable</td>
+<td>Customer support, factual Q&amp;A, data extraction</td>
+</tr>
+<tr>
+<td>Medium (0.5–0.8)</td>
+<td>Balanced</td>
+<td>General chat, writing assistance</td>
+</tr>
+<tr>
+<td>High (1.0+)</td>
+<td>Creative, varied, unpredictable</td>
+<td>Brainstorming, creative writing, idea generation</td>
+</tr>
+</tbody>
+</table>
+<p>Most consumer AI products expose this as a "creativity" or "randomness" slider. For business applications, you almost always want low-to-medium temperature — predictability and consistency matter more than creativity in production.</p>
+<p>There are a few other dials engineers tune (top-p, top-k, repetition penalty), but temperature is the one with the most direct business impact.</p>
+</div>
+<div class="audience-tech">
 <h3 id="concept_3">Concept</h3>
 <p>When the model predicts the next token, it produces a probability distribution over its entire vocabulary (e.g., 32K–200K tokens). Sampling parameters control how you draw from that distribution.</p>
 <p><strong>Temperature</strong> scales the logits before softmax:</p>
@@ -5487,8 +5610,45 @@ Values &gt; 1.0 penalize repetition. Without this, greedy decoding often collaps
 </tr>
 </tbody>
 </table>
+</div>
 <hr />
 <h2 id="types-of-llms">Types of LLMs</h2>
+<div class="audience-biz">
+<p>There are three main families of language models, each built for different tasks:</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>What it does</th>
+<th>Real-world examples</th>
+<th>Best for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Generator</strong></td>
+<td>Produces free-form text, answers questions, writes code</td>
+<td>ChatGPT, Claude, Gemini</td>
+<td>Chat, writing, coding, Q&amp;A, summarization</td>
+</tr>
+<tr>
+<td><strong>Classifier</strong></td>
+<td>Labels or categorizes text — doesn't generate new text</td>
+<td>BERT (used inside Google Search)</td>
+<td>Sentiment analysis, content moderation, search ranking</td>
+</tr>
+<tr>
+<td><strong>Translator</strong></td>
+<td>Converts one format of text to another</td>
+<td>Translation engines, document summarizers</td>
+<td>Language translation, structured extraction</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Generators have largely won</strong> for general-purpose AI products. When evaluating AI vendors or choosing a model for a specific business use case, the type matters more than the brand name. A classifier is orders of magnitude cheaper than a generator for tasks like "is this review positive or negative?"</p>
+<p>The emerging pattern is <strong>Mixture of Experts (MoE)</strong> — a way to make very large models cheaper to run by only activating a fraction of their capacity per request. This is why some models can have 400B+ parameters but still run at reasonable cost.</p>
+</div>
+<div class="audience-tech">
 <h3 id="concept_4">Concept</h3>
 <p>LLMs are categorized by their training architecture and objective. Three core types exist, with a clear market winner in 2024.</p>
 <p><strong>1. Decoder-Only (Causal LM)</strong>
@@ -5517,9 +5677,9 @@ Values &gt; 1.0 penalize repetition. Without this, greedy decoding often collaps
 <p><strong>Mixture of Experts (MoE) — a fourth category:</strong>
 Not a separate architecture but a modification: instead of one dense FFN per layer, use N "expert" FFNs and a router that selects 1–2 experts per token. Result: large total parameters but only a fraction active per token (Mixtral-8x7B: 47B total, ~13B active).</p>
 <p>Full architecture deep dive: see <a href="../02-Architecture/">Transformer Architecture</a> and <a href="../04-Model-Architecture-Types/">Model Architecture Types</a>.</p>
+</div>
 <hr />
 <h2 id="open-source-vs-proprietary">Open Source vs Proprietary</h2>
-<h3 id="concept_5">Concept</h3>
 <table>
 <thead>
 <tr>
@@ -6073,6 +6233,95 @@ Not a separate architecture but a modification: instead of one dense FFN per lay
 
   document.addEventListener('DOMContentLoaded', init);
 })();
+</script>
+<script>
+/* ── Audience toggle ───────────────────────────────────────────────────────── */
+(function () {
+  var MODE_KEY  = 'genai_mode';
+  var PILOT_SEG = '01-LLM-Fundamentals';
+
+  function isPilot() {
+    return window.location.pathname.indexOf(PILOT_SEG) !== -1;
+  }
+
+  function getMode() {
+    return localStorage.getItem(MODE_KEY) || 'all';
+  }
+
+  function applyMode(mode) {
+    document.body.classList.remove('mode-all', 'mode-tech', 'mode-biz');
+    if (mode === 'tech') document.body.classList.add('mode-tech');
+    if (mode === 'biz')  document.body.classList.add('mode-biz');
+  }
+
+  function setMode(mode) {
+    localStorage.setItem(MODE_KEY, mode);
+    applyMode(mode);
+    document.querySelectorAll('.aud-btn[data-mode]').forEach(function (btn) {
+      btn.classList.toggle('aud-btn--active', btn.dataset.mode === mode);
+    });
+  }
+
+  function buildBar() {
+    var bar = document.createElement('div');
+    bar.id = 'aud-bar';
+    bar.className = 'aud-bar';
+
+    if (isPilot()) {
+      var mode = getMode();
+      bar.innerHTML =
+        '<span class="aud-bar-label">View as</span>' +
+        '<div class="aud-btns">' +
+          '<button class="aud-btn' + (mode === 'all'  ? ' aud-btn--active' : '') + '" data-mode="all">All</button>' +
+          '<button class="aud-btn' + (mode === 'tech' ? ' aud-btn--active' : '') + '" data-mode="tech">Technical</button>' +
+          '<button class="aud-btn' + (mode === 'biz'  ? ' aud-btn--active' : '') + '" data-mode="biz">Business</button>' +
+        '</div>';
+      bar.querySelectorAll('.aud-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () { setMode(btn.dataset.mode); });
+      });
+    } else {
+      bar.innerHTML =
+        '<span class="aud-bar-label">View as</span>' +
+        '<div class="aud-btns">' +
+          '<button class="aud-btn aud-btn--active" disabled>Technical</button>' +
+          '<button class="aud-btn" disabled>Business</button>' +
+        '</div>' +
+        '<span class="aud-soon">Business view coming soon for this section</span>';
+    }
+    return bar;
+  }
+
+  function injectBar() {
+    var old = document.getElementById('aud-bar');
+    if (old) old.remove();
+
+    /* only inject on content pages — skip the home page */
+    var inner = document.querySelector('.md-content__inner');
+    if (!inner) return;
+    var article = document.querySelector('article.md-content__inner');
+    if (!article) return;
+
+    article.insertBefore(buildBar(), article.firstChild);
+
+    /* apply correct body class for this page */
+    if (isPilot()) {
+      applyMode(getMode());
+    } else {
+      document.body.classList.remove('mode-all', 'mode-tech', 'mode-biz');
+    }
+  }
+
+  /* apply saved mode immediately to avoid flash */
+  if (isPilot()) applyMode(getMode());
+
+  /* initial load */
+  document.addEventListener('DOMContentLoaded', injectBar);
+
+  /* SPA navigation — Material's document$ observable */
+  if (typeof document$ !== 'undefined') {
+    document$.subscribe(injectBar);
+  }
+}());
 </script>
 
   </body>
