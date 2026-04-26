@@ -5834,19 +5834,19 @@ A: RAG adds latency and cost unnecessarily when: (1) the entire knowledge base f
           '<div class="su-hdr">',
             '<span class="su-hdr-icon">✦</span>',
             '<h2 id="su-title">Stay in the loop</h2>',
-            '<p id="su-sub">Free forever — be the first to know when new modules, code labs, and study guides drop.</p>',
+            '<p id="su-sub">Be the first to know when new modules, code labs, and study guides drop.</p>',
           '</div>',
           '<form id="su-form" novalidate>',
-            '<input type="text"  id="su-name"  placeholder="Full name *" required />',
-            '<input type="email" id="su-email" placeholder="Email address *" required />',
+            '<input type="text"  id="su-name"  placeholder="Full name" required />',
+            '<input type="email" id="su-email" placeholder="Email address" required />',
             '<div class="su-row">',
-              '<select id="su-role">',
-                '<option value="">Role (optional)</option>',
+              '<select id="su-role" required>',
+                '<option value="">Role</option>',
                 '<option>Student</option><option>Engineer</option><option>Manager</option>',
                 '<option>Researcher</option><option>Recruiter</option><option>Other</option>',
               '</select>',
-              '<select id="su-profession">',
-                '<option value="">Profession (optional)</option>',
+              '<select id="su-profession" required>',
+                '<option value="">Profession</option>',
                 '<option>Data Scientist</option><option>ML Engineer</option>',
                 '<option>Software Engineer</option><option>Product Manager</option>',
                 '<option>Recruiter</option><option>Educator</option>',
@@ -5854,12 +5854,12 @@ A: RAG adds latency and cost unnecessarily when: (1) the entire knowledge base f
               '</select>',
             '</div>',
             '<div class="su-row">',
-              '<select id="su-bg">',
-                '<option value="">Background (optional)</option>',
+              '<select id="su-bg" required>',
+                '<option value="">Background</option>',
                 '<option>Technical</option><option>Non-Technical</option>',
               '</select>',
-              '<select id="su-age">',
-                '<option value="">Age range (optional)</option>',
+              '<select id="su-age" required>',
+                '<option value="">Age range</option>',
                 '<option>Under 18</option><option>18–24</option><option>25–34</option>',
                 '<option>35–44</option><option>45–54</option><option>55+</option>',
               '</select>',
@@ -5867,19 +5867,19 @@ A: RAG adds latency and cost unnecessarily when: (1) the entire knowledge base f
             '<div class="su-tp" id="su-tp-topics">',
               '<div class="su-tp-field" id="su-tp-field" tabindex="0">',
                 '<div id="su-tp-chips"></div>',
-                '<span class="su-tp-ph" id="su-tp-ph">Topics of interest <span>(optional)</span></span>',
+                '<span class="su-tp-ph" id="su-tp-ph">Topics of interest</span>',
                 '<span class="su-tp-arrow">▾</span>',
               '</div>',
               '<div class="su-tp-panel" id="su-tp-panel"></div>',
               '<input type="hidden" id="su-topics-val" />',
             '</div>',
             '<div class="su-row">',
-              '<select id="su-country" required><option value="">Country *</option>' + cOpts + '</select>',
-              '<input type="text" id="su-city" placeholder="City (optional)" />',
+              '<select id="su-country" required><option value="">Country</option>' + cOpts + '</select>',
+              '<input type="text" id="su-city" placeholder="City" required />',
             '</div>',
             '<div id="su-err"></div>',
-            '<button type="submit" id="su-btn">Get free access →</button>',
-            '<p class="su-fine">Free forever &middot; No spam &middot; Magic link login</p>',
+            '<button type="submit" id="su-btn">Keep Learning →</button>',
+            '<p class="su-fine">No spam &middot; Magic link login &middot; Unsubscribe anytime</p>',
           '</form>',
           '<div id="su-ok">',
             '<div class="su-ok-icon">&#10003;</div>',
@@ -5990,7 +5990,7 @@ A: RAG adds latency and cost unnecessarily when: (1) the entire knowledge base f
     m.classList.add('su-voluntary');
     document.getElementById('su-title').textContent = 'Stay in the loop';
     document.getElementById('su-sub').textContent =
-      'Free forever — be the first to know when new modules, code labs, and study guides drop.';
+      'Be the first to know when new modules, code labs, and study guides drop.';
     document.getElementById('su-overlay').classList.add('su-open');
   }
 
@@ -6009,16 +6009,25 @@ A: RAG adds latency and cost unnecessarily when: (1) the entire knowledge base f
     var name  = document.getElementById('su-name').value.trim();
     var email = document.getElementById('su-email').value.trim();
 
-    var country = document.getElementById('su-country').value;
-    if (!name)    { showErr('Please enter your name.'); return; }
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      showErr('Please enter a valid email address.');
-      return;
-    }
-    if (!country) { showErr('Please select your country.'); return; }
+    var role       = document.getElementById('su-role').value;
+    var profession = document.getElementById('su-profession').value;
+    var bg         = document.getElementById('su-bg').value;
+    var age        = document.getElementById('su-age').value;
+    var topics     = document.getElementById('su-topics-val').value;
+    var country    = document.getElementById('su-country').value;
+    var city       = document.getElementById('su-city').value.trim();
+
+    if (!name)                                              { showErr('Please enter your name.'); return; }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('Please enter a valid email address.'); return; }
+    if (!role)                                              { showErr('Please select your role.'); return; }
+    if (!profession)                                        { showErr('Please select your profession.'); return; }
+    if (!bg)                                                { showErr('Please select your background type.'); return; }
+    if (!age)                                               { showErr('Please select your age range.'); return; }
+    if (!topics)                                            { showErr('Please select at least one topic of interest.'); return; }
+    if (!country)                                           { showErr('Please select your country.'); return; }
+    if (!city)                                              { showErr('Please enter your city.'); return; }
 
     clearErr();
-    var topics = document.getElementById('su-topics-val').value;
 
     var btn = document.getElementById('su-btn');
     btn.disabled = true;
@@ -6036,8 +6045,8 @@ A: RAG adds latency and cost unnecessarily when: (1) the entire knowledge base f
             background_type: document.getElementById('su-bg').value,
             age_range:       document.getElementById('su-age').value,
             topics:          topics,
-            city:            document.getElementById('su-city').value.trim(),
-            country:         document.getElementById('su-country').value,
+            city:            city,
+            country:         country,
             course_name:     COURSE
           }
         }
@@ -6048,7 +6057,7 @@ A: RAG adds latency and cost unnecessarily when: (1) the entire knowledge base f
     } catch (err) {
       showErr(err.message || 'Something went wrong. Please try again.');
       btn.disabled = false;
-      btn.textContent = 'Get free access →';
+      btn.textContent = 'Keep Learning →';
     }
   }
 
