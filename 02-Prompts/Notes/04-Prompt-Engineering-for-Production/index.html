@@ -6454,7 +6454,7 @@ It depends on impact. A systematic positive offset means the judge is lenient â€
       if (!client) throw new Error('Client not ready â€” please refresh and try again.');
 
       /* Upsert subscriber row â€” no duplicate, preserves confirmed status on re-subscribe */
-      await client.from('subscribers').upsert({
+      var upsertRes = await client.from('subscribers').upsert({
         email:           email,
         name:            name,
         role:            role,
@@ -6462,6 +6462,7 @@ It depends on impact. A systematic positive offset means the judge is lenient â€
         country:         country,
         source:          window.location.pathname
       }, { onConflict: 'email' });
+      if (upsertRes.error) throw upsertRes.error;
 
       /* Send confirmation email via magic link (uses SMTP + custom template) */
       var res = await client.auth.signInWithOtp({

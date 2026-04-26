@@ -5408,7 +5408,7 @@ LLMs generate plausible-sounding text, not factually correct text — there's no
       if (!client) throw new Error('Client not ready — please refresh and try again.');
 
       /* Upsert subscriber row — no duplicate, preserves confirmed status on re-subscribe */
-      await client.from('subscribers').upsert({
+      var upsertRes = await client.from('subscribers').upsert({
         email:           email,
         name:            name,
         role:            role,
@@ -5416,6 +5416,7 @@ LLMs generate plausible-sounding text, not factually correct text — there's no
         country:         country,
         source:          window.location.pathname
       }, { onConflict: 'email' });
+      if (upsertRes.error) throw upsertRes.error;
 
       /* Send confirmation email via magic link (uses SMTP + custom template) */
       var res = await client.auth.signInWithOtp({
