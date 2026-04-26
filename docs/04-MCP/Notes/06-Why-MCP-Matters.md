@@ -103,7 +103,7 @@ More servers → More value to hosts → More host adoption →
 More users → More incentive to build servers → More servers
 ```
 
-Current ecosystem (as of 2025):
+Current ecosystem:
 
 **Hosts supporting MCP:**
 - Claude Desktop, Claude.ai (Anthropic)
@@ -203,7 +203,7 @@ A: Bespoke integrations implement security inconsistently — different auth pat
 
 **Q3: Explain the network effect that makes MCP's value grow non-linearly with adoption.** `[Medium]`
 
-A: Each new MCP server adds value not just to one application but to every existing and future MCP Host. Each new MCP Host creates demand for existing servers and incentivizes building more. More servers attract more users to MCP-supporting hosts; more users create more incentive to build servers. The value is multiplicative: N servers × M hosts = N×M working connections from N+M implementations. As of 2025, with 1000+ servers and dozens of supporting hosts, the ecosystem delivers tens of thousands of working integrations from a few thousand implementations — a ratio no proprietary alternative can match.
+A: Each new MCP server adds value not just to one application but to every existing and future MCP Host. Each new MCP Host creates demand for existing servers and incentivizes building more. More servers attract more users to MCP-supporting hosts; more users create more incentive to build servers. The value is multiplicative: N servers × M hosts = N×M working connections from N+M implementations. With 1000+ servers and dozens of supporting hosts, the ecosystem delivers tens of thousands of working integrations from a few thousand implementations — a ratio no proprietary alternative can match.
 
 ---
 

@@ -167,7 +167,7 @@ RAG Engine is purpose-built for retrieval to feed into Gemini. It exposes a retr
 - Google Drive
 - Google Cloud Storage (PDFs, text files)
 - Inline text
-- Slack, Jira (via connectors — preview as of 2025)
+- Slack, Jira (via connectors — in preview)
 
 ### Code
 

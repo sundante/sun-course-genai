@@ -23,7 +23,7 @@ This section is structured to follow the historical development of the field:
 2023  ToT, self-consistency — systematic search over reasoning space
 2023  Production concerns: injection, evals, versioning, structured output
 2024  DSPy, OPRO — automated prompt optimization
-2025  Reasoning models change the prompting paradigm
+Now   Reasoning models change the prompting paradigm
 ```
 
 ## Chapter Map

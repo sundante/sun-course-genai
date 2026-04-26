@@ -10,6 +10,10 @@ hide:
 > Self-paced, beginner-to-advanced coverage of the full AI stack —  
 > from foundational language models through fully autonomous agentic systems.
 
+<div class="hero-banner">
+  <img src="assets/social-card.png" alt="Learn AI: Generative AI to Agentic AI" />
+</div>
+
 ---
 
 ## The Stack
