@@ -1,6 +1,6 @@
 # Status — Learn AI: Generative AI to Agentic AI
 
-Last updated: 2026-04-26
+Last updated: 2026-04-26 (end of day)
 
 ---
 
@@ -53,11 +53,14 @@ Untagged content is always visible in all modes. LLM Fundamentals is the referen
 ### Email Subscription
 - Supabase `subscribers` table: `name, email, role, background_type, country, source, confirmed`
 - Modal form: name (optional), email (required), role, background, country
-- On submit → insert to `subscribers` (confirmed: false) → magic link via SMTP for confirmation
-- On magic link click → `onAuthStateChange` fires → `confirmed = true`
+- On submit → **upsert** into `subscribers` (no duplicates; preserves `confirmed` status on re-subscribe) → magic link sent via SMTP
+- Magic link email = welcome + confirmation in one (custom HTML template in Supabase → Magic Link)
+- On magic link click → user lands on site → `onAuthStateChange` fires → `confirmed = true`
+- Re-subscribe with same email: updates fields only, confirmed status preserved, magic link re-sent
 - Smart interaction gate: shows after 5 clicks, 30-day cool-down after dismissal
 - FAB button: "✦ Stay Updated" (fixed bottom-right, always visible)
 - Close (×) always visible — users are never blocked from content
+- `profiles` table removed — all data captured in `subscribers` + `auth.users`
 
 ### Page Feedback FAB
 - Fixed bottom-right, above the Stay Updated button
@@ -90,7 +93,9 @@ Untagged content is always visible in all modes. LLM Fundamentals is the referen
 | `page_feedback` | Per-page feedback | page_slug, rating, message, email |
 | `auth.users` | Auth identities (Supabase built-in) | email, created_at |
 
-RLS enabled on both custom tables. Anon insert policies in place.
+RLS enabled on both custom tables. Anon insert + update policies in place.
+
+**Known issue to resolve:** If a Supabase DB trigger on `auth.users` still references the dropped `profiles` table, OTP calls return 500. Fix: Supabase → Database → Triggers → delete any trigger pointing to `profiles`.
 
 ---
 
