@@ -51,13 +51,13 @@ export default async function CoursePage({ params }: Props) {
   return (
     <div className="flex gap-8 max-w-none">
       <article className="flex-1 min-w-0">
-        <div className="prose prose-sm max-w-none">
+        <div className="prose prose-base max-w-none">
           <MDXRemote source={page.rawContent} options={mdxOptions as any} />
         </div>
         <PageNav prev={prev} next={next} />
       </article>
       {page.toc.length > 0 && (
-        <aside className="hidden xl:block w-56 shrink-0">
+        <aside className="hidden lg:block w-64 shrink-0">
           <TableOfContents toc={page.toc} />
         </aside>
       )}
