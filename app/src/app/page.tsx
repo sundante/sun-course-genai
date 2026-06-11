@@ -1,7 +1,5 @@
 import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
 import { getNavigationTree } from "@/lib/content/nav";
-import { cn } from "@/lib/utils";
 
 const MODULE_META: Record<string, { subtitle: string; description: string; notes: string; qa: string; num: string }> = {
   "llm-models":         { num: "01", subtitle: "The Engine",    description: "How LLMs work — architecture, attention, training, inference, and production deployment.", notes: "12 notes", qa: "68+ Q&A" },
@@ -40,12 +38,14 @@ export default function HomePage() {
             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
             Star on GitHub
           </a>
-          <Link
-            href="/login"
-            className={cn(buttonVariants({ size: "sm" }), "text-xs bg-sun-yellow text-sun-dark hover:bg-sun-yellow-dk border-0")}
+          <a
+            href="https://sunmintz.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center text-xs font-semibold bg-sun-yellow text-sun-dark hover:bg-sun-yellow-dk rounded-md px-3 py-1.5 transition-colors"
           >
-            Sign in
-          </Link>
+            sunmintz.com
+          </a>
         </div>
       </header>
 

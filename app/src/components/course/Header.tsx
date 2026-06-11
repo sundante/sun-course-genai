@@ -101,12 +101,6 @@ export function Header() {
           >
             Quiz
           </Link>
-          <Link
-            href="/login"
-            className="inline-flex items-center text-xs font-semibold text-sun-dark border border-sun-yellow-bdr hover:border-sun-yellow hover:bg-sun-yellow-dim rounded-md px-2.5 py-1 transition-colors"
-          >
-            Sign in
-          </Link>
         </div>
       </div>
     </header>
