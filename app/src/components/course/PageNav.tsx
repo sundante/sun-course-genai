@@ -5,11 +5,12 @@ import type { PageRef } from "@/types/content";
 interface Props {
   prev?: PageRef;
   next?: PageRef;
+  className?: string;
 }
 
-export function PageNav({ prev, next }: Props) {
+export function PageNav({ prev, next, className }: Props) {
   return (
-    <nav className="flex justify-between mt-12 pt-6 border-t border-sun-yellow-bdr">
+    <nav className={className ?? "flex justify-between mt-12 pt-6 border-t border-sun-yellow-bdr"}>
       {prev ? (
         <Link
           href={prev.href}

@@ -28,10 +28,10 @@ export function TableOfContents({ toc }: { toc: TocItem[] }) {
         On this page
       </p>
       <ul className="space-y-0.5">
-        {toc.map((item) => {
+        {toc.map((item, i) => {
           const active = item.id === activeId;
           return (
-            <li key={item.id} style={{ paddingLeft: `${(item.level - 1) * 10}px` }}>
+            <li key={`${i}-${item.id}`} style={{ paddingLeft: `${(item.level - 1) * 10}px` }}>
               <a
                 href={`#${item.id}`}
                 className={`block text-sm py-1 px-2 rounded-md transition-colors leading-snug line-clamp-2 ${

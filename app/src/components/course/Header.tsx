@@ -36,17 +36,6 @@ export function Header() {
           Learn GenAI
         </Link>
 
-        {/* Sunmintz link */}
-        <a
-          href="https://sunmintz.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hidden sm:inline-flex items-center gap-1 text-xs font-medium text-sun-muted hover:text-sun-dark border border-transparent hover:border-sun-yellow-bdr hover:bg-sun-yellow-dim rounded-md px-2 py-1 transition-colors"
-        >
-          <SunIcon />
-          sunmintz.com
-        </a>
-
         <div className="flex-1" />
 
         {/* GitHub Star - always visible */}
@@ -60,6 +49,16 @@ export function Header() {
             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
           </svg>
           Github
+        </a>
+
+        {/* Sunmintz link - yellow button, hidden on mobile */}
+        <a
+          href="https://sunmintz.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold bg-sun-yellow text-sun-dark hover:bg-sun-yellow-dk rounded-md px-2.5 py-1 transition-colors shrink-0"
+        >
+          sunmintz.com
         </a>
 
         {/* Social icons - hidden on mobile */}
