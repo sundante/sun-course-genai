@@ -31,6 +31,19 @@ jobs:
         working-directory: app
         run: npm run build
 
+      - name: Show build output structure
+        run: |
+          echo "=== Files to be deployed ==="
+          find ./app/out -type f | head -30
+          echo "=== Total files ==="
+          find ./app/out -type f | wc -l
+
+      - name: Show FTP target
+        run: |
+          echo "FTP Server: ${{ secrets.FTP_SERVER }}"
+          echo "FTP Username: ${{ secrets.FTP_USERNAME }}"
+          echo "FTP Server Dir: ${{ secrets.FTP_SERVER_DIR }}"
+
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -40,6 +53,7 @@ jobs:
           local-dir: ./app/out/
           server-dir: ${{ secrets.FTP_SERVER_DIR }}
           dangerous-clean-slate: false
+          log-level: verbose
           exclude: |
             **/.git*
             **/.git*/**
