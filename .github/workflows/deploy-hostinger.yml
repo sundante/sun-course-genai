@@ -1,15 +1,10 @@
 name: Deploy to Hostinger
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
-    inputs:
-      environment:
-        description: "Target environment"
-        required: true
-        default: "production"
-        type: choice
-        options:
-          - production
 
 jobs:
   build-and-deploy:
@@ -22,6 +17,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
       - name: Install dependencies
         run: npm ci
@@ -50,8 +53,9 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./out/
           server-dir: /domains/sunmintz.com/public_html/learngenai/
-          dangerous-clean-slate: false
+          dangerous-clean-slate: true
           log-level: verbose
           exclude: |
             **/.git*
             **/.git*/**
+            **/*.txt
