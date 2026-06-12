@@ -42,7 +42,7 @@ jobs:
         run: |
           echo "FTP Server: ${{ secrets.FTP_SERVER }}"
           echo "FTP Username: ${{ secrets.FTP_USERNAME }}"
-          echo "FTP Server Dir: ${{ secrets.FTP_SERVER_DIR }}"
+          echo "FTP Server Dir: /domains/sunmintz.com/public_html/learngenai/"
 
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -51,7 +51,7 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./app/out/
-          server-dir: ${{ secrets.FTP_SERVER_DIR }}
+          server-dir: /domains/sunmintz.com/public_html/learngenai/
           dangerous-clean-slate: false
           log-level: verbose
           exclude: |
