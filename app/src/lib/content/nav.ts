@@ -4,7 +4,7 @@ import yaml from "js-yaml";
 import type { NavItem, NavModule, NavigationTree, PageRef } from "@/types/content";
 
 const DOCS_DIR = path.join(process.cwd(), "../docs");
-const MKDOCS_PATH = path.join(process.cwd(), "../mkdocs.yml");
+const NAV_PATH = path.join(DOCS_DIR, "nav.yml");
 
 /** Map from top-level nav section title to URL module slug */
 const MODULE_SLUG_MAP: Record<string, string> = {
@@ -68,10 +68,8 @@ let _cache: NavigationTree | null = null;
 export function getNavigationTree(): NavigationTree {
   if (_cache) return _cache;
 
-  const raw = fs.readFileSync(MKDOCS_PATH, "utf-8");
-  // Strip Python-specific YAML tags (e.g. !!python/name:...) before parsing
-  const safeRaw = raw.replace(/!![a-zA-Z][a-zA-Z/:.]+/g, "null");
-  const config = yaml.load(safeRaw) as { nav: MkDocsNavEntry[] };
+  const raw = fs.readFileSync(NAV_PATH, "utf-8");
+  const config = yaml.load(raw) as { nav: MkDocsNavEntry[] };
 
   const modules: NavModule[] = [];
   const flatPages: PageRef[] = [];
