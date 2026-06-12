@@ -10,7 +10,7 @@ A purely reactive agent takes one step at a time, deciding what to do based only
 
 Consider the task: "Prepare a comprehensive competitive analysis of EV battery manufacturers for our board presentation next Tuesday."
 
-A reactive agent starts immediately — perhaps searching for "EV battery manufacturers" — without considering:
+A reactive agent starts immediately - perhaps searching for "EV battery manufacturers" - without considering:
 - What structure the analysis should have
 - Which manufacturers to cover and why
 - What data needs to be gathered for each manufacturer
@@ -19,7 +19,7 @@ A reactive agent starts immediately — perhaps searching for "EV battery manufa
 
 An agent with planning produces a structured plan first, validates it, then executes. The plan is the agent's theory of how to solve the problem. Execution tests that theory. Replanning corrects it when reality diverges.
 
-The choice of planning strategy — whether to reason step-by-step, plan upfront, explore multiple approaches, or verify outputs — determines both the quality and cost of the result.
+The choice of planning strategy - whether to reason step-by-step, plan upfront, explore multiple approaches, or verify outputs - determines both the quality and cost of the result.
 
 ---
 
@@ -27,7 +27,7 @@ The choice of planning strategy — whether to reason step-by-step, plan upfront
 
 ### What It Is
 
-Chain of Thought is the simplest "planning" technique: prompt the model to reason through a problem step by step before giving an answer. The reasoning is not action — it's the model thinking out loud before committing.
+Chain of Thought is the simplest "planning" technique: prompt the model to reason through a problem step by step before giving an answer. The reasoning is not action - it's the model thinking out loud before committing.
 
 ```
 Without CoT:
@@ -115,7 +115,7 @@ Action: [FINAL ANSWER]
 Princeton University and was previously VP of Research at OpenAI before co-founding Anthropic."
 ```
 
-The "Thought" lines are not tool calls — they are the LLM reasoning out loud about what it knows and what it needs next. This makes the agent's logic visible and gives it the chance to self-correct before taking an action.
+The "Thought" lines are not tool calls - they are the LLM reasoning out loud about what it knows and what it needs next. This makes the agent's logic visible and gives it the chance to self-correct before taking an action.
 
 ### ReAct System Prompt
 
@@ -137,7 +137,7 @@ Final Answer: [your complete response to the user]
 
 Rules:
 - Always write a Thought before every Action
-- Never make up tool results — wait for the real Observation
+- Never make up tool results - wait for the real Observation
 - If a tool call fails, reason about the failure and try a different approach
 - Never call the same tool with identical arguments twice
 """
@@ -149,7 +149,7 @@ Rules:
 
 2. **Maintains goal awareness**: Each Thought step reconnects the agent to what it is ultimately trying to accomplish. Without this, agents drift toward solving the most recent subproblem and forget the original task.
 
-3. **Makes debugging possible**: When the agent produces a wrong answer, you can read the Thought steps to find exactly where the reasoning went wrong — often before any tool was even called.
+3. **Makes debugging possible**: When the agent produces a wrong answer, you can read the Thought steps to find exactly where the reasoning went wrong - often before any tool was even called.
 
 ### ReAct Failure Modes
 
@@ -235,7 +235,7 @@ async def plan_and_execute(goal: str) -> str:
         if result.success:
             completed_steps.append({"step": step, "result": result.output})
         else:
-            # Step failed — replan from here
+            # Step failed - replan from here
             updated_plan = await replan(
                 goal=goal,
                 completed=completed_steps,
@@ -387,7 +387,7 @@ Standard RAG:
 Problem: Context retrieved at step 1 may not cover specific sections (e.g., quantum error correction details)
 
 FLARE:
-1. Generate paragraph 1 (introduction — no retrieval needed)
+1. Generate paragraph 1 (introduction - no retrieval needed)
 2. Detect uncertainty: "I need to write about the current state of IBM's quantum systems..."
 3. Retrieve: search("IBM quantum computer 2024 qubits")
 4. Generate paragraph 2 using retrieved context
@@ -447,7 +447,7 @@ Reflexion is a pattern where the agent evaluates its own output (or a separate e
 ```
 Attempt 1:
   Task: "Write a Python function to reverse a linked list"
-  Output: [code with a bug — doesn't handle single-node lists]
+  Output: [code with a bug - doesn't handle single-node lists]
   Test results: 3/5 tests pass
   
 Reflection:
@@ -585,7 +585,7 @@ def decompose_with_dependencies(goal: str) -> list[Subtask]:
 
 **Decision rules:**
 
-1. Start with ReAct — it handles the majority of tasks well
+1. Start with ReAct - it handles the majority of tasks well
 2. Use Plan-and-Execute when you need HITL approval before execution or when the task is a known workflow
 3. Use Tree of Thoughts when the problem has multiple non-obvious solution approaches and quality outweighs cost
 4. Use FLARE when generating long documents that require retrieval at multiple points
@@ -658,29 +658,29 @@ class PlanExecutor:
 ## Study Notes
 
 - **ReAct is the default.** Use it unless you have a specific reason for something more complex. It handles more tasks than you'd expect and is much easier to debug than elaborate planning strategies.
-- **Plan-and-Execute's hidden superpower is HITL.** Being able to show a human the plan before executing anything — and getting approval or modification — is enormously valuable for high-stakes tasks. This alone often justifies the added complexity.
+- **Plan-and-Execute's hidden superpower is HITL.** Being able to show a human the plan before executing anything - and getting approval or modification - is enormously valuable for high-stakes tasks. This alone often justifies the added complexity.
 - **Tree of Thoughts is a premium tool.** The branching factor rapidly multiplies your LLM call count. Profile the cost before deploying. It's justified for one-time complex decisions, not for high-volume routine tasks.
 - **Replanning is different from retrying.** Retrying is running the same step again. Replanning is reconsidering the remaining work given that the step failed. Retrying is for transient errors; replanning is for fundamental approach failures.
-- **Decomposition quality determines everything downstream.** A bad decomposition — wrong seams, hidden dependencies, wrong granularity — will cause failures regardless of which reasoning strategy you use. Invest time in the decomposition prompt.
+- **Decomposition quality determines everything downstream.** A bad decomposition - wrong seams, hidden dependencies, wrong granularity - will cause failures regardless of which reasoning strategy you use. Invest time in the decomposition prompt.
 
 ---
 
 ## Q&A Review Bank
 
 **Q1: What is the difference between Chain of Thought and ReAct?** `[Easy]`
-A: Chain of Thought is a reasoning technique where the model thinks step by step before producing an answer — it's pure text generation, no tool calls, no external actions. ReAct (Reason + Act) is an agent pattern that interleaves explicit reasoning traces (Thought) with tool calls (Action) and tool results (Observation). CoT gives the model more reasoning steps within a single LLM call; ReAct enables the agent to take actions and observe results across multiple LLM calls in a loop. CoT improves answers to complex questions; ReAct enables agents to retrieve information, execute code, and interact with external systems. In practice, ReAct uses CoT-style reasoning within each Thought step.
+A: Chain of Thought is a reasoning technique where the model thinks step by step before producing an answer - it's pure text generation, no tool calls, no external actions. ReAct (Reason + Act) is an agent pattern that interleaves explicit reasoning traces (Thought) with tool calls (Action) and tool results (Observation). CoT gives the model more reasoning steps within a single LLM call; ReAct enables the agent to take actions and observe results across multiple LLM calls in a loop. CoT improves answers to complex questions; ReAct enables agents to retrieve information, execute code, and interact with external systems. In practice, ReAct uses CoT-style reasoning within each Thought step.
 
 **Q2: When should you choose Plan-and-Execute over ReAct?** `[Medium]`
-A: Choose Plan-and-Execute when: (1) the full task structure can be determined upfront — you know what the steps are before executing any of them; (2) HITL review of the plan before execution is required — you need a human to see and approve the approach before any action is taken; (3) the task is a known workflow (research → write → review) where the structure is predictable; (4) transparency and progress tracking matter — a plan with checkable steps is easier to report to users. Use ReAct when: the right next step depends on the result of the previous step (dynamic discovery), the task structure is unknown upfront, or speed is the primary concern and overhead of planning is not justified.
+A: Choose Plan-and-Execute when: (1) the full task structure can be determined upfront - you know what the steps are before executing any of them; (2) HITL review of the plan before execution is required - you need a human to see and approve the approach before any action is taken; (3) the task is a known workflow (research → write → review) where the structure is predictable; (4) transparency and progress tracking matter - a plan with checkable steps is easier to report to users. Use ReAct when: the right next step depends on the result of the previous step (dynamic discovery), the task structure is unknown upfront, or speed is the primary concern and overhead of planning is not justified.
 
 **Q3: What is Tree of Thoughts and what cost does it introduce?** `[Medium]`
-A: Tree of Thoughts models reasoning as a search tree — instead of committing to one reasoning path, the agent generates multiple candidate thoughts (branches), evaluates each, and continues from the most promising. This allows exploring multiple solution approaches before committing. The cost is multiplicative: if the branching factor is 3, every step requires 3× the LLM calls of a linear approach plus additional evaluation calls. Across 3 depth levels with branching factor 3, that's roughly 27 leaf nodes + 9 + 3 = 39 LLM calls vs 3 for linear. ToT is justified only when: the problem has non-obvious solution paths, choosing the wrong path leads to dead ends, and quality significantly outweighs cost.
+A: Tree of Thoughts models reasoning as a search tree - instead of committing to one reasoning path, the agent generates multiple candidate thoughts (branches), evaluates each, and continues from the most promising. This allows exploring multiple solution approaches before committing. The cost is multiplicative: if the branching factor is 3, every step requires 3× the LLM calls of a linear approach plus additional evaluation calls. Across 3 depth levels with branching factor 3, that's roughly 27 leaf nodes + 9 + 3 = 39 LLM calls vs 3 for linear. ToT is justified only when: the problem has non-obvious solution paths, choosing the wrong path leads to dead ends, and quality significantly outweighs cost.
 
 **Q4: What is FLARE and what specific problem does it solve that standard RAG does not?** `[Hard]`
-A: FLARE (Forward-Looking Active Retrieval Enhanced Generation) solves iterative retrieval for long document generation. Standard RAG retrieves documents once at the start and generates the entire output from that context. For short answers this works; for long reports or documents, the initial retrieval may be relevant for the first few sections but not later sections that need different facts. FLARE retrieves iteratively: it generates incrementally, detects when it's uncertain (hedging language, unknown specifics), generates a retrieval query for that specific uncertainty, retrieves new context, and continues generation. This ensures every section of a long output is grounded in relevant, retrieved context — not hallucinated from model weights or extrapolated from context retrieved for a different section.
+A: FLARE (Forward-Looking Active Retrieval Enhanced Generation) solves iterative retrieval for long document generation. Standard RAG retrieves documents once at the start and generates the entire output from that context. For short answers this works; for long reports or documents, the initial retrieval may be relevant for the first few sections but not later sections that need different facts. FLARE retrieves iteratively: it generates incrementally, detects when it's uncertain (hedging language, unknown specifics), generates a retrieval query for that specific uncertainty, retrieves new context, and continues generation. This ensures every section of a long output is grounded in relevant, retrieved context - not hallucinated from model weights or extrapolated from context retrieved for a different section.
 
 **Q5: What is the difference between retrying a failed step and replanning?** `[Medium]`
-A: Retrying executes the same step again with the same approach — appropriate for transient failures (network timeout, rate limit, temporary service outage) where the step itself is correct and the failure was environmental. Replanning reconsidering the remaining work given that a step failed — appropriate for fundamental approach failures where the step cannot succeed as designed (the tool doesn't exist, the data isn't available, the approach was wrong). Retrying a fundamentally broken step wastes time and money. Replanning rethinks the remaining subtasks to achieve the goal through a different path, preserving all work completed before the failure. A robust agent classifies failures before retrying: transient errors → retry with backoff; fundamental errors → replan.
+A: Retrying executes the same step again with the same approach - appropriate for transient failures (network timeout, rate limit, temporary service outage) where the step itself is correct and the failure was environmental. Replanning reconsidering the remaining work given that a step failed - appropriate for fundamental approach failures where the step cannot succeed as designed (the tool doesn't exist, the data isn't available, the approach was wrong). Retrying a fundamentally broken step wastes time and money. Replanning rethinks the remaining subtasks to achieve the goal through a different path, preserving all work completed before the failure. A robust agent classifies failures before retrying: transient errors → retry with backoff; fundamental errors → replan.
 
 **Q6: Why is goal decomposition considered a critical skill and what are the three most common decomposition mistakes?** `[Hard]`
-A: Decomposition quality determines the quality of everything downstream — a bad decomposition leads to coordination overhead, execution failures, and replanning that could have been avoided. The three most common mistakes: (1) Wrong seams — splitting at artificial boundaries rather than natural ones (e.g., splitting "write paragraph 1" and "write paragraph 2" as separate subtasks when the agent can't write paragraph 2 without knowing how paragraph 1 ends; the natural seam is between research/writing/review phases). (2) Hidden dependencies — creating subtasks that depend on each other in ways not captured in the dependency graph, causing deadlocks or incorrect ordering at execution time; uncovering dependencies requires explicitly asking the model to reason about what each task needs as inputs. (3) Wrong granularity — subtasks that are either so granular they add coordination overhead without benefit, or so coarse that each subtask is still too complex for a single agent to complete reliably.
+A: Decomposition quality determines the quality of everything downstream - a bad decomposition leads to coordination overhead, execution failures, and replanning that could have been avoided. The three most common mistakes: (1) Wrong seams - splitting at artificial boundaries rather than natural ones (e.g., splitting "write paragraph 1" and "write paragraph 2" as separate subtasks when the agent can't write paragraph 2 without knowing how paragraph 1 ends; the natural seam is between research/writing/review phases). (2) Hidden dependencies - creating subtasks that depend on each other in ways not captured in the dependency graph, causing deadlocks or incorrect ordering at execution time; uncovering dependencies requires explicitly asking the model to reason about what each task needs as inputs. (3) Wrong granularity - subtasks that are either so granular they add coordination overhead without benefit, or so coarse that each subtask is still too complex for a single agent to complete reliably.

@@ -1,4 +1,4 @@
-# GCP Agent Development Kit (ADK) — Fundamentals
+# GCP Agent Development Kit (ADK) - Fundamentals
 
 ## ADK Overview and Philosophy
 

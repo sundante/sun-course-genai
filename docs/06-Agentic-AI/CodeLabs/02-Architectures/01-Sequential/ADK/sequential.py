@@ -1,5 +1,5 @@
 """
-Sequential Architecture — Google ADK
+Sequential Architecture - Google ADK
 Pattern: Research → Summarize → Format report (A → B → C pipeline)
 
 ADK implements sequential pipelines via agent instruction with explicit numbered steps.
@@ -54,12 +54,12 @@ agent = Agent(
     description="Produces a formatted travel report via a strict Research → Summarize → Format pipeline.",
     instruction="""You are a travel report generator. For any city comparison request, follow these steps EXACTLY:
 
-STEP 1 — RESEARCH: Call fetch_city_data() for EACH city. Never skip a city.
+STEP 1 - RESEARCH: Call fetch_city_data() for EACH city. Never skip a city.
 
-STEP 2 — SUMMARIZE: For each city, write a concise 2-sentence summary using the fetched data.
+STEP 2 - SUMMARIZE: For each city, write a concise 2-sentence summary using the fetched data.
   Format: "City summary: [2 sentences covering weather, safety, key attraction]"
 
-STEP 3 — FORMAT: Compile all summaries into a polished travel report:
+STEP 3 - FORMAT: Compile all summaries into a polished travel report:
   - Use '## Travel Report' as the top header
   - Use '### [City Name]' as each city's section header
   - Include weather, safety level, local time, and top attraction for each city

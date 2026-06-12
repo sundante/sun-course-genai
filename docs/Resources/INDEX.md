@@ -1,4 +1,4 @@
-# Resources — Master Index
+# Resources - Master Index
 
 All reference PDFs and assets for the GenAI curriculum.
 

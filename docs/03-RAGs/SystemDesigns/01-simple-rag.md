@@ -16,7 +16,7 @@
 
 | Question | Why It Matters |
 |---|---|
-| What document types? (PDF, Word, HTML, scanned images?) | Determines parsers needed — scanned PDFs require OCR (Document AI) |
+| What document types? (PDF, Word, HTML, scanned images?) | Determines parsers needed - scanned PDFs require OCR (Document AI) |
 | Expected query types? (factual lookup, comparison, summarization?) | Factual → top-3 chunks sufficient; summarization → may need 20+ chunks |
 | What is the acceptable hallucination rate? (0%? <5%?) | Drives need for guardrails, grounding checks, citation enforcement |
 | Does freshness matter? (new docs within minutes, hours, or daily batch?) | Real-time → streaming ingestion; batch is fine → scheduled pipelines |
@@ -106,9 +106,9 @@
 **Trigger:** New file lands in Cloud Storage bucket → Eventarc → Cloud Run parser job.
 
 **Parser decisions:**
-- Native PDF (text layer present) → `pdfplumber` / `pypdf` — fast, no API cost
-- Scanned PDF / image PDFs → Document AI (Form Parser or Document OCR) — preserves layout, tables
-- Word/PPTX → `python-docx`, `python-pptx` — extract paragraphs + headings
+- Native PDF (text layer present) → `pdfplumber` / `pypdf` - fast, no API cost
+- Scanned PDF / image PDFs → Document AI (Form Parser or Document OCR) - preserves layout, tables
+- Word/PPTX → `python-docx`, `python-pptx` - extract paragraphs + headings
 - HTML → `BeautifulSoup` with `boilerpy3` to strip navigation/ads
 
 **Metadata enriched at parse time:**
@@ -151,7 +151,7 @@
 - Batched at 250 docs/batch via Cloud Tasks
 
 **Index:** Vertex AI Vector Search
-- Algorithm: ScaNN (Scalable Nearest Neighbor) — tree-AH hybrid
+- Algorithm: ScaNN (Scalable Nearest Neighbor) - tree-AH hybrid
 - Recall target: 98% at top-10
 - Shards: 5 (5M docs ÷ 1M per shard)
 - Online updates enabled for near-real-time ingestion
@@ -177,7 +177,7 @@ Reranker:
   Keep: top-3 chunks above threshold 0.4
 ```
 
-**Why rerank after RRF?** RRF is an unsupervised fusion — it can elevate lexically-matching but semantically-shallow chunks. A cross-encoder cross-attends between query and full chunk text and produces calibrated relevance scores.
+**Why rerank after RRF?** RRF is an unsupervised fusion - it can elevate lexically-matching but semantically-shallow chunks. A cross-encoder cross-attends between query and full chunk text and produces calibrated relevance scores.
 
 ---
 
@@ -200,7 +200,7 @@ Question: {user_query}
 Answer:
 ```
 
-**Model:** Gemini 1.5 Pro (128k context window — fits 3-10 chunks comfortably, no lost-in-middle risk at this scale)
+**Model:** Gemini 1.5 Pro (128k context window - fits 3-10 chunks comfortably, no lost-in-middle risk at this scale)
 
 **Grounding check:** Vertex AI Grounding API validates that each sentence in the answer is attributable to the provided context. Claims without grounding are flagged.
 
@@ -243,7 +243,7 @@ Answer:
 | Sparse search | 30ms | Yes | AlloyDB read replicas |
 | Reranking | 50ms | Yes (batched) | Reranker API auto-scales |
 | Generation (Gemini) | 800–1500ms | Yes | Vertex AI handles quota per project |
-| **Total P99** | **~2.5s** | — | Within 3s SLA |
+| **Total P99** | **~2.5s** | - | Within 3s SLA |
 
 **Scaling levers:**
 - Cloud Run: `--min-instances=10` to prevent cold starts under load
@@ -297,40 +297,40 @@ Vertex AI Vector Search supports online index updates (upsert/delete) without re
 
 **Q1: A user complains that a critical answer "isn't in the system" even though you can manually find it in a document. What are the top 3 causes and how do you diagnose each?** `[Hard]`
 
-A: (1) **Embedding model mismatch** — the document uses domain-specific terminology (e.g., "SOX compliance audit cycle") that the embedding model encodes differently than the user's query ("financial audit timeline"). Diagnose by running the query against BM25 alone — if BM25 finds it but vector search doesn't, it's a semantic gap. Fix: domain-adapted embedding or expand query with HyDE. (2) **Chunking boundary problem** — the key fact spans two chunks and neither chunk alone contains enough context for a high similarity score. Diagnose by inspecting which chunk contains the sentence. Fix: increase overlap, or use parent-child retrieval where the parent chunk contains the full context. (3) **Metadata filtering too aggressive** — a pre-filter by department/date excluded the relevant document. Diagnose by running without filters. Fix: broaden filter logic or remove it for fallback queries.
+A: (1) **Embedding model mismatch** - the document uses domain-specific terminology (e.g., "SOX compliance audit cycle") that the embedding model encodes differently than the user's query ("financial audit timeline"). Diagnose by running the query against BM25 alone - if BM25 finds it but vector search doesn't, it's a semantic gap. Fix: domain-adapted embedding or expand query with HyDE. (2) **Chunking boundary problem** - the key fact spans two chunks and neither chunk alone contains enough context for a high similarity score. Diagnose by inspecting which chunk contains the sentence. Fix: increase overlap, or use parent-child retrieval where the parent chunk contains the full context. (3) **Metadata filtering too aggressive** - a pre-filter by department/date excluded the relevant document. Diagnose by running without filters. Fix: broaden filter logic or remove it for fallback queries.
 
 ---
 
 **Q2: Why is hybrid retrieval (dense + sparse) better than dense-only retrieval, and when does sparse search have a structural advantage?** `[Medium]`
 
-A: Dense (embedding) search excels at semantic similarity — it finds chunks that mean the same thing even with different words. Sparse (BM25) search excels at exact-match retrieval — it finds documents containing the exact query tokens, which is critical for product codes, acronyms, proper nouns, and rare technical terms that embedding models compress into similar vectors as related-but-wrong concepts. Example: query "CVE-2024-1234 vulnerability" — a dense model may retrieve general "vulnerability management" content; BM25 will pinpoint the exact CVE document because it exact-matches the token. Hybrid search with RRF combines both signals without requiring a learned fusion model, making it robust to distributional shifts in the query population.
+A: Dense (embedding) search excels at semantic similarity - it finds chunks that mean the same thing even with different words. Sparse (BM25) search excels at exact-match retrieval - it finds documents containing the exact query tokens, which is critical for product codes, acronyms, proper nouns, and rare technical terms that embedding models compress into similar vectors as related-but-wrong concepts. Example: query "CVE-2024-1234 vulnerability" - a dense model may retrieve general "vulnerability management" content; BM25 will pinpoint the exact CVE document because it exact-matches the token. Hybrid search with RRF combines both signals without requiring a learned fusion model, making it robust to distributional shifts in the query population.
 
 ---
 
 **Q3: How does the semantic cache work and what are the failure modes introduced by caching RAG responses?** `[Hard]`
 
-A: The semantic cache stores `(query_embedding → cached_response)` pairs in Redis. On each new query, its embedding is computed and a nearest-neighbor lookup in the cache checks whether a "similar enough" prior query has been answered (typically cosine similarity > 0.95). If yes, the cached response is returned without hitting Vector Search or the LLM. Failure modes: (1) **Stale cache** — if the underlying document is updated after the cache entry was created, the cached answer is outdated. Fix: short TTL (1–4 hours) or invalidate on document update. (2) **Similarity threshold too low** — different questions get the same answer (e.g., "Who is the CEO?" vs "Who is the CFO?" may have embeddings close enough to hit the same cache entry). Fix: tighten threshold to 0.98+. (3) **Cache pollution** — rare or malicious queries poison cache slots. Fix: only cache queries above a minimum frequency threshold.
+A: The semantic cache stores `(query_embedding → cached_response)` pairs in Redis. On each new query, its embedding is computed and a nearest-neighbor lookup in the cache checks whether a "similar enough" prior query has been answered (typically cosine similarity > 0.95). If yes, the cached response is returned without hitting Vector Search or the LLM. Failure modes: (1) **Stale cache** - if the underlying document is updated after the cache entry was created, the cached answer is outdated. Fix: short TTL (1–4 hours) or invalidate on document update. (2) **Similarity threshold too low** - different questions get the same answer (e.g., "Who is the CEO?" vs "Who is the CFO?" may have embeddings close enough to hit the same cache entry). Fix: tighten threshold to 0.98+. (3) **Cache pollution** - rare or malicious queries poison cache slots. Fix: only cache queries above a minimum frequency threshold.
 
 ---
 
 **Q4: Design the latency budget for a 3-second P99 SLA. Which stage is the most dangerous and why?** `[Hard]`
 
-A: Budget breakdown: auth (20ms) → query embedding (20ms) → cache lookup (5ms) → vector search (80ms) → sparse search (30ms) → RRF fusion (5ms) → reranking (50ms) → prompt assembly (5ms) → Gemini generation (800–1500ms P99) → response serialization (10ms) = ~1.5–2.2s under normal load. The **generation stage is most dangerous** because it's the only stage that doesn't scale horizontally in a way you control — it depends on Gemini API P99 latency which can spike under shared infrastructure load. Mitigations: (1) semantic cache to skip generation for repeated queries; (2) Gemini Flash for short factual queries (3× faster); (3) streaming responses so users perceive faster response even if total latency is 3s; (4) timeout budget of 2s for generation with fallback to "Please try again."
+A: Budget breakdown: auth (20ms) → query embedding (20ms) → cache lookup (5ms) → vector search (80ms) → sparse search (30ms) → RRF fusion (5ms) → reranking (50ms) → prompt assembly (5ms) → Gemini generation (800–1500ms P99) → response serialization (10ms) = ~1.5–2.2s under normal load. The **generation stage is most dangerous** because it's the only stage that doesn't scale horizontally in a way you control - it depends on Gemini API P99 latency which can spike under shared infrastructure load. Mitigations: (1) semantic cache to skip generation for repeated queries; (2) Gemini Flash for short factual queries (3× faster); (3) streaming responses so users perceive faster response even if total latency is 3s; (4) timeout budget of 2s for generation with fallback to "Please try again."
 
 ---
 
 **Q5: A regulatory audit requires you to prove that every answer the system gave was grounded in a specific document version. How do you design for this?** `[Hard]`
 
-A: Three layers of auditability needed: (1) **Document versioning** — every document in Cloud Storage is versioned (Object Versioning enabled). Each chunk stores `doc_id + version_hash` as metadata. When a document is updated, old chunks are soft-deleted (marked `archived: true`) rather than deleted, so historical retrievals can be reconstructed. (2) **Query logging** — every query logs to BigQuery: `query_id, user_id, timestamp, query_text, retrieved_chunk_ids (with version_hash), prompt_sent_to_llm, llm_response, grounding_score`. This creates a complete audit trail. (3) **Grounding verification** — the Vertex AI Grounding API response includes which sentences are attributed to which source segments. This response is logged alongside the answer. An auditor can replay the query, retrieve the same versioned chunks, and verify the answer was derivable from those specific document versions.
+A: Three layers of auditability needed: (1) **Document versioning** - every document in Cloud Storage is versioned (Object Versioning enabled). Each chunk stores `doc_id + version_hash` as metadata. When a document is updated, old chunks are soft-deleted (marked `archived: true`) rather than deleted, so historical retrievals can be reconstructed. (2) **Query logging** - every query logs to BigQuery: `query_id, user_id, timestamp, query_text, retrieved_chunk_ids (with version_hash), prompt_sent_to_llm, llm_response, grounding_score`. This creates a complete audit trail. (3) **Grounding verification** - the Vertex AI Grounding API response includes which sentences are attributed to which source segments. This response is logged alongside the answer. An auditor can replay the query, retrieve the same versioned chunks, and verify the answer was derivable from those specific document versions.
 
 ---
 
 **Q6: Compare Vertex AI Vector Search vs. AlloyDB pgvector for this use case. When would you choose each?** `[Medium]`
 
-A: Vertex AI Vector Search is a dedicated ANN service — it handles billion-scale corpora, online index updates, and ~80ms P99 at scale with no operational overhead. It's the right choice when vector search is your primary query pattern and you need managed scaling. AlloyDB pgvector runs vector search as a PostgreSQL extension — you get SQL joins between vector results and structured metadata in the same query (e.g., `WHERE department = 'HR' AND cosine_similarity > 0.8`). It's the right choice when your retrieval requires complex metadata joins, when corpus size is <10M docs, or when you want hybrid BM25 + vector in one query. For this system: use both in tandem — Vector Search for high-throughput dense retrieval; AlloyDB for sparse BM25 and metadata-filtered lookups. The hybrid retrieval layer fuses results from both.
+A: Vertex AI Vector Search is a dedicated ANN service - it handles billion-scale corpora, online index updates, and ~80ms P99 at scale with no operational overhead. It's the right choice when vector search is your primary query pattern and you need managed scaling. AlloyDB pgvector runs vector search as a PostgreSQL extension - you get SQL joins between vector results and structured metadata in the same query (e.g., `WHERE department = 'HR' AND cosine_similarity > 0.8`). It's the right choice when your retrieval requires complex metadata joins, when corpus size is <10M docs, or when you want hybrid BM25 + vector in one query. For this system: use both in tandem - Vector Search for high-throughput dense retrieval; AlloyDB for sparse BM25 and metadata-filtered lookups. The hybrid retrieval layer fuses results from both.
 
 ---
 
 **Q7: What is "lost-in-the-middle" and how do you mitigate it in this system?** `[Medium]`
 
-A: Lost-in-the-middle is the empirically-observed degradation in LLM attention on context chunks placed in the middle of a long context window — information in positions 2 through N-1 is less well-utilized than the first and last chunks. For a 3-chunk RAG context, this is minimal, but for 10+ chunks it significantly degrades answer quality. Mitigations: (1) **Limit to 3–5 chunks** — enforce a hard cap on context size, relying on the reranker to surface only the most relevant. (2) **Positional priority** — place the highest-relevance chunk first and second, not in the middle. (3) **Summary-then-detail** — prepend a 2-sentence summary of each chunk before the full text, giving the model anchor points. (4) **Gemini 1.5 Pro's 128k window** — while the problem exists, it's less severe in Gemini 1.5 than earlier models, which exhibited sharper degradation at the 4–8k mark.
+A: Lost-in-the-middle is the empirically-observed degradation in LLM attention on context chunks placed in the middle of a long context window - information in positions 2 through N-1 is less well-utilized than the first and last chunks. For a 3-chunk RAG context, this is minimal, but for 10+ chunks it significantly degrades answer quality. Mitigations: (1) **Limit to 3–5 chunks** - enforce a hard cap on context size, relying on the reranker to surface only the most relevant. (2) **Positional priority** - place the highest-relevance chunk first and second, not in the middle. (3) **Summary-then-detail** - prepend a 2-sentence summary of each chunk before the full text, giving the model anchor points. (4) **Gemini 1.5 Pro's 128k window** - while the problem exists, it's less severe in Gemini 1.5 than earlier models, which exhibited sharper degradation at the 4–8k mark.

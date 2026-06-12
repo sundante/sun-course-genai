@@ -1,7 +1,7 @@
 """
-Code Review System — LangChain Implementation
+Code Review System - LangChain Implementation
 =============================================
-System    : 04 — Code Review System
+System    : 04 - Code Review System
 Framework : LangChain (LCEL)
 Model     : gemini-2.0-flash via langchain-google-genai
 
@@ -120,7 +120,7 @@ def critique_report(code_diff: str, report: str) -> dict:
 def run_code_review(code_diff: str) -> str:
     """Main orchestrator: run the full code review pipeline."""
     print("\n" + "="*60)
-    print("CODE REVIEW SYSTEM — LangChain")
+    print("CODE REVIEW SYSTEM - LangChain")
     print("="*60)
 
     # Parallel fan-out

@@ -1,5 +1,5 @@
 """
-Adversarial Debate Architecture — Google ADK
+Adversarial Debate Architecture - Google ADK
 Pattern: Proposer sub-agent → Critic sub-agent → Judge synthesizes
 
 The moderator agent orchestrates the debate:

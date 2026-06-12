@@ -1,7 +1,7 @@
 """
-Research Assistant — LangChain Implementation
+Research Assistant - LangChain Implementation
 ==============================================
-System    : 01 — Research Assistant
+System    : 01 - Research Assistant
 Framework : LangChain (LCEL)
 Model     : gemini-2.0-flash via langchain-google-genai
 
@@ -34,7 +34,7 @@ DOMAIN_DATA = {
             "Toyota plans to commercialize solid-state EV batteries by 2027-2028",
             "Solid-state batteries offer 2x energy density vs lithium-ion with no liquid electrolyte fire risk",
             "QuantumScape (backed by VW) achieved 800+ charge cycles in lab conditions",
-            "Key challenge: manufacturing at scale — current yield rates below 80%",
+            "Key challenge: manufacturing at scale - current yield rates below 80%",
             "CATL and Samsung SDI both have active solid-state programs",
         ],
         "default": ["No technology data found for this query"]
@@ -195,7 +195,7 @@ def run_research_assistant(query: str, max_iterations: int = 2) -> str:
     Flow: parallel search → synthesis → critique → (revise if needed) → final report
     """
     print(f"\n{'='*60}")
-    print(f"RESEARCH ASSISTANT — LangChain")
+    print(f"RESEARCH ASSISTANT - LangChain")
     print(f"Query: {query}")
     print(f"{'='*60}")
 
@@ -219,7 +219,7 @@ def run_research_assistant(query: str, max_iterations: int = 2) -> str:
         print(f"[Synthesis Agent] Revising report...")
         report = run_synthesis_agent(query, search_results, critique=eval_result["critique"])
     else:
-        print(f"[Orchestrator] Max iterations reached — returning best available report")
+        print(f"[Orchestrator] Max iterations reached - returning best available report")
 
     return report
 

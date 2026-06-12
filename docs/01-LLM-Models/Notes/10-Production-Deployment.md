@@ -58,7 +58,7 @@ Tokens-per-second (TPS)    = 1 / per-token-decode-time
 **SLO targets (typical):**
 - User-facing chat: TTFT < 500ms, TPS > 15 tokens/second (below this feels slow)
 - Batch processing: throughput matters, latency is secondary
-- Streaming: TTFT is paramount — users see first token immediately
+- Streaming: TTFT is paramount - users see first token immediately
 
 ---
 
@@ -98,24 +98,24 @@ Continuous:
 
 Multiple layers of caching are possible in LLM serving, each with different trade-offs.
 
-**Level 1 — KV Cache (per-request, in-GPU):**
+**Level 1 - KV Cache (per-request, in-GPU):**
 - Stores computed K/V for all tokens in the active sequence
 - Eliminated by sequence completion; re-created per request
 - Critical for decode speed (see [KV Cache](05-KV-Cache-and-Inference-Optimization.md))
 
-**Level 2 — Prefix Cache (across requests, in-GPU):**
+**Level 2 - Prefix Cache (across requests, in-GPU):**
 - Reuses KV cache blocks for shared prompt prefixes across requests
 - High ROI for system prompts (often 500–2000 tokens, shared across all users)
 - vLLM automatic prefix caching: compute prefix KV once, share blocks across requests
 - Savings: a 1000-token system prompt with 1000 requests/minute = 1M prefill tokens/min saved
 
-**Level 3 — Semantic Cache (across requests, external):**
+**Level 3 - Semantic Cache (across requests, external):**
 - Cache full responses for semantically similar (or identical) queries
 - Tools: GPTCache, Redis with embedding similarity search
 - Works for FAQ-style applications where many users ask near-identical questions
 - Does NOT help for unique/dynamic queries
 
-**Level 4 — Batch API (offline):**
+**Level 4 - Batch API (offline):**
 - For non-real-time workloads, queue requests to be processed at off-peak hours
 - 50% cost reduction in OpenAI Batch API
 - Latency: hours, but acceptable for document processing, bulk analysis
@@ -210,7 +210,7 @@ Quality tradeoff: acceptable for most tasks at INT4 AWQ
 - Savings: ~90% TTFT reduction for requests where prefix is 90% of the prompt
 
 **4. Streaming Responses**
-- Return the first token as soon as it's generated — don't wait for the full response
+- Return the first token as soon as it's generated - don't wait for the full response
 - Reduces *perceived* latency even though total time is the same
 - Implementation: Server-Sent Events (SSE) or WebSocket
 
@@ -224,7 +224,7 @@ Quality tradeoff: acceptable for most tasks at INT4 AWQ
 - 2–4× faster for long sequences with no quality change
 
 **7. Continuous Batching**
-- Already discussed — essential for production throughput
+- Already discussed - essential for production throughput
 
 **8. Tensor Parallelism Tuning**
 - Split across 2 GPUs: ~1.8× faster (some communication overhead)
@@ -395,14 +395,14 @@ print(f"Second request (cache hit): {(time.time()-t0)*1000:.0f}ms")
 **Must-know for interviews:**
 - vLLM is the dominant open-source serving framework: Paged Attention + continuous batching + OpenAI-compatible API
 - Latency has two components: TTFT (prefill, compute-bound) and TPS (decode, memory-bandwidth-bound)
-- Prefix caching eliminates reprocessing shared system prompts — very high ROI for chatbots
+- Prefix caching eliminates reprocessing shared system prompts - very high ROI for chatbots
 - Speculative decoding: small draft model proposes tokens → large model verifies in one pass → 2–3× speedup
 - Token window workarounds: sliding window, hierarchical summarization, RAG, LLMLingua compression, RoPE scaling
 - Cost optimization: prompt caching > model routing > quantization > batch API
 
 **Quick recall Q&A:**
 - *What is TTFT and what determines it?* Time-to-first-token = queue wait + prefill compute time. Determined by input prompt length and server load.
-- *Why is continuous batching better than static batching?* Completed sequences are evicted immediately and new requests fill their slots — no wasted GPU capacity waiting for stragglers.
+- *Why is continuous batching better than static batching?* Completed sequences are evicted immediately and new requests fill their slots - no wasted GPU capacity waiting for stragglers.
 - *What is chunked prefill?* Processing long prompts in chunks to avoid monopolizing the GPU during prefill, which would delay decode steps for other in-flight requests.
 - *When should you use RAG vs sliding window?* RAG when you can identify relevant content via search. Sliding window when you must process a document sequentially without a query.
 - *Name 3 ways to improve TTFT.* Prefix caching (eliminate redundant prefill), quantization (faster compute), reduce prompt length (LLMLingua compression).

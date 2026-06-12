@@ -1,7 +1,7 @@
 """
-Autonomous Task Planner — LangChain Implementation
+Autonomous Task Planner - LangChain Implementation
 ==================================================
-System    : 03 — Autonomous Task Planner
+System    : 03 - Autonomous Task Planner
 Framework : LangChain (LCEL)
 Model     : gemini-2.0-flash via langchain-google-genai
 
@@ -109,7 +109,7 @@ def monitor_result(task: Subtask, result: str) -> tuple[bool, str]:
 def synthesize_outputs(goal: str, completed: list[Subtask]) -> str:
     """Synthesize all completed task outputs into final deliverable."""
     print("\n[Synthesizer] Assembling final output...")
-    context = "\n\n".join([f"Task {t.id} — {t.description}:\n{t.output}" for t in completed if t.output])
+    context = "\n\n".join([f"Task {t.id} - {t.description}:\n{t.output}" for t in completed if t.output])
     return llm.invoke([
         SystemMessage(content="Synthesize the completed subtask outputs into a coherent final deliverable."),
         HumanMessage(content=f"Goal: {goal}\n\nCompleted tasks:\n{context}")
@@ -147,11 +147,11 @@ def run_task_planner(goal: str) -> str:
             if next_task.replan_count >= MAX_REPLANS:
                 print(f"[Replanner] Task [{next_task.id}] skipped after {next_task.replan_count} failures")
                 next_task.status = "done"
-                next_task.output = f"[Skipped — {next_task.replan_count} failed attempts]"
+                next_task.output = f"[Skipped - {next_task.replan_count} failed attempts]"
                 completed_outputs.append({"id": next_task.id, "output": next_task.output})
             else:
                 print(f"[Replanner] Retrying task [{next_task.id}] (attempt {next_task.replan_count + 1})")
-                # Task remains pending — will be picked up in next iteration
+                # Task remains pending - will be picked up in next iteration
 
     completed = [t for t in subtasks if t.status == "done"]
     return synthesize_outputs(goal, completed)
@@ -163,7 +163,7 @@ if __name__ == "__main__":
     goal = "Create a comprehensive report on best practices for remote work productivity"
 
     print("\n" + "="*60)
-    print("AUTONOMOUS TASK PLANNER — LangChain")
+    print("AUTONOMOUS TASK PLANNER - LangChain")
     print(f"Goal: {goal}")
     print("="*60)
 

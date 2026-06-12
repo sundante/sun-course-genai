@@ -1,5 +1,5 @@
 """
-Reflexion Architecture — LangChain
+Reflexion Architecture - LangChain
 Pattern: Generator → Critic → Conditional Rewriter (Python loop)
 
 The generator produces a draft. The critic scores it.

@@ -1,6 +1,6 @@
 # Learn AI: Generative AI to Agentic AI
 
-A structured, beginner-to-advanced curriculum covering the full AI stack — from foundational LLMs and Generative AI through fully autonomous Agentic systems — with prose notes, code labs, and interview Q&A.
+A structured, beginner-to-advanced curriculum covering the full AI stack - from foundational LLMs and Generative AI through fully autonomous Agentic systems - with prose notes, code labs, and interview Q&A.
 
 **Live site:** [sundante.github.io/sun-course-genai](https://sundante.github.io/sun-course-genai)
 
@@ -10,12 +10,12 @@ A structured, beginner-to-advanced curriculum covering the full AI stack — fro
 
 | # | Topic | Notes | Code Labs | Q&A | Status |
 |---|-------|-------|-----------|-----|--------|
-| 01 | LLM Models | 12 files — fundamentals through production deployment | Code snippets in notes | 68+ Q&A | Complete |
-| 02 | Prompt Engineering | 4 files — basics through production | — | ✅ | Complete |
-| 03 | RAG | 12 files — fundamentals through GCP production | ✅ | 80+ Q&A | Complete |
-| 04 | MCP | 8 files — problem through getting started | — | ✅ | Complete |
+| 01 | LLM Models | 12 files - fundamentals through production deployment | Code snippets in notes | 68+ Q&A | Complete |
+| 02 | Prompt Engineering | 4 files - basics through production | - | ✅ | Complete |
+| 03 | RAG | 12 files - fundamentals through GCP production | ✅ | 80+ Q&A | Complete |
+| 04 | MCP | 8 files - problem through getting started | - | ✅ | Complete |
 | 05 | Agents | Conceptual notes + 4 framework deep-dives | ✅ Codes/01-Agent-Types | ✅ | Complete |
-| 06 | Agentic AI | 6 files — concepts through evaluation | ✅ Codes/02-Architectures + 03-Systems | ✅ | Complete |
+| 06 | Agentic AI | 6 files - concepts through evaluation | ✅ Codes/02-Architectures + 03-Systems | ✅ | Complete |
 
 ---
 
@@ -24,7 +24,7 @@ A structured, beginner-to-advanced curriculum covering the full AI stack — fro
 Three dimensions of hands-on practice across **LangChain, LangGraph, CrewAI, and Google ADK**:
 
 ```
-DIMENSION 1 — AGENT EVOLUTION          DIMENSION 2 — ARCHITECTURE PATTERNS      DIMENSION 3 — END-TO-END SYSTEMS
+DIMENSION 1 - AGENT EVOLUTION          DIMENSION 2 - ARCHITECTURE PATTERNS      DIMENSION 3 - END-TO-END SYSTEMS
 ──────────────────────────────          ────────────────────────────────────      ─────────────────────────────────
 Codes/01-Agent-Types/                   Codes/02-Architectures/                   Codes/03-Agentic-Systems/
   × 4 frameworks                          01-Sequential                             01-Research-Assistant
@@ -116,16 +116,16 @@ For Vertex AI / GCP setup → [Codes/setup/gcp-setup.md](Codes/setup/gcp-setup.m
 
 ## Learning Paths
 
-### Path A — Conceptual (beginner)
+### Path A - Conceptual (beginner)
 LLM Fundamentals → Transformer Architecture → Attention Mechanisms → Prompt Engineering → RAG Fundamentals
 
-### Path B — Interview Preparation
+### Path B - Interview Preparation
 LLM Models (all 12 files) → RAG (12 files) → Agents → Agentic AI → All Q&A Banks
 
-### Path C — Hands-On Engineering
+### Path C - Hands-On Engineering
 Codes/01-Agent-Types (simple → complex) → Codes/02-Architectures → Codes/03-Agentic-Systems
 
-### Path D — Production Focus
+### Path D - Production Focus
 LLM Production Deployment → RAG System Design → Agentic System Design → Evaluation & Observability
 
 ---

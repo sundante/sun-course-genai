@@ -1,4 +1,4 @@
-# 02 — Parallel Architecture
+# 02 - Parallel Architecture
 
 ## Pattern: Fan-out → Independent Agents → Aggregate
 
@@ -25,7 +25,7 @@
 
 | Scenario | Why Parallel? |
 |---|---|
-| Multiple independent data sources | No dependency between sources — run simultaneously |
+| Multiple independent data sources | No dependency between sources - run simultaneously |
 | Same task on N items | Fan-out over a list, merge results |
 | Time-sensitive pipelines | Cut latency by parallelizing slow operations |
 | Diverse specialist agents | Each agent has different tools/context |
@@ -34,13 +34,13 @@
 
 | Pro | Con |
 |---|---|
-| Lower latency (N tasks in 1 LLM round) | Harder to debug — which agent failed? |
+| Lower latency (N tasks in 1 LLM round) | Harder to debug - which agent failed? |
 | Each agent has focused context | Aggregation step adds complexity |
 | Scales to many items | API rate limits may constrain true parallelism |
 
 ## Mock Task
 
-**Input:** Three cities — Tokyo, Paris, Bangalore  
+**Input:** Three cities - Tokyo, Paris, Bangalore  
 **Parallel step:** Each city researched independently (weather + safety + time)  
 **Aggregate step:** One aggregator compares all three and ranks them
 

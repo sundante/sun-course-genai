@@ -1,4 +1,4 @@
-# CrewAI — Fundamentals
+# CrewAI - Fundamentals
 
 ## CrewAI Overview and Philosophy
 

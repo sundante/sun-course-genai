@@ -32,7 +32,7 @@ LangGraph is a framework for building stateful, multi-actor agentic systems as g
 - **Edges** define the flow between nodes
 - **State** is a typed object passed between nodes and automatically persisted
 
-The graph metaphor makes complex control flows — loops, branches, parallel execution, human-in-the-loop checkpoints — explicit and visual.
+The graph metaphor makes complex control flows - loops, branches, parallel execution, human-in-the-loop checkpoints - explicit and visual.
 
 ### Core Concepts
 
@@ -97,7 +97,7 @@ memory = SqliteSaver.from_conn_string("agent_checkpoints.db")
 
 graph = graph_builder.compile(checkpointer=memory)
 
-# Each run gets a thread_id — the same thread_id resumes the same conversation
+# Each run gets a thread_id - the same thread_id resumes the same conversation
 config = {"configurable": {"thread_id": "user-123-task-456"}}
 
 # Run (or resume)
@@ -127,7 +127,7 @@ graph = graph_builder.compile(
 for event in graph.stream(initial_state, config):
     print(event)
 
-# System paused — state is checkpointed
+# System paused - state is checkpointed
 # Inspect the proposed action and approve
 snapshot = graph.get_state(config)
 proposed_email = snapshot.values["draft_email"]
@@ -274,7 +274,7 @@ orchestrator = Agent(
 
 CrewAI is a high-level framework for creating role-based multi-agent systems called "crews." It uses a business metaphor: a Crew has Agents (with Roles), Tasks (with descriptions and expected outputs), and a Process (sequential or hierarchical) for how tasks are assigned.
 
-CrewAI abstracts away most coordination mechanics — you define roles and tasks, and the framework handles delegation, output passing, and execution order.
+CrewAI abstracts away most coordination mechanics - you define roles and tasks, and the framework handles delegation, output passing, and execution order.
 
 ### Core Concepts
 
@@ -305,7 +305,7 @@ analyst = Agent(
     You are a strategic analyst who specializes in competitive intelligence.
     You identify patterns, extract key metrics, and frame findings for executive audiences.
     """,
-    tools=[],  # no tools — pure reasoning
+    tools=[],  # no tools - pure reasoning
     llm="gemini/gemini-1.5-pro",
     verbose=True
 )
@@ -388,7 +388,7 @@ crew = Crew(
 
 - Role-based multi-agent tasks with clear specialization
 - Business workflows where the "crew" metaphor maps naturally to the domain
-- Quick prototyping — lowest boilerplate of the four frameworks
+- Quick prototyping - lowest boilerplate of the four frameworks
 - Teams that want opinionated structure without managing coordination logic
 
 **Strengths:** Very low boilerplate, intuitive role/task model, good documentation  
@@ -402,7 +402,7 @@ crew = Crew(
 
 AutoGen (now continued as AG2 by the AutoGen community) is a framework for building conversational multi-agent systems. Its core metaphor is **conversation**: agents talk to each other. A `ConversableAgent` can be an LLM, a tool executor, or a human proxy. Complex behaviors emerge from these conversations.
 
-AutoGen excels at human-in-the-loop patterns because a `HumanProxyAgent` can literally represent a human in the conversation — either routing messages to a real human or using predefined responses in automated mode.
+AutoGen excels at human-in-the-loop patterns because a `HumanProxyAgent` can literally represent a human in the conversation - either routing messages to a real human or using predefined responses in automated mode.
 
 ### Core Concepts
 
@@ -490,9 +490,9 @@ user_proxy.initiate_chat(
 ### When to Use AutoGen / AG2
 
 - Conversational agent architectures where the "dialogue" metaphor fits
-- Code generation systems — the HumanProxyAgent with code execution is very powerful
-- HITL systems — the HumanProxyAgent can pause for human input at any point
-- Research and experimentation — large community, many examples
+- Code generation systems - the HumanProxyAgent with code execution is very powerful
+- HITL systems - the HumanProxyAgent can pause for human input at any point
+- Research and experimentation - large community, many examples
 - Systems where agents debate, critique, and iterate collaboratively
 
 **Strengths:** Excellent code execution support, flexible HITL, active community, natural multi-agent conversations  
@@ -614,7 +614,7 @@ def run_agent_task(goal: str) -> str:
 - **Understand the bare loop before picking a framework.** Every framework is a structured version of the same fundamental agent loop. If you understand what the framework is wrapping, you can debug it when it misbehaves. If you don't, abstraction becomes a mystery.
 - **LangGraph is the most popular choice for production systems** because of its explicit state, built-in checkpointing, and LangSmith integration. But it requires understanding the graph model.
 - **CrewAI is the fastest to prototype with.** If you need something working in a day, CrewAI's role/task model is the quickest path. Migrate to LangGraph when you need finer control.
-- **Don't over-commit early.** The tool implementations are framework-agnostic. Start with one framework and know you can migrate the core logic later — the tools and business logic are reusable.
+- **Don't over-commit early.** The tool implementations are framework-agnostic. Start with one framework and know you can migrate the core logic later - the tools and business logic are reusable.
 - **Observability from day one.** All four frameworks support Langfuse. Set it up before your first test run, not after you need to debug a production incident.
 
 ---
@@ -622,19 +622,19 @@ def run_agent_task(goal: str) -> str:
 ## Q&A Review Bank
 
 **Q1: What problem does LangGraph's graph model solve compared to a simple agent loop?** `[Easy]`
-A: A simple agent loop is a while loop — easy to write but hard to extend. LangGraph's graph model makes the control flow explicit: nodes are the computation steps, edges are the transitions, and conditional edges are the routing logic. This makes complex patterns — cycles, branches, parallel paths, HITL interrupts — declarative and visual rather than buried in if/else logic. It also enables checkpointing: because every transition is an edge in the graph, LangGraph knows exactly where to resume after a failure. The graph model is more code upfront but significantly more maintainable for complex systems.
+A: A simple agent loop is a while loop - easy to write but hard to extend. LangGraph's graph model makes the control flow explicit: nodes are the computation steps, edges are the transitions, and conditional edges are the routing logic. This makes complex patterns - cycles, branches, parallel paths, HITL interrupts - declarative and visual rather than buried in if/else logic. It also enables checkpointing: because every transition is an edge in the graph, LangGraph knows exactly where to resume after a failure. The graph model is more code upfront but significantly more maintainable for complex systems.
 
 **Q2: What is the core metaphor of each framework?** `[Easy]`
-A: LangGraph: a **graph** — nodes are functions, edges are transitions, state flows through the graph. ADK: **event-driven agents** — agents emit and respond to events, the Runner processes them; native integration with Google Cloud services. CrewAI: a **crew of specialists** — Agents have Roles, Tasks define the work, a Process (sequential or hierarchical) coordinates execution. AutoGen/AG2: **conversations** — agents talk to each other through a conversation history; complex multi-agent behavior emerges from dialogue. The right framework is often the one whose metaphor maps most naturally to the problem you're solving.
+A: LangGraph: a **graph** - nodes are functions, edges are transitions, state flows through the graph. ADK: **event-driven agents** - agents emit and respond to events, the Runner processes them; native integration with Google Cloud services. CrewAI: a **crew of specialists** - Agents have Roles, Tasks define the work, a Process (sequential or hierarchical) coordinates execution. AutoGen/AG2: **conversations** - agents talk to each other through a conversation history; complex multi-agent behavior emerges from dialogue. The right framework is often the one whose metaphor maps most naturally to the problem you're solving.
 
 **Q3: When is CrewAI the right choice and what are its limitations?** `[Medium]`
-A: CrewAI is the right choice when: the task naturally fits a "team of specialists" model (researcher, writer, reviewer roles are obvious), you want fast prototyping with minimal boilerplate, and the workflow is mostly sequential with clear task dependencies. Limitations: the sequential process is rigid — complex conditional routing or dynamic loops require workarounds; checkpointing is limited compared to LangGraph (no built-in resume-on-failure for long tasks); observability tooling is less mature; and the hierarchical process, while powerful, is less transparent than explicit orchestration because the manager LLM makes delegation decisions you can't directly inspect.
+A: CrewAI is the right choice when: the task naturally fits a "team of specialists" model (researcher, writer, reviewer roles are obvious), you want fast prototyping with minimal boilerplate, and the workflow is mostly sequential with clear task dependencies. Limitations: the sequential process is rigid - complex conditional routing or dynamic loops require workarounds; checkpointing is limited compared to LangGraph (no built-in resume-on-failure for long tasks); observability tooling is less mature; and the hierarchical process, while powerful, is less transparent than explicit orchestration because the manager LLM makes delegation decisions you can't directly inspect.
 
 **Q4: What makes AutoGen's HumanProxyAgent distinctive?** `[Medium]`
-A: The HumanProxyAgent represents a human participant in the multi-agent conversation. With `human_input_mode="ALWAYS"`, it pauses execution and waits for real human input at every turn — making it a genuine HITL implementation. With `human_input_mode="TERMINATE"`, it only asks for input when an agent says TERMINATE (or another termination condition). With `human_input_mode="NEVER"`, it uses auto-reply logic. This means the same agent graph can run fully automatically (for testing), semi-automatically (human only reviews final outputs), or fully interactively (human participates in each turn) just by changing the mode. Additionally, the HumanProxyAgent can execute code in a sandbox, making it central to AutoGen's code generation workflows: the AI writes code, the HumanProxy runs it, and the results go back to the AI for revision.
+A: The HumanProxyAgent represents a human participant in the multi-agent conversation. With `human_input_mode="ALWAYS"`, it pauses execution and waits for real human input at every turn - making it a genuine HITL implementation. With `human_input_mode="TERMINATE"`, it only asks for input when an agent says TERMINATE (or another termination condition). With `human_input_mode="NEVER"`, it uses auto-reply logic. This means the same agent graph can run fully automatically (for testing), semi-automatically (human only reviews final outputs), or fully interactively (human participates in each turn) just by changing the mode. Additionally, the HumanProxyAgent can execute code in a sandbox, making it central to AutoGen's code generation workflows: the AI writes code, the HumanProxy runs it, and the results go back to the AI for revision.
 
 **Q5: What is the key advantage of LangGraph's checkpointing compared to other frameworks?** `[Hard]`
-A: LangGraph persists the full graph state after every node execution as a first-class feature — not an afterthought. Because the state is a typed TypedDict and every node receives and returns state, LangGraph knows exactly what the state looks like at every point in the graph. This enables: (1) Resume on failure — if the process crashes at node 7 of 20, the next run picks up from node 7 with the same state; (2) HITL interrupts — `interrupt_before=["send_email"]` pauses execution and serializes state; when the human approves, execution resumes with `graph.stream(None, config)`; (3) State inspection — `graph.get_state(config)` returns the current state at any point; (4) Time-travel debugging — `graph.get_state_history(config)` returns the full history of state snapshots. CrewAI and AutoGen have much more limited checkpointing that essentially requires restarting from scratch after a failure.
+A: LangGraph persists the full graph state after every node execution as a first-class feature - not an afterthought. Because the state is a typed TypedDict and every node receives and returns state, LangGraph knows exactly what the state looks like at every point in the graph. This enables: (1) Resume on failure - if the process crashes at node 7 of 20, the next run picks up from node 7 with the same state; (2) HITL interrupts - `interrupt_before=["send_email"]` pauses execution and serializes state; when the human approves, execution resumes with `graph.stream(None, config)`; (3) State inspection - `graph.get_state(config)` returns the current state at any point; (4) Time-travel debugging - `graph.get_state_history(config)` returns the full history of state snapshots. CrewAI and AutoGen have much more limited checkpointing that essentially requires restarting from scratch after a failure.
 
-**Q6: A team is building a document processing system that reads invoices, classifies them, extracts structured data, validates the extraction, and stores to a database — with a human review step for low-confidence extractions. Which framework would you recommend and why?** `[Hard]`
-A: LangGraph is the best fit for this system. The reasons: (1) The workflow is a defined DAG with a conditional branch (high confidence → auto-store, low confidence → HITL), which maps directly to LangGraph's conditional edges; (2) The HITL step requires pausing execution, serializing state, waiting for human input, and resuming — exactly what `interrupt_before` and checkpointing provide; (3) Documents may be processed in batch overnight, so resume-on-failure checkpointing prevents reprocessing documents that succeeded before a crash; (4) Each stage (OCR, classify, extract, validate, store) has a clear input/output contract that maps cleanly to typed LangGraph state. CrewAI could work but offers no built-in resume-on-failure. AutoGen's conversational model is a poor fit for a sequential data pipeline. ADK is viable if deploying to GCP, but LangGraph is more flexible and better documented for this pattern.
+**Q6: A team is building a document processing system that reads invoices, classifies them, extracts structured data, validates the extraction, and stores to a database - with a human review step for low-confidence extractions. Which framework would you recommend and why?** `[Hard]`
+A: LangGraph is the best fit for this system. The reasons: (1) The workflow is a defined DAG with a conditional branch (high confidence → auto-store, low confidence → HITL), which maps directly to LangGraph's conditional edges; (2) The HITL step requires pausing execution, serializing state, waiting for human input, and resuming - exactly what `interrupt_before` and checkpointing provide; (3) Documents may be processed in batch overnight, so resume-on-failure checkpointing prevents reprocessing documents that succeeded before a crash; (4) Each stage (OCR, classify, extract, validate, store) has a clear input/output contract that maps cleanly to typed LangGraph state. CrewAI could work but offers no built-in resume-on-failure. AutoGen's conversational model is a poor fit for a sequential data pipeline. ADK is viable if deploying to GCP, but LangGraph is more flexible and better documented for this pattern.

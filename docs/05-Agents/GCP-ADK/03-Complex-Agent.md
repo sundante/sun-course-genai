@@ -1,4 +1,4 @@
-# GCP ADK — Complex Agent
+# GCP ADK - Complex Agent
 
 ## What We Are Building
 

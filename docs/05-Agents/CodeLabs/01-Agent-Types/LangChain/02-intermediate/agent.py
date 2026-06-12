@@ -2,7 +2,7 @@
 LangChain Intermediate Agent
 =============================
 Framework : LangChain (LCEL)
-Level     : 02 — Intermediate
+Level     : 02 - Intermediate
 Model     : gemini-2.0-flash
 
 New concepts vs Simple:
@@ -139,7 +139,7 @@ if __name__ == "__main__":
 
     turns = [
         "Give me a full travel briefing for Tokyo.",
-        "Now do the same for Bangalore. I prefer warm weather — which would you recommend?",
+        "Now do the same for Bangalore. I prefer warm weather - which would you recommend?",
         "Based on what you told me, what's the safer city to visit?",
     ]
 

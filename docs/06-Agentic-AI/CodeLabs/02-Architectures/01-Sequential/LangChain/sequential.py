@@ -1,9 +1,9 @@
 """
-Sequential Architecture — LangChain
+Sequential Architecture - LangChain
 Pattern: Research → Summarize → Format report (A → B → C pipeline)
 
 Each step is a separate LCEL chain. The output of one chain feeds directly
-into the next via Python variable passing — no shared state or agent loops.
+into the next via Python variable passing - no shared state or agent loops.
 """
 import os
 from dotenv import load_dotenv

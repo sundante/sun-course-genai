@@ -1,4 +1,4 @@
-# 04 — Orchestrator-Subagent Architecture
+# 04 - Orchestrator-Subagent Architecture
 
 ## Pattern: Planner Orchestrates Specialist Workers
 

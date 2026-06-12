@@ -1,4 +1,4 @@
-# 06 — Adversarial Debate Architecture
+# 06 - Adversarial Debate Architecture
 
 ## Pattern: Proposer vs Critic → Judge Decides
 

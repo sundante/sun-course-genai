@@ -5,7 +5,7 @@
 
 ## Welcome to Your MCP Masterclass
 
-You're about to embark on a comprehensive journey through the **Model Context Protocol (MCP)**—the open standard transforming how AI systems connect with data and tools.
+You're about to embark on a comprehensive journey through the **Model Context Protocol (MCP)**-the open standard transforming how AI systems connect with data and tools.
 
 Whether you're a **developer** building AI applications, an **engineer** implementing integrations, or an **enthusiast** curious about the future of AI, this guide will take you from foundational concepts to practical implementation.
 
@@ -22,28 +22,28 @@ Whether you're a **developer** building AI applications, an **engineer** impleme
 
 ## Your Learning Journey
 
-### Start Here — Choose Your Path
+### Start Here - Choose Your Path
 
 #### Fundamentals
 Begin with the essentials
 
-1. [The Problem](Notes/01-The-Problem.md) — What does MCP solve?
-2. [Definition](Notes/02-Definition.md) — What is MCP exactly?
-3. [The Solution](Notes/03-The-Solution.md) — How it works
+1. [The Problem](Notes/01-The-Problem.md) - What does MCP solve?
+2. [Definition](Notes/02-Definition.md) - What is MCP exactly?
+3. [The Solution](Notes/03-The-Solution.md) - How it works
 
 #### Building Knowledge
 Deepen your expertise
 
-4. [Components](Notes/04-Components.md) — The architecture
-5. [Capabilities](Notes/05-Capabilities.md) — Real-world uses
-6. [Why It Matters](Notes/06-Why-MCP-Matters.md) — Strategic value
+4. [Components](Notes/04-Components.md) - The architecture
+5. [Capabilities](Notes/05-Capabilities.md) - Real-world uses
+6. [Why It Matters](Notes/06-Why-MCP-Matters.md) - Strategic value
 
 #### Deep Dive & Practice
 
-7. [Architecture Deep-Dive](Notes/07-Architecture-Deep-Dive.md) — Technical internals
-8. [Getting Started](Notes/08-Getting-Started.md) — Your hands-on guide
-9. [Q&A Review Bank](Notes/09-QA-Review-Bank.md) — 48 curated Q&A pairs
-10. [Interview Q&A](../Interview-Questions/04-MCP.md) — Quick-reference questions
+7. [Architecture Deep-Dive](Notes/07-Architecture-Deep-Dive.md) - Technical internals
+8. [Getting Started](Notes/08-Getting-Started.md) - Your hands-on guide
+9. [Q&A Review Bank](Notes/09-QA-Review-Bank.md) - 48 curated Q&A pairs
+10. [Interview Q&A](../Interview-Questions/04-MCP.md) - Quick-reference questions
 
 ---
 
@@ -85,8 +85,8 @@ THE COMPLETE MCP LEARNING ARC
 
 ## Other Resources
 
-- [Implementation Examples](Implementation/) — Working code samples
-- [Image Assets](../Resources/04-MCP/mcp-img-assets/) — Architecture diagrams
+- [Implementation Examples](Implementation/) - Working code samples
+- [Image Assets](../Resources/04-MCP/mcp-img-assets/) - Architecture diagrams
 
 ---
 
@@ -96,4 +96,4 @@ THE COMPLETE MCP LEARNING ARC
 
 ## Navigation
 
-[Previous: 03 — RAGs](../03-RAGs/INDEX.md) | [Next: 05 — Agents](../05-Agents/INDEX.md)
+[Previous: 03 - RAGs](../03-RAGs/INDEX.md) | [Next: 05 - Agents](../05-Agents/INDEX.md)

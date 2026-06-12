@@ -9,14 +9,14 @@ Chunking is the most underappreciated quality lever in RAG. A perfect retriever 
 The core tension: chunk size creates a fundamental precision/recall trade-off.
 
 **Small chunks (100-300 chars):**
-- Higher semantic precision — the retrieved chunk is tightly focused on one idea
-- Lower contextual completeness — the surrounding context needed to understand the answer may be in adjacent chunks
+- Higher semantic precision - the retrieved chunk is tightly focused on one idea
+- Lower contextual completeness - the surrounding context needed to understand the answer may be in adjacent chunks
 - More chunks in the index → higher storage and retrieval cost
 - Better for factoid Q&A: "What is the capital of France?"
 
 **Large chunks (1000-2000 chars):**
-- More context per chunk — surrounding sentences provide interpretive context
-- Lower retrieval precision — a large chunk about "pricing" also contains unrelated terms that dilute the embedding
+- More context per chunk - surrounding sentences provide interpretive context
+- Lower retrieval precision - a large chunk about "pricing" also contains unrelated terms that dilute the embedding
 - Fewer chunks in index → lower storage cost
 - Better for summarization and nuanced questions
 
@@ -34,18 +34,18 @@ The core tension: chunk size creates a fundamental precision/recall trade-off.
 
 ### Concept
 
-The simplest strategy: split text into chunks of N characters (or tokens) with M character overlap. LangChain's `RecursiveCharacterTextSplitter` is the standard implementation — it tries to split on paragraph breaks first, then sentence breaks, then word breaks, only falling back to hard character splits if necessary.
+The simplest strategy: split text into chunks of N characters (or tokens) with M character overlap. LangChain's `RecursiveCharacterTextSplitter` is the standard implementation - it tries to split on paragraph breaks first, then sentence breaks, then word breaks, only falling back to hard character splits if necessary.
 
 **Character-based vs token-based:**
 - Character-based: faster to compute, but chunks may vary in token count. A 500-char chunk in English averages ~125 tokens; in German or CJK languages, character-to-token ratio differs.
 - Token-based: more predictable context window usage. Use `tiktoken` or the model's tokenizer. Preferred when you're close to the LLM's context window limit.
 
 **Recursive separators (in priority order):**
-1. `"\n\n"` — paragraph break (strongest semantic boundary)
-2. `"\n"` — line break
-3. `". "` — sentence end
-4. `" "` — word boundary
-5. `""` — character boundary (last resort)
+1. `"\n\n"` - paragraph break (strongest semantic boundary)
+2. `"\n"` - line break
+3. `". "` - sentence end
+4. `" "` - word boundary
+5. `""` - character boundary (last resort)
 
 This priority ensures chunks are split at the most meaningful boundaries available.
 
@@ -101,7 +101,7 @@ Fixed-size chunking is blind to content structure. A 500-character hard split mi
 5. Optionally set a minimum and maximum chunk size
 
 **Benefits:**
-- Each chunk is semantically coherent — about one topic
+- Each chunk is semantically coherent - about one topic
 - Splits happen at natural topic boundaries, not arbitrary character counts
 - Embeddings of semantic chunks have higher semantic purity → better retrieval precision
 
@@ -399,14 +399,14 @@ One of the most common retrieval failure modes: a semantic unit (key claim, defi
 **Why this happens:**
 - Fixed-size chunking splits at character/token counts, not topic boundaries
 - A definition may start at the end of chunk N and finish at the start of chunk N+1
-- An ANN search for the full concept matches neither chunk precisely — both are partial
+- An ANN search for the full concept matches neither chunk precisely - both are partial
 
 **Six strategies to mitigate cross-chunk retrieval failures:**
 
 | Strategy | How It Works | Implementation | Trade-off |
 |---|---|---|---|
 | **1. Hierarchical / Parent-Child Chunking** | Retrieve with small precise child chunks; return larger parent chunks to the LLM | `ParentDocumentRetriever` in LangChain | Higher storage (two indices); see dedicated section above |
-| **2. Chunk Overlap (20–40%)** | Adjacent chunks share a sliding window of content — boundary information appears in both chunks | `chunk_overlap=100` in `RecursiveCharacterTextSplitter` | Larger index size; redundant storage of ~30% of content |
+| **2. Chunk Overlap (20–40%)** | Adjacent chunks share a sliding window of content - boundary information appears in both chunks | `chunk_overlap=100` in `RecursiveCharacterTextSplitter` | Larger index size; redundant storage of ~30% of content |
 | **3. Multi-Vector Retrieval** | Generate multiple embeddings per chunk (summary + full text + hypothetical Q) | `MultiVectorRetriever`; index summary embedding, store full chunk | More complex ingest; improves recall for differently-phrased queries |
 | **4. Neighborhood Expansion at Retrieval** | After ANN search, fetch N adjacent chunks (before + after) and return them together | Post-retrieval step: look up `chunk_id ± 1` in the docstore | Increases context window usage; adds latency for docstore lookups |
 | **5. Cross-Encoder / Reranker over Expanded Set** | Over-retrieve k=20 candidates including neighbors, then rerank the full set with a cross-encoder | Stage 1: ANN k=20 + neighbors; Stage 2: cross-encoder rerank to top 5 | Best precision improvement; adds ~100ms reranking latency |
@@ -424,7 +424,7 @@ One of the most common retrieval failure modes: a semantic unit (key claim, defi
 
 | Stage | Method | Effect on Recall@5 |
 |---|---|---|
-| Baseline (dense k=5) | — | 0.62 |
+| Baseline (dense k=5) | - | 0.62 |
 | + Overlap 20% | Chunk overlap | +0.05 → 0.67 |
 | + Hybrid (BM25 + dense) | RRF fusion | +0.06 → 0.73 |
 | + Neighborhood expansion | ±1 adjacent chunks | +0.03 → 0.76 |
@@ -437,19 +437,19 @@ One of the most common retrieval failure modes: a semantic unit (key claim, defi
 ## Interview Q&A
 
 **Q: What is the retrieval precision/recall trade-off in chunk sizing, and how do you decide?** `[Medium]`
-A: Smaller chunks have higher retrieval precision — the retrieved text is tightly focused on the relevant topic with less noise. But smaller chunks may miss surrounding context needed to answer the question, reducing generation quality. Larger chunks include more context but their embeddings are "diluted" by multiple topics, reducing retrieval precision. The right chunk size depends on query type: factoid Q&A benefits from small precise chunks; synthesis and analysis questions need larger contextual chunks. Parent-child chunking resolves the tension: retrieve with small chunks, generate with their larger parents.
+A: Smaller chunks have higher retrieval precision - the retrieved text is tightly focused on the relevant topic with less noise. But smaller chunks may miss surrounding context needed to answer the question, reducing generation quality. Larger chunks include more context but their embeddings are "diluted" by multiple topics, reducing retrieval precision. The right chunk size depends on query type: factoid Q&A benefits from small precise chunks; synthesis and analysis questions need larger contextual chunks. Parent-child chunking resolves the tension: retrieve with small chunks, generate with their larger parents.
 
 **Q: Why does RecursiveCharacterTextSplitter outperform simple split-by-N-characters?** `[Easy]`
 A: RecursiveCharacterTextSplitter applies a priority list of separators, attempting to split at paragraph boundaries first, then sentence boundaries, then word boundaries, only falling back to hard character splits as a last resort. This ensures chunks respect semantic and syntactic boundaries where possible. A naive N-character split often bisects sentences mid-word, creating chunks with incomplete sentences and poor embeddings.
 
 **Q: How does parent-child chunking improve RAG quality over standard chunking?** `[Medium]`
-A: Parent-child chunking decouples retrieval granularity from generation context. Small child chunks (100-200 chars) produce focused, high-precision embeddings — ANN search finds the right topic. But the LLM receives the larger parent chunk (1000-2000 chars) containing the full section context, improving answer completeness. Without this pattern, you face a dilemma: small chunks = good retrieval, poor generation; large chunks = poor retrieval, good generation. Parent-child gives both.
+A: Parent-child chunking decouples retrieval granularity from generation context. Small child chunks (100-200 chars) produce focused, high-precision embeddings - ANN search finds the right topic. But the LLM receives the larger parent chunk (1000-2000 chars) containing the full section context, improving answer completeness. Without this pattern, you face a dilemma: small chunks = good retrieval, poor generation; large chunks = poor retrieval, good generation. Parent-child gives both.
 
 **Q: You're building a RAG system over a legal document corpus. What chunking strategy would you use and why?** `[Hard]`
-A: Legal documents require large chunks with substantial overlap because: (1) legal meaning is highly context-dependent — a definition in section 2 affects clause interpretation in section 8; (2) legal language is precise and formal, so semantic chunking on topic shifts works well; (3) cross-references between sections mean that a 200-char chunk often lacks the context to be understood alone. Strategy: semantic chunking with a minimum chunk size of 800 chars and maximum 2000 chars, with 20% overlap. Add rich metadata: section number, clause type (definition, obligation, exception), contract type, effective date. For retrieval, use parent-child: retrieve by clause (semantic unit), return the surrounding article (broader legal context) to the LLM.
+A: Legal documents require large chunks with substantial overlap because: (1) legal meaning is highly context-dependent - a definition in section 2 affects clause interpretation in section 8; (2) legal language is precise and formal, so semantic chunking on topic shifts works well; (3) cross-references between sections mean that a 200-char chunk often lacks the context to be understood alone. Strategy: semantic chunking with a minimum chunk size of 800 chars and maximum 2000 chars, with 20% overlap. Add rich metadata: section number, clause type (definition, obligation, exception), contract type, effective date. For retrieval, use parent-child: retrieve by clause (semantic unit), return the surrounding article (broader legal context) to the LLM.
 
 **Q: How do you handle metadata filtering in a system where users have fine-grained access controls (e.g., user can access marketing docs from 2022-2024 but not HR docs)?** `[Hard]`
-A: Model access control as metadata attributes at ingest time: tag every chunk with `department`, `classification_level`, and `date`. At query time, compute the user's permission set from their IAM/RBAC role, translate to a metadata filter: `filter={"department": {"$in": allowed_departments}, "date": {"$range": [user_start, user_end]}, "classification_level": {"$lte": user_max_level}}`. This filter is applied at the vector DB layer — even if application code has a bug, the filter prevents unauthorized vectors from entering results. Critical: this must be enforced server-side (in the query service), never client-side. Audit log every (user_id, query, filter_applied, returned_doc_ids) for forensic capability.
+A: Model access control as metadata attributes at ingest time: tag every chunk with `department`, `classification_level`, and `date`. At query time, compute the user's permission set from their IAM/RBAC role, translate to a metadata filter: `filter={"department": {"$in": allowed_departments}, "date": {"$range": [user_start, user_end]}, "classification_level": {"$lte": user_max_level}}`. This filter is applied at the vector DB layer - even if application code has a bug, the filter prevents unauthorized vectors from entering results. Critical: this must be enforced server-side (in the query service), never client-side. Audit log every (user_id, query, filter_applied, returned_doc_ids) for forensic capability.
 
 **Q: What are the specific chunking challenges for code repositories?** `[Medium]`
-A: Three key challenges: (1) **Semantic unit is function/class**, not paragraph — a function definition should never be split mid-body; use `RecursiveCharacterTextSplitter.from_language("python")` which splits on class/function boundaries. (2) **Context dependency** — a function's meaning depends on its docstring, imports, and class context; include function signatures and docstrings together. (3) **Long functions** — a 300-line function exceeds any reasonable chunk size; strategy: chunk at method level (include the class definition and method signature as context in metadata), or use a code-specific parser (ast module in Python) to extract logical units. Also index function names and docstrings separately for keyword-based retrieval.
+A: Three key challenges: (1) **Semantic unit is function/class**, not paragraph - a function definition should never be split mid-body; use `RecursiveCharacterTextSplitter.from_language("python")` which splits on class/function boundaries. (2) **Context dependency** - a function's meaning depends on its docstring, imports, and class context; include function signatures and docstrings together. (3) **Long functions** - a 300-line function exceeds any reasonable chunk size; strategy: chunk at method level (include the class definition and method signature as context in metadata), or use a code-specific parser (ast module in Python) to extract logical units. Also index function names and docstrings separately for keyword-based retrieval.

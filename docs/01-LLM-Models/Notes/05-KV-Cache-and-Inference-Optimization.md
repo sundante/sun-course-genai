@@ -33,7 +33,7 @@ With KV cache (step n):
 | **Decode** | Generate one token at a time, reading KV cache | Memory-bandwidth-bound (reading large KV cache per step) |
 
 **Tricky Q:** *Why is prefill faster per-token than decoding?*  
-Prefill processes all input tokens in parallel — the GPU is compute-bound (utilization near peak). Decoding generates one token at a time — the GPU must read the entire KV cache from HBM for each single-token step. Reading a large cache for one token wastes compute capacity → memory-bandwidth bound.
+Prefill processes all input tokens in parallel - the GPU is compute-bound (utilization near peak). Decoding generates one token at a time - the GPU must read the entire KV cache from HBM for each single-token step. Reading a large cache for one token wastes compute capacity → memory-bandwidth bound.
 
 ---
 
@@ -55,11 +55,11 @@ Factor of 2: one K matrix + one V matrix.
 total_KV = n_layers × seq_len × 2 × n_kv_heads × d_head × bytes_per_element
 ```
 
-**Example — LLaMA-3 8B in BF16 (2 bytes):**
+**Example - LLaMA-3 8B in BF16 (2 bytes):**
 - n_layers = 32, n_kv_heads = 8, d_head = 128, seq_len = 4096 (4K context)
 - Per token: 2 × 8 × 128 × 2 = 4096 bytes = 4 KB per token
 - For 4K tokens: 4 KB × 4096 tokens × 32 layers = 512 MB
-- For 128K tokens: 4 KB × 131072 tokens × 32 layers = 16 GB — just the KV cache!
+- For 128K tokens: 4 KB × 131072 tokens × 32 layers = 16 GB - just the KV cache!
 
 **Practical implication:** Long-context inference is as much a memory problem as a compute problem. A 70B model serving 128K-context sequences needs enormous GPU memory, most of it for KV caches.
 
@@ -97,7 +97,7 @@ These three variants trade KV cache size for generation quality.
 - All h query heads share a single K and V projection
 - KV cache: 2 × 1 × d_head per token per layer (1/h of MHA)
 - h× reduction in KV cache memory
-- Quality slightly lower — all heads see the same K/V space
+- Quality slightly lower - all heads see the same K/V space
 - Used by: Falcon, early efficient models, Gemma-1
 
 **Grouped-Query Attention (GQA):**
@@ -105,7 +105,7 @@ These three variants trade KV cache size for generation quality.
 - KV cache: 2 × G × d_head per token per layer (G/h reduction vs MHA)
 - LLaMA-3 8B: h=32, G=8 → 4× smaller KV cache than MHA
 - Quality nearly identical to MHA for most tasks
-- Used by: LLaMA-3, Gemma 2, Mistral — the current production standard
+- Used by: LLaMA-3, Gemma 2, Mistral - the current production standard
 
 ```
 MHA (h=32):  K₁V₁  K₂V₂  K₃V₃  ... K₃₂V₃₂   (32 KV pairs per token)
@@ -126,12 +126,12 @@ MQA (G=1):  32 × 32768 × 2 × 1  × 128 × 2 bytes = 0.5 GB
 
 ### Concept
 
-Production LLM serving has a fundamental memory fragmentation problem. Traditional KV cache allocation reserves contiguous memory blocks per sequence at the maximum context length — this wastes memory because:
+Production LLM serving has a fundamental memory fragmentation problem. Traditional KV cache allocation reserves contiguous memory blocks per sequence at the maximum context length - this wastes memory because:
 1. Most sequences are much shorter than the maximum context
 2. Memory is reserved upfront but used gradually as tokens are generated
 3. Different sequences have different lengths → external fragmentation
 
-**Paged Attention** (Kwon et al., 2023 — the key innovation behind vLLM) borrows the virtual memory concept from operating systems:
+**Paged Attention** (Kwon et al., 2023 - the key innovation behind vLLM) borrows the virtual memory concept from operating systems:
 
 ```
 Physical GPU memory is divided into fixed-size "blocks" (e.g., 16 tokens each)
@@ -140,7 +140,7 @@ For each sequence, a "page table" maps logical positions to physical blocks:
   Sequence A: [block 3, block 7, block 12, ...]  (non-contiguous physical)
   Sequence B: [block 1, block 4, ...]
 
-As a sequence grows, new blocks are allocated on demand — no pre-reservation
+As a sequence grows, new blocks are allocated on demand - no pre-reservation
 When a sequence finishes, its blocks are freed and immediately reusable
 ```
 
@@ -175,7 +175,7 @@ Request 2: [SYSTEM_PROMPT][DOCS][User: "What is the key point?"]
 - At 1000 req/min with a 1000-token system prompt, prefix caching eliminates reprocessing that prefix 1000 times/min
 - Effective latency improvement on prefill: often 50–90% reduction for cacheable content
 
-Paged Attention's block-based addressing makes prefix caching efficient — blocks that are identical across requests can be shared in the physical page table (copy-on-write).
+Paged Attention's block-based addressing makes prefix caching efficient - blocks that are identical across requests can be shared in the physical page table (copy-on-write).
 
 ---
 
@@ -188,7 +188,7 @@ Speculative decoding uses a small "draft" model to propose K tokens at once, the
 **Why this works:**
 - The small draft model (e.g., 1B) is fast but lower quality
 - The large target model (e.g., 70B) is high quality but slow
-- Key insight: if the draft model gets the next K tokens right (which it often does for common phrases), the target model can accept all K in one forward pass — K tokens for the cost of ~1 decode step
+- Key insight: if the draft model gets the next K tokens right (which it often does for common phrases), the target model can accept all K in one forward pass - K tokens for the cost of ~1 decode step
 
 ```
 Standard decode (3 tokens):
@@ -221,7 +221,7 @@ Speculative decode (3 tokens):
 
 ### Concept
 
-**Static batching** (naive approach): wait until a fixed batch of N requests is assembled, run one forward pass for all N, return all results. Problem: different sequences finish at different times — some GPUs sit idle waiting for the longest sequence in the batch to finish.
+**Static batching** (naive approach): wait until a fixed batch of N requests is assembled, run one forward pass for all N, return all results. Problem: different sequences finish at different times - some GPUs sit idle waiting for the longest sequence in the batch to finish.
 
 ```
 Static batch of 4 sequences:
@@ -256,7 +256,7 @@ Step 3: [A, E, C, D]  ← new request E fills B's slot immediately
 **Batch size and latency vs throughput:**
 - Small batch (1 request): lowest latency (TTFT + decode), GPU underutilized, low throughput
 - Large batch (many requests): GPU fully utilized, high throughput, but each individual request waits longer (queuing + longer decode steps)
-- **Latency and throughput are fundamentally at odds** — you must tune batch size for your SLO
+- **Latency and throughput are fundamentally at odds** - you must tune batch size for your SLO
 
 **Time-To-First-Token (TTFT):** How long from request submission to the first generated token. Dominated by:
 1. Queue waiting time (if server is busy)
@@ -274,26 +274,26 @@ Step 3: [A, E, C, D]  ← new request E fills B's slot immediately
 
 ### Concept
 
-A consolidated reference of all major LLM inference and training speed-up techniques. Many are covered in depth elsewhere — this table gives you the full landscape for interviews.
+A consolidated reference of all major LLM inference and training speed-up techniques. Many are covered in depth elsewhere - this table gives you the full landscape for interviews.
 
 | Technique | How It Works | Speedup / Savings | Where Covered |
 |-----------|-------------|-------------------|---------------|
 | **Quantization** | Reduce weight/activation precision (FP16→INT8→INT4) | 2–4× memory, 1.5–3× latency | GPU & Hardware |
 | **KV-Cache Quantization** | Store KV cache in INT8/INT4 instead of FP16 | Reduces KV memory 2–4× | This file |
-| **Flash Attention** | Tiling + recomputation to avoid O(n²) memory — compute stays O(n²) but memory is O(n) | 2–4× memory, 2× speed | Attention Mechanisms |
+| **Flash Attention** | Tiling + recomputation to avoid O(n²) memory - compute stays O(n²) but memory is O(n) | 2–4× memory, 2× speed | Attention Mechanisms |
 | **Speculative Decoding** | Small draft model proposes K tokens; large target verifies all in one pass | 2–3× decode speedup | This file |
 | **LoRA (at inference)** | Merged LoRA weights add zero latency; multiple adapters can share the same base | Zero overhead vs base | Fine-Tuning |
-| **Pruning** | Remove low-magnitude weights (unstructured) or entire heads/layers (structured). Structured pruning is inference-friendly; unstructured needs sparse hardware support. | 10–50% size, 10–30% speedup | — |
-| **Knowledge Distillation** | Train a smaller "student" model to mimic a larger "teacher" via soft probability targets (not just hard labels). Result: student achieves near-teacher quality at fraction of size. | 3–10× smaller model | — |
-| **Weight Sharing** | Share weight matrices across layers or sub-components (ALBERT uses cross-layer parameter sharing). Reduces model size without full distillation pipeline. | 2–4× smaller | — |
+| **Pruning** | Remove low-magnitude weights (unstructured) or entire heads/layers (structured). Structured pruning is inference-friendly; unstructured needs sparse hardware support. | 10–50% size, 10–30% speedup | - |
+| **Knowledge Distillation** | Train a smaller "student" model to mimic a larger "teacher" via soft probability targets (not just hard labels). Result: student achieves near-teacher quality at fraction of size. | 3–10× smaller model | - |
+| **Weight Sharing** | Share weight matrices across layers or sub-components (ALBERT uses cross-layer parameter sharing). Reduces model size without full distillation pipeline. | 2–4× smaller | - |
 | **Sparse Attention** | Replace full O(n²) attention with local windows, global tokens, or hash-based routing (Longformer, BigBird, Reformer) | O(n log n) or O(n) attention | Attention Mechanisms |
 | **Batching & Dynamic Batching** | Group multiple requests into one GPU pass; dynamic = fill slots as requests arrive/complete | 5–10× throughput | This file (continuous batching) |
 | **Model Serving Optimization** | Frameworks (vLLM, TGI, SGLang) combining paged attention, continuous batching, prefix caching in one stack | Combined 10–20× improvement | Production Deployment |
-| **Tensor Parallelism** | Split individual weight matrices across GPUs column/row-wise — each GPU holds a slice | Linear latency scaling with GPU count | GPU & Hardware |
-| **Pipeline Parallelism** | Assign different transformer layers to different GPUs — pipeline them with micro-batches | Enables models too large for one GPU | GPU & Hardware |
-| **Paged Attention** | Virtual memory for KV cache — non-contiguous blocks, eliminates fragmentation, enables prefix sharing | Near 100% GPU memory utilization | This file |
+| **Tensor Parallelism** | Split individual weight matrices across GPUs column/row-wise - each GPU holds a slice | Linear latency scaling with GPU count | GPU & Hardware |
+| **Pipeline Parallelism** | Assign different transformer layers to different GPUs - pipeline them with micro-batches | Enables models too large for one GPU | GPU & Hardware |
+| **Paged Attention** | Virtual memory for KV cache - non-contiguous blocks, eliminates fragmentation, enables prefix sharing | Near 100% GPU memory utilization | This file |
 | **Mixed Precision Inference** | Run forward pass in FP16/BF16 (fast matrix ops) while keeping master weights in FP32 for numerical stability. Modern GPUs have dedicated FP16/BF16 tensor cores. | 2× speed vs FP32, same quality as FP32 | GPU & Hardware |
-| **Early Exit / Token-Level Pruning** | Shallow layers output confident predictions early — skip remaining layers for "easy" tokens or inputs. Works best on classification; harder to implement for generation. | 20–50% compute reduction on easy inputs | — |
+| **Early Exit / Token-Level Pruning** | Shallow layers output confident predictions early - skip remaining layers for "easy" tokens or inputs. Works best on classification; harder to implement for generation. | 20–50% compute reduction on easy inputs | - |
 
 **Most impactful combination in production:**
 ```
@@ -304,7 +304,7 @@ Quantization (INT8/INT4)          → halve memory
 + Speculative decoding (optional) → latency for interactive use
 ```
 
-**Pruning vs Distillation — when to use each:**
+**Pruning vs Distillation - when to use each:**
 - **Pruning**: Already have a large model you want to compress; best for structured pruning (remove whole heads/layers); requires hardware that exploits sparsity for unstructured gains.
 - **Distillation**: Want a general-purpose smaller model trained from scratch with teacher guidance; better final quality than pruning at the same size; requires training pipeline.
 
@@ -313,11 +313,11 @@ Quantization (INT8/INT4)          → halve memory
 ## Study Notes
 
 **Must-know for interviews:**
-- KV cache stores K and V for all past tokens per layer — avoids O(n²) recomputation during decode
+- KV cache stores K and V for all past tokens per layer - avoids O(n²) recomputation during decode
 - Memory per token per layer = 2 × n_kv_heads × d_head × bytes (know how to derive this)
-- GQA reduces KV cache memory by sharing K/V across groups of heads — LLaMA-3, Gemma use this
-- Paged Attention (vLLM) uses virtual memory for KV blocks — eliminates fragmentation, enables prefix sharing
-- Prefix caching reuses KV cache for shared prompt prefixes — high ROI for chatbot system prompts
+- GQA reduces KV cache memory by sharing K/V across groups of heads - LLaMA-3, Gemma use this
+- Paged Attention (vLLM) uses virtual memory for KV blocks - eliminates fragmentation, enables prefix sharing
+- Prefix caching reuses KV cache for shared prompt prefixes - high ROI for chatbot system prompts
 - Speculative decoding: draft proposes K tokens, target verifies in one pass → 2–3× decode speedup
 - Continuous batching: remove finished sequences and insert new ones mid-batch → 5–10× throughput vs static batching
 - Prefill is compute-bound; decode is memory-bandwidth-bound
@@ -325,6 +325,6 @@ Quantization (INT8/INT4)          → halve memory
 **Quick recall Q&A:**
 - *What two phases does LLM inference have?* Prefill (process prompt in parallel) and decode (generate one token at a time).
 - *Why does a large batch size improve throughput but hurt latency?* More sequences share the GPU → higher utilization → more tokens/second total. But each sequence waits longer for the batch to cycle → higher per-request latency.
-- *What is Paged Attention?* A virtual memory system for KV cache blocks — non-contiguous physical allocation with page tables, eliminating memory fragmentation.
+- *What is Paged Attention?* A virtual memory system for KV cache blocks - non-contiguous physical allocation with page tables, eliminating memory fragmentation.
 - *How does GQA differ from MHA?* GQA groups query heads and shares a single K/V pair per group; MHA has unique K/V per head. GQA reduces KV cache by h/G× with minimal quality loss.
-- *When does speculative decoding NOT help?* When the draft model acceptance rate is low — i.e., highly creative, diverse generation where the draft model's predictions are often wrong.
+- *When does speculative decoding NOT help?* When the draft model acceptance rate is low - i.e., highly creative, diverse generation where the draft model's predictions are often wrong.

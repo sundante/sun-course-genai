@@ -1,8 +1,8 @@
-# 05 — Agents
+# 05 - Agents
 
 ## What Are Agents
 
-AI agents are LLM-powered systems that can perceive their environment, reason about goals, and take actions using tools — going beyond single-turn chat to autonomous, multi-step task completion.
+AI agents are LLM-powered systems that can perceive their environment, reason about goals, and take actions using tools - going beyond single-turn chat to autonomous, multi-step task completion.
 
 ## Covered Frameworks
 
@@ -15,8 +15,8 @@ AI agents are LLM-powered systems that can perceive their environment, reason ab
 
 ## Recommended Learning Path
 
-1. Read [Agent Fundamentals](Notes/01-Agent-Fundamentals.md) — understand what agents are
-2. Study [Agent Patterns](Notes/02-Agent-Patterns.md) — learn common design patterns
+1. Read [Agent Fundamentals](Notes/01-Agent-Fundamentals.md) - understand what agents are
+2. Study [Agent Patterns](Notes/02-Agent-Patterns.md) - learn common design patterns
 3. Pick one framework and work through its Fundamentals → Simple → Complex files
 4. Return to [Interview Q&A](../Interview-Questions/05-Agents.md) to consolidate knowledge
 
@@ -33,14 +33,14 @@ AI agents are LLM-powered systems that can perceive their environment, reason ab
 
 | Section | What You'll Build | Link |
 |---------|------------------|------|
-| Agent Types | Simple → Intermediate → Complex agents across all 4 frameworks | [CodeLabs — Agent Types](CodeLabs/01-Agent-Types.md) |
-| Architecture Patterns | 7 multi-agent coordination patterns × 4 frameworks | [CodeLabs — Architecture Patterns](../06-Agentic-AI/CodeLabs/02-Architectures.md) |
+| Agent Types | Simple → Intermediate → Complex agents across all 4 frameworks | [CodeLabs - Agent Types](CodeLabs/01-Agent-Types.md) |
+| Architecture Patterns | 7 multi-agent coordination patterns × 4 frameworks | [CodeLabs - Architecture Patterns](../06-Agentic-AI/CodeLabs/02-Architectures.md) |
 
 ## Notes
 
-- [01 — Agent Fundamentals](Notes/01-Agent-Fundamentals.md)
-- [02 — Agent Patterns](Notes/02-Agent-Patterns.md)
-- [03 — Interview Q&A](../Interview-Questions/05-Agents.md)
+- [01 - Agent Fundamentals](Notes/01-Agent-Fundamentals.md)
+- [02 - Agent Patterns](Notes/02-Agent-Patterns.md)
+- [03 - Interview Q&A](../Interview-Questions/05-Agents.md)
 
 ## Resources
 
@@ -48,4 +48,4 @@ AI agents are LLM-powered systems that can perceive their environment, reason ab
 
 ## Navigation
 
-[Previous: 04 — MCP](../04-MCP/INDEX.md) | [Next: 06 — Agentic AI](../06-Agentic-AI/INDEX.md)
+[Previous: 04 - MCP](../04-MCP/INDEX.md) | [Next: 06 - Agentic AI](../06-Agentic-AI/INDEX.md)

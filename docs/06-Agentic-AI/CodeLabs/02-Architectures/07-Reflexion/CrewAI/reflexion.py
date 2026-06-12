@@ -1,5 +1,5 @@
 """
-Reflexion Architecture — CrewAI
+Reflexion Architecture - CrewAI
 Pattern: Generator agent → Critic agent → Rewriter agent (conditional)
 
 The critic scores the draft. If score < threshold, the rewriter improves it.

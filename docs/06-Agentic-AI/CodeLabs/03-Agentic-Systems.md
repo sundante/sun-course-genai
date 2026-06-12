@@ -1,6 +1,6 @@
-# Code Labs — 03: Agentic Systems
+# Code Labs - 03: Agentic Systems
 
-Four complete, end-to-end production-grade agentic systems. Each system combines multiple architectural patterns from [02 — Architecture Patterns](02-Architectures.md) into a realistic use case, implemented across all four frameworks.
+Four complete, end-to-end production-grade agentic systems. Each system combines multiple architectural patterns from [02 - Architecture Patterns](02-Architectures.md) into a realistic use case, implemented across all four frameworks.
 
 ← **Back to Overview:** [Agentic AI](../INDEX.md) · **Back to Concepts:** [Agentic System Design](../Notes/10-Agentic-System-Design.md) · [Evaluation & Observability](../Notes/11-Evaluation-and-Observability.md)
 
@@ -34,7 +34,7 @@ execute, and adapt             review with synthesis
 
 ## System Details
 
-### 01 — Research Assistant
+### 01 - Research Assistant
 
 | Property | Detail |
 |----------|--------|
@@ -59,7 +59,7 @@ Orchestrator (plans sub-tasks)
 
 ---
 
-### 02 — Document Processor
+### 02 - Document Processor
 
 | Property | Detail |
 |----------|--------|
@@ -87,7 +87,7 @@ Output store
 
 ---
 
-### 03 — Autonomous Task Planner
+### 03 - Autonomous Task Planner
 
 | Property | Detail |
 |----------|--------|
@@ -113,7 +113,7 @@ Goal achieved / report
 
 ---
 
-### 04 — Code Review System
+### 04 - Code Review System
 
 | Property | Detail |
 |----------|--------|
@@ -156,8 +156,8 @@ All 4 systems × all 4 frameworks = **16 total implementations**:
 
 These systems assume familiarity with individual patterns. Complete these first:
 
-1. [01 — Agent Types](../../05-Agents/CodeLabs/01-Agent-Types.md) — at least the Complex level
-2. [02 — Architecture Patterns](02-Architectures.md) — at minimum: Parallel, Orchestrator-Subagent, Reflexion
+1. [01 - Agent Types](../../05-Agents/CodeLabs/01-Agent-Types.md) - at least the Complex level
+2. [02 - Architecture Patterns](02-Architectures.md) - at minimum: Parallel, Orchestrator-Subagent, Reflexion
 
 ---
 
@@ -175,6 +175,6 @@ python 06-Agentic-AI/CodeLabs/03-Agentic-Systems/04-Code-Review-System/CrewAI/sy
 
 ## What to Read Alongside
 
-- [Agentic System Design](../Notes/10-Agentic-System-Design.md) — production architecture, HITL design, reliability, cost
-- [Multi-Agent Systems](../Notes/08-Multi-Agent-Systems.md) — coordination protocols, shared state, failure modes
-- [Evaluation and Observability](../Notes/11-Evaluation-and-Observability.md) — how to evaluate these systems end-to-end
+- [Agentic System Design](../Notes/10-Agentic-System-Design.md) - production architecture, HITL design, reliability, cost
+- [Multi-Agent Systems](../Notes/08-Multi-Agent-Systems.md) - coordination protocols, shared state, failure modes
+- [Evaluation and Observability](../Notes/11-Evaluation-and-Observability.md) - how to evaluate these systems end-to-end

@@ -1,5 +1,5 @@
 """
-Adversarial Debate Architecture — LangChain
+Adversarial Debate Architecture - LangChain
 Pattern: Proposer → Critic → Judge
 
 Three LCEL chains with opposing personas debate a topic.

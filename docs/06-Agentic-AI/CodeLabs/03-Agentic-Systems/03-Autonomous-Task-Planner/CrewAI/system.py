@@ -1,7 +1,7 @@
 """
-Autonomous Task Planner — CrewAI Implementation
+Autonomous Task Planner - CrewAI Implementation
 ===============================================
-System    : 03 — Autonomous Task Planner
+System    : 03 - Autonomous Task Planner
 Framework : CrewAI
 Model     : gemini-2.0-flash via langchain-google-genai
 
@@ -41,7 +41,7 @@ research_specialist = Agent(
     role="Research Specialist",
     goal="Find, gather, and synthesize relevant information and data on assigned topics",
     backstory="""You are a thorough researcher who finds specific, credible information.
-    You never make up data — you present findings with appropriate context and note
+    You never make up data - you present findings with appropriate context and note
     when information is uncertain. Your research is always cited and structured.""",
     llm=llm,
     verbose=True,
@@ -104,7 +104,7 @@ research_task = Task(
     - Tools and technologies that support remote teams
     - Examples from companies that have implemented successful remote work
 
-    Be specific — cite numbers, studies, and company examples.""",
+    Be specific - cite numbers, studies, and company examples.""",
     expected_output="A comprehensive research document with specific data points, statistics, and examples",
     agent=research_specialist,
     context=[planning_task],
@@ -167,7 +167,7 @@ review_task = Task(
 
 if __name__ == "__main__":
     print("\n" + "="*60)
-    print("AUTONOMOUS TASK PLANNER — CrewAI")
+    print("AUTONOMOUS TASK PLANNER - CrewAI")
     print(f"Goal: {GOAL}")
     print("="*60)
 

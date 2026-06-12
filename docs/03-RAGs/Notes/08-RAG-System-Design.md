@@ -1,6 +1,6 @@
 # RAG System Design
 
-This is the highest-leverage section for building production RAG expertise. Every system design question about RAG follows the same structure — learn to decompose it into components, draw the two pipelines, and then drill into trade-offs.
+This is the highest-leverage section for building production RAG expertise. Every system design question about RAG follows the same structure - learn to decompose it into components, draw the two pipelines, and then drill into trade-offs.
 
 ---
 
@@ -83,7 +83,7 @@ FEEDBACK LOOP (async)
 
 ### Concept
 
-The ingest pipeline runs offline or on a schedule. It's the foundation — errors here propagate silently to all future queries.
+The ingest pipeline runs offline or on a schedule. It's the foundation - errors here propagate silently to all future queries.
 
 **Stages:**
 
@@ -101,7 +101,7 @@ Remove: HTML tags, page numbers, headers/footers, boilerplate legal text, repeat
 (see file 03 for full details). Default: `RecursiveCharacterTextSplitter`, 500 chars, 50 overlap. For domain-specific: semantic chunking.
 
 **4. Embedding**
-Batch embed chunks. CRITICAL: batch size matters — most embedding APIs accept 100-2048 texts per call. Batching 1 text at a time is 100x slower and 100x more expensive.
+Batch embed chunks. CRITICAL: batch size matters - most embedding APIs accept 100-2048 texts per call. Batching 1 text at a time is 100x slower and 100x more expensive.
 
 **5. Upsert**
 Write (vector, metadata, document_id) to vector DB. Handle:
@@ -162,7 +162,7 @@ For a p95 latency SLA of 2 seconds, you need to budget time across each stage:
 
 | Stage | Typical Latency | Notes |
 |---|---|---|
-| Query preprocessing (rewrite) | 200-400ms | Optional — skip if query is clear |
+| Query preprocessing (rewrite) | 200-400ms | Optional - skip if query is clear |
 | Cache lookup | 5-20ms | Redis or in-memory |
 | Query embedding | 10-30ms | Cached if same query |
 | ANN search (dense) | 5-20ms | HNSW at k=20 |
@@ -174,11 +174,11 @@ For a p95 latency SLA of 2 seconds, you need to budget time across each stage:
 | **Total (pessimistic)** | **~2200ms** | Without caching, with rewrite |
 
 **Optimization hierarchy (biggest wins first):**
-1. **Semantic caching** — deduplicate near-identical queries (30-60% hit rate for customer support)
-2. **Skip reranking for high-confidence retrievals** — if top BM25 and top dense agree, skip cross-encoder
-3. **Smaller reranker model** — `MiniLM-L-6-v2` (6-layer) is 3x faster than `L-12-v2` at ~80% quality
-4. **Streaming LLM output** — stream tokens immediately; users perceive faster responses
-5. **Pre-computed query embeddings cache** — hash query string, cache embedding for 24h
+1. **Semantic caching** - deduplicate near-identical queries (30-60% hit rate for customer support)
+2. **Skip reranking for high-confidence retrievals** - if top BM25 and top dense agree, skip cross-encoder
+3. **Smaller reranker model** - `MiniLM-L-6-v2` (6-layer) is 3x faster than `L-12-v2` at ~80% quality
+4. **Streaming LLM output** - stream tokens immediately; users perceive faster responses
+5. **Pre-computed query embeddings cache** - hash query string, cache embedding for 24h
 
 ### Code
 
@@ -221,19 +221,19 @@ At 100M documents, several assumptions of standard RAG break. Here's how to hand
 
 **1. Index size**
 100M documents × 500 chars avg × 1.2 chunks/doc = 120M chunks
-120M chunks × 768 floats × 4 bytes = ~369 GB — won't fit in memory on a single machine.
+120M chunks × 768 floats × 4 bytes = ~369 GB - won't fit in memory on a single machine.
 
 Solution: **IVF (Inverted File Index)** + optionally PQ compression, OR distributed vector DB (Vertex AI Vector Search, Pinecone, Qdrant distributed mode).
 
 **2. Query throughput (QPS)**
 A single vector DB node handles ~500-2000 QPS. At 10K QPS, you need horizontal scaling.
 
-Solution: **Read replicas** — the vector index is read-heavy; create multiple read replicas. Queries are load-balanced across replicas.
+Solution: **Read replicas** - the vector index is read-heavy; create multiple read replicas. Queries are load-balanced across replicas.
 
 **3. Write throughput (ingestion rate)**
 Re-indexing 100M documents is not feasible in real-time. 
 
-Solution: **Write-ahead log** — new documents go to a write log; a background job merges them into the main index on a schedule. Queries search both the main index and the recent write log (union of results).
+Solution: **Write-ahead log** - new documents go to a write log; a background job merges them into the main index on a schedule. Queries search both the main index and the recent write log (union of results).
 
 **4. Sharding**
 Two strategies:
@@ -241,7 +241,7 @@ Two strategies:
 - **Hash-based sharding**: distribute vectors uniformly by ID hash. All queries fan out to all shards. Simpler but all shards participate in every query.
 
 **5. Multi-region**
-For global products, replicate the index to multiple regions. Use eventual consistency for index updates — slight staleness (seconds to minutes) is acceptable for most RAG use cases.
+For global products, replicate the index to multiple regions. Use eventual consistency for index updates - slight staleness (seconds to minutes) is acceptable for most RAG use cases.
 
 ```
 Architecture for 100M documents:
@@ -410,7 +410,7 @@ Ingest (daily batch, 9 PM):
 Query (real-time):
   Employee query
     → Auth check (IAM → map user to department)
-    → Semantic cache (Redis) — 30-60% hit rate expected
+    → Semantic cache (Redis) - 30-60% hit rate expected
     → Cache miss: hybrid retrieval (Vector Search + Elasticsearch BM25)
                   filter={"department": user_dept}  ← tenant isolation
     → Cohere Rerank API (top-20 → top-5)
@@ -438,7 +438,7 @@ Query (real-time):
 ## Interview Q&A
 
 **Q: A product manager asks you to design a RAG system for a company with 10M internal documents. Walk me through your approach.** `[Hard]`
-A: I'd start with 5 clarifying questions: QPS, latency SLA, update frequency, access control requirements, and whether answers need citations. Then I'd draw the two pipelines — ingest (offline: load → chunk → embed → upsert) and query (online: cache check → hybrid retrieval → rerank → generate). For 10M docs at ~5 QPS, I'd use Vertex AI Vector Search for managed scale, Elasticsearch for BM25, Cohere Rerank, and Gemini Pro. Daily batch re-indexing at low-traffic hours. Namespace-based tenant isolation if multiple departments. p95 target: under 2s (cache hit: 20ms, cache miss: ~1s).
+A: I'd start with 5 clarifying questions: QPS, latency SLA, update frequency, access control requirements, and whether answers need citations. Then I'd draw the two pipelines - ingest (offline: load → chunk → embed → upsert) and query (online: cache check → hybrid retrieval → rerank → generate). For 10M docs at ~5 QPS, I'd use Vertex AI Vector Search for managed scale, Elasticsearch for BM25, Cohere Rerank, and Gemini Pro. Daily batch re-indexing at low-traffic hours. Namespace-based tenant isolation if multiple departments. p95 target: under 2s (cache hit: 20ms, cache miss: ~1s).
 
 **Q: How do you handle index freshness in a RAG system where documents update every hour?** `[Medium]`
 A: Use event-driven incremental updates. Subscribe to document change events (Pub/Sub or Webhooks). On each event: (1) delete existing vectors with that document_id from the vector DB, (2) re-chunk and re-embed the new version, (3) upsert new vectors. For high-throughput update scenarios, buffer changes in a "hot" write-ahead index that is searched alongside the main "cold" index. This avoids re-indexing the entire corpus for each update.
@@ -447,13 +447,13 @@ A: Use event-driven incremental updates. Subscribe to document change events (Pu
 A: A standard key-value cache returns a hit only on exact string matches. A semantic cache stores query embeddings alongside answers and returns a cache hit when a new query's embedding is within a cosine similarity threshold (e.g., 0.95) of a cached query. This handles paraphrases: "What is your refund policy?" and "How do I get a refund?" both hit the same cache entry. Tools: GPTCache (open source), Redis + FAISS, or Qdrant as a vector-based cache store.
 
 **Q: How would you design a multi-tenant RAG system where tenants must not see each other's data?** `[Hard]`
-A: Two isolation strategies: (1) **Namespace isolation** — store all tenants in one vector DB but with a tenant_id namespace/collection. At query time, apply a mandatory metadata filter: `filter={"tenant_id": current_user.tenant_id}`. This is simple but relies on correct filter application at every query — a missed filter leaks data. (2) **Index isolation** — separate vector DB indices per tenant. Stronger isolation, but higher operational overhead (N indices to manage). For high-security requirements (HIPAA, SOC2), index isolation is preferred. For standard enterprise, namespace isolation with application-layer enforcement + audit logging is sufficient.
+A: Two isolation strategies: (1) **Namespace isolation** - store all tenants in one vector DB but with a tenant_id namespace/collection. At query time, apply a mandatory metadata filter: `filter={"tenant_id": current_user.tenant_id}`. This is simple but relies on correct filter application at every query - a missed filter leaks data. (2) **Index isolation** - separate vector DB indices per tenant. Stronger isolation, but higher operational overhead (N indices to manage). For high-security requirements (HIPAA, SOC2), index isolation is preferred. For standard enterprise, namespace isolation with application-layer enforcement + audit logging is sufficient.
 
 **Q: How do you detect and handle retrieval quality degradation in production?** `[Hard]`
 A: Set up three signals: (1) **Offline eval**: a fixed set of 100-500 golden (question, expected_answer) pairs; run weekly, alert if Recall@5 or faithfulness score drops >5% from baseline. (2) **Online signals**: thumbs down / feedback buttons; low user rating rate is a leading indicator of quality degradation. (3) **Embedding distribution drift**: periodically compute the centroid of recent query embeddings; if it drifts significantly from the training distribution of your embedding model, re-evaluate whether to switch models. Common causes of degradation: corpus changes (new document types or vocabulary), index staleness, or changes in user query patterns.
 
 **Q: What are the trade-offs between batch and streaming ingestion for a RAG system?** `[Medium]`
-A: Batch ingestion (nightly runs) is simple, cost-efficient (bulk embedding API rates), and idempotent — easy to retry and monitor. Freshness SLA: hours to a day. Streaming ingestion (event-driven) achieves minute-level freshness but adds operational complexity: you need idempotent updates (delete old vectors → insert new ones), handling of race conditions (same document updated twice in quick succession), and dead-letter queues for failed ingestion events. Choose based on freshness requirement: most enterprise knowledge bases are fine with daily batch; customer support (where KB articles change hourly) needs streaming.
+A: Batch ingestion (nightly runs) is simple, cost-efficient (bulk embedding API rates), and idempotent - easy to retry and monitor. Freshness SLA: hours to a day. Streaming ingestion (event-driven) achieves minute-level freshness but adds operational complexity: you need idempotent updates (delete old vectors → insert new ones), handling of race conditions (same document updated twice in quick succession), and dead-letter queues for failed ingestion events. Choose based on freshness requirement: most enterprise knowledge bases are fine with daily batch; customer support (where KB articles change hourly) needs streaming.
 
 **Q: How do you prevent the RAG system from returning confidential documents to unauthorized users?** `[Hard]`
-A: Defense in depth: (1) **Metadata tagging at ingest** — tag every document with its access control level (public, internal, confidential, top-secret) and owner group during ingestion. (2) **Mandatory metadata filtering at query time** — the retrieval function always includes a filter based on the authenticated user's permissions. This filter must be applied at the vector DB layer, not in application code after retrieval. (3) **Audit logging** — log every (user, query, retrieved_doc_ids) tuple for forensic capability. (4) **Index-level isolation** for highly sensitive data (never co-locate top-secret documents with general documents in the same index, regardless of filters).
+A: Defense in depth: (1) **Metadata tagging at ingest** - tag every document with its access control level (public, internal, confidential, top-secret) and owner group during ingestion. (2) **Mandatory metadata filtering at query time** - the retrieval function always includes a filter based on the authenticated user's permissions. This filter must be applied at the vector DB layer, not in application code after retrieval. (3) **Audit logging** - log every (user, query, retrieved_doc_ids) tuple for forensic capability. (4) **Index-level isolation** for highly sensitive data (never co-locate top-secret documents with general documents in the same index, regardless of filters).

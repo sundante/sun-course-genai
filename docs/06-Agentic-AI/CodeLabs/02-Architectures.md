@@ -1,6 +1,6 @@
-# Code Labs — 02: Architecture Patterns
+# Code Labs - 02: Architecture Patterns
 
-Seven multi-agent coordination patterns, each implemented in all four frameworks using the same mock task. Builds directly on [01 — Agent Types](../../05-Agents/CodeLabs/01-Agent-Types.md).
+Seven multi-agent coordination patterns, each implemented in all four frameworks using the same mock task. Builds directly on [01 - Agent Types](../../05-Agents/CodeLabs/01-Agent-Types.md).
 
 ← **Back to Overview:** [Agentic AI](../INDEX.md) · **Back to Concepts:** [Architectural Patterns](../Notes/06-Architectural-Patterns.md)
 
@@ -54,19 +54,19 @@ Each pattern lives in `06-Agentic-AI/CodeLabs/02-Architectures/<pattern-name>/<F
 | Adversarial-Debate | `debate.py` + `.ipynb` | same | same | same |
 | Reflexion | `reflexion.py` + `.ipynb` | same | same | same |
 
-**28 total implementations** — every pattern × every framework.
+**28 total implementations** - every pattern × every framework.
 
 ---
 
 ## Recommended Order
 
-1. **Sequential** — start here; simplest pattern, clear A→B→C structure
-2. **Parallel** — fan-out to multiple agents, then aggregate results
-3. **Orchestrator-Subagent** — dynamic planning; the most commonly used pattern in production
-4. **Hierarchical** — nested orchestration; builds on Orchestrator-Subagent
-5. **Pipeline** — data-flow style; useful for ETL and document processing
-6. **Adversarial-Debate** — quality through disagreement; challenging but powerful
-7. **Reflexion** — self-improvement loop; combines with most other patterns
+1. **Sequential** - start here; simplest pattern, clear A→B→C structure
+2. **Parallel** - fan-out to multiple agents, then aggregate results
+3. **Orchestrator-Subagent** - dynamic planning; the most commonly used pattern in production
+4. **Hierarchical** - nested orchestration; builds on Orchestrator-Subagent
+5. **Pipeline** - data-flow style; useful for ETL and document processing
+6. **Adversarial-Debate** - quality through disagreement; challenging but powerful
+7. **Reflexion** - self-improvement loop; combines with most other patterns
 
 ---
 
@@ -97,12 +97,12 @@ jupyter notebook 06-Agentic-AI/CodeLabs/02-Architectures/01-Sequential/CrewAI/se
 
 ## What to Read Alongside
 
-- [Architectural Patterns](../Notes/06-Architectural-Patterns.md) — conceptual deep-dive on all 8 patterns
-- [Design Patterns](../Notes/07-Design-Patterns.md) — tool-use, reflection, planning, routing
-- [Multi-Agent Systems](../Notes/08-Multi-Agent-Systems.md) — coordination, state management, failure modes
+- [Architectural Patterns](../Notes/06-Architectural-Patterns.md) - conceptual deep-dive on all 8 patterns
+- [Design Patterns](../Notes/07-Design-Patterns.md) - tool-use, reflection, planning, routing
+- [Multi-Agent Systems](../Notes/08-Multi-Agent-Systems.md) - coordination, state management, failure modes
 
 ---
 
 ## Next: Agentic Systems
 
-After mastering individual patterns, see how they combine in [03 — Agentic Systems](03-Agentic-Systems.md) — full end-to-end production system designs.
+After mastering individual patterns, see how they combine in [03 - Agentic Systems](03-Agentic-Systems.md) - full end-to-end production system designs.

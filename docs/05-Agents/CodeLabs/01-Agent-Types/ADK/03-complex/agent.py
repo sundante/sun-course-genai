@@ -2,7 +2,7 @@
 ADK Complex Agent
 =================
 Framework : Google Agent Development Kit (ADK)
-Level     : 03 — Complex
+Level     : 03 - Complex
 Model     : gemini-2.0-flash
 
 New concepts vs Intermediate:
@@ -121,7 +121,7 @@ def score_report(report: str) -> dict:
     if len(report) > 300:
         score += 2
     else:
-        suggestions.append("Report is too brief — add more detail.")
+        suggestions.append("Report is too brief - add more detail.")
 
     if any(c in report.lower() for c in ["time", "gmt", "ist", "jst", "est", "cet"]):
         score += 1
@@ -142,15 +142,15 @@ agent = Agent(
     description="A trip planner that produces ranked city comparison reports.",
     instruction="""You are an expert travel analyst. When given a list of cities to compare:
 
-STEP 1 — PLAN: Before calling any tools, write a brief plan:
+STEP 1 - PLAN: Before calling any tools, write a brief plan:
   "I will research [list cities], checking weather, time, and safety for each."
 
-STEP 2 — GATHER: Call get_weather, get_time, and get_travel_advisory for EVERY city.
+STEP 2 - GATHER: Call get_weather, get_time, and get_travel_advisory for EVERY city.
 
-STEP 3 — DRAFT: Write a comparison report that ranks the cities for travel.
+STEP 3 - DRAFT: Write a comparison report that ranks the cities for travel.
   Include: weather scores, safety scores, best time to visit.
 
-STEP 4 — CRITIQUE: Call score_report() with your draft.
+STEP 4 - CRITIQUE: Call score_report() with your draft.
   If score < 7, revise the report addressing the suggestions.
   If score >= 7, deliver the final report.
 

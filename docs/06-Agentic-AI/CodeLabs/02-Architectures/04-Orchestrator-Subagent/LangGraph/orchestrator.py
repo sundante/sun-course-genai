@@ -1,5 +1,5 @@
 """
-Orchestrator-Subagent Architecture — LangGraph
+Orchestrator-Subagent Architecture - LangGraph
 Pattern: Orchestrator node selects specialists via conditional routing
 
 The orchestrator node reads a task queue and dispatches to specialist nodes.

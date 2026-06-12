@@ -4,16 +4,16 @@
 
 ### Concept
 
-Encoder-only models use **bidirectional self-attention** — each token can attend to all other tokens simultaneously. There is no causal mask; the model sees the full context in both directions.
+Encoder-only models use **bidirectional self-attention** - each token can attend to all other tokens simultaneously. There is no causal mask; the model sees the full context in both directions.
 
-**Training objective — Masked Language Modeling (MLM):**
+**Training objective - Masked Language Modeling (MLM):**
 - Randomly mask 15% of tokens in the input
 - Train the model to predict the masked tokens from context
 - This forces the model to understand bidirectional context
 
 **Architecture specifics:**
 - Input sequence → bidirectional attention → contextual representations per token
-- No autoregressive generation — the model produces a fixed-size representation for each token, not new tokens
+- No autoregressive generation - the model produces a fixed-size representation for each token, not new tokens
 - Classification and span-extraction heads are added on top of the final hidden states
 
 **When to use encoder-only:**
@@ -34,7 +34,7 @@ Encoder-only models use **bidirectional self-attention** — each token can atte
 | BGE-M3 | ~560M | 8K | Multi-function embedding model |
 
 **Tricky Q:** *Can a BERT-family model generate text?*  
-No — BERT was never trained to autoregressively predict the next token. Its output is a contextual representation, not a probability distribution over the next token. You can build a seq2seq encoder-decoder on top of a BERT encoder, but the encoder alone cannot generate.
+No - BERT was never trained to autoregressively predict the next token. Its output is a contextual representation, not a probability distribution over the next token. You can build a seq2seq encoder-decoder on top of a BERT encoder, but the encoder alone cannot generate.
 
 ---
 
@@ -42,16 +42,16 @@ No — BERT was never trained to autoregressively predict the next token. Its ou
 
 ### Concept
 
-Decoder-only models use **causal (left-to-right) self-attention** — each token can only attend to itself and all preceding tokens. The model is trained to predict the next token.
+Decoder-only models use **causal (left-to-right) self-attention** - each token can only attend to itself and all preceding tokens. The model is trained to predict the next token.
 
-**Training objective — Causal Language Modeling (CLM):**
+**Training objective - Causal Language Modeling (CLM):**
 - Given tokens t₁, t₂, ..., tₙ₋₁, predict tₙ
 - Loss is cross-entropy on the predicted next-token distribution vs the actual next token
 - The simplicity of this objective is a key reason for the architecture's dominance
 
 **Why decoder-only won:**
 
-1. **Unified objective:** CLM pretraining + instruction fine-tuning (SFT) + RLHF all use the same token prediction framework — no architectural changes between stages
+1. **Unified objective:** CLM pretraining + instruction fine-tuning (SFT) + RLHF all use the same token prediction framework - no architectural changes between stages
 2. **Natural generation:** The architecture is inherently designed to generate; no adapter or cross-attention bridge needed
 3. **Emergent reasoning:** At scale, decoder-only models develop chain-of-thought reasoning by learning to produce intermediate "thinking" tokens
 4. **In-context learning:** Few-shot prompting works naturally by prepending examples before the query
@@ -157,8 +157,8 @@ MoE FFN:
 ```
 
 **Key MoE concept: sparse activation**
-- Total parameters: N × (d_model × d_ffn) — much larger than a dense model
-- Active parameters per token: only K experts are used — much smaller computation
+- Total parameters: N × (d_model × d_ffn) - much larger than a dense model
+- Active parameters per token: only K experts are used - much smaller computation
 - Example: Mixtral-8x7B has 8 experts of 7B each ≈ 47B total parameters, but activates 2 experts per token ≈ 13B active parameters
 
 **MoE advantages:**
@@ -169,7 +169,7 @@ MoE FFN:
 **MoE challenges:**
 - Load balancing: without constraints, router collapses all tokens to the same 1–2 experts
 - Communication overhead in distributed training (all-to-all for expert routing)
-- KV cache still scales with total layers — memory savings only in FFN compute
+- KV cache still scales with total layers - memory savings only in FFN compute
 
 **Models:**
 - Mixtral-8x7B: 8 experts, top-2 routing, 47B total / 13B active
@@ -226,7 +226,7 @@ Beyond architecture type, LLMs are also categorized by the **modalities they han
 | Speech-Text | Integrate speech recognition and synthesis | Whisper, SeamlessM4T | Transcription, speech translation |
 | Image/Vision | Image understanding and classification | ViT, ConvNeXT, DETR, Mask2Former | Object detection, segmentation, depth estimation |
 
-**Modality in system design:** When building a multi-modal pipeline (e.g., processing scanned PDFs + structured data + free text), you must choose whether to use a single multi-modal foundation model (simplicity, one context) or multiple specialized models (higher per-task accuracy, more complex orchestration). For RAG over images, multimodal embeddings (CLIP, Gemini Embeddings) are required — text-only embeddings cannot capture visual content.
+**Modality in system design:** When building a multi-modal pipeline (e.g., processing scanned PDFs + structured data + free text), you must choose whether to use a single multi-modal foundation model (simplicity, one context) or multiple specialized models (higher per-task accuracy, more complex orchestration). For RAG over images, multimodal embeddings (CLIP, Gemini Embeddings) are required - text-only embeddings cannot capture visual content.
 
 **Models by specific task (quick reference):**
 
@@ -253,7 +253,7 @@ Beyond architecture type, LLMs are also categorized by the **modalities they han
 - Task is purely classification, NER, or span extraction
 - You need high-quality fixed-size embeddings for search/RAG
 - Inference must be very fast (smaller models, no generation overhead)
-- Labels are sentence-level or token-level — not generative
+- Labels are sentence-level or token-level - not generative
 
 **Use decoder-only (LLaMA/Gemma/GPT) when:**
 - Task requires free-form text generation
@@ -263,7 +263,7 @@ Beyond architecture type, LLMs are also categorized by the **modalities they han
 
 **Use encoder-decoder (T5/FLAN-T5/BART) when:**
 - Task is explicitly seq2seq with fixed input and output schemas
-- You have limited compute — smaller fine-tuned encoder-decoder can beat large decoder-only for specific structured tasks
+- You have limited compute - smaller fine-tuned encoder-decoder can beat large decoder-only for specific structured tasks
 - Translation or summarization at scale where encoder-decoder efficiency matters
 
 **Practical rule of thumb (2024):** Default to decoder-only for new projects. Switch to encoder-only if you need embeddings or fast token classification. Encoder-decoder is a niche choice for legacy systems or very specific seq2seq workloads.
@@ -317,7 +317,7 @@ from transformers import AutoConfig
 
 for model_name in ["bert-base-uncased", "gpt2", "facebook/bart-large"]:
     config = AutoConfig.from_pretrained(model_name)
-    print(f"{model_name}: {config.model_type} — {config.architectures}")
+    print(f"{model_name}: {config.model_type} - {config.architectures}")
 ```
 
 ---
@@ -331,7 +331,7 @@ Beyond the classic encoder/decoder taxonomy, modern AI agent systems draw from a
 | Type | Full Name | What It Is | Key Examples | Primary Use in Agents |
 |------|-----------|-----------|-------------|----------------------|
 | **GPT** | Generative Pretrained Transformer | Standard autoregressive decoder-only LLM | GPT-4, LLaMA, Gemma | General reasoning, planning, text generation |
-| **MoE** | Mixture of Experts | Sparse routing — only top-K expert FFNs fire per token | Mixtral-8x7B, GPT-4 (est.), LLaMA 4 | Scale capacity without proportional compute cost |
+| **MoE** | Mixture of Experts | Sparse routing - only top-K expert FFNs fire per token | Mixtral-8x7B, GPT-4 (est.), LLaMA 4 | Scale capacity without proportional compute cost |
 | **LRM** | Large Reasoning Model | LLM fine-tuned (via GRPO/RL) to produce long chain-of-thought reasoning traces before answering | DeepSeek-R1, OpenAI o1/o3, QwQ | Complex math, coding, multi-step logical deduction |
 | **VLM** | Vision-Language Model | Multi-stage model combining a vision encoder (ViT) with a language model; trained on image-text pairs | GPT-4o, Gemini, LLaVA, Qwen-VL | Document parsing, image Q&A, multimodal agent perception |
 | **SLM** | Small Language Model | Compact decoder-only model (1B–7B params) with GQA and efficient attention, deployable on edge/local | Phi-3-mini (3.8B), Gemma 2B, TinyLLaMA | On-device inference, latency-critical agent sub-tasks |
@@ -342,9 +342,9 @@ Beyond the classic encoder/decoder taxonomy, modern AI agent systems draw from a
 **Key distinctions for interviews:**
 - **LRM vs GPT:** Both are decoder-only, but LRM is trained with RL to output explicit reasoning steps (think-then-answer). GPT answers directly.
 - **VLM training stages:** (1) Pretrain vision encoder + LM separately; (2) Align vision→language with image-text pairs; (3) SFT on multi-task visual instruction data. The ViT and LM share a projection layer.
-- **SLM vs quantized LLM:** SLMs are architecturally designed small (GQA, RMSNorm, SwiGLU) — not just a compressed large model.
+- **SLM vs quantized LLM:** SLMs are architecturally designed small (GQA, RMSNorm, SwiGLU) - not just a compressed large model.
 - **LAM vs standard LLM with tools:** A LAM is specifically fine-tuned on action trajectories; a standard LLM uses tools via prompt engineering. LAMs produce more reliable action sequences.
-- **LCM:** Addresses the token-level limitation — instead of next-token prediction, LCMs predict the next concept embedding. This makes them language-agnostic by design.
+- **LCM:** Addresses the token-level limitation - instead of next-token prediction, LCMs predict the next concept embedding. This makes them language-agnostic by design.
 
 ---
 
@@ -352,14 +352,14 @@ Beyond the classic encoder/decoder taxonomy, modern AI agent systems draw from a
 
 **Must-know for interviews:**
 - Three architecture families: encoder-only (bidirectional, MLM, classification), decoder-only (causal, CLM, generation), encoder-decoder (cross-attention, seq2seq)
-- Decoder-only dominates production for general LLMs — simple CLM objective + instruction fine-tuning = powerful general purpose model
-- BERT uses bidirectional attention — cannot generate; best for embeddings and classification
+- Decoder-only dominates production for general LLMs - simple CLM objective + instruction fine-tuning = powerful general purpose model
+- BERT uses bidirectional attention - cannot generate; best for embeddings and classification
 - MoE: sparse routing selects top-K experts per token → large total params, small active params
 - LLaMA-3, Gemma, Mistral all use GQA for efficient KV caching
 - When in doubt in 2024: reach for decoder-only (LLaMA-3, Gemma)
 
 **Quick recall Q&A:**
-- *Why can BERT not generate text?* BERT was trained with MLM (predict masked tokens), not CLM (predict next token) — it has no autoregressive generation mechanism.
-- *What is MoE and what is the key tradeoff?* Multiple expert FFNs with sparse routing — scales capacity without proportional compute, but requires load balancing and has communication overhead in distributed settings.
+- *Why can BERT not generate text?* BERT was trained with MLM (predict masked tokens), not CLM (predict next token) - it has no autoregressive generation mechanism.
+- *What is MoE and what is the key tradeoff?* Multiple expert FFNs with sparse routing - scales capacity without proportional compute, but requires load balancing and has communication overhead in distributed settings.
 - *Why did decoder-only beat encoder-decoder for summarization?* At scale + instruction fine-tuning, decoder-only generalizes across tasks without architectural inductive bias; operational simplicity wins.
 - *Name 3 decoder-only models and their context lengths.* LLaMA-3.1 (128K), Gemma 2 (8K), Mistral 7B (32K).

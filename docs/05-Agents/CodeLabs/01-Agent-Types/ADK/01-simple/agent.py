@@ -2,7 +2,7 @@
 ADK Simple Agent
 ================
 Framework : Google Agent Development Kit (ADK)
-Level     : 01 — Simple
+Level     : 01 - Simple
 Model     : gemini-2.0-flash (via Gemini API key)
 
 What this demonstrates:

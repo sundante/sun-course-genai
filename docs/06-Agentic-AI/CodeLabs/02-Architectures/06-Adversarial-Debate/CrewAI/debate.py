@@ -1,5 +1,5 @@
 """
-Adversarial Debate Architecture — CrewAI
+Adversarial Debate Architecture - CrewAI
 Pattern: Proposer agent → Critic agent → Judge agent
 
 Three agents with opposing personas debate a topic.
@@ -101,4 +101,4 @@ if __name__ == "__main__":
         print(f"Key insight: {verdict.key_insight}")
         print(f"\nFinal conclusion:\n{verdict.final_conclusion}")
     else:
-        print("No structured verdict — check raw output")
+        print("No structured verdict - check raw output")

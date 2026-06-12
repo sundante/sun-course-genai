@@ -1,9 +1,9 @@
 """
-Hierarchical Architecture — LangChain
+Hierarchical Architecture - LangChain
 Pattern: Manager chain orchestrates Research Lead + Report Lead sub-chains
 
 The manager decides what to delegate. Each lead chain calls its workers.
-All are plain LCEL chains — hierarchy is expressed via function calls.
+All are plain LCEL chains - hierarchy is expressed via function calls.
 """
 import os
 from dotenv import load_dotenv

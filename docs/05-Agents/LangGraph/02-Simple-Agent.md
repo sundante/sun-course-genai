@@ -1,4 +1,4 @@
-# LangGraph — Simple Agent
+# LangGraph - Simple Agent
 
 ## What We Are Building
 

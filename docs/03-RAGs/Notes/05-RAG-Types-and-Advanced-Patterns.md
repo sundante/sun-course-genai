@@ -44,7 +44,7 @@ Query → embed → similarity search → top-k chunks → prompt → LLM → an
 - Poorly phrased queries retrieve irrelevant chunks
 - Chunks may contain the right information but wrong context (mid-sentence splits)
 - No handling of complex multi-hop questions
-- No feedback loop — errors are silent
+- No feedback loop - errors are silent
 - Context window stuffing: top-k chunks may exceed the LLM's effective attention window
 
 **When to use:** Prototypes, internal tools with small clean corpora (<10K docs), or when latency budget is very tight and precision requirements are moderate.
@@ -84,20 +84,20 @@ answer = naive_rag.invoke("What is the refund policy?")
 Advanced RAG adds intelligence at three stages: **pre-retrieval**, **retrieval**, and **post-retrieval**. It fixes Naive RAG's core weaknesses while keeping a single retrieval step.
 
 **Pre-retrieval improvements:**
-- **Query rewriting** — rephrase the query to be more retrieval-friendly
-- **HyDE** — generate a hypothetical answer, embed that instead of the raw query
-- **Step-back prompting** — generalize a specific question to retrieve broader context first
-- **Multi-query** — generate 3–5 query variants, retrieve for each, deduplicate
+- **Query rewriting** - rephrase the query to be more retrieval-friendly
+- **HyDE** - generate a hypothetical answer, embed that instead of the raw query
+- **Step-back prompting** - generalize a specific question to retrieve broader context first
+- **Multi-query** - generate 3–5 query variants, retrieve for each, deduplicate
 
 **Retrieval improvements:**
-- **Hybrid search** — combine dense (semantic) + sparse (BM25) retrieval
-- **Metadata filtering** — pre-filter by date, source, category before ANN search
-- **MMR** — penalize redundant chunks, increase diversity
+- **Hybrid search** - combine dense (semantic) + sparse (BM25) retrieval
+- **Metadata filtering** - pre-filter by date, source, category before ANN search
+- **MMR** - penalize redundant chunks, increase diversity
 
 **Post-retrieval improvements:**
-- **Re-ranking** — cross-encoder model scores (query, chunk) pairs, promotes best chunks
-- **Contextual compression** — extract only the relevant sentences from each retrieved chunk
-- **Chunk stitching** — restore surrounding sentences for mid-sentence chunks
+- **Re-ranking** - cross-encoder model scores (query, chunk) pairs, promotes best chunks
+- **Contextual compression** - extract only the relevant sentences from each retrieved chunk
+- **Chunk stitching** - restore surrounding sentences for mid-sentence chunks
 
 **When to use:** Production systems with real users. The combination of query rewriting + hybrid search + reranking often improves answer quality 20–40% over Naive RAG with modest added latency.
 
@@ -192,10 +192,10 @@ The pattern: use an LLM to generate 3–5 paraphrased or decomposed variants of 
 - Queries using informal language when documents use formal terminology
 
 **When it doesn't help:**
-- Precise technical queries (e.g., "error code E4013") — variants can't improve on the exact term
+- Precise technical queries (e.g., "error code E4013") - variants can't improve on the exact term
 - Adds latency: N queries × embedding time + N × ANN searches + deduplication
 
-**Deduplication strategy:** De-duplicate by content hash before reranking. If two variants retrieve the same chunk, keep it once but boost its effective score — found by multiple independent queries signals higher relevance.
+**Deduplication strategy:** De-duplicate by content hash before reranking. If two variants retrieve the same chunk, keep it once but boost its effective score - found by multiple independent queries signals higher relevance.
 
 ### Code
 
@@ -278,7 +278,7 @@ fast_retriever = ContextualCompressionRetriever(
     base_retriever=vectorstore.as_retriever(search_kwargs={"k": 8})
 )
 
-# Option 3: Pipeline — filter first (cheap), then extract from remaining
+# Option 3: Pipeline - filter first (cheap), then extract from remaining
 pipeline_compressor = DocumentCompressorPipeline(
     transformers=[embeddings_filter, extractor]
 )
@@ -311,7 +311,7 @@ Self-RAG (Asai et al., 2023) teaches an LLM to adaptively retrieve and critique 
 4. LLM generates answer segments, producing `[IsSup]` to verify each claim
 5. If `[IsNotSup]` → retrieve again with a refined query
 
-**Key insight:** Unlike standard RAG (always retrieves once), Self-RAG retrieves only when needed and performs in-generation verification — reducing unnecessary retrievals for questions the model can answer from parametric knowledge.
+**Key insight:** Unlike standard RAG (always retrieves once), Self-RAG retrieves only when needed and performs in-generation verification - reducing unnecessary retrievals for questions the model can answer from parametric knowledge.
 
 ### Code
 
@@ -446,16 +446,16 @@ Agentic RAG gives an LLM-based agent autonomy to decide **when** to retrieve, **
 | Complexity | Low | High |
 
 **Patterns within Agentic RAG:**
-- **ReAct** — interleave reasoning and retrieval actions
-- **Plan-and-solve** — decompose into sub-questions, retrieve for each
-- **Self-RAG** — retrieval triggered by reflection tokens (see above)
-- **CRAG** — evaluate retrieval quality, fall back to web search if poor (see below)
+- **ReAct** - interleave reasoning and retrieval actions
+- **Plan-and-solve** - decompose into sub-questions, retrieve for each
+- **Self-RAG** - retrieval triggered by reflection tokens (see above)
+- **CRAG** - evaluate retrieval quality, fall back to web search if poor (see below)
 
 **ReAct trace:**
 ```
 Thought: I need to find Q3 revenue
 Action: retrieve("Q3 2024 revenue")
-Observation: [retrieved chunks — Q3 = $4.2B]
+Observation: [retrieved chunks - Q3 = $4.2B]
 Thought: I found Q3, now I need Q4 and the reason for the change
 Action: retrieve("Q4 2024 revenue cause of change")
 Observation: [retrieved chunks]
@@ -538,13 +538,13 @@ Hierarchical community summaries (C0 = coarse, C4 = fine-grained)
 ```
 
 **Two retrieval modes:**
-- **Local search** — relevant entities, relationships, and community summaries for a specific query
-- **Global search** — broad community-level summaries to answer thematic questions
+- **Local search** - relevant entities, relationships, and community summaries for a specific query
+- **Global search** - broad community-level summaries to answer thematic questions
 
 **Why GraphRAG beats dense for relationship queries:**
 
 Example: "Which employees worked at both Google and Apple?"
-- Dense RAG: retrieves chunks mentioning Google or Apple — can't traverse the "employee of" relationship across documents
+- Dense RAG: retrieves chunks mentioning Google or Apple - can't traverse the "employee of" relationship across documents
 - GraphRAG: entity "Alice Chen" is a node; edges "worked_at" connect to both "Google" and "Apple"; a graph traversal directly answers this
 
 **Cost reality:** Indexing costs ~$1–5 per 1M tokens (LLM calls for entity extraction). Justified only when relationship traversal or global synthesis is a core query pattern.
@@ -606,12 +606,12 @@ def graph_retrieve(G: nx.DiGraph, query: str, k_hops: int = 2) -> list[str]:
 
 CRAG (Yan et al., 2024) adds a quality gate after retrieval: evaluate whether the retrieved documents are actually relevant to the query. If not, fall back to web search instead of forcing the generator to work with irrelevant context.
 
-**The problem it solves:** Standard RAG always uses retrieved documents, even if they're irrelevant. The LLM then hallucinates or says "I don't know" — wasting the query. CRAG detects retrieval failure and has a recovery strategy.
+**The problem it solves:** Standard RAG always uses retrieved documents, even if they're irrelevant. The LLM then hallucinates or says "I don't know" - wasting the query. CRAG detects retrieval failure and has a recovery strategy.
 
 **CRAG states:**
-- `CORRECT` — retrieved docs are highly relevant → use directly
-- `INCORRECT` — retrieved docs are irrelevant → fall back to web search
-- `AMBIGUOUS` — partial relevance → use retrieved docs + web search, merge
+- `CORRECT` - retrieved docs are highly relevant → use directly
+- `INCORRECT` - retrieved docs are irrelevant → fall back to web search
+- `AMBIGUOUS` - partial relevance → use retrieved docs + web search, merge
 
 ### Code
 
@@ -676,8 +676,8 @@ crag = builder.compile()
 ### Concept
 
 Multimodal RAG retrieves across image, text, table, and audio modalities. The key challenges are:
-1. **Embedding heterogeneous content** — images and text need to share the same embedding space
-2. **Cross-modal queries** — a text query should retrieve relevant images and vice versa
+1. **Embedding heterogeneous content** - images and text need to share the same embedding space
+2. **Cross-modal queries** - a text query should retrieve relevant images and vice versa
 
 **Approaches:**
 
@@ -688,7 +688,7 @@ Multimodal RAG retrieves across image, text, table, and audio modalities. The ke
 | **ColPali** | Late interaction: each image patch gets a vector | Best precision for document images |
 | **GPT-4V / Gemini summaries** | LLM describes image content, embed description | High quality, higher cost |
 
-**ColPali** (2024) is state-of-the-art for document image retrieval — it embeds entire page images as a bag of patch vectors and uses MaxSim (late interaction) to score (query, page) pairs without OCR.
+**ColPali** (2024) is state-of-the-art for document image retrieval - it embeds entire page images as a bag of patch vectors and uses MaxSim (late interaction) to score (query, page) pairs without OCR.
 
 ### Code (Caption-based)
 
@@ -732,7 +732,7 @@ vectorstore = Chroma.from_texts(
 
 ## Extended Variant Taxonomy
 
-Beyond the six types above, production systems exhibit specialized patterns. These are named variants — most are specializations of Agentic or Advanced RAG.
+Beyond the six types above, production systems exhibit specialized patterns. These are named variants - most are specializations of Agentic or Advanced RAG.
 
 | Variant | What It Does | Distinguishing Feature | Best For |
 |---|---|---|---|
@@ -762,19 +762,19 @@ A: Advanced RAG improves a fixed pipeline at pre/retrieval/post stages but keeps
 
 **Q: How does Self-RAG differ from standard RAG?** `[Medium]`
 
-A: Standard RAG always retrieves before generating — one retrieval, then one generation. Self-RAG uses a fine-tuned model that generates special reflection tokens (`[Retrieve]`, `[IsRel]`, `[IsSup]`) to decide dynamically: should I retrieve at all? Is this retrieved document relevant? Does this generated claim have support from the retrieved context? Self-RAG retrieves only when needed, validates each retrieval, and checks factual support mid-generation — resulting in fewer hallucinations and unnecessary retrievals. The downside is requiring a specially fine-tuned model.
+A: Standard RAG always retrieves before generating - one retrieval, then one generation. Self-RAG uses a fine-tuned model that generates special reflection tokens (`[Retrieve]`, `[IsRel]`, `[IsSup]`) to decide dynamically: should I retrieve at all? Is this retrieved document relevant? Does this generated claim have support from the retrieved context? Self-RAG retrieves only when needed, validates each retrieval, and checks factual support mid-generation - resulting in fewer hallucinations and unnecessary retrievals. The downside is requiring a specially fine-tuned model.
 
 ---
 
 **Q: What is the core architectural difference between pipeline RAG and Agentic RAG?** `[Medium]`
 
-A: Pipeline RAG has a fixed control flow — retrieve once, generate once. Agentic RAG gives an LLM agent the ability to dynamically decide when to retrieve, what query to use, and whether to retrieve again based on intermediate results. Pipeline RAG has predictable latency; Agentic RAG has variable latency but handles multi-hop and ambiguous queries naturally.
+A: Pipeline RAG has a fixed control flow - retrieve once, generate once. Agentic RAG gives an LLM agent the ability to dynamically decide when to retrieve, what query to use, and whether to retrieve again based on intermediate results. Pipeline RAG has predictable latency; Agentic RAG has variable latency but handles multi-hop and ambiguous queries naturally.
 
 ---
 
 **Q: When would GraphRAG outperform dense vector retrieval?** `[Hard]`
 
-A: Three scenarios where graph traversal wins: (1) Multi-entity relationship queries — "Find all companies that both person X and person Y have worked at" requires graph traversal, not vector similarity. (2) Global thematic synthesis — "Summarize the main trends across 10,000 earnings reports" — GraphRAG community summaries aggregate information across the entire corpus. (3) Causal chain queries — "What led to Event A?" — knowledge graph edges explicitly represent causal relationships that are only implicit in flat text.
+A: Three scenarios where graph traversal wins: (1) Multi-entity relationship queries - "Find all companies that both person X and person Y have worked at" requires graph traversal, not vector similarity. (2) Global thematic synthesis - "Summarize the main trends across 10,000 earnings reports" - GraphRAG community summaries aggregate information across the entire corpus. (3) Causal chain queries - "What led to Event A?" - knowledge graph edges explicitly represent causal relationships that are only implicit in flat text.
 
 ---
 
@@ -786,31 +786,31 @@ A: FLARE monitors token-level generation probabilities during forward pass. When
 
 **Q: What is Corrective RAG and why is it important for reliability?** `[Medium]`
 
-A: CRAG adds a retrieval quality gate: after retrieving documents, an LLM evaluates whether they actually address the query. If not (`grade=INCORRECT`), it falls back to web search rather than forcing the generator to work with irrelevant context. This matters because standard RAG silently fails — irrelevant retrieval leads to hallucination without any signal. CRAG makes retrieval failure explicit and provides a recovery path. The trade-off: adds latency (one extra LLM grading call + possible web search).
+A: CRAG adds a retrieval quality gate: after retrieving documents, an LLM evaluates whether they actually address the query. If not (`grade=INCORRECT`), it falls back to web search rather than forcing the generator to work with irrelevant context. This matters because standard RAG silently fails - irrelevant retrieval leads to hallucination without any signal. CRAG makes retrieval failure explicit and provides a recovery path. The trade-off: adds latency (one extra LLM grading call + possible web search).
 
 ---
 
 **Q: Your multi-query RAG is adding too much latency. How do you optimize it?** `[Medium]`
 
-A: Three optimizations: (1) **Parallelize retrievals** — run all N variant queries concurrently using `asyncio.gather()` instead of sequentially; N variants takes the same wall-clock time as 1. (2) **Cache embeddings** — if the same query or variant reappears, the embedding is already computed. (3) **Reduce N** — 2–3 variants often gives 80% of the benefit of 5; empirically test on your eval set. (4) **Diversify, don't duplicate** — generate variants using MMR on query embeddings to ensure they cover different semantic regions.
+A: Three optimizations: (1) **Parallelize retrievals** - run all N variant queries concurrently using `asyncio.gather()` instead of sequentially; N variants takes the same wall-clock time as 1. (2) **Cache embeddings** - if the same query or variant reappears, the embedding is already computed. (3) **Reduce N** - 2–3 variants often gives 80% of the benefit of 5; empirically test on your eval set. (4) **Diversify, don't duplicate** - generate variants using MMR on query embeddings to ensure they cover different semantic regions.
 
 ---
 
 **Q: How does Contextual Compression help with the "lost in the middle" problem?** `[Medium]`
 
-A: The "lost in the middle" effect means LLMs perform worse when relevant information is buried in the middle of a long context window. Contextual compression reduces each chunk to only its relevant sentences before assembly — fewer total tokens means the relevant information is proportionally more prominent, less total context to "get lost in," and relevant spans are more likely to land near the beginning or end of the assembled context.
+A: The "lost in the middle" effect means LLMs perform worse when relevant information is buried in the middle of a long context window. Contextual compression reduces each chunk to only its relevant sentences before assembly - fewer total tokens means the relevant information is proportionally more prominent, less total context to "get lost in," and relevant spans are more likely to land near the beginning or end of the assembled context.
 
 ---
 
 **Q: Explain the trade-off between Agentic RAG and Pipeline RAG for a production system.** `[Hard]`
 
-A: Pipeline RAG gives predictable sub-2 second latency, is easy to test and monitor — appropriate for 80% of queries that are straightforward factual lookups. Agentic RAG handles the remaining 20% that require multi-step reasoning but adds variable latency (2–15 seconds) and is harder to debug deterministically. The production pattern is often hybrid: fast pipeline RAG as the primary path, Agentic RAG triggered only when the pipeline's confidence score is low or the query classifier detects a multi-hop pattern.
+A: Pipeline RAG gives predictable sub-2 second latency, is easy to test and monitor - appropriate for 80% of queries that are straightforward factual lookups. Agentic RAG handles the remaining 20% that require multi-step reasoning but adds variable latency (2–15 seconds) and is harder to debug deterministically. The production pattern is often hybrid: fast pipeline RAG as the primary path, Agentic RAG triggered only when the pipeline's confidence score is low or the query classifier detects a multi-hop pattern.
 
 ---
 
 **Q: How does ColPali differ from CLIP for image retrieval?** `[Hard]`
 
-A: CLIP produces one embedding per image (a global vector), losing spatial and layout information. ColPali uses a Vision Language Model to produce per-patch embeddings (typically 1024 patches per page image), then scores (query, image) pairs using MaxSim — the max similarity over all patch-query pairs. This preserves layout information critical for document page retrieval (charts, tables, diagrams) and achieves significantly higher precision on document QA benchmarks without requiring OCR.
+A: CLIP produces one embedding per image (a global vector), losing spatial and layout information. ColPali uses a Vision Language Model to produce per-patch embeddings (typically 1024 patches per page image), then scores (query, image) pairs using MaxSim - the max similarity over all patch-query pairs. This preserves layout information critical for document page retrieval (charts, tables, diagrams) and achieves significantly higher precision on document QA benchmarks without requiring OCR.
 
 ---
 

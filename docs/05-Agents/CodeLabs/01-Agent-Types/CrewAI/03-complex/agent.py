@@ -2,7 +2,7 @@
 CrewAI Complex Agent
 =====================
 Framework : CrewAI
-Level     : 03 — Complex
+Level     : 03 - Complex
 Model     : gemini-2.0-flash
 
 New concepts vs Intermediate:
@@ -202,7 +202,7 @@ if __name__ == "__main__":
         print("FINAL TRIP REPORT")
         print("="*60)
         for i, city in enumerate(report.ranked_cities, 1):
-            print(f"{i}. {city.city} — Weather: {city.weather_score}/10, Safety: {city.safety_score}/10")
+            print(f"{i}. {city.city} - Weather: {city.weather_score}/10, Safety: {city.safety_score}/10")
             print(f"   {city.summary}")
         print(f"\nTop Recommendation: {report.top_recommendation}")
         print(f"Reasoning: {report.reasoning}")

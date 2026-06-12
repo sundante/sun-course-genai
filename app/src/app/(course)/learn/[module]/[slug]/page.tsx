@@ -23,8 +23,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const result = getPageWithNavigation(module, slug);
   if (!result) return {};
   return {
-    title: `${result.page.title} — Learn GenAI`,
-    description: `${result.page.title} — part of the ${module} module`,
+    title: `${result.page.title} - Learn GenAI`,
+    description: `${result.page.title} - part of the ${module} module`,
   };
 }
 

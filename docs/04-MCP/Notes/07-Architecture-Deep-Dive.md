@@ -2,7 +2,7 @@
 
 ← **Back to Overview:** [MCP](../INDEX.md)
 
-*Source: [Model Context Protocol — Architecture](https://modelcontextprotocol.io/docs/concepts/architecture)*
+*Source: [Model Context Protocol - Architecture](https://modelcontextprotocol.io/docs/concepts/architecture)*
 
 ---
 
@@ -49,10 +49,10 @@ Used for **local MCP servers** running as subprocesses.
 - Each message is a single line (newline-delimited JSON)
 
 **Critical rules:**
-- Messages **MUST NOT** contain embedded newlines — each JSON message is exactly one line
-- Server **MUST NOT** write non-MCP data to stdout — any debug print will corrupt the message stream
-- Server **MAY** write UTF-8 text to **stderr** for diagnostic logs — these appear in the host's debug console
-- Server process lifetime is tied to the client — when the client exits, the server process is terminated
+- Messages **MUST NOT** contain embedded newlines - each JSON message is exactly one line
+- Server **MUST NOT** write non-MCP data to stdout - any debug print will corrupt the message stream
+- Server **MAY** write UTF-8 text to **stderr** for diagnostic logs - these appear in the host's debug console
+- Server process lifetime is tied to the client - when the client exits, the server process is terminated
 
 **Startup sequence:**
 ```
@@ -144,7 +144,7 @@ The server **MAY** replay missed messages since that event ID, ensuring no notif
 ```
 Note: `id` can be a string, number, or null. Using strings makes logs more readable.
 
-**Response — success:**
+**Response - success:**
 ```json
 {
   "jsonrpc": "2.0",
@@ -153,7 +153,7 @@ Note: `id` can be a string, number, or null. Using strings makes logs more reada
 }
 ```
 
-**Response — error:**
+**Response - error:**
 ```json
 {
   "jsonrpc": "2.0",
@@ -187,7 +187,7 @@ Note: `id` can be a string, number, or null. Using strings makes logs more reada
 | `-32002` | Resource not found | Requested URI doesn't exist |
 | `+ve` integers | Application | Custom tool/business errors |
 
-Note: Tool execution failures are **not** JSON-RPC errors — they return normally with `isError: true` in the result body.
+Note: Tool execution failures are **not** JSON-RPC errors - they return normally with `isError: true` in the result body.
 
 ---
 
@@ -260,9 +260,9 @@ For long-running tool calls, both sides coordinate via progress tokens:
 }
 ```
 
-**Final result is still the JSON-RPC response** to the original request — progress notifications are out-of-band updates, not the result.
+**Final result is still the JSON-RPC response** to the original request - progress notifications are out-of-band updates, not the result.
 
-If the client doesn't include a `progressToken`, the server should not send progress notifications — it's opt-in.
+If the client doesn't include a `progressToken`, the server should not send progress notifications - it's opt-in.
 
 ---
 
@@ -295,7 +295,7 @@ Servers send structured log messages to the Host via notifications:
   "params": {
     "level": "warning",
     "logger": "github-server",
-    "data": "Rate limit at 80% — throttling requests"
+    "data": "Rate limit at 80% - throttling requests"
   }
 }
 ```
@@ -328,7 +328,7 @@ A malicious server crafts tool descriptions containing instruction text designed
 }
 ```
 
-**Defense:** Hosts should treat server-provided content (tool names, descriptions, resource content) as untrusted user input — not instructions. Display tool descriptions to users before first session use. Maintain allow-lists of trusted servers. Monitor for anomalous tool call patterns.
+**Defense:** Hosts should treat server-provided content (tool names, descriptions, resource content) as untrusted user input - not instructions. Display tool descriptions to users before first session use. Maintain allow-lists of trusted servers. Monitor for anomalous tool call patterns.
 
 ### Confused Deputy via Sampling
 
@@ -360,11 +360,11 @@ Attempted access: file:///home/user/project/../../../etc/passwd
 
 ## Key Architectural Invariants
 
-1. **A Client manages exactly one Server connection** — multiplexing is the Host's responsibility
-2. **Servers are stateless with respect to the Host** — they can't call the Host outside the established session
-3. **Capability declarations are binding** — using undeclared capabilities is a protocol violation
-4. **In-flight requests are abandoned on disconnect** — no guaranteed delivery across reconnects (use resumability for notifications)
-5. **Tool annotations are advisory** — never rely on `readOnlyHint` for security decisions
+1. **A Client manages exactly one Server connection** - multiplexing is the Host's responsibility
+2. **Servers are stateless with respect to the Host** - they can't call the Host outside the established session
+3. **Capability declarations are binding** - using undeclared capabilities is a protocol violation
+4. **In-flight requests are abandoned on disconnect** - no guaranteed delivery across reconnects (use resumability for notifications)
+5. **Tool annotations are advisory** - never rely on `readOnlyHint` for security decisions
 
 ---
 
@@ -379,7 +379,7 @@ Attempted access: file:///home/user/project/../../../etc/passwd
 
 **Q1: Walk through the MCP session lifecycle from transport establishment to active operations.** `[Easy]`
 
-A: (1) Transport established — stdio: server subprocess launched; HTTP: TCP connection opened. (2) Client sends `initialize` with its protocol version and capability set. (3) Server responds with its protocol version, capabilities, and server info. (4) Client sends `notifications/initialized` — session is now active. (5) Client calls `tools/list`, `resources/list`, `prompts/list` to discover capabilities. (6) Normal operations begin: tool calls, resource reads, prompt gets, and server notifications flow bidirectionally. (7) Either side closes the transport to end the session; in-flight requests are abandoned.
+A: (1) Transport established - stdio: server subprocess launched; HTTP: TCP connection opened. (2) Client sends `initialize` with its protocol version and capability set. (3) Server responds with its protocol version, capabilities, and server info. (4) Client sends `notifications/initialized` - session is now active. (5) Client calls `tools/list`, `resources/list`, `prompts/list` to discover capabilities. (6) Normal operations begin: tool calls, resource reads, prompt gets, and server notifications flow bidirectionally. (7) Either side closes the transport to end the session; in-flight requests are abandoned.
 
 ---
 
@@ -391,22 +391,22 @@ A: Stdio: messages are newline-delimited JSON on stdin/stdout; server is a subpr
 
 **Q3: What is the difference between a tool execution error (`isError: true`) and a JSON-RPC protocol error, and how should each be handled?** `[Medium]`
 
-A: A JSON-RPC protocol error (negative error code, `error` field in response) means something went wrong at the communication level: unknown method, malformed request, server crash, or missing capability. The client should treat this as a transport/protocol failure — log it, potentially retry, or surface a system error. A tool execution error (`isError: true` in the result) means the tool ran successfully but the business logic failed: file not found, permission denied, query returned no rows. The LLM should treat this as meaningful information it can reason about — adjust the plan, try a different approach, or inform the user of the specific failure. Conflating the two leads to the LLM either ignoring recoverable failures or attempting to retry unretriable transport errors.
+A: A JSON-RPC protocol error (negative error code, `error` field in response) means something went wrong at the communication level: unknown method, malformed request, server crash, or missing capability. The client should treat this as a transport/protocol failure - log it, potentially retry, or surface a system error. A tool execution error (`isError: true` in the result) means the tool ran successfully but the business logic failed: file not found, permission denied, query returned no rows. The LLM should treat this as meaningful information it can reason about - adjust the plan, try a different approach, or inform the user of the specific failure. Conflating the two leads to the LLM either ignoring recoverable failures or attempting to retry unretriable transport errors.
 
 ---
 
 **Q4: How does MCP's resumability feature work for HTTP/SSE, and what attack does it help prevent?** `[Hard]`
 
-A: The server attaches a globally unique `id` field to each SSE event. When the client's connection drops and it reconnects, it sends a `Last-Event-ID` header with the ID of the last successfully received event. The server replays all events since that point, ensuring no notifications are lost across reconnections. This prevents a class of race condition where a dropped connection during a long-running operation (indexing 10,000 documents) causes the client to miss progress notifications or capability-change events, leaving the host with stale state. The event IDs must be globally unique per session — using sequential integers or guessable patterns would allow a malicious client to request arbitrary event replays and potentially receive data from other sessions.
+A: The server attaches a globally unique `id` field to each SSE event. When the client's connection drops and it reconnects, it sends a `Last-Event-ID` header with the ID of the last successfully received event. The server replays all events since that point, ensuring no notifications are lost across reconnections. This prevents a class of race condition where a dropped connection during a long-running operation (indexing 10,000 documents) causes the client to miss progress notifications or capability-change events, leaving the host with stale state. The event IDs must be globally unique per session - using sequential integers or guessable patterns would allow a malicious client to request arbitrary event replays and potentially receive data from other sessions.
 
 ---
 
 **Q5: Explain the DNS rebinding attack against local MCP HTTP servers and how the Origin header defense works.** `[Hard]`
 
-A: DNS rebinding tricks a browser into believing that a locally-running server (e.g., `localhost:3000`) is served from the attacker's domain. The attacker's malicious page makes requests to `localhost:3000`, which the browser allows because DNS now maps the attacker's domain to `127.0.0.1`. The browser includes `Origin: https://attacker.com` in these requests. A server that validates the `Origin` header will reject requests from `https://attacker.com` — it only accepts requests from known trusted origins (or no `Origin` for native client connections). Additionally, binding to `127.0.0.1` instead of `0.0.0.0` prevents the server from being reachable from outside the local machine, further limiting the attack surface. This is why MCP spec requires HTTP servers to validate Origin.
+A: DNS rebinding tricks a browser into believing that a locally-running server (e.g., `localhost:3000`) is served from the attacker's domain. The attacker's malicious page makes requests to `localhost:3000`, which the browser allows because DNS now maps the attacker's domain to `127.0.0.1`. The browser includes `Origin: https://attacker.com` in these requests. A server that validates the `Origin` header will reject requests from `https://attacker.com` - it only accepts requests from known trusted origins (or no `Origin` for native client connections). Additionally, binding to `127.0.0.1` instead of `0.0.0.0` prevents the server from being reachable from outside the local machine, further limiting the attack surface. This is why MCP spec requires HTTP servers to validate Origin.
 
 ---
 
 **Q6: A server receives a `notifications/cancelled` for an in-flight tool call. What SHOULD and MUST it do?** `[Hard]`
 
-A: The server **SHOULD** stop processing the request if practical — for example, if the tool is making a paginated API call, it should stop fetching additional pages. The server **MAY** complete the operation if it's near completion or if stopping would leave external state in an inconsistent condition (e.g., a file write that's 95% complete should finish rather than leave a corrupt partial file). The server is **NOT REQUIRED** to guarantee cancellation. If a response arrives at the client after the client sent a cancellation notification, the client **SHOULD** ignore the response. The key design insight: cancellation is best-effort in MCP, not a transactional guarantee — servers must be designed with this expectation.
+A: The server **SHOULD** stop processing the request if practical - for example, if the tool is making a paginated API call, it should stop fetching additional pages. The server **MAY** complete the operation if it's near completion or if stopping would leave external state in an inconsistent condition (e.g., a file write that's 95% complete should finish rather than leave a corrupt partial file). The server is **NOT REQUIRED** to guarantee cancellation. If a response arrives at the client after the client sent a cancellation notification, the client **SHOULD** ignore the response. The key design insight: cancellation is best-effort in MCP, not a transactional guarantee - servers must be designed with this expectation.

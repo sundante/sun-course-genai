@@ -7,15 +7,15 @@
 
 ## How I Would Open (Framing the Problem)
 
-Before touching the architecture, I want to reframe what makes this problem genuinely hard — because it's easy to sketch a "RAG chatbot with a nice UI" and call it done. That's wrong for this use case in at least three ways.
+Before touching the architecture, I want to reframe what makes this problem genuinely hard - because it's easy to sketch a "RAG chatbot with a nice UI" and call it done. That's wrong for this use case in at least three ways.
 
-**This is a safety-critical system.** Wrong repair instructions don't just produce a bad user experience — they can injure a technician, damage a $2M piece of equipment, or trigger a production line shutdown costing tens of thousands of dollars per minute. The safety layer is not a feature. It's a non-negotiable architectural constraint that touches every component.
+**This is a safety-critical system.** Wrong repair instructions don't just produce a bad user experience - they can injure a technician, damage a $2M piece of equipment, or trigger a production line shutdown costing tens of thousands of dollars per minute. The safety layer is not a feature. It's a non-negotiable architectural constraint that touches every component.
 
 **This is a mobile-first, physically hostile environment.** A technician standing next to a broken CNC machine has oil on their hands, is wearing PPE, and may have noise levels above 85dB. Voice input is primary, not secondary. Tap targets need to work with gloved hands. Screen brightness must be readable under industrial lighting. These are UX constraints that change the architecture.
 
-**This is potentially an offline-first system.** Large factory floors, basement plant rooms, and EMI-shielded machine enclosures frequently have dead zones where WiFi and cellular don't reach. An assistant that stops working when the machine breaks down is worse than useless — it creates a false dependency. Offline capability is load-bearing, not a nice-to-have.
+**This is potentially an offline-first system.** Large factory floors, basement plant rooms, and EMI-shielded machine enclosures frequently have dead zones where WiFi and cellular don't reach. An assistant that stops working when the machine breaks down is worse than useless - it creates a false dependency. Offline capability is load-bearing, not a nice-to-have.
 
-With those three constraints established, this becomes a multimodal, safety-critical, offline-capable agentic system — not a chatbot.
+With those three constraints established, this becomes a multimodal, safety-critical, offline-capable agentic system - not a chatbot.
 
 ---
 
@@ -27,9 +27,9 @@ These questions are not optional. The answers change the architecture significan
 
 | Question | Why It Matters |
 |---|---|
-| How many distinct machine models are in the factory? (10? 500? 2,000?) | Determines knowledge base scale — 10 models means focused RAG; 2,000 means machine-identity routing before retrieval |
+| How many distinct machine models are in the factory? (10? 500? 2,000?) | Determines knowledge base scale - 10 models means focused RAG; 2,000 means machine-identity routing before retrieval |
 | What format are the repair manuals in today? (PDFs, CAD files, scanned paper, structured CMMS database?) | PDFs → Document AI pipeline; scanned paper → OCR + heavy cleanup; structured DB → direct import |
-| Is there historical repair log data? (past repairs, parts used, outcomes?) | If yes: gold for RAG — real repair outcomes beat manual instructions for common failure modes |
+| Is there historical repair log data? (past repairs, parts used, outcomes?) | If yes: gold for RAG - real repair outcomes beat manual instructions for common failure modes |
 | Are machines connected (IoT sensors, PLC fault codes, OBD-style diagnostics)? | If yes: real-time machine state (error code, sensor readings) dramatically improves diagnostic accuracy |
 | How many distinct failure modes per machine type, on average? | High volume → knowledge graph; low volume → flat RAG may suffice |
 
@@ -37,7 +37,7 @@ These questions are not optional. The answers change the architecture significan
 
 | Question | Why It Matters |
 |---|---|
-| What is WiFi coverage like on the factory floor? Any known dead zones? | Determines offline architecture depth — partial offline vs. full offline-first |
+| What is WiFi coverage like on the factory floor? Any known dead zones? | Determines offline architecture depth - partial offline vs. full offline-first |
 | What devices will technicians use? (iOS? Android? Company-issued or BYOD?) | Affects app framework choice (Flutter cross-platform vs. native) and MDM deployment strategy |
 | Are there areas where camera use is restricted (explosion risk zones, secure areas)? | May require alternative input modes for those zones |
 | What is the ambient noise level? (Does the technician need to use the app while nearby machines are still running?) | High noise → voice input needs noise cancellation; may need visual-only mode |
@@ -47,18 +47,18 @@ These questions are not optional. The answers change the architecture significan
 | Question | Why It Matters |
 |---|---|
 | What safety standards apply? (ISO 45001, IATF 16949, OSHA, country-specific?) | Directly defines what the safety guardrail layer must enforce |
-| Are there repair procedures that require LOTO (Lock-Out/Tag-Out) before starting? | LOTO must be surfaced automatically — the system must never allow a technician to skip it |
+| Are there repair procedures that require LOTO (Lock-Out/Tag-Out) before starting? | LOTO must be surfaced automatically - the system must never allow a technician to skip it |
 | What is the escalation policy for major failures? (Always escalate for electrical? Above a certain machine value threshold?) | Defines the agent's escalation logic and hard stops |
-| Are technicians tiered by skill level (junior/senior/specialist)? | If yes: instructions must be scoped to the technician's certification level — a junior must not receive instructions for repairs they're not qualified to perform |
+| Are technicians tiered by skill level (junior/senior/specialist)? | If yes: instructions must be scoped to the technician's certification level - a junior must not receive instructions for repairs they're not qualified to perform |
 
 ### Integration & Operations
 
 | Question | Why It Matters |
 |---|---|
-| Is there a CMMS (e.g., SAP PM, IBM Maximo, ServiceNow)? | Repair logs, work orders, parts inventory — all need to flow back |
-| Is parts inventory accessible via API? | Enables real-time check: "this repair requires Part X — you have 3 in stock, Bay 7" |
+| Is there a CMMS (e.g., SAP PM, IBM Maximo, ServiceNow)? | Repair logs, work orders, parts inventory - all need to flow back |
+| Is parts inventory accessible via API? | Enables real-time check: "this repair requires Part X - you have 3 in stock, Bay 7" |
 | What languages do technicians speak? (Single factory or global rollout across multiple countries?) | Multilingual from Day 1 or later? Changes embedding model choice and UI localization scope |
-| What is the acceptable response time? (Machine down = production loss — is 3 seconds acceptable?) | Factory lines can cost $10k–$50k per hour of downtime; P99 latency is a business SLA, not just a UX metric |
+| What is the acceptable response time? (Machine down = production loss - is 3 seconds acceptable?) | Factory lines can cost $10k–$50k per hour of downtime; P99 latency is a business SLA, not just a UX metric |
 
 **Assumed answers for this design:**
 - ~300 distinct machine models, mix of PDF manuals and historical CMMS data
@@ -76,13 +76,13 @@ These questions are not optional. The answers change the architecture significan
 
 Unlike the email campaign problem, this is not a throughput problem. It's a **latency + reliability** problem.
 
-- 5,000 technicians — not concurrent; peak load maybe 200–300 simultaneous queries
+- 5,000 technicians - not concurrent; peak load maybe 200–300 simultaneous queries
 - Each query: one multimodal LLM call + RAG retrieval + safety check + CMMS lookup
 - Target P99: < 5 seconds (machine down = line down = $$$/min)
 - Knowledge base: ~300 machine models × ~500 pages/manual + historical logs ≈ **~5M document chunks**
 - Offline cache per device: top 50 failure modes × 300 machines = ~15,000 pre-generated guides ≈ **~2GB per device** (manageable on modern tablets)
 
-The scale numbers are small enough that a simple Cloud Run deployment handles the peak load. The hard problems here are **latency**, **safety**, **offline**, and **multimodal input** — not throughput.
+The scale numbers are small enough that a simple Cloud Run deployment handles the peak load. The hard problems here are **latency**, **safety**, **offline**, and **multimodal input** - not throughput.
 
 ---
 
@@ -91,7 +91,7 @@ The scale numbers are small enough that a simple Cloud Run deployment handles th
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                        MOBILE APP (Android / iOS)                                │
-│                        Flutter — MDM deployed                                    │
+│                        Flutter - MDM deployed                                    │
 │                                                                                  │
 │  Input Capture                     Offline Mode                                  │
 │  ┌────────────────────────────┐    ┌──────────────────────────────────────┐      │
@@ -116,7 +116,7 @@ The scale numbers are small enough that a simple Cloud Run deployment handles th
 │                        API GATEWAY + BACKEND (Cloud Run)                         │
 │                                                                                  │
 │  ┌───────────────────────────────────────────────────────────────────────────┐  │
-│  │  Auth: Firebase Auth + IAP — technician identity + skill tier             │  │
+│  │  Auth: Firebase Auth + IAP - technician identity + skill tier             │  │
 │  │  Rate limiting: 300 concurrent sessions max                               │  │
 │  │  Session context: Firestore (machine_id, technician_id, repair_session)   │  │
 │  └───────────────────────────────────────────────────────────────────────────┘  │
@@ -152,7 +152,7 @@ The scale numbers are small enough that a simple Cloud Run deployment handles th
                                             │
                                             ▼
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                     DIAGNOSTIC AGENT (Cloud Run — ADK / LangGraph)               │
+│                     DIAGNOSTIC AGENT (Cloud Run - ADK / LangGraph)               │
 │                                                                                  │
 │  ┌───────────────────────────────────────────────────────────────────────────┐  │
 │  │  Step 1: Failure Mode Classification                                      │  │
@@ -179,7 +179,7 @@ The scale numbers are small enough that a simple Cloud Run deployment handles th
 │                                    │                                             │
 │                                    ▼                                             │
 │  ┌───────────────────────────────────────────────────────────────────────────┐  │
-│  │  Step 3: Safety Gate (HARD STOP — non-negotiable)                        │  │
+│  │  Step 3: Safety Gate (HARD STOP - non-negotiable)                        │  │
 │  │                                                                           │  │
 │  │  Check A: Skill level gate                                               │  │
 │  │  procedure.required_skill_tier > technician.skill_tier → ESCALATE        │  │
@@ -261,7 +261,7 @@ The scale numbers are small enough that a simple Cloud Run deployment handles th
 
 ### Hard Problem 1: Offline Mode
 
-A machine that breaks in a dead zone is the worst-case scenario — the assistant must work there.
+A machine that breaks in a dead zone is the worst-case scenario - the assistant must work there.
 
 **Architecture decision: offline-first with pre-generated guides, not on-device model.**
 
@@ -274,7 +274,7 @@ Running a full LLM on a factory-floor Android tablet is impractical today (model
 - **What offline can't do:** Image-based diagnosis, real-time parts inventory check, work order creation. These are queued and synced when connectivity returns.
 - **Sync on reconnect:** All technician actions during offline mode (steps completed, notes added) are stored in Firestore local cache and synced automatically.
 
-**Identifying what's in cache:** When the technician opens the app in offline mode, they see: "Offline — showing cached guides for your machines." They select their machine model and reported symptom from a structured dropdown, which maps to the pre-generated guide.
+**Identifying what's in cache:** When the technician opens the app in offline mode, they see: "Offline - showing cached guides for your machines." They select their machine model and reported symptom from a structured dropdown, which maps to the pre-generated guide.
 
 ---
 
@@ -296,7 +296,7 @@ For any procedure in safety class `{electrical, hydraulic, pneumatic, stored-ene
 - LOTO steps are always prepended, rendered as a distinct checklist with mandatory confirmation checkboxes
 - The app will not show Step 1 of the repair until all LOTO checkboxes are ticked
 - LOTO completion is logged with timestamp + technician ID for compliance records
-- This is implemented as a UI-level gate, not an LLM prompt instruction — it cannot be hallucinated away
+- This is implemented as a UI-level gate, not an LLM prompt instruction - it cannot be hallucinated away
 
 **Class 3: Confidence-based escalation (soft gate)**
 If the diagnostic agent's confidence in the failure mode classification is < 0.75:
@@ -304,7 +304,7 @@ If the diagnostic agent's confidence in the failure mode classification is < 0.7
 - Ask 1–2 clarifying questions to narrow the diagnosis
 - After 2 clarifications with still low confidence: escalate
 
-The reason for the confidence threshold: **generating confident-sounding wrong instructions is more dangerous than admitting uncertainty.** An "I'm not sure — let me escalate" response is always safer than a hallucinated repair procedure.
+The reason for the confidence threshold: **generating confident-sounding wrong instructions is more dangerous than admitting uncertainty.** An "I'm not sure - let me escalate" response is always safer than a hallucinated repair procedure.
 
 ---
 
@@ -316,12 +316,12 @@ Factory floors are harsh for UX. Design choices that matter:
 - Technician holds up the tablet, says: "Machine 47-B, hydraulic press. It's making a grinding noise from the left side and stopped mid-cycle."
 - Vertex AI Speech-to-Text with `enhanced_phone_call` model (handles background noise)
 - On-device Whisper model as offline fallback (no network needed)
-- Voice input must work at 80–90 dB ambient noise — use noise-canceling audio processing before STT
+- Voice input must work at 80–90 dB ambient noise - use noise-canceling audio processing before STT
 
 **Photo as diagnostic input:**
 - Technician photographs the damaged component
 - Gemini Vision identifies: component name, failure type (crack, wear, leak, burn mark), severity
-- Output becomes part of the problem description — not just visual context
+- Output becomes part of the problem description - not just visual context
 - Photo is stored with the repair session for compliance documentation
 
 **QR code as machine identifier:**
@@ -331,7 +331,7 @@ Factory floors are harsh for UX. Design choices that matter:
 
 **Glove-friendly UI design:**
 - All interactive elements: minimum 56px touch targets (Apple HIG for glove use)
-- No small text input — voice first, large dropdown selects for structured fields
+- No small text input - voice first, large dropdown selects for structured fields
 - High-contrast display mode for bright industrial lighting
 - Step-by-step view: one step per screen, large typography, clear "Next" / "Back" navigation
 
@@ -410,7 +410,7 @@ Cloud Run: Outcome annotator
 
 **1. On-device LLM vs. pre-generated offline guides**
 
-The "obvious" offline solution is to run a small LLM on-device (Gemma 2B, Phi-3 Mini). The reality: even a 3B model struggles on mid-range Android tablets, generates instructions in 15–30 seconds, and hallucinates at a higher rate than a well-tuned cloud model. For safety-critical repair instructions, hallucination rate is not acceptable. Pre-generated guides for known failure modes are deterministic, fast (<1ms), and auditable. The trade-off: pre-generated guides only cover known failure modes. Novel failures that don't match any cached guide will show "Connectivity required for this diagnosis" in offline mode — which is honest and safe rather than generating potentially wrong instructions.
+The "obvious" offline solution is to run a small LLM on-device (Gemma 2B, Phi-3 Mini). The reality: even a 3B model struggles on mid-range Android tablets, generates instructions in 15–30 seconds, and hallucinates at a higher rate than a well-tuned cloud model. For safety-critical repair instructions, hallucination rate is not acceptable. Pre-generated guides for known failure modes are deterministic, fast (<1ms), and auditable. The trade-off: pre-generated guides only cover known failure modes. Novel failures that don't match any cached guide will show "Connectivity required for this diagnosis" in offline mode - which is honest and safe rather than generating potentially wrong instructions.
 
 **2. Graph + RAG vs. RAG alone**
 
@@ -418,19 +418,19 @@ Pure vector search over repair manuals can retrieve relevant sections, but it ca
 
 **3. Confidence threshold calibration**
 
-Setting the failure classification confidence threshold too high (>0.90) means too many escalations for repairable failures — frustrating for technicians and expensive for maintenance engineers. Too low (<0.60) means generating instructions for misdiagnosed failures — dangerous. The right threshold is calibrated on historical data: run the classifier against labeled past repairs and tune the threshold to maximize precision on dangerous failure classes (electrical, hydraulic, structural). I'd start at 0.75 and adjust based on the first 30 days of production data.
+Setting the failure classification confidence threshold too high (>0.90) means too many escalations for repairable failures - frustrating for technicians and expensive for maintenance engineers. Too low (<0.60) means generating instructions for misdiagnosed failures - dangerous. The right threshold is calibrated on historical data: run the classifier against labeled past repairs and tune the threshold to maximize precision on dangerous failure classes (electrical, hydraulic, structural). I'd start at 0.75 and adjust based on the first 30 days of production data.
 
 **4. Real-time PLC fault code integration vs. manual symptom entry**
 
-If machines have OPC-UA or MQTT connectivity, the app can automatically pull fault codes the moment a technician scans the machine QR code — no symptom entry needed, dramatically improving diagnostic accuracy. This is the right long-term architecture. But it requires connectivity between the app backend and the factory's OT (Operational Technology) network — which typically has strict IT/OT segmentation policies, requires OT team sign-off, and can take months to approve. Design for it, but plan for manual symptom entry as the Day 1 fallback.
+If machines have OPC-UA or MQTT connectivity, the app can automatically pull fault codes the moment a technician scans the machine QR code - no symptom entry needed, dramatically improving diagnostic accuracy. This is the right long-term architecture. But it requires connectivity between the app backend and the factory's OT (Operational Technology) network - which typically has strict IT/OT segmentation policies, requires OT team sign-off, and can take months to approve. Design for it, but plan for manual symptom entry as the Day 1 fallback.
 
 **5. Safety gates as UI vs. LLM instructions**
 
-A common mistake: implementing safety gates as LLM prompt instructions ("Always include LOTO steps before electrical repairs"). LLM instructions can be reasoned around, misapplied, or hallucinated. LOTO enforcement must be a hard UI gate — a checklist that blocks progression, rendered from the knowledge graph's `safety_class` field, independent of what the LLM generates. The LLM writes the repair instructions; the safety layer is a separately-engineered, deterministic overlay. Never trust a language model with life-safety enforcement.
+A common mistake: implementing safety gates as LLM prompt instructions ("Always include LOTO steps before electrical repairs"). LLM instructions can be reasoned around, misapplied, or hallucinated. LOTO enforcement must be a hard UI gate - a checklist that blocks progression, rendered from the knowledge graph's `safety_class` field, independent of what the LLM generates. The LLM writes the repair instructions; the safety layer is a separately-engineered, deterministic overlay. Never trust a language model with life-safety enforcement.
 
 **6. Single-turn vs. multi-turn repair session**
 
-Simple repairs: single-turn (describe → get instructions → execute). Complex repairs with 20+ steps: multi-turn (execute step 1–5, hit unexpected issue, ask follow-up, get adapted instructions). The session model in Firestore preserves step progress and context, enabling the agent to answer mid-repair follow-ups like "Step 7 says to remove the coupling — but mine doesn't have a coupling. What do I do?" with full context of the machine and prior steps.
+Simple repairs: single-turn (describe → get instructions → execute). Complex repairs with 20+ steps: multi-turn (execute step 1–5, hit unexpected issue, ask follow-up, get adapted instructions). The session model in Firestore preserves step progress and context, enabling the agent to answer mid-repair follow-ups like "Step 7 says to remove the coupling - but mine doesn't have a coupling. What do I do?" with full context of the machine and prior steps.
 
 ---
 
@@ -443,7 +443,7 @@ Simple repairs: single-turn (describe → get instructions → execute). Complex
 | Safety gate false positive (escalates fixable issue) | Technician frustration, unnecessary escalation | Log all escalations; weekly review by maintenance manager; adjust threshold or procedure tier if pattern identified |
 | SAP PM API down | Can't create work order or check parts | Non-blocking: work order creation queued in Pub/Sub, retried when SAP recovers; show technician parts location from cached inventory snapshot |
 | Outdated repair manual in knowledge base | Instructions reference superseded procedure | Every document chunk has `valid_until` metadata; stale chunks suppressed in retrieval; CMMS change notifications trigger re-ingestion |
-| Technician photos wrong machine | Wrong machine context → wrong instructions | QR code scan is the authoritative machine identifier; if photo is used as supplemental input, the response includes "Confirming this is machine {id} — the {model} in {location}?" before generating steps |
+| Technician photos wrong machine | Wrong machine context → wrong instructions | QR code scan is the authoritative machine identifier; if photo is used as supplemental input, the response includes "Confirming this is machine {id} - the {model} in {location}?" before generating steps |
 
 ---
 
@@ -491,7 +491,7 @@ Simple repairs: single-turn (describe → get instructions → execute). Complex
 *What the interviewer is watching for:* Do you identify safety-criticality unprompted? Do you ask about offline requirements? Do you know what LOTO is? Candidates who immediately talk about "a RAG chatbot with a nice UI" haven't thought about the environment.
 
 **Minutes 5–10: Reframe as a Three-Constraint Problem**
-> Strong candidate: "Based on those answers, I want to flag three constraints that I think are load-bearing for the architecture. Safety — wrong instructions can injure someone. Offline — factory dead zones are real. And mobile hostility — voice is the primary input, not text."
+> Strong candidate: "Based on those answers, I want to flag three constraints that I think are load-bearing for the architecture. Safety - wrong instructions can injure someone. Offline - factory dead zones are real. And mobile hostility - voice is the primary input, not text."
 
 *What the interviewer is watching for:* Do you derive non-obvious constraints from the clarifications, or just restate the question?
 
@@ -500,24 +500,24 @@ Draw the five stages: input capture → processing → diagnostic agent → know
 
 **Minutes 25–35: Deep dives (interviewer picks)**
 Common probes:
-- "How does offline mode actually work — what happens if the technician is in a dead zone for 6 hours?"
+- "How does offline mode actually work - what happens if the technician is in a dead zone for 6 hours?"
 - "Walk me through exactly what happens when a technician scans a QR code and takes a photo."
 - "How do you prevent the LLM from generating instructions that could injure a technician?"
 - "The CMMS has 10 years of repair logs. How do you use that data?"
 - "What happens if a technician reaches Step 7 and encounters something the manual doesn't cover?"
 
-*Step 7 unexpected situation answer:* The session context in Firestore contains the full repair history: machine_id, failure_mode, steps completed so far, and the current manual sections used. When the technician says "Step 7 doesn't match what I'm seeing — my machine has an extra coupling here," the agent does a targeted RAG query: `vector_search("unexpected coupling + machine_model + procedure_section")` + `graph_query(machine_model, variant=?)` to find whether there's a known variant. If no match and confidence is low → escalate to senior technician with full session context pre-loaded.
+*Step 7 unexpected situation answer:* The session context in Firestore contains the full repair history: machine_id, failure_mode, steps completed so far, and the current manual sections used. When the technician says "Step 7 doesn't match what I'm seeing - my machine has an extra coupling here," the agent does a targeted RAG query: `vector_search("unexpected coupling + machine_model + procedure_section")` + `graph_query(machine_model, variant=?)` to find whether there's a known variant. If no match and confidence is low → escalate to senior technician with full session context pre-loaded.
 
 **Minutes 35–45: Trade-offs**
 Strong candidate proactively raises:
-- "I should flag that safety gates must be implemented as UI constraints, not LLM prompt instructions — I can explain why."
-- "The on-device LLM temptation for offline mode is a trap for this use case — pre-generated guides are safer."
+- "I should flag that safety gates must be implemented as UI constraints, not LLM prompt instructions - I can explain why."
+- "The on-device LLM temptation for offline mode is a trap for this use case - pre-generated guides are safer."
 - "IT/OT network segmentation is the biggest integration risk for real-time PLC fault code access."
 
 **Minutes 45–55: Follow-up scenarios**
 - "What if a machine is brand new and has no repair history or manual yet?"
-- "How would you handle a safety recall that affects 200 machines — how do you update all their guides?"
-- "What if a technician follows the instructions and the repair fails — how do you improve the system?"
+- "How would you handle a safety recall that affects 200 machines - how do you update all their guides?"
+- "What if a technician follows the instructions and the repair fails - how do you improve the system?"
 
 *Safety recall answer:* Recall bulletin → ingestion pipeline → knowledge graph edge update: `{machine_model} REQUIRES_SAFETY_ACTION {recall_id}`. Next time any technician opens a session for that machine model, the safety gate layer checks for active recalls before generating any other content, and surfaces the recall procedure as the mandatory first action. Push notification via Firebase to all technicians assigned to affected machines. Pre-generated offline guides for affected machines are invalidated and regenerated automatically.
 
@@ -525,6 +525,6 @@ Strong candidate proactively raises:
 
 ## Summary Framing for Closing the Answer
 
-The key insight I want to leave you with is that the hardest problems in this design are not the AI problems — they're the environmental and safety constraints that most candidates forget. The LLM is capable of generating excellent repair instructions given the right context. What makes this system production-ready is everything around the LLM: the offline cache that works in dead zones, the LOTO enforcement that cannot be LLM-generated, the skill-tier gate that can't be bypassed, and the confidence threshold that chooses escalation over hallucination.
+The key insight I want to leave you with is that the hardest problems in this design are not the AI problems - they're the environmental and safety constraints that most candidates forget. The LLM is capable of generating excellent repair instructions given the right context. What makes this system production-ready is everything around the LLM: the offline cache that works in dead zones, the LOTO enforcement that cannot be LLM-generated, the skill-tier gate that can't be bypassed, and the confidence threshold that chooses escalation over hallucination.
 
-A RAG chatbot that works 95% of the time in a factory is dangerous because of the 5% where it confidently generates wrong instructions. The architecture I've described is designed so that uncertainty leads to escalation, not fabrication — and safety checks are structural, not instructional. That's the difference between a demo and a system you'd deploy to 5,000 people working with machinery that can kill them.
+A RAG chatbot that works 95% of the time in a factory is dangerous because of the 5% where it confidently generates wrong instructions. The architecture I've described is designed so that uncertainty leads to escalation, not fabrication - and safety checks are structural, not instructional. That's the difference between a demo and a system you'd deploy to 5,000 people working with machinery that can kill them.

@@ -13,9 +13,9 @@ Attention(Q, K, V) = softmax( Q·Kᵀ / √d_k ) · V
 ```
 
 Where:
-- **Q** (Queries): "What am I looking for?" — derived from the current token
-- **K** (Keys): "What do I have to offer?" — derived from all tokens
-- **V** (Values): "What do I actually provide?" — derived from all tokens
+- **Q** (Queries): "What am I looking for?" - derived from the current token
+- **K** (Keys): "What do I have to offer?" - derived from all tokens
+- **V** (Values): "What do I actually provide?" - derived from all tokens
 - **d_k**: dimension of the key/query vectors (used for scaling)
 
 **Step-by-step forward pass:**
@@ -49,7 +49,7 @@ Input X: [seq_len, d_model]
 As d_k grows, the dot product Q·K grows in variance (its magnitude scales as √d_k for random vectors). Without scaling, large dot products push softmax into regions of extremely small gradients (near-zero everywhere except the argmax). Dividing by √d_k keeps the dot product variance at ~1, keeping softmax in its useful gradient range.
 
 **Tricky Q:** *Why does large Q·K variance cause softmax to become "spiky"?*  
-Softmax is `exp(x_i) / Σ exp(x_j)`. With large magnitude differences, one term dominates the denominator exponentially — the distribution collapses to a one-hot. The gradient of softmax at this extreme is near-zero → training stalls.
+Softmax is `exp(x_i) / Σ exp(x_j)`. With large magnitude differences, one term dominates the denominator exponentially - the distribution collapses to a one-hot. The gradient of softmax at this extreme is near-zero → training stalls.
 
 ---
 
@@ -67,7 +67,7 @@ Each head learns to attend based on different relationships:
 - Head 3 might focus on local context (adjacent words)
 - Head 4 might attend to the beginning of the sequence (topic sentence)
 
-No single set of Q/K/V projections can capture all these simultaneously — different projections reveal different structure.
+No single set of Q/K/V projections can capture all these simultaneously - different projections reveal different structure.
 
 **Formal definition:**
 
@@ -90,7 +90,7 @@ Total per layer:     4 × d_model² ≈ 67M (for 4096)
 
 **Tricky Q:** *Why use separate projection matrices per head rather than just splitting the embedding dimension?*  
 
-Simply splitting d_model/h gives each head a different slice of the same embedding — the slices are not independent because the preceding LayerNorm and FFN computed them jointly. Separate W_Q/W_K/W_V projections allow each head to compute a **different linear transformation** of the full embedding, giving each head a genuinely different "view" of the input. This is the critical distinction.
+Simply splitting d_model/h gives each head a different slice of the same embedding - the slices are not independent because the preceding LayerNorm and FFN computed them jointly. Separate W_Q/W_K/W_V projections allow each head to compute a **different linear transformation** of the full embedding, giving each head a genuinely different "view" of the input. This is the critical distinction.
 
 ---
 
@@ -115,7 +115,7 @@ K = V = encoder_output
 output = MultiHead(Q, K, V)  # decoder attends to encoder
 ```
 
-Cross-attention is absent in decoder-only models (LLaMA, GPT) — they have no separate encoder to cross-attend to.
+Cross-attention is absent in decoder-only models (LLaMA, GPT) - they have no separate encoder to cross-attend to.
 
 ---
 
@@ -138,7 +138,7 @@ Mask:
 
 Masked positions get score = -inf → softmax produces probability ≈ 0 for those positions.
 
-**Causal masking enables parallel training:** Even though generation is sequential, training can process the entire sequence in parallel by applying the mask. The model simultaneously predicts token 1 from token 0, token 2 from tokens 0–1, token 3 from tokens 0–2, etc. — all in a single forward pass.
+**Causal masking enables parallel training:** Even though generation is sequential, training can process the entire sequence in parallel by applying the mask. The model simultaneously predicts token 1 from token 0, token 2 from tokens 0–1, token 3 from tokens 0–2, etc. - all in a single forward pass.
 
 ---
 
@@ -147,7 +147,7 @@ Masked positions get score = -inf → softmax produces probability ≈ 0 for tho
 ### Concept
 
 Standard self-attention is O(n²) in both memory and compute for sequence length n:
-- The attention score matrix is [n × n] — n² entries
+- The attention score matrix is [n × n] - n² entries
 - Computing Q·Kᵀ requires n × n × d_k multiply-adds
 
 **Practical implications:**
@@ -157,7 +157,7 @@ Standard self-attention is O(n²) in both memory and compute for sequence length
 | 2K | 4M entries | ~16 MB per layer (FP16) |
 | 32K | 1B entries | ~2 GB per layer |
 | 128K | 16B entries | ~32 GB per layer |
-| 1M | 1T entries | ~2 TB per layer — impossible to materialize |
+| 1M | 1T entries | ~2 TB per layer - impossible to materialize |
 
 This is why long-context models need specialized attention implementations.
 
@@ -171,7 +171,7 @@ This is why long-context models need specialized attention implementations.
 
 Flash Attention (Dao et al., 2022) achieves the *same mathematical result* as standard attention but avoids materializing the full n×n attention matrix in GPU HBM (High Bandwidth Memory). Instead, it tiles the computation to fit in fast on-chip SRAM.
 
-**Why this matters — GPU memory hierarchy:**
+**Why this matters - GPU memory hierarchy:**
 ```
 GPU SRAM (on-chip): ~192 KB per SM, ~20 TB/s bandwidth
 GPU HBM (off-chip):  80 GB on A100, ~2 TB/s bandwidth
@@ -186,7 +186,7 @@ Flash:    Tile(Q,K,V) → compute entire attention within SRAM → write only ou
 
 **Results:**
 - 2–4× faster wall-clock time on long sequences
-- Memory usage: O(n) instead of O(n²) — enables much longer contexts
+- Memory usage: O(n) instead of O(n²) - enables much longer contexts
 - Numerically identical to standard attention (not an approximation)
 
 **Flash Attention 2 (2023):** Improved parallelism across GPU thread blocks, better work partitioning. ~2× faster than Flash Attention 1.
@@ -199,7 +199,7 @@ Flash:    Tile(Q,K,V) → compute entire attention within SRAM → write only ou
 
 ### Concept
 
-Both are modifications of multi-head attention that **share key and value projections across heads**, reducing KV cache memory (critical for inference — see [KV Cache](05-KV-Cache-and-Inference-Optimization.md)).
+Both are modifications of multi-head attention that **share key and value projections across heads**, reducing KV cache memory (critical for inference - see [KV Cache](05-KV-Cache-and-Inference-Optimization.md)).
 
 **Multi-Head Attention (MHA):** Each head has its own K and V projections.
 ```
@@ -208,7 +208,7 @@ h heads × (d_k + d_v) × d_model = full KV memory
 
 **Multi-Query Attention (MQA):** All heads share a single K and V.
 ```
-1 shared K + 1 shared V — KV memory reduced by h×
+1 shared K + 1 shared V - KV memory reduced by h×
 Quality trade-off: slightly worse, especially for complex tasks
 Used by: Falcon, some early efficient models
 ```
@@ -247,7 +247,7 @@ Sliding:  token 100 attends only to tokens 95–100 (W=5)
 After L layers: receptive field = L × W
 ```
 
-Mistral 7B uses W=4096 with a 32K context — each token's effective receptive field grows with depth. Reduces attention compute from O(n²) to O(n×W).
+Mistral 7B uses W=4096 with a 32K context - each token's effective receptive field grows with depth. Reduces attention compute from O(n²) to O(n×W).
 
 **Trade-off:** Cannot directly attend to distant context within a single layer. Works well for most generation tasks; less effective for tasks requiring precise recall of distant facts.
 
@@ -311,16 +311,16 @@ print(f"\nFlash Attention output shape: {output_flash.shape}")
 ## Study Notes
 
 **Must-know for interviews:**
-- Attention(Q,K,V) = softmax(QKᵀ/√d_k) · V — know this formula by heart
+- Attention(Q,K,V) = softmax(QKᵀ/√d_k) · V - know this formula by heart
 - Scale by √d_k to prevent softmax from collapsing to one-hot with large dot products
 - Multi-head attention: different projection matrices per head give genuinely different "views," not just embedding slices
 - Causal masking sets future positions to -inf before softmax → enables parallel training of autoregressive models
-- Standard attention is O(n²) memory and compute — Flash Attention achieves same result in O(n) memory via SRAM tiling
-- GQA (Grouped-Query) shares K/V across head groups — standard in LLaMA-3, Gemma, Mistral for KV cache efficiency
+- Standard attention is O(n²) memory and compute - Flash Attention achieves same result in O(n) memory via SRAM tiling
+- GQA (Grouped-Query) shares K/V across head groups - standard in LLaMA-3, Gemma, Mistral for KV cache efficiency
 
 **Quick recall Q&A:**
-- *Why does multi-head attention use separate W_Q/W_K/W_V per head?* To give each head a different linear projection of the full embedding, not just a slice — independent "views" of the input.
-- *What does Flash Attention optimize?* IO between GPU HBM and SRAM — not the math, just where it happens. Same output, O(n) memory.
-- *What is GQA?* Grouped-Query Attention — G groups of heads share K/V projections, reducing KV cache by h/G× with minimal quality loss.
+- *Why does multi-head attention use separate W_Q/W_K/W_V per head?* To give each head a different linear projection of the full embedding, not just a slice - independent "views" of the input.
+- *What does Flash Attention optimize?* IO between GPU HBM and SRAM - not the math, just where it happens. Same output, O(n) memory.
+- *What is GQA?* Grouped-Query Attention - G groups of heads share K/V projections, reducing KV cache by h/G× with minimal quality loss.
 - *What does the causal mask do during training?* Forces position i to predict from only positions 0..i-1, while still processing the full sequence in parallel.
 - *Why scale Q·K by √d_k and not d_k?* The standard deviation of the dot product of two random d_k-dimensional unit vectors grows as √d_k, so dividing by √d_k normalizes variance to 1.

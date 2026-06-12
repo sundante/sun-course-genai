@@ -1,5 +1,5 @@
 """
-Adversarial Debate Architecture — LangGraph
+Adversarial Debate Architecture - LangGraph
 Pattern: proposer_node → critic_node → judge_node
 
 State accumulates the full debate transcript.

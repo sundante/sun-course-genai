@@ -2,7 +2,7 @@
 CrewAI Simple Agent
 ===================
 Framework : CrewAI
-Level     : 01 — Simple
+Level     : 01 - Simple
 Model     : gemini-2.0-flash via CrewAI's LLM integration
 
 What this demonstrates:

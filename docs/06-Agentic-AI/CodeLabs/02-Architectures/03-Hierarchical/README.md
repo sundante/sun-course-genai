@@ -1,4 +1,4 @@
-# 03 — Hierarchical Architecture
+# 03 - Hierarchical Architecture
 
 ## Pattern: Manager → Team Leads → Workers
 
@@ -37,7 +37,7 @@
 |---|---|
 | Clear chain of command | More agents = more LLM calls |
 | Manager can adapt delegation | Manager is a bottleneck and single point of failure |
-| Workers stay focused | Harder to debug — which level failed? |
+| Workers stay focused | Harder to debug - which level failed? |
 
 ## Mock Task
 
@@ -50,7 +50,7 @@
 
 | Framework | Hierarchy Mechanism |
 |---|---|
-| LangChain | Nested LCEL chains — manager chain calls sub-chains |
+| LangChain | Nested LCEL chains - manager chain calls sub-chains |
 | LangGraph | Multi-level graph with supervisor nodes routing to subgraphs |
 | CrewAI | `Process.hierarchical` with a `manager_llm` |
 | ADK | Multi-agent with sub-agents registered in parent agent |

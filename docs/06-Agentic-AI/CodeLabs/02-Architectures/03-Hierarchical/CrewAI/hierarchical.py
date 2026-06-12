@@ -1,5 +1,5 @@
 """
-Hierarchical Architecture — CrewAI
+Hierarchical Architecture - CrewAI
 Pattern: Process.hierarchical with manager_llm
 
 CrewAI's Process.hierarchical gives a manager LLM full autonomy to:
@@ -7,7 +7,7 @@ CrewAI's Process.hierarchical gives a manager LLM full autonomy to:
 - Delegate tasks to appropriate agents
 - Synthesize the final output
 
-No explicit task chaining needed — the manager handles orchestration.
+No explicit task chaining needed - the manager handles orchestration.
 """
 import os
 from pydantic import BaseModel, Field
@@ -60,7 +60,7 @@ class HierarchicalReport(BaseModel):
     top_city: str
 
 
-# ── Agents (workers — manager LLM delegates to these) ────────────────────────
+# ── Agents (workers - manager LLM delegates to these) ────────────────────────
 
 weather_researcher = Agent(
     role="Weather Intelligence Specialist",

@@ -1,5 +1,5 @@
 """
-Reflexion Architecture — LangGraph
+Reflexion Architecture - LangGraph
 Pattern: generator → critic → conditional: rewriter or END
 
 The loop is an explicit graph edge (critic → generator for retry).

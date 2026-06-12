@@ -20,7 +20,7 @@ A neural network (the embedding model) is trained on a large corpus with an obje
 | | Bi-encoder | Cross-encoder |
 |---|---|---|
 | **How** | Query and document embedded independently | Query+document concatenated, scored together |
-| **Speed** | Fast — embed query once, search all docs | Slow — must run model on each (query, doc) pair |
+| **Speed** | Fast - embed query once, search all docs | Slow - must run model on each (query, doc) pair |
 | **Quality** | Good | Excellent |
 | **Use in RAG** | First-stage retrieval | Re-ranking top-k results |
 | **Example** | `text-embedding-004` | `cross-encoder/ms-marco-MiniLM-L-6-v2` |
@@ -70,7 +70,7 @@ Query text → embedding model → query vector (768-dim)
 ```
 
 **Why ANN and not exact nearest neighbor?**
-Exact k-NN requires computing the distance from the query to every vector in the index — O(n × d) where n is corpus size and d is dimensions. At 10M documents with 768 dimensions, that's 7.68 billion multiplications per query. ANN algorithms trade a small recall loss (typically 1-5%) for 10-1000x speedup.
+Exact k-NN requires computing the distance from the query to every vector in the index - O(n × d) where n is corpus size and d is dimensions. At 10M documents with 768 dimensions, that's 7.68 billion multiplications per query. ANN algorithms trade a small recall loss (typically 1-5%) for 10-1000x speedup.
 
 **The Recall@k metric:** For a given query, Recall@k = (number of relevant docs in top-k) / (total relevant docs). At Recall@10 = 0.85, 15% of relevant documents are missed by the first-stage ANN retrieval.
 
@@ -133,7 +133,7 @@ Measures straight-line distance in the vector space. For embeddings with unit no
 **When cosine similarity outperforms dot product for text:**
 Text embedding models like `text-embedding-004` output vectors with varying L2 norms. The norm often correlates with confidence or lexical density, not semantic relevance. Normalizing to unit vectors (which cosine similarity does implicitly) removes this bias. Using raw dot product would unfairly rank verbose, information-dense documents higher regardless of topical relevance.
 
-**Practical note:** Most vector databases use cosine similarity as default for text. Always check what metric your embedding model was trained with — using a different metric degrades recall.
+**Practical note:** Most vector databases use cosine similarity as default for text. Always check what metric your embedding model was trained with - using a different metric degrades recall.
 
 ### Code
 
@@ -192,17 +192,17 @@ import faiss
 d = 768  # embedding dimension
 n_vecs = 1_000_000  # 1M documents
 
-# HNSW — best recall for moderate scale
+# HNSW - best recall for moderate scale
 hnsw_index = faiss.IndexHNSWFlat(d, 32)  # M=32
 
-# IVF — for large scale
+# IVF - for large scale
 nlist = 4096  # number of clusters (rule of thumb: sqrt(n_vecs) to 4*sqrt(n_vecs))
 quantizer = faiss.IndexFlatL2(d)
 ivf_index = faiss.IndexIVFFlat(quantizer, d, nlist)
 ivf_index.train(doc_vectors)  # must train on a representative sample
 ivf_index.nprobe = 64  # search 64 of 4096 clusters (tune for recall vs speed)
 
-# IVF + PQ — maximum compression
+# IVF + PQ - maximum compression
 M_pq = 8   # number of sub-vectors
 nbits = 8  # bits per sub-vector (256 centroids)
 ivfpq_index = faiss.IndexIVFPQ(quantizer, d, nlist, M_pq, nbits)
@@ -229,10 +229,10 @@ A vector database stores embedding vectors alongside metadata and provides ANN s
 | **AlloyDB (pgvector)** | GCP managed Postgres | Medium-Large | Full SQL | Yes | SQL + vector, GCP |
 
 **Key capabilities to evaluate:**
-- **Metadata pre-filtering** — filter by document source, date, category BEFORE ANN search (significant performance win)
-- **Multi-tenancy** — namespace/tenant isolation so one tenant's data isn't retrievable by another
-- **Hybrid search** — built-in BM25 + vector search (Weaviate, Qdrant)
-- **Streaming updates** — can you upsert vectors in real-time or only in batch?
+- **Metadata pre-filtering** - filter by document source, date, category BEFORE ANN search (significant performance win)
+- **Multi-tenancy** - namespace/tenant isolation so one tenant's data isn't retrievable by another
+- **Hybrid search** - built-in BM25 + vector search (Weaviate, Qdrant)
+- **Streaming updates** - can you upsert vectors in real-time or only in batch?
 
 ### Code (Chroma local + Pinecone production pattern)
 
@@ -273,7 +273,7 @@ results = prod_vs.similarity_search(
 
 ### Concept
 
-Picking the wrong embedding model is one of the most common production RAG mistakes. The model determines the ceiling of retrieval quality — no amount of downstream reranking recovers from poor embeddings.
+Picking the wrong embedding model is one of the most common production RAG mistakes. The model determines the ceiling of retrieval quality - no amount of downstream reranking recovers from poor embeddings.
 
 **MTEB (Massive Text Embedding Benchmark)** is the authoritative benchmark for evaluating embedding models. Key tasks: retrieval, reranking, classification, clustering. Always check MTEB leaderboard scores in your domain.
 
@@ -286,7 +286,7 @@ Picking the wrong embedding model is one of the most common production RAG mista
 | **Latency** | Can you embed queries within your SLA? (typical: <50ms for bi-encoder) |
 | **Language** | Multilingual required? → `multilingual-e5-large` or `text-multilingual-embedding-002` |
 | **Cost** | API calls per query → cached? Off-the-shelf? Self-hosted? |
-| **Domain** | Medical, legal, code — domain-specific models often outperform general-purpose by 5-15% |
+| **Domain** | Medical, legal, code - domain-specific models often outperform general-purpose by 5-15% |
 
 **Key models (2024-2025):**
 
@@ -299,7 +299,7 @@ Picking the wrong embedding model is one of the most common production RAG mista
 | `multilingual-e5-large` | 1024 | 62.2 | Best open multilingual |
 | `text-multilingual-embedding-002` (Google) | 768 | ~62 | GCP multilingual |
 
-**Matryoshka Representation Learning (MRL):** Models trained with MRL (like OpenAI's text-embedding-3 series) encode information hierarchically — truncating the vector to fewer dimensions preserves most quality. This lets you store compressed vectors at low cost and expand to full dimensions for quality-critical reranking.
+**Matryoshka Representation Learning (MRL):** Models trained with MRL (like OpenAI's text-embedding-3 series) encode information hierarchically - truncating the vector to fewer dimensions preserves most quality. This lets you store compressed vectors at low cost and expand to full dimensions for quality-critical reranking.
 
 ### Code
 
@@ -336,22 +336,22 @@ def evaluate_retrieval(model, query: str, docs: list[str], relevant_idx: int) ->
 ## Interview Q&A
 
 **Q: Why must you use the same embedding model for indexing and querying?** `[Easy]`
-A: Each embedding model defines its own vector space — a specific mapping from text to points in n-dimensional space. The similarity scores (cosine, dot product) are only meaningful within the same coordinate system. If you index with model A and query with model B, the query vector lives in a completely different space, making similarity scores meaningless. The result: the system silently returns random-looking results with no error or warning.
+A: Each embedding model defines its own vector space - a specific mapping from text to points in n-dimensional space. The similarity scores (cosine, dot product) are only meaningful within the same coordinate system. If you index with model A and query with model B, the query vector lives in a completely different space, making similarity scores meaningless. The result: the system silently returns random-looking results with no error or warning.
 
 **Q: When does cosine similarity outperform dot product for text retrieval?** `[Medium]`
-A: When embedding vectors have non-unit norms that don't correlate with relevance. Text embedding models often produce vectors with varying magnitudes — verbose, information-dense chunks get higher magnitude vectors. Dot product unfairly boosts these high-magnitude vectors even when they're less topically relevant. Cosine similarity normalizes away magnitude, so only the angular direction (semantic direction) matters. Exception: if your model was explicitly trained with dot product as the objective (some DPR variants), use dot product.
+A: When embedding vectors have non-unit norms that don't correlate with relevance. Text embedding models often produce vectors with varying magnitudes - verbose, information-dense chunks get higher magnitude vectors. Dot product unfairly boosts these high-magnitude vectors even when they're less topically relevant. Cosine similarity normalizes away magnitude, so only the angular direction (semantic direction) matters. Exception: if your model was explicitly trained with dot product as the objective (some DPR variants), use dot product.
 
 **Q: How does HNSW achieve fast approximate nearest neighbor search?** `[Hard]`
-A: HNSW builds a multilayer graph where each node represents a vector. The top layers are sparse (long-range connections for fast navigation), and lower layers are dense (local connections for precision). At query time, search starts at the top layer and greedily navigates toward the query vector, then descends to lower layers for refinement. The key insight is that greedy graph navigation in high-dimensional space finds approximate nearest neighbors much faster than exhaustive search. The `efSearch` parameter controls how many candidate neighbors to explore at each layer — higher values give better recall at the cost of query latency.
+A: HNSW builds a multilayer graph where each node represents a vector. The top layers are sparse (long-range connections for fast navigation), and lower layers are dense (local connections for precision). At query time, search starts at the top layer and greedily navigates toward the query vector, then descends to lower layers for refinement. The key insight is that greedy graph navigation in high-dimensional space finds approximate nearest neighbors much faster than exhaustive search. The `efSearch` parameter controls how many candidate neighbors to explore at each layer - higher values give better recall at the cost of query latency.
 
 **Q: Your RAG system needs to serve 10 tenants with 5M documents each (50M total) with strict data isolation. What vector database architecture would you use?** `[Hard]`
-A: Namespace/tenant-isolated indices. Most vector databases (Pinecone, Qdrant, Weaviate) support namespace or collection-level isolation where data and access controls are separated per tenant. Architecture: one namespace per tenant, metadata filtering enforces tenant boundaries at the application layer. Alternative: separate indices per tenant — stronger isolation, but higher operational overhead. For 50M vectors, Pinecone or Vertex AI Vector Search are good managed options; Weaviate or Qdrant if you want self-hosted control. Always benchmark: at this scale, namespace isolation in a single index is often better than 10 separate indices due to index build costs.
+A: Namespace/tenant-isolated indices. Most vector databases (Pinecone, Qdrant, Weaviate) support namespace or collection-level isolation where data and access controls are separated per tenant. Architecture: one namespace per tenant, metadata filtering enforces tenant boundaries at the application layer. Alternative: separate indices per tenant - stronger isolation, but higher operational overhead. For 50M vectors, Pinecone or Vertex AI Vector Search are good managed options; Weaviate or Qdrant if you want self-hosted control. Always benchmark: at this scale, namespace isolation in a single index is often better than 10 separate indices due to index build costs.
 
 **Q: What is Matryoshka Representation Learning and why is it useful for production RAG?** `[Hard]`
 A: MRL trains embedding models to encode information in a nested way: the first N dimensions of the vector capture the most important semantic information, and adding more dimensions adds progressively finer detail. This means you can truncate an MRL-trained vector (like OpenAI's text-embedding-3 series) to 256 or 512 dimensions with minimal quality loss instead of storing the full 3072 dimensions. In production, this enables a two-stage retrieval: first-stage retrieval with compressed 256-dim vectors (fast, cheap), followed by re-scoring with the full 3072-dim vectors for the top-k candidates (precision). This cuts storage and query costs significantly.
 
 **Q: What is the difference between a bi-encoder and a cross-encoder, and when would you use each?** `[Medium]`
-A: A bi-encoder embeds the query and document independently, producing two separate vectors that are compared by cosine similarity. This is fast because documents can be pre-embedded offline — at query time, you only embed the query. A cross-encoder takes a (query, document) pair as a single input and produces a scalar relevance score; it sees the interaction between query and document terms, giving much higher precision. Cross-encoders are 10-100x slower because they must process each (query, document) pair at query time. The standard pattern: bi-encoder for first-stage ANN retrieval (fast, moderate precision), cross-encoder for reranking top-k candidates (slow, high precision).
+A: A bi-encoder embeds the query and document independently, producing two separate vectors that are compared by cosine similarity. This is fast because documents can be pre-embedded offline - at query time, you only embed the query. A cross-encoder takes a (query, document) pair as a single input and produces a scalar relevance score; it sees the interaction between query and document terms, giving much higher precision. Cross-encoders are 10-100x slower because they must process each (query, document) pair at query time. The standard pattern: bi-encoder for first-stage ANN retrieval (fast, moderate precision), cross-encoder for reranking top-k candidates (slow, high precision).
 
 **Q: How would you reduce embedding costs in a RAG system with 10 million documents and 100K daily queries?** `[Medium]`
-A: Three levers: (1) **Batch indexing** — embed documents in batches of 100-2048 (most API providers give bulk discounts and lower per-call overhead), not one by one. (2) **Query embedding cache** — hash the query string and cache the embedding; many users ask near-identical questions. A TTL of 24 hours with an LRU cache can hit 30-60% cache rates for customer support use cases. (3) **Smaller embedding model** — if quality is acceptable, a 256-dim MRL-truncated model costs 6x less to store and compute than the full 1536-dim model. (4) **Embedding model self-hosting** — open-source models (BGE, E5) hosted on Cloud Run or GKE eliminate per-token API costs at the cost of infrastructure management.
+A: Three levers: (1) **Batch indexing** - embed documents in batches of 100-2048 (most API providers give bulk discounts and lower per-call overhead), not one by one. (2) **Query embedding cache** - hash the query string and cache the embedding; many users ask near-identical questions. A TTL of 24 hours with an LRU cache can hit 30-60% cache rates for customer support use cases. (3) **Smaller embedding model** - if quality is acceptable, a 256-dim MRL-truncated model costs 6x less to store and compute than the full 1536-dim model. (4) **Embedding model self-hosting** - open-source models (BGE, E5) hosted on Cloud Run or GKE eliminate per-token API costs at the cost of infrastructure management.

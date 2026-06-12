@@ -1,13 +1,13 @@
 # Prompt Optimization and Automation
 
-Manual prompt engineering has a fundamental problem: it does not scale. Expert prompt engineers are scarce, prompt quality depends heavily on individual intuition, and the search space of possible prompts is effectively infinite. A prompt that achieves 87% accuracy could potentially achieve 94% with better wording — but finding that wording through manual iteration is slow, expensive, and non-reproducible.
+Manual prompt engineering has a fundamental problem: it does not scale. Expert prompt engineers are scarce, prompt quality depends heavily on individual intuition, and the search space of possible prompts is effectively infinite. A prompt that achieves 87% accuracy could potentially achieve 94% with better wording - but finding that wording through manual iteration is slow, expensive, and non-reproducible.
 
 The field response: **automate the search over prompt space**. This file covers the techniques, frameworks, and mental models that emerged from 2022–2025 to automate what was previously artisanal.
 
 ```
 2022: Manual prompt engineering is the norm
-2023: APE, OPRO — LLMs propose and evaluate prompt candidates
-2023: DSPy — paradigm shift from writing prompts to writing programs
+2023: APE, OPRO - LLMs propose and evaluate prompt candidates
+2023: DSPy - paradigm shift from writing prompts to writing programs
 2024: LLM-as-Judge matures as an evaluation standard
 2025: Reasoning models change what prompts need to do
 ```
@@ -33,20 +33,20 @@ The three levers for automated optimization:
 
 ## Automatic Prompt Engineer (APE)
 
-Automatic Prompt Engineer (Zhou et al., 2023) was an early demonstration that LLMs can be used to generate and evaluate prompt candidates — treating prompt optimization as a program synthesis problem.
+Automatic Prompt Engineer (Zhou et al., 2023) was an early demonstration that LLMs can be used to generate and evaluate prompt candidates - treating prompt optimization as a program synthesis problem.
 
 ### How APE Works
 
 ```
-Phase 1 — Instruction Induction:
+Phase 1 - Instruction Induction:
   Given a set of (input, output) demonstration pairs, ask an LLM to
   infer what instruction would produce those outputs.
 
-Phase 2 — Scoring:
+Phase 2 - Scoring:
   Run each candidate instruction on a held-out evaluation set.
   Score each candidate by accuracy or the target metric.
 
-Phase 3 — Selection:
+Phase 3 - Selection:
   Pick the highest-scoring candidate.
   Optionally, use it as a seed for a second round.
 ```
@@ -80,10 +80,10 @@ def ape_select_best(candidates: list, eval_set: list) -> str:
 
 - The LLM generating candidates is biased toward prompts that are easy for *it* to follow
 - Candidate quality is bounded by what the LLM can imagine
-- Does not iteratively improve — it's generate-once, evaluate, select
+- Does not iteratively improve - it's generate-once, evaluate, select
 - Overfits to small eval sets
 
-> **Tricky interview point:** APE selects the best prompt from a generated set — but "best on the eval set" is not the same as "best on production inputs." If your eval set is small or unrepresentative, APE will select a prompt that is overfit to the eval set distribution. Always validate APE-selected prompts on a held-out test set that was not used in the optimization loop.
+> **Tricky interview point:** APE selects the best prompt from a generated set - but "best on the eval set" is not the same as "best on production inputs." If your eval set is small or unrepresentative, APE will select a prompt that is overfit to the eval set distribution. Always validate APE-selected prompts on a held-out test set that was not used in the optimization loop.
 
 ---
 
@@ -110,7 +110,7 @@ Score: 0.89
 Based on this history, propose a new instruction that might achieve a higher score:
 ```
 
-The optimizer LLM reads the trajectory and uses it to propose increasingly better prompts — much like a gradient descent optimizer reads the loss history to update weights, but using language instead of calculus.
+The optimizer LLM reads the trajectory and uses it to propose increasingly better prompts - much like a gradient descent optimizer reads the loss history to update weights, but using language instead of calculus.
 
 ```python
 def opro_optimize(task_description: str, eval_set: list, n_iterations: int = 10) -> str:
@@ -140,7 +140,7 @@ Output only the instruction text, nothing else:"""
         new_score = evaluate_prompt(new_prompt, eval_set)["accuracy"]
         history.append({"prompt": new_prompt, "score": new_score})
 
-        print(f"Iteration {iteration + 1}: {new_score:.3f} — {new_prompt[:80]}...")
+        print(f"Iteration {iteration + 1}: {new_score:.3f} - {new_prompt[:80]}...")
 
     # Return best prompt found
     return max(history, key=lambda x: x["score"])["prompt"]
@@ -150,7 +150,7 @@ Output only the instruction text, nothing else:"""
 
 OPRO tends to converge within 5–20 iterations. The trajectory often resembles a hill-climbing search: rapid early improvement, diminishing gains, occasional backtracking, convergence to a local optimum.
 
-> **Tricky interview point:** OPRO can overfit to the eval set used during optimization. The optimizer LLM learns what *pattern* of prompt correlates with high scores on that specific eval set — if the eval set is small, it finds prompts that happen to work well on those N examples, not prompts that generalize. Use a separate validation set to check for eval set overfitting. Budget at least 100 eval examples for OPRO to work reliably.
+> **Tricky interview point:** OPRO can overfit to the eval set used during optimization. The optimizer LLM learns what *pattern* of prompt correlates with high scores on that specific eval set - if the eval set is small, it finds prompts that happen to work well on those N examples, not prompts that generalize. Use a separate validation set to check for eval set overfitting. Budget at least 100 eval examples for OPRO to work reliably.
 
 ---
 
@@ -181,7 +181,7 @@ import dspy
 lm = dspy.LM("anthropic/claude-sonnet-4-6")
 dspy.configure(lm=lm)
 
-# Define a DSPy module — the LOGIC, not the prompt
+# Define a DSPy module - the LOGIC, not the prompt
 class SentimentAnalyzer(dspy.Module):
     def __init__(self):
         # Declare the signature: what goes in, what comes out
@@ -255,16 +255,16 @@ print(compiled_analyzer.classify.demos)   # Auto-selected few-shot examples
 | You have a metric and labeled training data | Yes |
 | Rapid one-off prompt for a simple task | No |
 | You need full control over the exact prompt text | No |
-| The pipeline changes frequently | No — DSPy recompilation is expensive |
-| Production system with stability requirements | Maybe — test thoroughly |
+| The pipeline changes frequently | No - DSPy recompilation is expensive |
+| Production system with stability requirements | Maybe - test thoroughly |
 
-> **Tricky interview point:** DSPy requires a **metric function** — a programmatic way to evaluate whether an output is good. Writing a good metric is often harder than writing a good prompt. If your metric is wrong (penalizes good outputs, rewards bad ones), the compiler will optimize toward bad behavior. The quality of DSPy outputs is fundamentally bounded by the quality of your metric. "I can't write a metric" is a signal that the task itself is underspecified.
+> **Tricky interview point:** DSPy requires a **metric function** - a programmatic way to evaluate whether an output is good. Writing a good metric is often harder than writing a good prompt. If your metric is wrong (penalizes good outputs, rewards bad ones), the compiler will optimize toward bad behavior. The quality of DSPy outputs is fundamentally bounded by the quality of your metric. "I can't write a metric" is a signal that the task itself is underspecified.
 
 ---
 
 ## LLM-as-Judge
 
-LLM-as-Judge is the practice of using a strong language model to evaluate the outputs of another (or the same) model. It enables scalable, automated evaluation for tasks where "correct" is not binary — summarization, writing quality, reasoning coherence, instruction-following.
+LLM-as-Judge is the practice of using a strong language model to evaluate the outputs of another (or the same) model. It enables scalable, automated evaluation for tasks where "correct" is not binary - summarization, writing quality, reasoning coherence, instruction-following.
 
 ### Evaluation Modes
 
@@ -361,7 +361,7 @@ OpenAI o1 (2024), o3, Claude 3.7 Sonnet with extended thinking, and DeepSeek R1 
 
 ### What Still Matters
 
-Reasoning models don't eliminate the need for prompt engineering — they shift what matters:
+Reasoning models don't eliminate the need for prompt engineering - they shift what matters:
 
 ```python
 # For reasoning models: focus on these
@@ -384,13 +384,13 @@ Include only items with explicit owners. Omit general discussion.
 ```
 
 **What still matters with reasoning models:**
-- **Task framing** — clear description of what success looks like
-- **Output format** — explicit schema, still needs to be specified
-- **Constraints and scope** — what to include/exclude
-- **Context quality** — garbage in, garbage out still applies
-- **Evaluation** — you still need to measure whether outputs are correct
+- **Task framing** - clear description of what success looks like
+- **Output format** - explicit schema, still needs to be specified
+- **Constraints and scope** - what to include/exclude
+- **Context quality** - garbage in, garbage out still applies
+- **Evaluation** - you still need to measure whether outputs are correct
 
-> **Tricky interview point:** Reasoning models can be "overthought" — they perform extensive internal reasoning even when the task is trivial, adding latency and cost. For simple tasks (classification, extraction of obvious information), a standard model with a direct prompt will be faster and cheaper. Use reasoning models selectively for genuinely complex tasks: multi-step planning, complex code generation, research synthesis, math-heavy problems.
+> **Tricky interview point:** Reasoning models can be "overthought" - they perform extensive internal reasoning even when the task is trivial, adding latency and cost. For simple tasks (classification, extraction of obvious information), a standard model with a direct prompt will be faster and cheaper. Use reasoning models selectively for genuinely complex tasks: multi-step planning, complex code generation, research synthesis, math-heavy problems.
 
 ### Prompting Differences in Practice
 
@@ -420,10 +420,10 @@ Problem: {problem}
 ## Interview Q&A
 
 **Q: What is the fundamental difference between APE and OPRO?** `[Medium]`  
-APE is a one-shot approach: generate N candidates, evaluate them, select the best. OPRO is iterative: it maintains a history of (prompt, score) pairs and uses an optimizer LLM to propose improvements based on that history, converging over multiple rounds. OPRO is closer to gradient descent in spirit — it uses the optimization history to improve each successive candidate.
+APE is a one-shot approach: generate N candidates, evaluate them, select the best. OPRO is iterative: it maintains a history of (prompt, score) pairs and uses an optimizer LLM to propose improvements based on that history, converging over multiple rounds. OPRO is closer to gradient descent in spirit - it uses the optimization history to improve each successive candidate.
 
 **Q: Why does DSPy require a metric function, and what happens if the metric is wrong?** `[Medium]`  
-DSPy optimizes the prompt by running the program on training examples and using the metric to score the outputs. The optimizer searches for prompts that maximize the metric score. If the metric is wrong — rewards incorrect outputs, penalizes correct ones — DSPy will converge on prompts that produce the wrong behavior. The metric is the ground truth signal that guides the entire optimization. Getting the metric right is often harder than writing the prompt manually and is the most common failure mode in DSPy adoption.
+DSPy optimizes the prompt by running the program on training examples and using the metric to score the outputs. The optimizer searches for prompts that maximize the metric score. If the metric is wrong - rewards incorrect outputs, penalizes correct ones - DSPy will converge on prompts that produce the wrong behavior. The metric is the ground truth signal that guides the entire optimization. Getting the metric right is often harder than writing the prompt manually and is the most common failure mode in DSPy adoption.
 
 **Q: What is position bias in LLM-as-Judge and how do you correct for it?** `[Medium]`  
 Position bias: when presented with Response A and Response B, LLM judges tend to prefer whichever response appears first (~60% of the time). Correction: run the evaluation twice, swapping the order of A and B in the second run. Average the scores from both orderings. If one response is preferred in both orderings, it is a robust win. If the "preferred" response flips with the ordering, the difference is not statistically meaningful.
@@ -432,7 +432,7 @@ Position bias: when presented with Response A and Response B, LLM judges tend to
 Self-consistency: use at inference time for specific high-stakes queries where you need higher confidence on a single answer and can afford N× cost. It improves accuracy per-query without changing the prompt. OPRO: use during development to find a better prompt that performs well across the entire evaluation set. OPRO improves accuracy globally by finding a better prompt; self-consistency improves accuracy locally for a specific query by sampling multiple answers. They are complementary: an OPRO-optimized prompt + self-consistency at inference time gives both benefits.
 
 **Q: A team wants to migrate from manual prompting to DSPy. What are the three main risks?** `[Hard]`  
-(1) **Metric risk:** DSPy quality is bounded by metric quality. If the team can't write a programmatic metric that correctly captures "good output," the compiled prompts will be optimized toward the wrong objective. (2) **Brittleness risk:** DSPy-compiled prompts are often long and specific — they're optimized for the training distribution but may perform worse on distribution shift. They also break when models update. (3) **Observability risk:** The prompt is generated by the compiler, not written by an engineer. When a compiled system fails, it's harder to diagnose because you can't read and reason about "why did this prompt produce that output" as easily as with a hand-crafted prompt.
+(1) **Metric risk:** DSPy quality is bounded by metric quality. If the team can't write a programmatic metric that correctly captures "good output," the compiled prompts will be optimized toward the wrong objective. (2) **Brittleness risk:** DSPy-compiled prompts are often long and specific - they're optimized for the training distribution but may perform worse on distribution shift. They also break when models update. (3) **Observability risk:** The prompt is generated by the compiler, not written by an engineer. When a compiled system fails, it's harder to diagnose because you can't read and reason about "why did this prompt produce that output" as easily as with a hand-crafted prompt.
 
 **Q: How do reasoning models change the way you evaluate prompts?** `[Hard]`  
-With traditional models, prompt quality is directly testable through output quality on an eval set — you change the prompt and run the eval. With reasoning models, the model's internal chain-of-thought is not always visible (o1's thinking is hidden; extended thinking models may expose it). This means you're evaluating a black box — you see the final answer but not the intermediate reasoning that produced it. Evaluation must focus more on output quality and less on reasoning trace quality. Additionally, reasoning model outputs are inherently more variable (longer, more exploratory) — evaluation rubrics must account for this. Pass/fail metrics work well; fine-grained "reasoning quality" scores are harder to compute and interpret.
+With traditional models, prompt quality is directly testable through output quality on an eval set - you change the prompt and run the eval. With reasoning models, the model's internal chain-of-thought is not always visible (o1's thinking is hidden; extended thinking models may expose it). This means you're evaluating a black box - you see the final answer but not the intermediate reasoning that produced it. Evaluation must focus more on output quality and less on reasoning trace quality. Additionally, reasoning model outputs are inherently more variable (longer, more exploratory) - evaluation rubrics must account for this. Pass/fail metrics work well; fine-grained "reasoning quality" scores are harder to compute and interpret.

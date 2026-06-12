@@ -17,7 +17,7 @@
 | "National health insurer" | Stakes are clear; HIPAA/PHI compliance is implied but not stated |
 | "50,000 physicians" | Forces scale thinking without prescribing exact request volume |
 | "3–5 days → under 4 hours" | Gives a concrete goal while leaving implementation fully open |
-| "Support the workflow" | Intentionally vague — candidate must ask: support *whom*? Providers? Reviewers? Both? |
+| "Support the workflow" | Intentionally vague - candidate must ask: support *whom*? Providers? Reviewers? Both? |
 | No mention of evidence type | Forces clarifying question on EHR, imaging, notes |
 | No mention of legacy systems | Forces clarifying question on Epic, fax, payer portals |
 
@@ -29,11 +29,11 @@ Prior authorization is a multi-stakeholder workflow. These questions must be ans
 
 | Question | Why It Matters |
 |---|---|
-| Who submits the PA request — provider staff, EHR auto-trigger, or both? | Determines the intake surface and whether the system needs an EHR integration vs. a standalone portal |
+| Who submits the PA request - provider staff, EHR auto-trigger, or both? | Determines the intake surface and whether the system needs an EHR integration vs. a standalone portal |
 | What clinical evidence is available digitally? (EHR notes, lab results, imaging reports, medication history) | Defines what the Evidence Aggregator must fetch and in what formats (FHIR, PDF, HL7) |
 | Are payer policy documents structured (JSON criteria sets) or unstructured (PDF clinical guidelines)? | Structured criteria → rules engine; unstructured → RAG over PDFs; most real deployments need both |
 | Which EHR platforms must the system integrate with? (Epic, Cerner, etc.) Is fax still in use? | Defines the Legacy System Connector's complexity; fax is still dominant in US healthcare |
-| Are there urgency tiers — standard, expedited, concurrent/urgent? | Same pipeline but priority queue routing; urgent PAs need a near-real-time path |
+| Are there urgency tiers - standard, expedited, concurrent/urgent? | Same pipeline but priority queue routing; urgent PAs need a near-real-time path |
 | What is the scope? (medications, procedures, imaging, DME, or all authorization types?) | Each type has different policy criteria structures and evidence requirements |
 
 ---
@@ -95,11 +95,11 @@ Prior authorization is a multi-stakeholder workflow. These questions must be ans
 │                    SUBMISSION READINESS AGENT                                     │
 │                                                                                   │
 │   CRITERIA CHECK          │  STATUS     │  ACTION                                │
-│   Diagnosis codes present │  ✅ Found   │  —                                     │
-│   Clinical notes ≥ 90 days│  ✅ Found   │  —                                     │
+│   Diagnosis codes present │  ✅ Found   │  -                                     │
+│   Clinical notes ≥ 90 days│  ✅ Found   │  -                                     │
 │   Lab result: HbA1c       │  ❌ Missing │  Request from provider                 │
 │   Prior treatment failed  │  ⚠️ Partial │  Needs clarification                   │
-│   Step therapy documented │  ✅ Found   │  —                                     │
+│   Step therapy documented │  ✅ Found   │  -                                     │
 │                                                                                   │
 │   Output: COMPLETE (proceed) or INCOMPLETE (notify provider of gaps)            │
 └──────────────────────────────┬───────────────────────────────────────────────────┘
@@ -116,14 +116,14 @@ Prior authorization is a multi-stakeholder workflow. These questions must be ans
                                                │
                                                ▼
 ┌──────────────────────────────────────────────────────────────────────────────────┐
-│               HUMAN-IN-THE-LOOP — CLINICAL REVIEWER QUEUE                        │
+│               HUMAN-IN-THE-LOOP - CLINICAL REVIEWER QUEUE                        │
 │                                                                                   │
 │   AI is decision SUPPORT. Final approve / deny rests with a licensed reviewer.  │
 │                                                                                   │
 │   RECOMMENDATION  │  CONFIDENCE  │  CONDITIONS                                   │
 │   ✅ Approve       │  HIGH (92%)  │  All criteria met, no conflicts               │
 │   ⚠️ Approve w/   │  MEDIUM      │  Minor gap or borderline criterion            │
-│      conditions   │  (68–85%)    │  — reviewer must confirm                      │
+│      conditions   │  (68–85%)    │  - reviewer must confirm                      │
 │   ❌ Likely Deny  │  HIGH        │  Required criterion unmet                     │
 │   🔍 Peer-to-Peer │  LOW (<68%)  │  Conflicting evidence or ambiguous policy     │
 │                                                                                   │
@@ -157,7 +157,7 @@ Prior authorization is a multi-stakeholder workflow. These questions must be ans
 
 | Responsibility | Details |
 |---|---|
-| Urgency routing | Standard (72hr) · Expedited (24hr) · Urgent/Concurrent (4hr) — same pipeline, different priority queue |
+| Urgency routing | Standard (72hr) · Expedited (24hr) · Urgent/Concurrent (4hr) - same pipeline, different priority queue |
 | Parallel dispatch | Evidence Aggregator + Policy Interpreter run simultaneously to minimise latency |
 | Conflict detection | Compares sub-agent outputs before routing to Decision Support Agent |
 | Escalation logic | Applies confidence thresholds and conflict flags to determine reviewer queue |
@@ -176,7 +176,7 @@ Prior authorization is a multi-stakeholder workflow. These questions must be ans
 - Looks up authorisation criteria for the requested service code (CPT / HCPCS / NDC)
 - RAG retrieval over unstructured policy PDFs; rules engine for structured JSON criteria
 - Returns a structured criteria checklist with each required evidence element and policy citation
-- Handles policy versioning — always retrieves criteria valid at the date of service
+- Handles policy versioning - always retrieves criteria valid at the date of service
 
 > **Build vs. Fine-tune:** General-purpose LLM + RAG over a maintained policy library is preferred. PA criteria vary per payer and are updated quarterly. RAG avoids retraining costs and keeps criteria current.
 
@@ -227,7 +227,7 @@ Prior authorization is a multi-stakeholder workflow. These questions must be ans
 | **Expedited** | Condition could worsen without timely treatment | 24 hours | 4 hours |
 | **Urgent / Concurrent** | Patient currently admitted or in active treatment | 4 hours | 1 hour |
 
-All tiers use the same pipeline — urgency flag sets queue priority and SLA alerts only.
+All tiers use the same pipeline - urgency flag sets queue priority and SLA alerts only.
 
 ---
 
@@ -379,7 +379,7 @@ flowchart TD
 
     D -->|Yes| E[✅ COMPLETE\nProceed to Decision Support]
     D -->|No| F[Generate Gap Notice\nSpecific missing items per criterion]
-    F --> G[Notify Provider\nEHR in-basket — actionable list]
+    F --> G[Notify Provider\nEHR in-basket - actionable list]
     G --> H{Provider\nresponds?}
     H -->|Provides evidence| I[Re-run Readiness Check]
     I --> D
@@ -409,11 +409,11 @@ flowchart TD
 
 ```mermaid
 gantt
-    title Prior Authorization — Processing Timeline by Urgency Tier
+    title Prior Authorization - Processing Timeline by Urgency Tier
     dateFormat HH:mm
     axisFormat %H:%M
 
-    section URGENT — Target 4 hours
+    section URGENT - Target 4 hours
     Security + Ingestion              :u0, 00:00, 5m
     Evidence Aggregation + Policy Lookup (parallel) :u1, after u0, 20m
     Submission Readiness Check        :u2, after u1, 10m
@@ -421,7 +421,7 @@ gantt
     Clinical Reviewer SLA             :u4, after u3, 60m
     Notification + CMS submission     :u5, after u4, 5m
 
-    section EXPEDITED — Target 24 hours
+    section EXPEDITED - Target 24 hours
     Security + Ingestion              :e0, 00:00, 10m
     Evidence Aggregation + Policy Lookup (parallel) :e1, after e0, 30m
     Submission Readiness Check        :e2, after e1, 15m
@@ -430,7 +430,7 @@ gantt
     Clinical Reviewer SLA             :e5, after e4, 240m
     Notification + CMS submission     :e6, after e5, 10m
 
-    section STANDARD — Target 72 hours
+    section STANDARD - Target 72 hours
     Security + Ingestion              :s0, 00:00, 15m
     Evidence Aggregation + Policy Lookup (parallel) :s1, after s0, 45m
     Submission Readiness + Provider Response :s2, after s1, 480m
@@ -448,13 +448,13 @@ stateDiagram-v2
     EVIDENCE_GATHERING --> READINESS_CHECK : Evidence bundle + Policy criteria ready
     READINESS_CHECK --> PENDING_INFO : Evidence gaps detected · Provider notified
     PENDING_INFO --> READINESS_CHECK : Provider submits missing evidence
-    PENDING_INFO --> UNDER_REVIEW : Provider non-responsive — incomplete flag
+    PENDING_INFO --> UNDER_REVIEW : Provider non-responsive - incomplete flag
     READINESS_CHECK --> UNDER_REVIEW : Evidence complete · Recommendation ready
     UNDER_REVIEW --> APPROVED : Reviewer approves
     UNDER_REVIEW --> DENIED : Reviewer denies
     UNDER_REVIEW --> PEER_TO_PEER : Reviewer requests clinical discussion
-    PEER_TO_PEER --> APPROVED : Discussion outcome — approved
-    PEER_TO_PEER --> DENIED : Discussion outcome — denied
+    PEER_TO_PEER --> APPROVED : Discussion outcome - approved
+    PEER_TO_PEER --> DENIED : Discussion outcome - denied
     APPROVED --> CLOSED : Determination letter sent · CMS updated · Audit finalised
     DENIED --> CLOSED : Denial letter + appeal rights sent · Audit finalised
 ```

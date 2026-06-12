@@ -52,7 +52,7 @@ This loop (reason → tool call → observe result → reason again) is the **Re
 
 ### Tool Chaining
 
-Tools can be chained — the output of one tool becomes the input to another. The LLM manages this chaining naturally within its reasoning loop.
+Tools can be chained - the output of one tool becomes the input to another. The LLM manages this chaining naturally within its reasoning loop.
 
 ```
 User: "Summarize the latest earnings report for AAPL"
@@ -69,7 +69,7 @@ Agent reasoning:
 Tools fail. APIs return errors. The agent must handle these gracefully.
 
 **Patterns:**
-- Return structured errors: `{"error": "rate_limit", "retry_after": 30}` — gives the LLM actionable information
+- Return structured errors: `{"error": "rate_limit", "retry_after": 30}` - gives the LLM actionable information
 - Distinguish retryable from fatal errors in the tool response
 - Set a max tool call limit per task to prevent infinite retry loops
 - Log every tool call and result for debugging
@@ -106,7 +106,7 @@ def check_order_status(order_id: str) -> dict:
     Use this when the user asks about their order status, shipping, or delivery.
     Input: order ID (format: ORD-XXXXXX).
     Output: order status, estimated delivery, and tracking info.
-    Do NOT use for product searches — use search_products instead.
+    Do NOT use for product searches - use search_products instead.
     """
     orders = {
         "ORD-123456": {"status": "shipped", "delivery": "2024-12-20", "tracking": "UPS-789"},
@@ -154,7 +154,7 @@ Pass 3: "Revise the analysis based on this critique: [critique]"
 ```
 
 **External evaluator (separate model or role)**
-A separate agent or a stronger model acts as the evaluator. This avoids the self-consistency bias — the same model will often fail to catch its own errors.
+A separate agent or a stronger model acts as the evaluator. This avoids the self-consistency bias - the same model will often fail to catch its own errors.
 
 ```
 Generator Agent → Draft → Evaluator Agent → Critique → Generator Agent → Revision
@@ -246,26 +246,26 @@ Planning is valuable when:
 
 ### ReAct (Reason + Act)
 
-ReAct is the most common planning pattern — it doesn't produce an explicit upfront plan but interleaves reasoning traces with actions.
+ReAct is the most common planning pattern - it doesn't produce an explicit upfront plan but interleaves reasoning traces with actions.
 
 ```
 Thought: I need to find the population of Tokyo. I'll use the search tool.
 Action: search("Tokyo population 2024")
 Observation: Tokyo population is approximately 13.9 million (city) or 37.4 million (metro area).
 Thought: I have the city and metro figures. The question asks for the city population.
-Action: [DONE — answer: 13.9 million]
+Action: [DONE - answer: 13.9 million]
 ```
 
 **Why it works:** Explicit reasoning traces make the agent's logic visible, which helps the LLM stay on track and makes debugging much easier.
 
-**When to use:** Most general-purpose agentic tasks. ReAct is the default — use it unless you have a specific reason to choose another pattern.
+**When to use:** Most general-purpose agentic tasks. ReAct is the default - use it unless you have a specific reason to choose another pattern.
 
 ### Plan-and-Execute
 
 The agent first produces a complete plan (a list of steps), then executes each step in order. The plan can be updated mid-execution if a step fails.
 
 ```
-Phase 1 — Planning:
+Phase 1 - Planning:
   Goal: "Prepare a competitive analysis of EV battery manufacturers"
   Plan:
     Step 1: Search for top 5 EV battery manufacturers by market share
@@ -274,7 +274,7 @@ Phase 1 — Planning:
     Step 4: Compare across manufacturers in a structured table
     Step 5: Write executive summary
 
-Phase 2 — Execution:
+Phase 2 - Execution:
   Execute Step 1 → result → Execute Step 2 → ...
 ```
 
@@ -293,18 +293,18 @@ The agent explores multiple reasoning paths simultaneously (like a search tree),
 Goal: "Design a fault-tolerant data pipeline"
 
 Branch A: Event-driven (Kafka)
-  → Evaluate: High throughput, complex ops — score: 7/10
+  → Evaluate: High throughput, complex ops - score: 7/10
 
 Branch B: Batch processing (Spark)
-  → Evaluate: Simple ops, high latency — score: 5/10
+  → Evaluate: Simple ops, high latency - score: 5/10
 
 Branch C: Lambda architecture (both)
-  → Evaluate: Best of both, complex to build — score: 8/10
+  → Evaluate: Best of both, complex to build - score: 8/10
 
 Select Branch C → Continue planning from there
 ```
 
-**When to use:** Complex decisions where the "right" first step isn't obvious and exploring alternatives before committing improves quality. Expensive — use only for high-stakes decisions.
+**When to use:** Complex decisions where the "right" first step isn't obvious and exploring alternatives before committing improves quality. Expensive - use only for high-stakes decisions.
 
 ---
 
@@ -319,9 +319,9 @@ When a task is too complex for one agent, you split it across multiple agents. C
 Each agent has a clearly defined role: what it does, what it doesn't do, and what its inputs/outputs look like.
 
 **Good role definition:**
-- **Research Agent**: Searches the web and returns structured summaries. Does NOT write or evaluate — only retrieves.
-- **Writer Agent**: Transforms structured research into prose. Does NOT research — only writes.
-- **Critic Agent**: Evaluates prose quality and factual consistency. Does NOT write — only critiques.
+- **Research Agent**: Searches the web and returns structured summaries. Does NOT write or evaluate - only retrieves.
+- **Writer Agent**: Transforms structured research into prose. Does NOT research - only writes.
+- **Critic Agent**: Evaluates prose quality and factual consistency. Does NOT write - only critiques.
 
 **Why strict roles matter:** When roles overlap, agents start doing each other's work and producing conflicting outputs. Clear role boundaries prevent this.
 
@@ -343,7 +343,7 @@ class ResearchResult:
 
 **Shared state:** All agents read from and write to a shared state object. Each agent reads what it needs, does its work, and writes its output back. The orchestrator coordinates access.
 
-**Message passing:** Agents communicate via explicit message objects passed through the orchestrator. No agent talks to another agent directly — all communication goes through a defined channel.
+**Message passing:** Agents communicate via explicit message objects passed through the orchestrator. No agent talks to another agent directly - all communication goes through a defined channel.
 
 ### Avoiding Coordination Failures
 
@@ -376,7 +376,7 @@ Incoming request
     └── "escalation" → [Human Support Queue]
 ```
 
-**Router design:** The router is often a lightweight LLM call with a classification prompt. It doesn't need to solve the task — just route it correctly.
+**Router design:** The router is often a lightweight LLM call with a classification prompt. It doesn't need to solve the task - just route it correctly.
 
 ### Confidence Gating
 
@@ -414,9 +414,9 @@ Human: Timeout → Agent escalates to supervisor
 
 ## Study Notes
 
-- Tool-use is the foundation — every agentic system uses it. Master tool design (descriptions, schemas, error handling) before anything else.
+- Tool-use is the foundation - every agentic system uses it. Master tool design (descriptions, schemas, error handling) before anything else.
 - Reflection adds quality but adds cost and latency. Measure both. The improvement must justify the expense.
-- Plan-and-Execute is particularly useful when HITL is required — you can show the human the plan and get approval before any action is taken.
+- Plan-and-Execute is particularly useful when HITL is required - you can show the human the plan and get approval before any action is taken.
 - Routing is often underestimated. A good router dramatically improves system performance by sending each input to the specialist that handles it best.
 - Multi-agent coordination is the hardest pattern to get right. Start with the simplest coordination mechanism (shared state via orchestrator) before introducing direct agent-to-agent communication.
 
@@ -425,19 +425,19 @@ Human: Timeout → Agent escalates to supervisor
 ## Q&A Review Bank
 
 **Q1: What is the ReAct pattern and why is it the default for most agentic tasks?** `[Easy]`
-A: ReAct (Reason + Act) interleaves explicit reasoning traces with tool calls: Thought → Action → Observation → Thought → ... The agent writes out its reasoning before each action, making its logic visible and keeping it on track. It's the default because it handles most general-purpose agentic tasks without requiring an explicit upfront plan, it's simple to implement, and the visible reasoning traces make debugging straightforward. Use something more complex (Plan-and-Execute, Tree of Thoughts) only when you have a specific reason — most tasks don't need it.
+A: ReAct (Reason + Act) interleaves explicit reasoning traces with tool calls: Thought → Action → Observation → Thought → ... The agent writes out its reasoning before each action, making its logic visible and keeping it on track. It's the default because it handles most general-purpose agentic tasks without requiring an explicit upfront plan, it's simple to implement, and the visible reasoning traces make debugging straightforward. Use something more complex (Plan-and-Execute, Tree of Thoughts) only when you have a specific reason - most tasks don't need it.
 
 **Q2: Why does tool description quality matter as much as tool implementation quality?** `[Medium]`
-A: The tool description is part of the prompt — the LLM reads it to decide whether to use the tool and how to call it. A vague description ("Search products") gives the model no guidance on when to use the tool, what input format is expected, or what it will return. A good description specifies: what the tool does, when to use it, when NOT to use it, the input format, and the output format. A well-implemented tool with a poor description will be called at wrong times or with wrong arguments; a well-described tool is used correctly even in edge cases. Tool descriptions are LLM-facing documentation, not human-facing documentation.
+A: The tool description is part of the prompt - the LLM reads it to decide whether to use the tool and how to call it. A vague description ("Search products") gives the model no guidance on when to use the tool, what input format is expected, or what it will return. A good description specifies: what the tool does, when to use it, when NOT to use it, the input format, and the output format. A well-implemented tool with a poor description will be called at wrong times or with wrong arguments; a well-described tool is used correctly even in edge cases. Tool descriptions are LLM-facing documentation, not human-facing documentation.
 
 **Q3: When should you use an external evaluator rather than self-reflection?** `[Medium]`
-A: Use an external evaluator (a separate agent or a stronger model) when the task requires catching the model's own blind spots — the same model that generated an output will often fail to identify its own errors due to self-consistency bias (it will evaluate using the same flawed reasoning that produced the error). A stronger model as evaluator works because it has better reasoning; a different model works because it has different priors. Self-reflection is acceptable for tasks like stylistic revision where the model can improve on its own draft without needing to catch factual errors. For factual accuracy, security review, or adversarial analysis, always use a separate evaluator.
+A: Use an external evaluator (a separate agent or a stronger model) when the task requires catching the model's own blind spots - the same model that generated an output will often fail to identify its own errors due to self-consistency bias (it will evaluate using the same flawed reasoning that produced the error). A stronger model as evaluator works because it has better reasoning; a different model works because it has different priors. Self-reflection is acceptable for tasks like stylistic revision where the model can improve on its own draft without needing to catch factual errors. For factual accuracy, security review, or adversarial analysis, always use a separate evaluator.
 
 **Q4: What is the difference between Plan-and-Execute and ReAct?** `[Medium]`
-A: ReAct interleaves reasoning and action — the agent decides what to do at each step based on the most recent observation, with no upfront plan. Plan-and-Execute separates planning from execution: the agent first produces a complete list of steps, then executes them in sequence, only returning to planning if a step fails (replanning). Plan-and-Execute is better when the full plan can be determined upfront, when HITL review of the plan before execution is required, or when the task has stable dependencies. ReAct is better when the right next step depends on the result of the previous step and can't be planned ahead. Most production systems use ReAct for dynamic tasks and Plan-and-Execute for structured workflows.
+A: ReAct interleaves reasoning and action - the agent decides what to do at each step based on the most recent observation, with no upfront plan. Plan-and-Execute separates planning from execution: the agent first produces a complete list of steps, then executes them in sequence, only returning to planning if a step fails (replanning). Plan-and-Execute is better when the full plan can be determined upfront, when HITL review of the plan before execution is required, or when the task has stable dependencies. ReAct is better when the right next step depends on the result of the previous step and can't be planned ahead. Most production systems use ReAct for dynamic tasks and Plan-and-Execute for structured workflows.
 
 **Q5: What must every Reflection loop have, and what happens without it?** `[Hard]`
-A: Every Reflection loop requires a termination condition: a quality score threshold the evaluator must award (e.g., 8/10), a specific criterion the evaluator must declare met (e.g., "APPROVED"), or a hard maximum iteration count. Without a termination condition, the loop runs indefinitely — the agent keeps revising, the evaluator keeps finding new issues, and cost grows without bound. In practice, always set a `max_iterations` even when you have a quality threshold as a safety net: an evaluator with an inconsistent rubric can reject every revision forever. Three conditions in combination (score threshold OR "no critical issues" OR max iterations = 3) is the standard pattern.
+A: Every Reflection loop requires a termination condition: a quality score threshold the evaluator must award (e.g., 8/10), a specific criterion the evaluator must declare met (e.g., "APPROVED"), or a hard maximum iteration count. Without a termination condition, the loop runs indefinitely - the agent keeps revising, the evaluator keeps finding new issues, and cost grows without bound. In practice, always set a `max_iterations` even when you have a quality threshold as a safety net: an evaluator with an inconsistent rubric can reject every revision forever. Three conditions in combination (score threshold OR "no critical issues" OR max iterations = 3) is the standard pattern.
 
 **Q6: How does a confidence-gated HITL differ from a fixed HITL gate?** `[Hard]`
-A: A fixed HITL gate always pauses at a defined point — for example, "always get approval before sending any email." A confidence-gated HITL is conditional: the agent computes or estimates its confidence in the output, and routes to human review only when confidence falls below a threshold (e.g., <0.85 routes to queue, <0.60 routes directly to human). Confidence gating reduces human interruptions for routine high-confidence actions while still catching genuinely uncertain cases. The challenge is that LLM self-confidence estimates are unreliable — models are often confidently wrong. Calibrate confidence thresholds empirically against known error rates before deploying confidence gating in production.
+A: A fixed HITL gate always pauses at a defined point - for example, "always get approval before sending any email." A confidence-gated HITL is conditional: the agent computes or estimates its confidence in the output, and routes to human review only when confidence falls below a threshold (e.g., <0.85 routes to queue, <0.60 routes directly to human). Confidence gating reduces human interruptions for routine high-confidence actions while still catching genuinely uncertain cases. The challenge is that LLM self-confidence estimates are unreliable - models are often confidently wrong. Calibrate confidence thresholds empirically against known error rates before deploying confidence gating in production.

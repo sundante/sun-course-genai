@@ -1,6 +1,6 @@
 """
-Pipeline Architecture — LangChain
-Pattern: ETL pipeline — Extract → Transform → Load
+Pipeline Architecture - LangChain
+Pattern: ETL pipeline - Extract → Transform → Load
 
 Mix of pure Python transforms and LLM-powered steps.
 LangChain's LCEL pipe operator chains them cleanly.

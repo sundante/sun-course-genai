@@ -4,7 +4,7 @@
 
 ### Concept
 
-The transformer architecture, introduced in "Attention Is All You Need" (Vaswani et al., 2017), replaced recurrent networks (LSTMs, GRUs) as the dominant architecture for sequence modeling. Its key insight: replace sequential recurrence with **parallel attention** — compute relationships between all positions simultaneously.
+The transformer architecture, introduced in "Attention Is All You Need" (Vaswani et al., 2017), replaced recurrent networks (LSTMs, GRUs) as the dominant architecture for sequence modeling. Its key insight: replace sequential recurrence with **parallel attention** - compute relationships between all positions simultaneously.
 
 **Why transformers displaced RNNs:**
 - RNNs process tokens sequentially → cannot parallelize → slow training
@@ -13,10 +13,10 @@ The transformer architecture, introduced in "Attention Is All You Need" (Vaswani
 - Self-attention has direct access to any position in the sequence, regardless of distance
 
 **The original architecture** had two components:
-1. **Encoder** — reads the full input with bidirectional attention, produces context representations
-2. **Decoder** — generates output tokens autoregressively, attends to encoder output via cross-attention
+1. **Encoder** - reads the full input with bidirectional attention, produces context representations
+2. **Decoder** - generates output tokens autoregressively, attends to encoder output via cross-attention
 
-Modern LLMs (GPT, LLaMA, Gemma) use **decoder-only** — the encoder is dropped. See [Model Architecture Types](04-Model-Architecture-Types.md) for why.
+Modern LLMs (GPT, LLaMA, Gemma) use **decoder-only** - the encoder is dropped. See [Model Architecture Types](04-Model-Architecture-Types.md) for why.
 
 **High-level decoder-only forward pass:**
 
@@ -55,9 +55,9 @@ Softmax → probability distribution over next token
 
 ### Concept
 
-**Token Embedding:** Maps each token ID to a learnable dense vector of size `d_model` (512–8192 depending on model). This is a lookup table — a matrix of shape `[vocab_size, d_model]` — learned during training.
+**Token Embedding:** Maps each token ID to a learnable dense vector of size `d_model` (512–8192 depending on model). This is a lookup table - a matrix of shape `[vocab_size, d_model]` - learned during training.
 
-**The positional encoding problem:** Self-attention is permutation-invariant by design — the same tokens in different orders produce the same attention outputs without positional information. You must inject position explicitly.
+**The positional encoding problem:** Self-attention is permutation-invariant by design - the same tokens in different orders produce the same attention outputs without positional information. You must inject position explicitly.
 
 **Three approaches, each with different trade-offs:**
 
@@ -78,9 +78,9 @@ PE(pos, 2i+1) = cos(pos / 10000^(2i/d_model))
 A trainable embedding table of shape `[max_seq_len, d_model]`, just like token embeddings.
 
 - Advantage: the model optimizes position representations for the task
-- Disadvantage: hard limit at `max_seq_len` — cannot extrapolate to longer sequences
+- Disadvantage: hard limit at `max_seq_len` - cannot extrapolate to longer sequences
 
-### 3. Rotary Position Embeddings — RoPE (LLaMA, Gemma, Mistral)
+### 3. Rotary Position Embeddings - RoPE (LLaMA, Gemma, Mistral)
 
 Instead of adding position to the embedding, RoPE **rotates** the query and key vectors in attention by an angle proportional to position. The dot product Q·K then naturally encodes relative position.
 
@@ -94,7 +94,7 @@ Q·K encodes relative position (pos_q - pos_k)
 - Used by: LLaMA-2/3, Gemma, Mistral, Phi, Falcon
 - RoPE with scaling (YaRN, LongRoPE) allows extending context beyond the training length
 
-### 4. ALiBi — Attention with Linear Biases (MPT, BLOOM)
+### 4. ALiBi - Attention with Linear Biases (MPT, BLOOM)
 
 Adds a position-dependent bias directly to attention scores (not embeddings):
 ```
@@ -103,7 +103,7 @@ attention_score = Q·K / sqrt(d_k) - m * |i - j|
 Where `m` is a per-head slope and `|i-j|` is the distance between positions.
 
 - Advantage: zero extra parameters; strong length generalization beyond training length
-- Disadvantage: doesn't encode exact position, only proximity — can hurt tasks needing absolute position
+- Disadvantage: doesn't encode exact position, only proximity - can hurt tasks needing absolute position
 
 | Encoding | Model examples | Extrapolates? | Relative position? |
 |----------|----------------|---------------|--------------------|
@@ -126,7 +126,7 @@ output = LayerNorm(x + Sublayer(x))  # Post-LN (original)
 output = x + Sublayer(LayerNorm(x))  # Pre-LN (modern)
 ```
 
-Why they matter: in a 32-layer network without residuals, gradients must flow through 32 multiplicative transformations and easily vanish to zero or explode. Residuals create a "highway" — gradients can flow directly from the output to any layer without passing through all the transformations.
+Why they matter: in a 32-layer network without residuals, gradients must flow through 32 multiplicative transformations and easily vanish to zero or explode. Residuals create a "highway" - gradients can flow directly from the output to any layer without passing through all the transformations.
 
 **Layer Normalization:** Normalizes across the feature dimension (d_model) for each token independently:
 ```
@@ -134,7 +134,7 @@ LayerNorm(x) = γ * (x - μ) / (σ + ε) + β
 ```
 Where γ, β are learned scale and shift parameters; μ, σ are computed per-token across features.
 
-**Pre-LN vs Post-LN — a critical difference:**
+**Pre-LN vs Post-LN - a critical difference:**
 
 | | Post-LN (original "Attention is All You Need") | Pre-LN (modern LLMs: LLaMA, GPT-3) |
 |--|----------------------------------------------|-------------------------------------|
@@ -151,7 +151,7 @@ Where γ, β are learned scale and shift parameters; μ, σ are computed per-tok
 
 ### Concept
 
-Each transformer block has an FFN that applies the same two-layer MLP to each token **independently** (no cross-token interaction — that's attention's job):
+Each transformer block has an FFN that applies the same two-layer MLP to each token **independently** (no cross-token interaction - that's attention's job):
 
 **Original FFN (ReLU):**
 ```
@@ -170,7 +170,7 @@ SwiGLU uses **three** weight matrices (W1, W2, W3) but the intermediate dimensio
 
 **Why the FFN matters as much as attention:**
 - Attention routes information between tokens
-- FFN stores and recalls knowledge — "factual associations" are often thought to live in FFN weights
+- FFN stores and recalls knowledge - "factual associations" are often thought to live in FFN weights
 - The 4× intermediate dimension is why transformers are computationally expensive: for a 7B model with d_model=4096, each FFN layer is 4096 → 16384 → 4096 = 2 × (4096 × 16384) = 134M parameters per layer
 
 ---
@@ -192,7 +192,7 @@ Understanding model shape hyperparameters is essential for VRAM estimation (see 
 | `vocab_size` | Number of tokens in vocabulary | 32K–200K |
 | `max_position` | Maximum sequence length | 4K–1M |
 
-**Example — LLaMA-3 8B:**
+**Example - LLaMA-3 8B:**
 - `d_model = 4096`, `n_layers = 32`, `n_heads = 32`, `n_kv_heads = 8` (GQA), `d_ffn = 14336` (SwiGLU)
 
 **Parameter count estimation:**
@@ -282,7 +282,7 @@ print(f"Parameters: {sum(p.numel() for p in model.parameters()):,}")
 - d_model, n_layers, n_heads, d_ffn are the four key hyperparameters for parameter count estimation
 
 **Quick recall Q&A:**
-- *Why can't you just add more layers to improve a model without residuals?* Gradients vanish through deep multiplicative transformations — residuals provide a gradient highway.
+- *Why can't you just add more layers to improve a model without residuals?* Gradients vanish through deep multiplicative transformations - residuals provide a gradient highway.
 - *What is the role of the FFN in a transformer?* Stores and recalls learned associations per-token (independent of cross-token interaction, which is attention's job).
-- *Why does RoPE generalize better than learned absolute embeddings?* It encodes relative position in the attention dot product, not absolute position in embeddings — relative patterns seen at shorter contexts extend to longer ones.
+- *Why does RoPE generalize better than learned absolute embeddings?* It encodes relative position in the attention dot product, not absolute position in embeddings - relative patterns seen at shorter contexts extend to longer ones.
 - *What is Pre-LN and why does it matter?* LayerNorm is applied before the sublayer, not after; makes training stable without requiring careful warmup schedules.

@@ -1,4 +1,4 @@
-# LLM Models — Q&A Review Bank
+# LLM Models - Q&A Review Bank
 
 > 80+ curated Q&A pairs. Tags: `[Easy]` = conceptual recall, `[Medium]` = design decisions / tradeoffs, `[Hard]` = math-level, system design, or tricky edge cases.
 
@@ -8,7 +8,7 @@
 
 **Q1** `[Easy]` What is a Large Language Model at its most fundamental level?
 
-> A next-token predictor. An LLM is a neural network trained to predict the most likely next token given all preceding tokens (Causal Language Modeling). All capabilities — reasoning, coding, summarization — emerge from this single objective applied at scale.
+> A next-token predictor. An LLM is a neural network trained to predict the most likely next token given all preceding tokens (Causal Language Modeling). All capabilities - reasoning, coding, summarization - emerge from this single objective applied at scale.
 
 ---
 
@@ -26,7 +26,7 @@
 
 **Q4** `[Medium]` Why does the model fail at "Is 9.11 greater than 9.9?"
 
-> Tokenization. "9.11" tokenizes as `["9", ".", "1", "1"]` and "9.9" as `["9", ".", "9"]`. The model sees digit token sequences, not numbers, and has no native integer comparison — it must reason about ordering from statistical patterns in training data. This is why LLMs should use Python tools for any numerical computation.
+> Tokenization. "9.11" tokenizes as `["9", ".", "1", "1"]` and "9.9" as `["9", ".", "9"]`. The model sees digit token sequences, not numbers, and has no native integer comparison - it must reason about ordering from statistical patterns in training data. This is why LLMs should use Python tools for any numerical computation.
 
 ---
 
@@ -38,7 +38,7 @@
 
 **Q6** `[Medium]` Explain top-p (nucleus) sampling and why it's preferred over top-k.
 
-> Top-p considers the smallest set of tokens whose cumulative probability ≥ p, then samples from that nucleus. It's adaptive: when the model is confident (peaked distribution), the nucleus is small (few tokens considered); when uncertain, the nucleus is large. Top-k uses a fixed cutoff (always k tokens) regardless of distribution shape — it may include too many options when the model is certain, or too few when it's uncertain. Top-p adapts to the model's confidence level.
+> Top-p considers the smallest set of tokens whose cumulative probability ≥ p, then samples from that nucleus. It's adaptive: when the model is confident (peaked distribution), the nucleus is small (few tokens considered); when uncertain, the nucleus is large. Top-k uses a fixed cutoff (always k tokens) regardless of distribution shape - it may include too many options when the model is certain, or too few when it's uncertain. Top-p adapts to the model's confidence level.
 
 ---
 
@@ -58,31 +58,31 @@
 
 **Q9** `[Easy]` What is a residual connection and why does it matter?
 
-> A residual connection adds the input directly to the output of a sublayer: `output = x + Sublayer(x)`. It creates a "gradient highway" — gradients can flow directly from the output to any earlier layer without passing through all transformations. Without residuals, gradients vanish in deep networks (32+ layers). With residuals, deep transformers train stably.
+> A residual connection adds the input directly to the output of a sublayer: `output = x + Sublayer(x)`. It creates a "gradient highway" - gradients can flow directly from the output to any earlier layer without passing through all transformations. Without residuals, gradients vanish in deep networks (32+ layers). With residuals, deep transformers train stably.
 
 ---
 
 **Q10** `[Medium]` What is the difference between Pre-LN and Post-LN, and which is better?
 
-> **Post-LN** (original Transformer): `output = LayerNorm(x + Sublayer(x))` — LayerNorm applied after the residual. **Pre-LN** (modern LLMs): `output = x + Sublayer(LayerNorm(x))` — LayerNorm applied before the sublayer. Pre-LN is better: in Pre-LN, the residual path bypasses LayerNorm entirely, giving gradients a clean path to early layers. This makes training more stable without requiring careful learning rate warmup, enabling easier scaling to very deep networks.
+> **Post-LN** (original Transformer): `output = LayerNorm(x + Sublayer(x))` - LayerNorm applied after the residual. **Pre-LN** (modern LLMs): `output = x + Sublayer(LayerNorm(x))` - LayerNorm applied before the sublayer. Pre-LN is better: in Pre-LN, the residual path bypasses LayerNorm entirely, giving gradients a clean path to early layers. This makes training more stable without requiring careful learning rate warmup, enabling easier scaling to very deep networks.
 
 ---
 
 **Q11** `[Medium]` What is SwiGLU and why does LLaMA use it instead of ReLU in the FFN?
 
-> SwiGLU: `FFN(x) = W2 · (SiLU(W1·x) ⊗ W3·x)`. It uses three weight matrices (vs two for ReLU-FFN) and a gating mechanism. SwiGLU consistently outperforms ReLU and GELU on language modeling benchmarks — the gating provides smoother activation and better gradient flow. LLaMA, Gemma, and Mistral all use SwiGLU.
+> SwiGLU: `FFN(x) = W2 · (SiLU(W1·x) ⊗ W3·x)`. It uses three weight matrices (vs two for ReLU-FFN) and a gating mechanism. SwiGLU consistently outperforms ReLU and GELU on language modeling benchmarks - the gating provides smoother activation and better gradient flow. LLaMA, Gemma, and Mistral all use SwiGLU.
 
 ---
 
 **Q12** `[Hard]` What is RoPE and how does it differ from learned absolute positional embeddings?
 
-> **Learned absolute embeddings**: a trainable lookup table `[max_seq, d_model]` — different embedding per absolute position. Cannot extrapolate beyond `max_seq`. **RoPE (Rotary Position Embeddings)**: rotates Q and K vectors by an angle proportional to their absolute position. The dot product Q_i · K_j then encodes the relative position `i-j` naturally. Benefits: (1) relative position is what matters for language understanding, (2) RoPE can extrapolate to longer sequences than seen during training (via frequency scaling, e.g., YaRN), (3) no extra parameters.
+> **Learned absolute embeddings**: a trainable lookup table `[max_seq, d_model]` - different embedding per absolute position. Cannot extrapolate beyond `max_seq`. **RoPE (Rotary Position Embeddings)**: rotates Q and K vectors by an angle proportional to their absolute position. The dot product Q_i · K_j then encodes the relative position `i-j` naturally. Benefits: (1) relative position is what matters for language understanding, (2) RoPE can extrapolate to longer sequences than seen during training (via frequency scaling, e.g., YaRN), (3) no extra parameters.
 
 ---
 
 **Q13** `[Medium]` What does the FFN sublayer do that attention doesn't?
 
-> Attention routes information between tokens — it computes a weighted mixture of other tokens' value vectors. FFN applies the same two-layer MLP to each token independently (no cross-token interaction). FFN is thought to store factual associations — the "knowledge" of the model — while attention handles reasoning and information routing. The two sublayers have complementary roles.
+> Attention routes information between tokens - it computes a weighted mixture of other tokens' value vectors. FFN applies the same two-layer MLP to each token independently (no cross-token interaction). FFN is thought to store factual associations - the "knowledge" of the model - while attention handles reasoning and information routing. The two sublayers have complementary roles.
 
 ---
 
@@ -102,13 +102,13 @@
 
 **Q16** `[Medium]` Why does multi-head attention use separate W_Q/W_K/W_V per head rather than just splitting the embedding?
 
-> Separate projection matrices allow each head to compute a **different linear transformation** of the full d_model embedding — a genuinely different "view" of the input. Simply slicing d_model/h elements per head gives each head a different portion of the same embedding, which was computed as a unit by the preceding FFN and LayerNorm. The heads would see correlated, non-independent views. Separate projections allow truly independent perspectives: one head can focus on subject-verb agreement while another tracks coreference.
+> Separate projection matrices allow each head to compute a **different linear transformation** of the full d_model embedding - a genuinely different "view" of the input. Simply slicing d_model/h elements per head gives each head a different portion of the same embedding, which was computed as a unit by the preceding FFN and LayerNorm. The heads would see correlated, non-independent views. Separate projections allow truly independent perspectives: one head can focus on subject-verb agreement while another tracks coreference.
 
 ---
 
 **Q17** `[Medium]` What is the causal mask and why is it needed for training?
 
-> The causal mask sets all positions where j > i to -inf before softmax, preventing token i from attending to future tokens j > i. This is necessary because the model is trained to predict the next token — it must not see the answer. The mask enables **parallel training**: all positions can be predicted simultaneously in one forward pass, each using only its valid past context, instead of running N sequential forward passes for N positions.
+> The causal mask sets all positions where j > i to -inf before softmax, preventing token i from attending to future tokens j > i. This is necessary because the model is trained to predict the next token - it must not see the answer. The mask enables **parallel training**: all positions can be predicted simultaneously in one forward pass, each using only its valid past context, instead of running N sequential forward passes for N positions.
 
 ---
 
@@ -120,7 +120,7 @@
 
 **Q19** `[Hard]` What is GQA (Grouped-Query Attention) and what problem does it solve?
 
-> GQA partitions the h query heads into G groups and shares one K/V pair per group. Instead of h × d_head KV pairs per token, you only need G × d_head. For LLaMA-3 8B (h=32, G=8): KV cache is 4× smaller than full MHA with minimal quality degradation (empirically < 1% on most benchmarks). This solves the KV cache memory bottleneck at long context lengths — at 128K tokens, GQA KV cache is 2 GB vs 8 GB for MHA.
+> GQA partitions the h query heads into G groups and shares one K/V pair per group. Instead of h × d_head KV pairs per token, you only need G × d_head. For LLaMA-3 8B (h=32, G=8): KV cache is 4× smaller than full MHA with minimal quality degradation (empirically < 1% on most benchmarks). This solves the KV cache memory bottleneck at long context lengths - at 128K tokens, GQA KV cache is 2 GB vs 8 GB for MHA.
 
 ---
 
@@ -134,19 +134,19 @@
 
 **Q21** `[Medium]` Why did decoder-only models overtake encoder-decoder for most tasks?
 
-> Three reasons: (1) **Unified objective**: CLM pretraining + SFT + RLHF all use next-token prediction — no architectural changes between stages. (2) **Generalization via prompting**: at scale, decoder-only models learn to perform translation, summarization, etc. via instructions — no task-specific architecture needed. (3) **In-context learning**: few-shot examples in the context window work naturally in decoder-only. The architectural simplicity + unification of training objectives allows more efficient scaling.
+> Three reasons: (1) **Unified objective**: CLM pretraining + SFT + RLHF all use next-token prediction - no architectural changes between stages. (2) **Generalization via prompting**: at scale, decoder-only models learn to perform translation, summarization, etc. via instructions - no task-specific architecture needed. (3) **In-context learning**: few-shot examples in the context window work naturally in decoder-only. The architectural simplicity + unification of training objectives allows more efficient scaling.
 
 ---
 
 **Q22** `[Easy]` Can BERT generate text? Why or why not?
 
-> No. BERT was trained with Masked Language Modeling — predicting masked tokens given surrounding context. It has bidirectional attention with no causal mask, so it cannot generate text autoregressively. It also has no mechanism for sampling a distribution over next tokens. BERT produces contextual token representations, not generative text.
+> No. BERT was trained with Masked Language Modeling - predicting masked tokens given surrounding context. It has bidirectional attention with no causal mask, so it cannot generate text autoregressively. It also has no mechanism for sampling a distribution over next tokens. BERT produces contextual token representations, not generative text.
 
 ---
 
 **Q23** `[Hard]` What is MoE (Mixture of Experts) and what's the key operational tradeoff?
 
-> MoE replaces each dense FFN with N expert FFNs and a learned router that selects top-K experts per token. **Total parameters**: N × FFN size (e.g., Mixtral: 47B total). **Active parameters**: K × FFN size per token (~13B for Mixtral). Tradeoffs: (1) You get a much larger model's capacity at a smaller model's compute cost. (2) Load balancing challenge: without auxiliary losses, the router collapses all tokens to the same 1–2 experts. (3) Communication: in distributed training, expert routing requires all-to-all communication. (4) KV cache still scales with total layers — memory savings only in FFN compute.
+> MoE replaces each dense FFN with N expert FFNs and a learned router that selects top-K experts per token. **Total parameters**: N × FFN size (e.g., Mixtral: 47B total). **Active parameters**: K × FFN size per token (~13B for Mixtral). Tradeoffs: (1) You get a much larger model's capacity at a smaller model's compute cost. (2) Load balancing challenge: without auxiliary losses, the router collapses all tokens to the same 1–2 experts. (3) Communication: in distributed training, expert routing requires all-to-all communication. (4) KV cache still scales with total layers - memory savings only in FFN compute.
 
 ---
 
@@ -154,7 +154,7 @@
 
 **Q24** `[Easy]` What is the KV cache and what does it avoid?
 
-> The KV cache stores Key and Value matrices for all past tokens in all layers. Without it, generating token n requires recomputing K and V for tokens 0..n-1 from scratch at every step — O(n²) total compute. With the cache, only K/V for the new token is computed at each step — O(n) total compute.
+> The KV cache stores Key and Value matrices for all past tokens in all layers. Without it, generating token n requires recomputing K and V for tokens 0..n-1 from scratch at every step - O(n²) total compute. With the cache, only K/V for the new token is computed at each step - O(n) total compute.
 
 ---
 
@@ -166,19 +166,19 @@
 
 **Q26** `[Medium]` Explain the two phases of LLM inference and which is the bottleneck for each.
 
-> **Prefill**: process all input prompt tokens in parallel (like training). Bottleneck: **compute-bound** — many matrix multiplications for all prompt tokens simultaneously. **Decode**: generate one token at a time, reading KV cache per step. Bottleneck: **memory-bandwidth-bound** — must read the entire KV cache from HBM for each single token generated, wasting GPU compute capacity.
+> **Prefill**: process all input prompt tokens in parallel (like training). Bottleneck: **compute-bound** - many matrix multiplications for all prompt tokens simultaneously. **Decode**: generate one token at a time, reading KV cache per step. Bottleneck: **memory-bandwidth-bound** - must read the entire KV cache from HBM for each single token generated, wasting GPU compute capacity.
 
 ---
 
 **Q27** `[Hard]` How does speculative decoding achieve speedup?
 
-> A small draft model (e.g., 1B) proposes K tokens quickly. The large target model (e.g., 70B) verifies all K proposed tokens in one batch forward pass — a single pass validates K tokens simultaneously. If M tokens are accepted (M ≤ K), the model advances M positions for the cost of one large-model forward pass plus K small-model passes. Since K small-model passes are cheap compared to one large-model pass, and acceptance rates are often high (70–90% for predictable text), effective throughput increases 2–3×. Speedup is lower when acceptance rate is low (creative/diverse generation).
+> A small draft model (e.g., 1B) proposes K tokens quickly. The large target model (e.g., 70B) verifies all K proposed tokens in one batch forward pass - a single pass validates K tokens simultaneously. If M tokens are accepted (M ≤ K), the model advances M positions for the cost of one large-model forward pass plus K small-model passes. Since K small-model passes are cheap compared to one large-model pass, and acceptance rates are often high (70–90% for predictable text), effective throughput increases 2–3×. Speedup is lower when acceptance rate is low (creative/diverse generation).
 
 ---
 
 **Q28** `[Medium]` What is continuous batching and why is it essential in production?
 
-> In static batching, once a batch is assembled, it runs to completion — sequences that finish early waste their GPU slots. Continuous batching (in-flight batching) removes completed sequences and inserts new waiting requests after each decode step. This keeps GPU utilization consistently high (80–95% vs 30–50% for static). Production throughput improvement: 5–10×.
+> In static batching, once a batch is assembled, it runs to completion - sequences that finish early waste their GPU slots. Continuous batching (in-flight batching) removes completed sequences and inserts new waiting requests after each decode step. This keeps GPU utilization consistently high (80–95% vs 30–50% for static). Production throughput improvement: 5–10×.
 
 ---
 
@@ -198,7 +198,7 @@
 
 **Q31** `[Medium]` What does the Chinchilla scaling law say and why is it important?
 
-> Hoffmann et al. (2022) showed that the optimal training strategy for a given compute budget is approximately: **tokens = 20 × parameters**. Previous models (GPT-3, LLaMA-1) were trained on too few tokens relative to their size. Key implication: for deployment efficiency, it's often better to train a smaller model on more tokens — inference with the smaller model is cheaper across millions of requests.
+> Hoffmann et al. (2022) showed that the optimal training strategy for a given compute budget is approximately: **tokens = 20 × parameters**. Previous models (GPT-3, LLaMA-1) were trained on too few tokens relative to their size. Key implication: for deployment efficiency, it's often better to train a smaller model on more tokens - inference with the smaller model is cheaper across millions of requests.
 
 ---
 
@@ -216,7 +216,7 @@
 
 **Q34** `[Hard]` Why is data deduplication critical in pretraining and what are the consequences of skipping it?
 
-> Duplicate data causes models to memorize specific sequences rather than learning generalizable patterns. Consequences: (1) Models can verbatim recall training data → privacy risk (memorized PII, copyrighted text). (2) Perplexity on held-out data is inflated (artificially good — test overlap with train). (3) Models overfit to duplicated domains, underperforming on underrepresented topics. Near-deduplication (MinHash, SimHash) finds near-duplicates that exact hashing misses.
+> Duplicate data causes models to memorize specific sequences rather than learning generalizable patterns. Consequences: (1) Models can verbatim recall training data → privacy risk (memorized PII, copyrighted text). (2) Perplexity on held-out data is inflated (artificially good - test overlap with train). (3) Models overfit to duplicated domains, underperforming on underrepresented topics. Near-deduplication (MinHash, SimHash) finds near-duplicates that exact hashing misses.
 
 ---
 
@@ -224,13 +224,13 @@
 
 **Q35** `[Easy]` What is Supervised Fine-Tuning (SFT)?
 
-> SFT trains a pretrained model on (instruction, output) pairs using CLM loss. Only the completion (output) tokens contribute to the loss — instruction tokens are masked. The model learns to produce outputs in the desired format and style. Unlike pretraining, SFT datasets are small (thousands to hundreds of thousands of examples) and curated for quality and diversity.
+> SFT trains a pretrained model on (instruction, output) pairs using CLM loss. Only the completion (output) tokens contribute to the loss - instruction tokens are masked. The model learns to produce outputs in the desired format and style. Unlike pretraining, SFT datasets are small (thousands to hundreds of thousands of examples) and curated for quality and diversity.
 
 ---
 
 **Q36** `[Medium]` Why are instruction tokens masked during SFT loss computation?
 
-> You want the model to learn to generate good outputs, not to predict instruction text. Instruction tokens vary per example — computing loss on them would push the model toward contradictory gradients (different instructions in different samples). More fundamentally: the model already knows how to process instructions from pretraining. You want to optimize output quality, not instruction processing.
+> You want the model to learn to generate good outputs, not to predict instruction text. Instruction tokens vary per example - computing loss on them would push the model toward contradictory gradients (different instructions in different samples). More fundamentally: the model already knows how to process instructions from pretraining. You want to optimize output quality, not instruction processing.
 
 ---
 
@@ -242,19 +242,19 @@
 
 **Q38** `[Hard]` What is QLoRA and what enables it to fine-tune 7B models on a single 24GB GPU?
 
-> QLoRA combines two innovations: (1) **NF4 quantization** of the base model weights (4-bit NormalFloat — bins at equal normal distribution probability intervals) → 4 GB for 7B weights instead of 14 GB. (2) **BF16 LoRA adapters** on top of the frozen NF4 base → ~0.3 GB adapters. Total VRAM: ~5–6 GB for weights + activations, fitting on an RTX 4090 (24 GB). Double quantization further reduces the quantization constant storage. The base model is frozen (no gradient through NF4 weights); only the BF16 adapters are updated.
+> QLoRA combines two innovations: (1) **NF4 quantization** of the base model weights (4-bit NormalFloat - bins at equal normal distribution probability intervals) → 4 GB for 7B weights instead of 14 GB. (2) **BF16 LoRA adapters** on top of the frozen NF4 base → ~0.3 GB adapters. Total VRAM: ~5–6 GB for weights + activations, fitting on an RTX 4090 (24 GB). Double quantization further reduces the quantization constant storage. The base model is frozen (no gradient through NF4 weights); only the BF16 adapters are updated.
 
 ---
 
 **Q39** `[Medium]` Why is DPO preferred over RLHF/PPO in 2024?
 
-> DPO reformulates preference optimization as a supervised loss directly on (chosen, rejected) pairs — no separate reward model training, no PPO. RLHF/PPO challenges: reward model is a proxy (can be gamed), PPO is unstable (KL constraint must be tuned carefully), requires two separate training stages. DPO: one training stage, same stability as SFT, competitive or better results on most benchmarks. Used by LLaMA-3, Gemma 2, Mistral instruction-tuned models.
+> DPO reformulates preference optimization as a supervised loss directly on (chosen, rejected) pairs - no separate reward model training, no PPO. RLHF/PPO challenges: reward model is a proxy (can be gamed), PPO is unstable (KL constraint must be tuned carefully), requires two separate training stages. DPO: one training stage, same stability as SFT, competitive or better results on most benchmarks. Used by LLaMA-3, Gemma 2, Mistral instruction-tuned models.
 
 ---
 
 **Q40** `[Hard]` How do you handle task interference in multi-head fine-tuning?
 
-> Three main approaches: (1) **LoRA per task**: freeze the shared backbone, train separate LoRA adapters per task — mathematically impossible for tasks to interfere since backbone is untouched. (2) **Gradient surgery (PCGrad)**: project each task's gradient onto the perpendicular of conflicting gradients from other tasks before summing — reduces destructive interference. (3) **Task-specific learning rates**: use a small LR for the shared encoder (slow drift) and larger LR for task heads (fast adaptation). Also: balanced sampling (prevent one task dominating the batch) and auxiliary losses.
+> Three main approaches: (1) **LoRA per task**: freeze the shared backbone, train separate LoRA adapters per task - mathematically impossible for tasks to interfere since backbone is untouched. (2) **Gradient surgery (PCGrad)**: project each task's gradient onto the perpendicular of conflicting gradients from other tasks before summing - reduces destructive interference. (3) **Task-specific learning rates**: use a small LR for the shared encoder (slow drift) and larger LR for task heads (fast adaptation). Also: balanced sampling (prevent one task dominating the batch) and auxiliary losses.
 
 ---
 
@@ -268,11 +268,11 @@
 
 **Q42** `[Medium]` What are the three components Adam optimizer stores per parameter, and what does that imply for training VRAM?
 
-> Current weights (BF16, 2 bytes) + first moment/momentum (FP32, 4 bytes) + second moment/variance (FP32, 4 bytes) = 10 bytes per parameter. A 7B model requires 7B × 10 = 70 GB for weights + optimizer states alone — before activations or KV cache. Full training of 7B requires ~2–4 A100-40GB with ZeRO-2.
+> Current weights (BF16, 2 bytes) + first moment/momentum (FP32, 4 bytes) + second moment/variance (FP32, 4 bytes) = 10 bytes per parameter. A 7B model requires 7B × 10 = 70 GB for weights + optimizer states alone - before activations or KV cache. Full training of 7B requires ~2–4 A100-40GB with ZeRO-2.
 
 ---
 
-**Q43** `[Medium]` A 70B model in FP16 — minimum A100-80GB GPUs for inference?
+**Q43** `[Medium]` A 70B model in FP16 - minimum A100-80GB GPUs for inference?
 
 > 70B × 2 bytes = 140 GB → minimum **2× A100-80GB** (160 GB total, ~20 GB headroom). With INT4 AWQ quantization: 70B × 0.5 = 35 GB → **1× A100-80GB** with room for KV cache.
 
@@ -286,7 +286,7 @@
 
 **Q45** `[Hard]` Why does tensor parallelism require NVLink while pipeline parallelism doesn't?
 
-> Tensor parallelism requires **all-reduce after every layer** (forward and backward) because each GPU computes only part of the layer output and must synchronize. With 32 layers and 32 tokens per step: 64 all-reduce calls per training step. PCIe at 32 GB/s is a severe bottleneck for this frequency. NVLink at 900 GB/s handles it. Pipeline parallelism only passes activations **at layer boundaries** — one inter-GPU transfer per pipeline stage per step, much lower frequency, acceptable on PCIe.
+> Tensor parallelism requires **all-reduce after every layer** (forward and backward) because each GPU computes only part of the layer output and must synchronize. With 32 layers and 32 tokens per step: 64 all-reduce calls per training step. PCIe at 32 GB/s is a severe bottleneck for this frequency. NVLink at 900 GB/s handles it. Pipeline parallelism only passes activations **at layer boundaries** - one inter-GPU transfer per pipeline stage per step, much lower frequency, acceptable on PCIe.
 
 ---
 
@@ -306,13 +306,13 @@
 
 **Q48** `[Medium]` How does LoRA prevent catastrophic forgetting?
 
-> LoRA freezes the base model weights — the original W_0 is never updated. Only the LoRA adapters (B and A matrices) receive gradient updates. Since W_0 is frozen, the general capabilities encoded in the base model cannot be overwritten. The adapter learns the task-specific delta ΔW = BA while the base model remains intact.
+> LoRA freezes the base model weights - the original W_0 is never updated. Only the LoRA adapters (B and A matrices) receive gradient updates. Since W_0 is frozen, the general capabilities encoded in the base model cannot be overwritten. The adapter learns the task-specific delta ΔW = BA while the base model remains intact.
 
 ---
 
 **Q49** `[Medium]` What is the "lost in the middle" problem and when does it matter?
 
-> Models attend more reliably to tokens at the beginning and end of long contexts — information placed in the middle receives significantly less attention. Empirically demonstrated by Liu et al. (2023): accuracy on multi-document QA drops from ~85% when the key document is first/last to ~55% when it's in the middle of 15+ documents. Matters for: RAG with many retrieved chunks, long-form document analysis, and multi-turn conversations where early context "fades."
+> Models attend more reliably to tokens at the beginning and end of long contexts - information placed in the middle receives significantly less attention. Empirically demonstrated by Liu et al. (2023): accuracy on multi-document QA drops from ~85% when the key document is first/last to ~55% when it's in the middle of 15+ documents. Matters for: RAG with many retrieved chunks, long-form document analysis, and multi-turn conversations where early context "fades."
 
 ---
 
@@ -330,7 +330,7 @@
 
 **Q52** `[Easy]` What is context window saturation and a simple workaround?
 
-> As a prompt approaches the model's context window limit, performance degrades even if technically within the limit — positional encoding extrapolates poorly, attention entropy dilutes signal, floating-point errors accumulate. Simple workaround: keep total context under 70% of the stated limit. Use RAG to retrieve only relevant content instead of loading full documents.
+> As a prompt approaches the model's context window limit, performance degrades even if technically within the limit - positional encoding extrapolates poorly, attention entropy dilutes signal, floating-point errors accumulate. Simple workaround: keep total context under 70% of the stated limit. Use RAG to retrieve only relevant content instead of loading full documents.
 
 ---
 
@@ -338,7 +338,7 @@
 
 **Q53** `[Easy]` What are the two main latency metrics for LLM serving?
 
-> **TTFT (Time-to-First-Token)**: time from request submission to the first generated token. Dominated by prefill compute and queue time. **TPS (Tokens-Per-Second)**: decode throughput — how quickly subsequent tokens are generated. Dominated by memory bandwidth during KV cache reads.
+> **TTFT (Time-to-First-Token)**: time from request submission to the first generated token. Dominated by prefill compute and queue time. **TPS (Tokens-Per-Second)**: decode throughput - how quickly subsequent tokens are generated. Dominated by memory bandwidth during KV cache reads.
 
 ---
 
@@ -376,13 +376,13 @@
 
 **Q59** `[Hard]` Your team wants to fine-tune LLaMA-3 8B for a customer support bot. You have 50K labeled (question, answer) pairs and a single A100-40GB. What approach do you recommend and why?
 
-> **QLoRA with SFT**. Reasons: (1) 50K high-quality labeled pairs is an appropriate SFT dataset. (2) A100-40GB with QLoRA (NF4 base + BF16 LoRA) fits the 8B model in ~6 GB — plenty of headroom for training. (3) LoRA's frozen base prevents catastrophic forgetting of general capabilities. (4) Training configuration: rank=16, lora_alpha=32, target q_proj/v_proj/k_proj/o_proj, lr=2e-4, 3 epochs, cosine schedule. (5) After fine-tuning: merge LoRA adapters if you want to deploy the standalone model; keep separate if you might want to update adapters later.
+> **QLoRA with SFT**. Reasons: (1) 50K high-quality labeled pairs is an appropriate SFT dataset. (2) A100-40GB with QLoRA (NF4 base + BF16 LoRA) fits the 8B model in ~6 GB - plenty of headroom for training. (3) LoRA's frozen base prevents catastrophic forgetting of general capabilities. (4) Training configuration: rank=16, lora_alpha=32, target q_proj/v_proj/k_proj/o_proj, lr=2e-4, 3 epochs, cosine schedule. (5) After fine-tuning: merge LoRA adapters if you want to deploy the standalone model; keep separate if you might want to update adapters later.
 
 ---
 
 **Q60** `[Hard]` A 70B model is serving 100 concurrent users with 2K-token average context at TTFT p99 > 2s. What is your debugging process?
 
-> Step 1: **Is the server compute-saturated?** Check GPU utilization → if < 80%, something else is wrong. Step 2: **Is prefill the bottleneck?** 2K tokens × 100 concurrent = 200K tokens in prefill simultaneously → may be prefill-bound. Solution: chunked prefill, or split into more GPUs. Step 3: **Is the queue too long?** If requests are waiting more than 500ms before even starting, the system is undersized. Add GPUs or reduce batch. Step 4: **Enable prefix caching** — if these 100 users share a system prompt, prefix caching could cut prefill by 50–80%. Step 5: **Check quantization** — if running in BF16, switching to AWQ INT4 doubles throughput per GPU. Step 6: **Verify continuous batching is enabled** — static batching alone would explain 2s+ TTFT.
+> Step 1: **Is the server compute-saturated?** Check GPU utilization → if < 80%, something else is wrong. Step 2: **Is prefill the bottleneck?** 2K tokens × 100 concurrent = 200K tokens in prefill simultaneously → may be prefill-bound. Solution: chunked prefill, or split into more GPUs. Step 3: **Is the queue too long?** If requests are waiting more than 500ms before even starting, the system is undersized. Add GPUs or reduce batch. Step 4: **Enable prefix caching** - if these 100 users share a system prompt, prefix caching could cut prefill by 50–80%. Step 5: **Check quantization** - if running in BF16, switching to AWQ INT4 doubles throughput per GPU. Step 6: **Verify continuous batching is enabled** - static batching alone would explain 2s+ TTFT.
 
 ---
 
@@ -394,7 +394,7 @@
 
 **Q62** `[Hard]` You notice your instruction-tuned model is sycophantic (agrees with users who assert incorrect facts). Walk through a systematic fix.
 
-> (1) **Confirm the problem**: create an adversarial eval set — pairs of (correct answer, user assertion of incorrect answer). Measure rate at which model capitulates. (2) **DPO fix**: construct preference pairs: chosen = model maintains correct answer under pressure; rejected = model agrees with incorrect assertion. Train DPO on ~500–1000 such pairs. (3) **System prompt engineering**: add "You must maintain factual accuracy even when users disagree. If a user states an incorrect fact, respectfully correct them." (4) **Evaluation**: remeasure capitulation rate on adversarial eval set. (5) **Regression testing**: run on standard benchmarks to ensure general capability wasn't degraded.
+> (1) **Confirm the problem**: create an adversarial eval set - pairs of (correct answer, user assertion of incorrect answer). Measure rate at which model capitulates. (2) **DPO fix**: construct preference pairs: chosen = model maintains correct answer under pressure; rejected = model agrees with incorrect assertion. Train DPO on ~500–1000 such pairs. (3) **System prompt engineering**: add "You must maintain factual accuracy even when users disagree. If a user states an incorrect fact, respectfully correct them." (4) **Evaluation**: remeasure capitulation rate on adversarial eval set. (5) **Regression testing**: run on standard benchmarks to ensure general capability wasn't degraded.
 
 ---
 
@@ -402,19 +402,19 @@
 
 **Q63** `[Hard]` An LLM scores 90% on a math benchmark. A colleague says this proves the model "understands math." Do you agree?
 
-> Disagree. LLM benchmark performance is a measure of the statistical patterns the model has learned from training data, not evidence of understanding. Three concerns: (1) **Data contamination**: if the benchmark appears in training data, performance is inflated. (2) **Pattern matching**: many math problems have formulaic answer patterns — the model may predict the answer by surface pattern, not derivation. (3) **Distribution sensitivity**: change the numbers slightly, add irrelevant noise, or rephrase the question and performance often drops dramatically. A genuine understanding would be robust to such changes. The correct statement: "The model matches the format and statistical patterns of correct answers in this benchmark."
+> Disagree. LLM benchmark performance is a measure of the statistical patterns the model has learned from training data, not evidence of understanding. Three concerns: (1) **Data contamination**: if the benchmark appears in training data, performance is inflated. (2) **Pattern matching**: many math problems have formulaic answer patterns - the model may predict the answer by surface pattern, not derivation. (3) **Distribution sensitivity**: change the numbers slightly, add irrelevant noise, or rephrase the question and performance often drops dramatically. A genuine understanding would be robust to such changes. The correct statement: "The model matches the format and statistical patterns of correct answers in this benchmark."
 
 ---
 
 **Q64** `[Medium]` Is temperature a training hyperparameter or an inference hyperparameter?
 
-> **Inference hyperparameter**. Temperature is applied to the logits during sampling at inference time — it does not affect the training loss, the weights, or the forward pass computation. The trained model has a fixed probability distribution over next tokens; temperature post-processes the logits before sampling from that distribution. You can change temperature on every inference call without retraining.
+> **Inference hyperparameter**. Temperature is applied to the logits during sampling at inference time - it does not affect the training loss, the weights, or the forward pass computation. The trained model has a fixed probability distribution over next tokens; temperature post-processes the logits before sampling from that distribution. You can change temperature on every inference call without retraining.
 
 ---
 
 **Q65** `[Hard]` Why does adding more training tokens to a model improve performance even without changing the architecture?
 
-> The model's weights encode a compression of the training distribution. More tokens means: (1) **Better statistical estimates**: each pattern/fact appears more times → more reliable weight updates toward the correct distribution. (2) **Rarer knowledge coverage**: uncommon facts that appeared in few training examples get more exposure → model can answer questions about them reliably. (3) **Better generalization**: the model sees more diverse contexts for the same knowledge → learns more robust representations. (4) **Emergent capabilities**: some capabilities appear threshold-like at certain data volumes — more tokens can cross these thresholds. The architecture and parameter count are fixed; only the compressed knowledge changes.
+> The model's weights encode a compression of the training distribution. More tokens means: (1) **Better statistical estimates**: each pattern/fact appears more times → more reliable weight updates toward the correct distribution. (2) **Rarer knowledge coverage**: uncommon facts that appeared in few training examples get more exposure → model can answer questions about them reliably. (3) **Better generalization**: the model sees more diverse contexts for the same knowledge → learns more robust representations. (4) **Emergent capabilities**: some capabilities appear threshold-like at certain data volumes - more tokens can cross these thresholds. The architecture and parameter count are fixed; only the compressed knowledge changes.
 
 ---
 
@@ -436,7 +436,7 @@
 
 ---
 
-*End of Q&A Bank — 68 core Q&A + referenced concepts from all 11 preceding files.*
+*End of Q&A Bank - 68 core Q&A + referenced concepts from all 11 preceding files.*
 
 ---
 

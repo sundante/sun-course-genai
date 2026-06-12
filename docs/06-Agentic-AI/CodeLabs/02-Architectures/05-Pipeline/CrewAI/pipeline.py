@@ -1,5 +1,5 @@
 """
-Pipeline Architecture — CrewAI
+Pipeline Architecture - CrewAI
 Pattern: ETL pipeline as sequential tasks with data transformation roles
 
 CrewAI models pipeline stages as agents with data transformation goals.
@@ -89,7 +89,7 @@ if __name__ == "__main__":
     if report:
         print("\nRankings:")
         for r in report.rankings:
-            print(f"  {r.get('rank')}. {r.get('city')} — score {r.get('combined_score')}")
+            print(f"  {r.get('rank')}. {r.get('city')} - score {r.get('combined_score')}")
         print(f"\nTop City: {report.top_city}")
         print(f"Summary: {report.summary}")
     else:

@@ -1,7 +1,7 @@
 """
-Code Review System — Google ADK Implementation
+Code Review System - Google ADK Implementation
 ==============================================
-System    : 04 — Code Review System
+System    : 04 - Code Review System
 Framework : Google Agent Development Kit (ADK)
 Model     : gemini-2.0-flash
 
@@ -179,8 +179,8 @@ critic_agent = Agent(
     3. Provided specific, actionable fixes
 
     End with:
-    VERDICT: APPROVED — if comprehensive and actionable
-    VERDICT: NEEDS_REVISION: [what was missed] — if important issues were overlooked""",
+    VERDICT: APPROVED - if comprehensive and actionable
+    VERDICT: NEEDS_REVISION: [what was missed] - if important issues were overlooked""",
 )
 
 # ── Compose the system ─────────────────────────────────────────────────────────
@@ -222,7 +222,7 @@ def run_code_review(code_diff: str) -> str:
 
 if __name__ == "__main__":
     print("\n" + "="*60)
-    print("CODE REVIEW SYSTEM — ADK")
+    print("CODE REVIEW SYSTEM - ADK")
     print("="*60)
 
     result = run_code_review(SAMPLE_DIFF)

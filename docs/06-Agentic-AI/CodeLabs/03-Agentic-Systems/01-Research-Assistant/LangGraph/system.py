@@ -1,7 +1,7 @@
 """
-Research Assistant — LangGraph Implementation
+Research Assistant - LangGraph Implementation
 =============================================
-System    : 01 — Research Assistant
+System    : 01 - Research Assistant
 Framework : LangGraph
 Model     : gemini-2.0-flash via langchain-google-genai
 
@@ -54,7 +54,7 @@ DOMAIN_DATA = {
     "market": [
         "Global solid-state battery market projected at $8.8B by 2031 (CAGR 36%)",
         "EV sector accounts for 72% of demand; consumer electronics 18%",
-        "Japan leads in patents — Toyota holds 1,300+ solid-state battery patents",
+        "Japan leads in patents - Toyota holds 1,300+ solid-state battery patents",
         "China government invested $15B in battery R&D since 2020",
         "Key players: Toyota, Samsung SDI, QuantumScape, CATL, Panasonic, Solid Power",
     ],
@@ -82,7 +82,7 @@ def orchestrate(state: ResearchState) -> dict:
 
 
 def search_domain(state: dict) -> dict:
-    """Generic domain search node — receives {query, domain} from Send()."""
+    """Generic domain search node - receives {query, domain} from Send()."""
     domain = state["domain"]
     query = state["query"]
 
@@ -143,7 +143,7 @@ def critique(state: ResearchState) -> dict:
 
 def finalize(state: ResearchState) -> dict:
     """Final node: wraps up the approved report."""
-    print("[Orchestrator] Report approved — task complete")
+    print("[Orchestrator] Report approved - task complete")
     return {"final_report": state["synthesis"]}
 
 
@@ -154,7 +154,7 @@ def should_revise(state: ResearchState) -> str:
     if state["approved"]:
         return "finalize"
     if state["iteration"] >= MAX_ITERATIONS:
-        print(f"[Orchestrator] Max iterations reached — finalizing best report")
+        print(f"[Orchestrator] Max iterations reached - finalizing best report")
         return "finalize"
     return "synthesize"
 
@@ -217,7 +217,7 @@ if __name__ == "__main__":
     }
 
     print("\n" + "="*60)
-    print("RESEARCH ASSISTANT — LangGraph")
+    print("RESEARCH ASSISTANT - LangGraph")
     print("="*60)
 
     final_state = app.invoke(initial_state)

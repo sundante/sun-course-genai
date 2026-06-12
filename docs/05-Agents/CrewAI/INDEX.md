@@ -16,9 +16,9 @@ CrewAI is a framework for orchestrating role-based multi-agent systems. You defi
 
 | File | Topic |
 |------|-------|
-| [01 — CrewAI Fundamentals](01-CrewAI-Fundamentals.md) | Crews, agents, tasks, tools |
-| [02 — Simple Agent](02-Simple-Agent.md) | Single-agent crew |
-| [03 — Complex Agent](03-Complex-Agent.md) | Multi-role crew with task dependencies |
+| [01 - CrewAI Fundamentals](01-CrewAI-Fundamentals.md) | Crews, agents, tasks, tools |
+| [02 - Simple Agent](02-Simple-Agent.md) | Single-agent crew |
+| [03 - Complex Agent](03-Complex-Agent.md) | Multi-role crew with task dependencies |
 
 ## Navigation
 

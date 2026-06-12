@@ -2,16 +2,16 @@ import Link from "next/link";
 import { getNavigationTree } from "@/lib/content/nav";
 
 const MODULE_META: Record<string, { subtitle: string; description: string; notes: string; qa: string; num: string }> = {
-  "llm-models":         { num: "01", subtitle: "The Engine",    description: "How LLMs work — architecture, attention, training, inference, and production deployment.", notes: "12 notes", qa: "68+ Q&A" },
+  "llm-models":         { num: "01", subtitle: "The Engine",    description: "How LLMs work - architecture, attention, training, inference, and production deployment.", notes: "12 notes", qa: "68+ Q&A" },
   "prompt-engineering": { num: "02", subtitle: "The Interface", description: "Prompting strategies, chain-of-thought, few-shot, and production-grade prompt optimization.", notes: "6 notes",  qa: "65+ Q&A" },
   "rag":                { num: "03", subtitle: "The Memory",    description: "Embeddings, vector stores, chunking, retrieval strategies, and advanced RAG architectures.", notes: "12 notes", qa: "80+ Q&A" },
-  "mcp":                { num: "04", subtitle: "The Protocol",  description: "Model Context Protocol — how AI systems talk to tools, APIs, and external services.", notes: "9 notes",  qa: "40+ Q&A" },
+  "mcp":                { num: "04", subtitle: "The Protocol",  description: "Model Context Protocol - how AI systems talk to tools, APIs, and external services.", notes: "9 notes",  qa: "40+ Q&A" },
   "agents":             { num: "05", subtitle: "The Actors",    description: "Agent fundamentals and patterns across GCP ADK, LangChain, LangGraph, and CrewAI.", notes: "8 notes",  qa: "50+ Q&A" },
   "agentic-ai":         { num: "06", subtitle: "The Systems",   description: "Multi-agent systems, planning, memory, evaluation, and full agentic system design.", notes: "12 notes", qa: "60+ Q&A" },
 };
 
 const LEARNING_PATHS = [
-  { label: "A", title: "Conceptual",     desc: "New to GenAI — start here for a guided overview" },
+  { label: "A", title: "Conceptual",     desc: "New to GenAI - start here for a guided overview" },
   { label: "B", title: "Interview Prep", desc: "Accelerated deep-dive through Q&A banks" },
   { label: "C", title: "Hands-On",       desc: "Code labs across 4 frameworks" },
   { label: "D", title: "Full Sequence",  desc: "Complete curriculum from LLMs to Agentic AI" },
@@ -36,7 +36,7 @@ export default function HomePage() {
             className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold bg-sun-yellow text-sun-dark hover:bg-sun-yellow-dk rounded-md px-2.5 py-1 transition-colors"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
-            Star on GitHub
+            Github
           </a>
           <a
             href="https://sunmintz.com/"

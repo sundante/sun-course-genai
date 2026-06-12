@@ -2,7 +2,7 @@
 CrewAI Intermediate Agent
 ==========================
 Framework : CrewAI
-Level     : 02 — Intermediate
+Level     : 02 - Intermediate
 Model     : gemini-2.0-flash
 
 New concepts vs Simple:
@@ -103,7 +103,7 @@ formatter = Agent(
         "You are a professional travel writer who takes raw data from research analysts "
         "and crafts clear, concise briefings that help travelers make informed decisions."
     ),
-    tools=[],        # formatter doesn't need tools — it works with the researcher's output
+    tools=[],        # formatter doesn't need tools - it works with the researcher's output
     llm=gemini,
     verbose=False,
 )
@@ -157,4 +157,4 @@ if __name__ == "__main__":
             print(f"  Advisory:   {briefing.travel_advisory}")
             print(f"  Rec:        {briefing.recommendation}")
         else:
-            print("  (Structured output not available — check verbose output above)")
+            print("  (Structured output not available - check verbose output above)")

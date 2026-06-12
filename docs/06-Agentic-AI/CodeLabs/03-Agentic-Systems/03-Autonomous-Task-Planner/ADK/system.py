@@ -1,7 +1,7 @@
 """
-Autonomous Task Planner — Google ADK Implementation
+Autonomous Task Planner - Google ADK Implementation
 ===================================================
-System    : 03 — Autonomous Task Planner
+System    : 03 - Autonomous Task Planner
 Framework : Google Agent Development Kit (ADK)
 Model     : gemini-2.0-flash
 
@@ -57,7 +57,7 @@ def validate_task_output(task_description: str, output_summary: str) -> dict:
     Returns:
         dict with passed (bool), issues (list), and recommendation
     """
-    # Simple heuristic validation — in production use LLM-as-Judge
+    # Simple heuristic validation - in production use LLM-as-Judge
     is_empty = len(output_summary.strip()) < 50
     return {
         "passed": not is_empty,
@@ -98,7 +98,7 @@ executor_agent = Agent(
     2. Produce a concrete, specific output for that task
     3. Mark it complete before moving to the next
 
-    Be thorough — each task output should be substantive and specific.""",
+    Be thorough - each task output should be substantive and specific.""",
 )
 
 monitor_agent = Agent(
@@ -167,7 +167,7 @@ def run_planner(goal: str) -> str:
 
 if __name__ == "__main__":
     print("\n" + "="*60)
-    print("AUTONOMOUS TASK PLANNER — ADK")
+    print("AUTONOMOUS TASK PLANNER - ADK")
     print(f"Goal: {GOAL}")
     print("="*60)
 

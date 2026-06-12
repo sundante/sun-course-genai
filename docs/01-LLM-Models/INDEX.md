@@ -1,4 +1,4 @@
-# 01 — LLM Models
+# 01 - LLM Models
 
 ## What You Will Learn
 
@@ -34,19 +34,19 @@
 ## Recommended Learning Paths
 
 ### Path A: Beginner → Conceptual Understanding
-1. [LLM Fundamentals](Notes/01-LLM-Fundamentals.md) — understand what LLMs are and how they generate text
-2. [Transformer Architecture](Notes/02-Architecture.md) — understand the building blocks
-3. [Attention Mechanisms](Notes/03-Attention-Mechanisms.md) — understand the core operation
-4. [Model Architecture Types](Notes/04-Model-Architecture-Types.md) — understand the landscape
-5. [Prompting Strategies](Notes/11-Prompting-Strategies.md) — understand how to interact with models
+1. [LLM Fundamentals](Notes/01-LLM-Fundamentals.md) - understand what LLMs are and how they generate text
+2. [Transformer Architecture](Notes/02-Architecture.md) - understand the building blocks
+3. [Attention Mechanisms](Notes/03-Attention-Mechanisms.md) - understand the core operation
+4. [Model Architecture Types](Notes/04-Model-Architecture-Types.md) - understand the landscape
+5. [Prompting Strategies](Notes/11-Prompting-Strategies.md) - understand how to interact with models
 
 ### Path B: Interview Preparation (Accelerated)
 1. [LLM Fundamentals](Notes/01-LLM-Fundamentals.md) + [Transformer Architecture](Notes/02-Architecture.md) in parallel
-2. [Attention Mechanisms](Notes/03-Attention-Mechanisms.md) — very common in technical interviews
-3. [KV Cache & Inference](Notes/05-KV-Cache-and-Inference-Optimization.md) — increasingly asked in production roles
-4. [Fine-Tuning](Notes/07-Fine-Tuning.md) — LoRA math, RLHF vs DPO
-5. [GPU & Hardware](Notes/08-GPU-and-Hardware.md) — VRAM estimation questions are common
-6. [Q&A Review Bank](Notes/12-Interview-QA-Bank.md) — drill all 68 questions
+2. [Attention Mechanisms](Notes/03-Attention-Mechanisms.md) - very common in technical interviews
+3. [KV Cache & Inference](Notes/05-KV-Cache-and-Inference-Optimization.md) - increasingly asked in production roles
+4. [Fine-Tuning](Notes/07-Fine-Tuning.md) - LoRA math, RLHF vs DPO
+5. [GPU & Hardware](Notes/08-GPU-and-Hardware.md) - VRAM estimation questions are common
+6. [Q&A Review Bank](Notes/12-Interview-QA-Bank.md) - drill all 68 questions
 
 ### Path C: Production Engineering (Advanced)
 1. [KV Cache & Inference Optimization](Notes/05-KV-Cache-and-Inference-Optimization.md)
@@ -56,8 +56,8 @@
 
 ## Resources
 
-- [Gemma Handbook](../Resources/01-LLM-Models/Gemma-Handbook.pdf) — Google's Gemma open model reference
-- [Q&A Review Bank](Notes/12-Interview-QA-Bank.md) — 68+ Q&A pairs in this module
+- [Gemma Handbook](../Resources/01-LLM-Models/Gemma-Handbook.pdf) - Google's Gemma open model reference
+- [Q&A Review Bank](Notes/12-Interview-QA-Bank.md) - 68+ Q&A pairs in this module
 - [Cross-topic Interview Questions](../Interview-Questions/01-LLM-Models.md)
 
 ## Key Cross-References
@@ -70,4 +70,4 @@
 
 ## Next Topic
 
-[02 — Prompt Engineering](../02-Prompts/INDEX.md)
+[02 - Prompt Engineering](../02-Prompts/INDEX.md)

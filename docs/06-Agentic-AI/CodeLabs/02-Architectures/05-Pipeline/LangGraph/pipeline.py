@@ -1,6 +1,6 @@
 """
-Pipeline Architecture — LangGraph
-Pattern: ETL as a state graph — Extract → Transform → Load nodes
+Pipeline Architecture - LangGraph
+Pattern: ETL as a state graph - Extract → Transform → Load nodes
 
 Each step is a graph node with a clear state contract.
 Pure Python nodes and LLM nodes are mixed transparently.

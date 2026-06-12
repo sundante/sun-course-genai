@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS public.subscribers (
   source        TEXT        -- 'homepage', 'module-footer', etc.
 );
 
--- No RLS on subscribers — inserts happen unauthenticated (email capture)
+-- No RLS on subscribers - inserts happen unauthenticated (email capture)
 
 -- ── page_feedback ─────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.page_feedback (

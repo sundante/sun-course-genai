@@ -1,4 +1,4 @@
--- GenAI Curriculum — Supabase setup
+-- GenAI Curriculum - Supabase setup
 -- Run this once in the Supabase SQL Editor (https://app.supabase.com → SQL Editor)
 
 -- ── profiles table ────────────────────────────────────────────────────────

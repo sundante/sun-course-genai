@@ -1,8 +1,8 @@
 """
-Orchestrator-Subagent Architecture — CrewAI
+Orchestrator-Subagent Architecture - CrewAI
 Pattern: Manager agent orchestrates specialist subagents via task delegation
 
-The orchestrator agent holds no tools itself — it delegates every task to
+The orchestrator agent holds no tools itself - it delegates every task to
 specialist agents. Each specialist has focused tools and a narrow role.
 """
 import os

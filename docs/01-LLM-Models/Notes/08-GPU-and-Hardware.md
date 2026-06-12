@@ -44,7 +44,7 @@ Training VRAM ≈ 10 bytes × num_parameters
 | Activations | Seq_len × d_model × n_layers × batch | Cleared by grad checkpointing |
 | KV cache | See formula in file 05 | Inference only |
 
-**Worked example — 70B inference on A100-80GB:**
+**Worked example - 70B inference on A100-80GB:**
 ```
 70B × 2 bytes (BF16) = 140 GB → needs 2× A100-80GB minimum
 With 4-bit quantization: 70B × 0.5 bytes = 35 GB → fits on 1× A100-80GB
@@ -64,11 +64,11 @@ Quantization reduces the numerical precision of model weights (and sometimes act
 
 ---
 
-### INT8 — LLM.int8()
+### INT8 - LLM.int8()
 
 **How it works:**
 - Most weights are quantized to INT8 (1 byte)
-- "Emergent outliers" — a small fraction of activations with very large magnitude that distort quantization — are kept in FP16 and computed separately
+- "Emergent outliers" - a small fraction of activations with very large magnitude that distort quantization - are kept in FP16 and computed separately
 - This mixed-precision approach prevents the significant quality loss of naive INT8
 
 **Results:**
@@ -79,7 +79,7 @@ Quantization reduces the numerical precision of model weights (and sometimes act
 
 ---
 
-### GPTQ — GPU Post-Training Quantization
+### GPTQ - GPU Post-Training Quantization
 
 **How it works:**
 - Weight-only quantization (weights to INT4 or INT8, activations remain FP16)
@@ -94,7 +94,7 @@ Quantization reduces the numerical precision of model weights (and sometimes act
 
 ---
 
-### AWQ — Activation-Aware Weight Quantization
+### AWQ - Activation-Aware Weight Quantization
 
 **How it works:**
 - Observes that 1% of weight channels (those corresponding to large activation values) contribute disproportionately to reconstruction quality
@@ -108,14 +108,14 @@ Quantization reduces the numerical precision of model weights (and sometimes act
 
 ---
 
-### NF4 — NormalFloat4 (QLoRA)
+### NF4 - NormalFloat4 (QLoRA)
 
 **How it works:**
 - 4-bit format with bins placed at equal probability intervals of the standard normal distribution N(0,1)
 - LLM weights have a near-normal distribution → NF4 bins are optimally placed
 - Used exclusively for QLoRA base model storage; combined with FP16/BF16 LoRA adapters
 
-**Not intended for standalone inference** — primarily a training-efficiency format.
+**Not intended for standalone inference** - primarily a training-efficiency format.
 
 ---
 
@@ -130,7 +130,7 @@ Quantization reduces the numerical precision of model weights (and sometimes act
 | NF4 | 4 | ~4× | Good | Medium | bitsandbytes | QLoRA fine-tuning |
 | GGUF/Q4_K_M | 4-5 | ~4× | Good | CPU-optimized | llama.cpp | Local/CPU inference |
 
-**Interview Q:** *A 70B model in FP16 — minimum A100-80GB GPUs to run inference?*  
+**Interview Q:** *A 70B model in FP16 - minimum A100-80GB GPUs to run inference?*  
 70B × 2 bytes = 140 GB. One A100-80GB has 80 GB → need at least **2 GPUs**. With INT4 quantization (70B × 0.5 = 35 GB) → fits on **1 GPU**.
 
 ---
@@ -182,7 +182,7 @@ Linear(d_model, d_ffn):
   All-reduce: output = concat(output_0, output_1)
 ```
 
-**Communication cost:** One all-reduce per layer forward AND backward. High communication — requires NVLink for efficiency (PCIe is too slow).
+**Communication cost:** One all-reduce per layer forward AND backward. High communication - requires NVLink for efficiency (PCIe is too slow).
 
 **When to use:** Single layer too large for one GPU; NVLink interconnect available.
 
@@ -210,30 +210,30 @@ Step 2: GPU 0 processes micro-batch 2 (while GPU 1 processes micro-batch 1)
 
 ---
 
-### ZeRO — Zero Redundancy Optimizer
+### ZeRO - Zero Redundancy Optimizer
 
 ### Concept
 
 ZeRO (Rajbhandari et al., 2019) eliminates redundant copies of optimizer states, gradients, and parameters across GPUs in data-parallel training. Three stages:
 
 ```
-Stage 1 — Optimizer State Partitioning:
+Stage 1 - Optimizer State Partitioning:
   Each GPU stores only 1/N of optimizer states (momentum, variance)
   Parameters and gradients: still replicated on all GPUs
   Memory reduction: 4× (optimizer states are typically 2× weights in Adam)
 
-Stage 2 — Gradient Partitioning:
+Stage 2 - Gradient Partitioning:
   Each GPU stores only 1/N of gradients during backward pass
   Parameters: still replicated
   Memory reduction: 8× vs DDP
 
-Stage 3 — Parameter Partitioning:
+Stage 3 - Parameter Partitioning:
   Each GPU stores only 1/N of parameters
   Parameters are gathered via all-gather as needed during forward/backward
-  Memory reduction: 16× or more vs DDP — enables training models far larger than single-GPU memory
+  Memory reduction: 16× or more vs DDP - enables training models far larger than single-GPU memory
 ```
 
-**ZeRO-Infinity:** Extends ZeRO-3 to offload to CPU RAM and NVMe SSDs — can train trillion-parameter models on limited GPU clusters.
+**ZeRO-Infinity:** Extends ZeRO-3 to offload to CPU RAM and NVMe SSDs - can train trillion-parameter models on limited GPU clusters.
 
 | ZeRO Stage | What's partitioned | Memory reduction | Communication overhead |
 |------------|-------------------|-----------------|----------------------|
@@ -250,20 +250,20 @@ Stage 3 — Parameter Partitioning:
 
 ### Concept
 
-Flash Attention is primarily a hardware (GPU memory hierarchy) optimization — see [Attention Mechanisms](03-Attention-Mechanisms.md) for the algorithm. Here is the hardware context:
+Flash Attention is primarily a hardware (GPU memory hierarchy) optimization - see [Attention Mechanisms](03-Attention-Mechanisms.md) for the algorithm. Here is the hardware context:
 
 **GPU memory hierarchy:**
 ```
 Registers: ~256 KB, fastest (no latency)
 L1 cache:  ~128 KB per SM
 SRAM:      ~192 KB per SM on A100, ~20 TB/s bandwidth
-HBM:       80 GB on A100, ~2 TB/s bandwidth — 10× slower than SRAM
+HBM:       80 GB on A100, ~2 TB/s bandwidth - 10× slower than SRAM
 ```
 
-Standard attention writes the n×n attention matrix to HBM (slow), reads it back for softmax (slow), writes softmax output (slow), reads for ×V (slow). Flash Attention keeps all intermediate results in SRAM by tiling — eliminates the HBM round-trips.
+Standard attention writes the n×n attention matrix to HBM (slow), reads it back for softmax (slow), writes softmax output (slow), reads for ×V (slow). Flash Attention keeps all intermediate results in SRAM by tiling - eliminates the HBM round-trips.
 
 **Why this matters at scale:**
-- For 128K tokens: attention matrix = 128K × 128K × 2 bytes = 32 GB — impossible to hold in SRAM, Flash Attention never materializes it
+- For 128K tokens: attention matrix = 128K × 128K × 2 bytes = 32 GB - impossible to hold in SRAM, Flash Attention never materializes it
 - Flash Attention makes long-context models practical, not just mathematically possible
 
 ---
@@ -277,12 +277,12 @@ GPU-to-GPU communication speed determines how well parallelism strategies scale.
 | Interconnect | Bandwidth | Latency | Use |
 |-------------|-----------|---------|-----|
 | PCIe 4.0 ×16 | ~32 GB/s (bidirectional) | Medium | Consumer GPUs, budget clusters |
-| NVLink 4.0 | ~900 GB/s (bidirectional) | Low | A100, H100 — production AI clusters |
+| NVLink 4.0 | ~900 GB/s (bidirectional) | Low | A100, H100 - production AI clusters |
 | NVSwitch | ~3.6 TB/s (all-to-all) | Very low | H100 SXM clusters |
 
 **Practical impact:**
-- Tensor parallelism requires all-reduce after every layer: high bandwidth demand. PCIe is the bottleneck — tensor parallelism scales poorly without NVLink.
-- Pipeline parallelism only passes activations at layer boundaries: lower bandwidth requirement — viable with PCIe.
+- Tensor parallelism requires all-reduce after every layer: high bandwidth demand. PCIe is the bottleneck - tensor parallelism scales poorly without NVLink.
+- Pipeline parallelism only passes activations at layer boundaries: lower bandwidth requirement - viable with PCIe.
 - A100 SXM4 (NVLink) vs A100 PCIe: tensor-parallel scaling efficiency drops from ~95% to ~50% at 8 GPUs.
 
 ---
@@ -366,8 +366,8 @@ if torch.cuda.is_available():
 - NVLink is required for efficient tensor parallelism (PCIe is 28× slower than NVLink)
 
 **Quick recall Q&A:**
-- *A 13B model in BF16 — how much VRAM for inference?* 13 × 2 = 26 GB → needs 1× A100-40GB or more.
+- *A 13B model in BF16 - how much VRAM for inference?* 13 × 2 = 26 GB → needs 1× A100-40GB or more.
 - *What 3 things does Adam store per parameter?* Current weights (BF16), first moment/momentum (FP32), second moment/variance (FP32).
-- *What is the key difference between GPTQ and AWQ?* AWQ uses activation statistics to identify and protect important weight channels before quantization — better quality at the same bit-width.
+- *What is the key difference between GPTQ and AWQ?* AWQ uses activation statistics to identify and protect important weight channels before quantization - better quality at the same bit-width.
 - *What does ZeRO Stage 3 partition?* Optimizer states + gradients + parameters (model weights themselves).
-- *Why does tensor parallelism require NVLink?* It requires all-reduce communication after every layer (forward and backward) — PCIe bandwidth is a severe bottleneck at this frequency.
+- *Why does tensor parallelism require NVLink?* It requires all-reduce communication after every layer (forward and backward) - PCIe bandwidth is a severe bottleneck at this frequency.

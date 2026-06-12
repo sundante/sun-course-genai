@@ -1,14 +1,14 @@
 """
-Autonomous Task Planner — LangGraph Implementation
+Autonomous Task Planner - LangGraph Implementation
 ==================================================
-System    : 03 — Autonomous Task Planner
+System    : 03 - Autonomous Task Planner
 Framework : LangGraph
 Model     : gemini-2.0-flash via langchain-google-genai
 
 What this demonstrates:
   - Plan-and-Execute pattern: full plan generated before execution begins
   - Task ledger in graph state for dependency tracking
-  - Monitor node evaluates each result — conditional edge triggers replanning
+  - Monitor node evaluates each result - conditional edge triggers replanning
   - LangGraph's StateGraph loop: plan → execute → monitor → (replan or next_task)
   - Bounded execution: max_iterations prevents infinite replanning loops
 
@@ -92,7 +92,7 @@ def analyze_data(data_description: str) -> dict:
 @tool
 def write_section(title: str, content_brief: str) -> str:
     """Write a section of a document given a title and content brief."""
-    return f"## {title}\n\n{content_brief}\n\n[Section complete — detailed content based on research and analysis above]"
+    return f"## {title}\n\n{content_brief}\n\n[Section complete - detailed content based on research and analysis above]"
 
 
 # ── Graph nodes ────────────────────────────────────────────────────────────────
@@ -167,7 +167,7 @@ def execute_next(state: PlannerState) -> dict:
     result = llm.invoke([
         SystemMessage(content="""Execute the given task. Use the available tools if appropriate.
         Return a clear, specific result that addresses the task description."""),
-        HumanMessage(content=f"Task: {next_task['description']}\n\nContext — completed tasks so far:\n" +
+        HumanMessage(content=f"Task: {next_task['description']}\n\nContext - completed tasks so far:\n" +
                      "\n".join(f"- Task {o['id']}: {o['output'][:100]}..." for o in state["completed_outputs"]))
     ]).content
 
@@ -235,7 +235,7 @@ def replan(state: PlannerState) -> dict:
     print(f"\n[Replanner] Replanning after failure in task [{failed_task['id'] if failed_task else '?'}]...")
 
     if failed_task and failed_task["replan_count"] >= MAX_REPLANS_PER_TASK:
-        print(f"[Replanner] Task [{failed_task['id']}] exceeded max replans — skipping")
+        print(f"[Replanner] Task [{failed_task['id']}] exceeded max replans - skipping")
         updated_subtasks = [
             {**t, "status": "done", "output": f"[Skipped after {t['replan_count']} failed attempts]"}
             if t["id"] == state["current_task_id"] else t
@@ -321,7 +321,7 @@ if __name__ == "__main__":
     goal = "Create a comprehensive report on best practices for remote work productivity, including research findings, analysis, and actionable recommendations"
 
     print("\n" + "="*60)
-    print("AUTONOMOUS TASK PLANNER — LangGraph")
+    print("AUTONOMOUS TASK PLANNER - LangGraph")
     print(f"Goal: {goal}")
     print("="*60)
 

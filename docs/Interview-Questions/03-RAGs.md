@@ -1,9 +1,9 @@
-# Concept Review — RAG (Retrieval-Augmented Generation)
+# Concept Review - RAG (Retrieval-Augmented Generation)
 
 ## Conceptual Questions
 
 **Q: What is RAG and what problem does it solve?**
-Retrieval-Augmented Generation. LLMs have a fixed knowledge cutoff and limited context windows — they can't know about recent events or proprietary internal data. RAG solves this by retrieving relevant documents at query time and injecting them into the prompt, grounding the model's response in real, up-to-date sources without changing model weights.
+Retrieval-Augmented Generation. LLMs have a fixed knowledge cutoff and limited context windows - they can't know about recent events or proprietary internal data. RAG solves this by retrieving relevant documents at query time and injecting them into the prompt, grounding the model's response in real, up-to-date sources without changing model weights.
 
 **Q: What is the difference between RAG and fine-tuning?**
 RAG injects knowledge at inference time through retrieved context. Fine-tuning bakes knowledge into model weights during training. RAG is better for: frequently changing data, verifiable citations, large knowledge bases that won't fit in a prompt, and privacy-sensitive data. Fine-tuning is better for: consistent tone/style/format, domain-specific behavior, and reducing inference latency from long prompts. They are complementary, not mutually exclusive.
@@ -12,7 +12,7 @@ RAG injects knowledge at inference time through retrieved context. Fine-tuning b
 (1) Indexing: chunk documents, embed each chunk, store vectors in a vector database. (2) Retrieval: embed the user query, search the vector DB for the top-k nearest chunks. (3) Augmentation: inject retrieved chunks into the prompt alongside the query. (4) Generation: LLM generates a response grounded in the retrieved context.
 
 **Q: What are embeddings and why are they central to RAG?**
-Embeddings are dense vector representations of text that capture semantic meaning — similar texts map to nearby vectors in high-dimensional space. They enable semantic search: you retrieve chunks that are *meaning-similar* to the query, not just keyword-matching. The quality of your embedding model directly determines retrieval quality.
+Embeddings are dense vector representations of text that capture semantic meaning - similar texts map to nearby vectors in high-dimensional space. They enable semantic search: you retrieve chunks that are *meaning-similar* to the query, not just keyword-matching. The quality of your embedding model directly determines retrieval quality.
 
 ---
 
@@ -48,4 +48,4 @@ Index small chunks (child) for precise retrieval, but when a child chunk is retr
 Two dimensions: retrieval quality and generation quality. Retrieval metrics: recall@k (was the relevant chunk retrieved?), precision@k (were the retrieved chunks relevant?). Generation metrics: faithfulness (does the answer contradict the retrieved context?), answer relevance (does the answer address the question?), context utilization. RAGAS is a popular framework that measures all of these with LLM-as-judge.
 
 **Q: What are the main failure modes of RAG?**
-(1) Retrieval failure: relevant chunks not retrieved — caused by poor embeddings, bad chunking, or query-document mismatch. (2) Context poisoning: irrelevant chunks retrieved and hallucinated into the answer. (3) Lost in the middle: LLMs ignore context in the middle of long retrieved passages — put the most relevant chunk first or last. (4) Faithfulness failure: model uses its parametric knowledge instead of the retrieved context. (5) Chunking boundary: answer spans a chunk boundary, so it's never fully retrieved.
+(1) Retrieval failure: relevant chunks not retrieved - caused by poor embeddings, bad chunking, or query-document mismatch. (2) Context poisoning: irrelevant chunks retrieved and hallucinated into the answer. (3) Lost in the middle: LLMs ignore context in the middle of long retrieved passages - put the most relevant chunk first or last. (4) Faithfulness failure: model uses its parametric knowledge instead of the retrieved context. (5) Chunking boundary: answer spans a chunk boundary, so it's never fully retrieved.

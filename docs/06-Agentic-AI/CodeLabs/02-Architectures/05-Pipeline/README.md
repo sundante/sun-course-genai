@@ -1,4 +1,4 @@
-# 05 — Pipeline Architecture
+# 05 - Pipeline Architecture
 
 ## Pattern: Pure Data-Flow, No Shared State
 

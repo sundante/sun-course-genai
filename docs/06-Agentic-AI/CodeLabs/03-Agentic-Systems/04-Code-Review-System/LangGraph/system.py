@@ -1,7 +1,7 @@
 """
-Code Review System — LangGraph Implementation
+Code Review System - LangGraph Implementation
 =============================================
-System    : 04 — Code Review System
+System    : 04 - Code Review System
 Framework : LangGraph
 Model     : gemini-2.0-flash via langchain-google-genai
 
@@ -35,13 +35,13 @@ SAMPLE_DIFF = '''
 +    query = "SELECT * FROM users WHERE id = " + user_id  # SQL injection risk
 +    result = db_connection.execute(query)
 +    data = result.fetchall()
-+    return data  # Returns raw DB rows — no error handling
++    return data  # Returns raw DB rows - no error handling
 +
 +def process_usr(d, t):  # Poor naming: 'usr', 'd', 't'
 +    API_KEY = "sk-1234abcd5678"  # Hardcoded secret
 +    if t == "premium":
 +        for i in range(len(d)):      # Could use enumerate()
-+            for j in range(len(d)):  # O(n²) — nested loop on same data
++            for j in range(len(d)):  # O(n²) - nested loop on same data
 +                if d[i]["score"] > d[j]["score"]:
 +                    pass  # TODO: implement swap logic
 +    return d
@@ -67,7 +67,7 @@ MAX_ITERATIONS = 2
 # ── Review node (shared by all reviewers, dispatched with different focus) ─────
 
 def run_specialized_review(state: dict) -> dict:
-    """Single review node — receives {code_diff, review_type} from Send()."""
+    """Single review node - receives {code_diff, review_type} from Send()."""
     review_type = state["review_type"]
     code_diff = state["code_diff"]
 
@@ -171,7 +171,7 @@ def critique_report(state: ReviewState) -> dict:
         VERDICT: APPROVED
         or
         VERDICT: NEEDS_REVISION
-        ISSUES: [specific gaps — missing issue types, wrong priorities, unclear fixes]
+        ISSUES: [specific gaps - missing issue types, wrong priorities, unclear fixes]
         Only approve if the report is comprehensive and actionable."""),
         HumanMessage(content=f"Code reviewed:\n{state['code_diff']}\n\nReview report:\n{state['aggregated_report']}")
     ]).content
@@ -233,7 +233,7 @@ if __name__ == "__main__":
     app = build_graph()
 
     print("\n" + "="*60)
-    print("CODE REVIEW SYSTEM — LangGraph")
+    print("CODE REVIEW SYSTEM - LangGraph")
     print("="*60)
 
     initial_state = ReviewState(

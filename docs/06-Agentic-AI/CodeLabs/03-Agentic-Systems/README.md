@@ -1,4 +1,4 @@
-# 03 — Agentic Systems
+# 03 - Agentic Systems
 
 End-to-end system designs that combine multiple architectural and design patterns into complete, production-like agentic applications. Each system is implemented in all four frameworks.
 
@@ -41,12 +41,12 @@ cp .env.example .env
 
 ## How to Read These Examples
 
-1. Read the system's `README.md` first — it explains the architecture, agent roles, and data flow
+1. Read the system's `README.md` first - it explains the architecture, agent roles, and data flow
 2. Run the LangGraph version for the clearest state visibility (state transitions are explicit)
 3. Compare the CrewAI version to see the role-based approach to the same problem
 4. The ADK version shows Google Cloud-native patterns
 
 ## Related Notes
 
-- [06-Agentic-AI Notes](../../INDEX.md) — architectural patterns and system design concepts
-- [02-Architectures](../02-Architectures/README.md) — individual pattern implementations
+- [06-Agentic-AI Notes](../../INDEX.md) - architectural patterns and system design concepts
+- [02-Architectures](../02-Architectures/README.md) - individual pattern implementations

@@ -1,4 +1,4 @@
-# CrewAI — Complex Agent
+# CrewAI - Complex Agent
 
 ## What We Are Building
 

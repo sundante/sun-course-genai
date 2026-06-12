@@ -1,8 +1,8 @@
 """
-Sequential Architecture — LangGraph
+Sequential Architecture - LangGraph
 Pattern: Research → Summarize → Format report (A → B → C pipeline)
 
-Each step is a graph node. State flows through the graph — each node reads
+Each step is a graph node. State flows through the graph - each node reads
 from state and writes back. The graph enforces the A→B→C order explicitly.
 """
 import os

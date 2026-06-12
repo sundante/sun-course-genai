@@ -8,7 +8,7 @@
 
 A chatbot takes one input and produces one output, then stops. It cannot take actions, observe results, or decide what to do next.
 
-An **agent** adds a loop. It generates a response, checks if the task is done, and if not, takes an action, observes what happened, and generates the next response. This loop is what gives an agent agency — the ability to act on the world and adjust based on what it observes.
+An **agent** adds a loop. It generates a response, checks if the task is done, and if not, takes an action, observes what happened, and generates the next response. This loop is what gives an agent agency - the ability to act on the world and adjust based on what it observes.
 
 The loop is not just a useful feature. It is the defining characteristic. Remove the loop, and you have a chatbot. Keep the loop, and everything else in agentic AI follows from it.
 
@@ -88,7 +88,7 @@ def run_agent(user_message: str, max_steps: int = 10) -> str:
     return "Reached maximum steps without completing the task."
 ```
 
-This is the entire loop. Every framework — LangChain, LangGraph, ADK, CrewAI — is a more sophisticated version of this same structure.
+This is the entire loop. Every framework - LangChain, LangGraph, ADK, CrewAI - is a more sophisticated version of this same structure.
 
 ---
 
@@ -161,7 +161,7 @@ The LLM now has both results. It knows the task is done. It outputs:
 }
 ```
 
-**Key insight:** The LLM does not "remember" between steps. It is stateless. What appears to be memory is the accumulating `messages` array. The loop controller manages this array — appending each response, appending each tool result — so the LLM always has full context of everything that has happened.
+**Key insight:** The LLM does not "remember" between steps. It is stateless. What appears to be memory is the accumulating `messages` array. The loop controller manages this array - appending each response, appending each tool result - so the LLM always has full context of everything that has happened.
 
 ---
 
@@ -178,18 +178,18 @@ Agent: [immediately calls send_email with wrong address]
 With ReAct (reasoning trace visible in the LLM output or scratchpad):
 ```
 Thought: The user wants me to find the CEO of OpenAI and email them.
-         First, I need to search for who the CEO is — I don't know their email.
+         First, I need to search for who the CEO is - I don't know their email.
 
 Action: search_web("OpenAI CEO 2024")
 Observation: Sam Altman is the CEO of OpenAI.
 
 Thought: I have the name. Now I need the email address.
 Action: find_email("Sam Altman", "OpenAI")
-Observation: contact@openai.com (public contact only — no direct email available)
+Observation: contact@openai.com (public contact only - no direct email available)
 
 Thought: I only have the public contact email, not a direct email.
          This might not be what the user intended. I should clarify.
-Action: [final answer — ask user to clarify]
+Action: [final answer - ask user to clarify]
 ```
 
 The explicit "Thought" steps serve three functions:
@@ -219,9 +219,9 @@ Every step in the agent loop adds tokens to the context window. This is the fund
 A typical step adds:
 - **LLM reasoning output**: 100–500 tokens
 - **Tool call**: 20–100 tokens (tool name + arguments)
-- **Tool result**: 50–5,000 tokens (varies enormously — a web page can be 50,000 tokens)
+- **Tool result**: 50–5,000 tokens (varies enormously - a web page can be 50,000 tokens)
 
-After 10 steps, the context might hold 10,000–50,000 tokens. After 30 steps, it could be 150,000 tokens — approaching or exceeding most models' context limits.
+After 10 steps, the context might hold 10,000–50,000 tokens. After 30 steps, it could be 150,000 tokens - approaching or exceeding most models' context limits.
 
 ```
 Context size over time:
@@ -239,7 +239,7 @@ Tokens
       1    5    10   15   20   25   30
 ```
 
-When context fills up, agents exhibit **context drift** — they start losing track of the original goal, their reasoning becomes inconsistent, and they may repeat work they already did.
+When context fills up, agents exhibit **context drift** - they start losing track of the original goal, their reasoning becomes inconsistent, and they may repeat work they already did.
 
 **Mitigation strategies:**
 
@@ -312,7 +312,7 @@ class AgentBounds:
     max_tool_calls: int = 50     # individual tool invocations
 ```
 
-When a bound is hit, the agent should return a **partial result** with a status flag — not silently fail or raise an exception:
+When a bound is hit, the agent should return a **partial result** with a status flag - not silently fail or raise an exception:
 
 ```python
 if step >= config.max_steps:
@@ -327,7 +327,7 @@ if step >= config.max_steps:
 
 ### Failure Termination
 
-Some errors warrant immediate termination — not retry, not continuation:
+Some errors warrant immediate termination - not retry, not continuation:
 
 - **Budget exceeded**: Never continue a task that already exceeded its cost limit
 - **Safety violation**: Agent attempted a prohibited action
@@ -338,7 +338,7 @@ Some errors warrant immediate termination — not retry, not continuation:
 
 ## The System Prompt as the Agent's Identity
 
-The system prompt is the agent's fixed context — it shapes everything the agent does. Unlike the `messages` array which grows with each step, the system prompt is stable throughout the entire loop.
+The system prompt is the agent's fixed context - it shapes everything the agent does. Unlike the `messages` array which grows with each step, the system prompt is stable throughout the entire loop.
 
 A well-structured agent system prompt has four sections:
 
@@ -467,7 +467,7 @@ Tool returns: "No results found"
 ```python
 call_history = []
 if tool_call in call_history[-3:]:
-    return "Could not find information — search returned no results."
+    return "Could not find information - search returned no results."
 call_history.append(tool_call)
 ```
 
@@ -512,10 +512,10 @@ if current_tokens > TOKEN_SUMMARIZE_THRESHOLD:
 
 ## Study Notes
 
-- The loop is the agent. Everything else — tools, memory, orchestration — is infrastructure that makes the loop more capable and reliable.
+- The loop is the agent. Everything else - tools, memory, orchestration - is infrastructure that makes the loop more capable and reliable.
 - **Never deploy an agent without bounds.** Even a "simple" agent in a loop can exhaust a month's API budget in hours if it gets stuck.
 - **Parallel tool calls are free performance.** When the LLM needs multiple independent pieces of information, parallel calls halve the wall-clock time with no extra cost. Encourage them in the system prompt.
-- **The messages array is the agent's memory.** It's not infinite. Managing what goes into it — and what gets summarized or dropped — is one of the most important production engineering concerns.
+- **The messages array is the agent's memory.** It's not infinite. Managing what goes into it - and what gets summarized or dropped - is one of the most important production engineering concerns.
 - **Build your loop before picking a framework.** Writing the bare loop once teaches you more than reading framework documentation for an hour. Once you understand what a framework is wrapping, its abstractions become intuitive.
 
 ---
@@ -526,16 +526,16 @@ if current_tokens > TOKEN_SUMMARIZE_THRESHOLD:
 A: An LLM (reasons about what to do and produces either a tool call or a final answer), a Tool Executor (receives tool calls, executes the corresponding function, and returns results), and a Loop Controller (checks whether the agent is done; if not, appends the tool result to the messages array and sends it back to the LLM for the next iteration). Remove any one of the three and you no longer have an agent: without the LLM you have an automated script, without the Tool Executor you have a chatbot, without the Loop Controller you have a single-turn system.
 
 **Q2: Why must the LLM receive the full message history at every step, and what problem does this cause at scale?** `[Medium]`
-A: The LLM is stateless — it has no internal memory between calls. The only way it "knows" what happened in previous steps is by reading the full history of messages on every call. This is why the loop controller appends each tool call and each tool result to the messages array. The problem at scale is context window exhaustion: every step adds tokens, and after many steps the accumulated history can approach or exceed the model's context limit. Solutions are context summarization (compressing old history), tool result truncation (trimming long tool outputs before storing them), and task ledgers (keeping a compact goal-tracking structure that's separate from conversational history).
+A: The LLM is stateless - it has no internal memory between calls. The only way it "knows" what happened in previous steps is by reading the full history of messages on every call. This is why the loop controller appends each tool call and each tool result to the messages array. The problem at scale is context window exhaustion: every step adds tokens, and after many steps the accumulated history can approach or exceed the model's context limit. Solutions are context summarization (compressing old history), tool result truncation (trimming long tool outputs before storing them), and task ledgers (keeping a compact goal-tracking structure that's separate from conversational history).
 
 **Q3: What is the ReAct pattern and what three functions do explicit reasoning traces serve?** `[Medium]`
-A: ReAct (Reason + Act) is the pattern where the agent writes explicit reasoning traces (labeled "Thought") before each tool call, making its logic visible in the output. The three functions: (1) Keeps the agent on track — writing out reasoning before acting prevents the agent from jumping to action before it understands the situation; (2) Makes debugging possible — you can read exactly what the agent was reasoning at the step where things went wrong; (3) Enables self-correction — the agent can explicitly evaluate whether its previous action succeeded before deciding what to do next. Without ReAct, agents tend to take premature actions and their errors are very hard to trace.
+A: ReAct (Reason + Act) is the pattern where the agent writes explicit reasoning traces (labeled "Thought") before each tool call, making its logic visible in the output. The three functions: (1) Keeps the agent on track - writing out reasoning before acting prevents the agent from jumping to action before it understands the situation; (2) Makes debugging possible - you can read exactly what the agent was reasoning at the step where things went wrong; (3) Enables self-correction - the agent can explicitly evaluate whether its previous action succeeded before deciding what to do next. Without ReAct, agents tend to take premature actions and their errors are very hard to trace.
 
 **Q4: Name four termination conditions an agent should have. What should happen when a bound is hit?** `[Medium]`
 A: Four conditions: max steps (maximum loop iterations), max tokens (total context size), max wall time (seconds), and max cost (dollar cap). A fifth is infinite-loop detection (same tool call repeated 3+ times). When any bound is hit, the agent should NOT raise a raw exception or return nothing. The correct behavior is to return a partial result with a status flag (`"status": "limit_reached"`, `"limit_type": "max_steps"`), include whatever output was produced before the limit, and log the event for monitoring. This allows the system to return something useful to the user and enables post-hoc analysis of why the agent hit its limit.
 
 **Q5: What is tool argument hallucination and how do you prevent it?** `[Hard]`
-A: Tool argument hallucination is when the LLM calls a tool with parameter values that don't appear in the conversation and were not provided by the user — the model invents them. For example, the user mentions order ORD-555 and the agent calls get_order(order_id="ORD-999"). This is a significant real-world failure mode because the tool succeeds syntactically but returns information about the wrong entity. Prevention has two layers: (1) Validate tool arguments before execution — use schema validation (Pydantic) to catch format violations, and cross-reference against context where possible; (2) Improve tool descriptions to be explicit about where arguments should come from: "Use the exact order ID the user provided, verbatim — do not guess or generate order IDs."
+A: Tool argument hallucination is when the LLM calls a tool with parameter values that don't appear in the conversation and were not provided by the user - the model invents them. For example, the user mentions order ORD-555 and the agent calls get_order(order_id="ORD-999"). This is a significant real-world failure mode because the tool succeeds syntactically but returns information about the wrong entity. Prevention has two layers: (1) Validate tool arguments before execution - use schema validation (Pydantic) to catch format violations, and cross-reference against context where possible; (2) Improve tool descriptions to be explicit about where arguments should come from: "Use the exact order ID the user provided, verbatim - do not guess or generate order IDs."
 
 **Q6: How do parallel tool calls differ from sequential calls and when should an agent use them?** `[Hard]`
-A: Sequential calls execute one tool, wait for the result, then call the next — each call adds full tool latency to the total. Parallel calls send multiple tool invocations simultaneously and wait for all results at once — total latency is the max of any one call rather than the sum. Use parallel calls when (a) multiple pieces of information are needed and (b) the queries are independent — the result of one does not determine the input of another. Example: looking up weather in three cities is perfectly parallel (three independent searches). But looking up a user's order history and then looking up the details of their most recent order is sequential (you need the first result to know what to query next). Most LLMs will choose parallel calls naturally when given permission in the system prompt, but explicitly encouraging them ("You can call multiple tools at once when the queries are independent") improves the frequency.
+A: Sequential calls execute one tool, wait for the result, then call the next - each call adds full tool latency to the total. Parallel calls send multiple tool invocations simultaneously and wait for all results at once - total latency is the max of any one call rather than the sum. Use parallel calls when (a) multiple pieces of information are needed and (b) the queries are independent - the result of one does not determine the input of another. Example: looking up weather in three cities is perfectly parallel (three independent searches). But looking up a user's order history and then looking up the details of their most recent order is sequential (you need the first result to know what to query next). Most LLMs will choose parallel calls naturally when given permission in the system prompt, but explicitly encouraging them ("You can call multiple tools at once when the queries are independent") improves the frequency.

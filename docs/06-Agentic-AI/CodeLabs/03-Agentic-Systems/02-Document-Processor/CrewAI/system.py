@@ -1,7 +1,7 @@
 """
-Document Processor — CrewAI Implementation
+Document Processor - CrewAI Implementation
 ==========================================
-System    : 02 — Document Processor
+System    : 02 - Document Processor
 Framework : CrewAI
 Model     : gemini-2.0-flash via langchain-google-genai
 
@@ -46,7 +46,7 @@ classifier = Agent(
     role="Document Classification Specialist",
     goal="Accurately classify document types and assess confidence",
     backstory="""You are an expert at identifying document types from their content and structure.
-    You provide confidence scores that reflect your actual certainty — you never overstate confidence.
+    You provide confidence scores that reflect your actual certainty - you never overstate confidence.
     When a document is ambiguous, you say so clearly.""",
     llm=llm,
     verbose=True,
@@ -167,7 +167,7 @@ def build_processing_crew(document_text: str) -> Crew:
 
 if __name__ == "__main__":
     print("\n" + "="*60)
-    print("DOCUMENT PROCESSOR — CrewAI")
+    print("DOCUMENT PROCESSOR - CrewAI")
     print("="*60)
 
     crew = build_processing_crew(SAMPLE_INVOICE)

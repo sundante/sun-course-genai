@@ -216,7 +216,7 @@ TERMINATED                                                  │
     [Reconnect if desired] ─────────────────────────────────┘
 ```
 
-There is no "pause" state — a dropped connection means full re-initialization on reconnect. In-flight requests at disconnection are lost.
+There is no "pause" state - a dropped connection means full re-initialization on reconnect. In-flight requests at disconnection are lost.
 
 ---
 
@@ -240,7 +240,7 @@ SDKs translate the spec into idiomatic libraries:
 | Java/Kotlin | Community SDKs | Enterprise, Android |
 | C# | Community SDKs | .NET ecosystem |
 
-SDKs handle the JSON-RPC framing, capability negotiation, and message routing automatically — you write business logic, not protocol code.
+SDKs handle the JSON-RPC framing, capability negotiation, and message routing automatically - you write business logic, not protocol code.
 
 ### 3. Community Server Repository
 
@@ -259,19 +259,19 @@ The [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/serve
 
 **Q1: Describe the Host, Client, and Server roles in one sentence each.** `[Easy]`
 
-A: The Host is the user-facing AI application that manages all client connections, enforces security policies, and mediates interactions between servers and the LLM/user. Each Client maintains a dedicated stateful JSON-RPC connection to exactly one Server and handles the protocol mechanics for that connection. The Server is an independent program that exposes tools, resources, and prompts for a specific data source — it has no knowledge of the Host's application logic or other Server connections.
+A: The Host is the user-facing AI application that manages all client connections, enforces security policies, and mediates interactions between servers and the LLM/user. Each Client maintains a dedicated stateful JSON-RPC connection to exactly one Server and handles the protocol mechanics for that connection. The Server is an independent program that exposes tools, resources, and prompts for a specific data source - it has no knowledge of the Host's application logic or other Server connections.
 
 ---
 
 **Q2: Why does MCP separate Host from Client rather than merging them?** `[Medium]`
 
-A: A Host typically manages simultaneous connections to multiple Servers. By separating Host from Client, the architecture allows one Host to fan out across N independent Client connections — each managing its own stateful session lifecycle, capability set, and message flow without coupling to other connections. If merged, the Host would need to multiplex all inbound and outbound messages across all servers, making the code complex and making it harder to add or drop connections at runtime. The separation also makes it possible for different Client implementations to serve different Server types without changing Host code.
+A: A Host typically manages simultaneous connections to multiple Servers. By separating Host from Client, the architecture allows one Host to fan out across N independent Client connections - each managing its own stateful session lifecycle, capability set, and message flow without coupling to other connections. If merged, the Host would need to multiplex all inbound and outbound messages across all servers, making the code complex and making it harder to add or drop connections at runtime. The separation also makes it possible for different Client implementations to serve different Server types without changing Host code.
 
 ---
 
 **Q3: What happens during the initialized notification (step 3 of the handshake) and what would break if it were skipped?** `[Medium]`
 
-A: The `notifications/initialized` notification signals to the Server that the Client has received and accepted the initialize response and is ready to begin normal operations. If skipped, the Server would be in an ambiguous state — it responded to `initialize` but doesn't know if the Client processed it successfully. Well-implemented servers will not send capabilities-dependent messages (like `notifications/tools/list_changed`) until they receive `initialized`. A missing `initialized` notification can cause servers to either hang waiting or proceed immediately, both of which can cause subtle ordering bugs where tool list notifications arrive before the client has set up its listener.
+A: The `notifications/initialized` notification signals to the Server that the Client has received and accepted the initialize response and is ready to begin normal operations. If skipped, the Server would be in an ambiguous state - it responded to `initialize` but doesn't know if the Client processed it successfully. Well-implemented servers will not send capabilities-dependent messages (like `notifications/tools/list_changed`) until they receive `initialized`. A missing `initialized` notification can cause servers to either hang waiting or proceed immediately, both of which can cause subtle ordering bugs where tool list notifications arrive before the client has set up its listener.
 
 ---
 

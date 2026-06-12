@@ -1,5 +1,5 @@
 """
-Reflexion Architecture — Google ADK
+Reflexion Architecture - Google ADK
 Pattern: score_report tool triggers self-critique loop
 
 This is the architectural pattern from ADK 03-complex, presented as a
@@ -53,7 +53,7 @@ def score_recommendation(draft: str) -> dict:
         score += 1
         suggestions.append("Expand with more detail (aim for 400+ characters).")
     else:
-        suggestions.append("Too brief — add much more detail.")
+        suggestions.append("Too brief - add much more detail.")
 
     return {
         "score": min(score, 10),
@@ -71,14 +71,14 @@ agent = Agent(
     description="Writes travel recommendations with built-in self-critique and improvement loop.",
     instruction="""You are a travel recommendation writer with a quality gate.
 
-STEP 1 — DRAFT: Write a comprehensive travel recommendation for the requested destination.
+STEP 1 - DRAFT: Write a comprehensive travel recommendation for the requested destination.
   Include: top 3 named attractions, weather/temperature, safety tips, best time to visit.
 
-STEP 2 — EVALUATE: Call score_recommendation() with your draft.
+STEP 2 - EVALUATE: Call score_recommendation() with your draft.
   - If score >= 7: deliver the recommendation as your final answer.
   - If score < 7: read the suggestions, rewrite addressing ALL of them, then evaluate again.
 
-STEP 3 — DELIVER: When score >= 7 (or after 2 revision attempts), present the final recommendation.
+STEP 3 - DELIVER: When score >= 7 (or after 2 revision attempts), present the final recommendation.
 
 You MUST call score_recommendation() at least once before responding.""",
     tools=[score_recommendation],

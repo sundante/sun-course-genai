@@ -1,4 +1,4 @@
-# LangChain — Complex Agent
+# LangChain - Complex Agent
 
 ## What We Are Building
 

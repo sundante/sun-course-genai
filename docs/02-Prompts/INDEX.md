@@ -1,12 +1,12 @@
-# 02 — Prompt Engineering
+# 02 - Prompt Engineering
 
 ## What You Will Learn
 
-Prompt engineering is the practice of designing inputs to language models to reliably produce the desired outputs. It is the first lever you pull when working with LLMs — before fine-tuning, before RAG, before agents. It is also the fastest to iterate on: a prompt change takes seconds; retraining takes days.
+Prompt engineering is the practice of designing inputs to language models to reliably produce the desired outputs. It is the first lever you pull when working with LLMs - before fine-tuning, before RAG, before agents. It is also the fastest to iterate on: a prompt change takes seconds; retraining takes days.
 
 ## Why It Comes After LLMs
 
-You need to understand how LLMs process tokens and generate text (Topic 01) before you can reason about *why* certain prompt structures work. Prompt engineering is applied LLM knowledge — tokenization explains why character-level tasks fail; attention explains why "lost in the middle" happens; instruction tuning explains why zero-shot prompting works at all.
+You need to understand how LLMs process tokens and generate text (Topic 01) before you can reason about *why* certain prompt structures work. Prompt engineering is applied LLM knowledge - tokenization explains why character-level tasks fail; attention explains why "lost in the middle" happens; instruction tuning explains why zero-shot prompting works at all.
 
 ## Why It Comes Before RAG and Agents
 
@@ -20,9 +20,9 @@ This section is structured to follow the historical development of the field:
 2020  Zero-shot / few-shot discovered (GPT-3)
 2022  Chain-of-Thought unlocks reasoning (Wei et al.)
 2022  ReAct connects models to tools (Yao et al.)
-2023  ToT, self-consistency — systematic search over reasoning space
+2023  ToT, self-consistency - systematic search over reasoning space
 2023  Production concerns: injection, evals, versioning, structured output
-2024  DSPy, OPRO — automated prompt optimization
+2024  DSPy, OPRO - automated prompt optimization
 Now   Reasoning models change the prompting paradigm
 ```
 
@@ -39,14 +39,14 @@ Now   Reasoning models change the prompting paradigm
 
 ## Recommended Path
 
-1. [Prompt Basics](Notes/01-Prompt-Basics.md) — understand what a prompt actually is
-2. [Core Techniques](Notes/02-Core-Techniques.md) — learn the patterns used 90% of the time
-3. [Advanced Techniques](Notes/03-Advanced-Techniques.md) — extend your toolkit for complex tasks
-4. [Prompts in Production](Notes/04-Prompt-Engineering-for-Production.md) — real-world engineering concerns
-5. [Prompt Optimization & Automation](Notes/05-Prompt-Optimization-and-Automation.md) — scale beyond manual iteration
-6. [Q&A Review Bank](Notes/06-Interview-QA-Bank.md) — consolidated review across all topics
-7. [Knowledge Check](../Interview-Questions/02-Prompt-Engineering.md) — concise Q&A for final review
+1. [Prompt Basics](Notes/01-Prompt-Basics.md) - understand what a prompt actually is
+2. [Core Techniques](Notes/02-Core-Techniques.md) - learn the patterns used 90% of the time
+3. [Advanced Techniques](Notes/03-Advanced-Techniques.md) - extend your toolkit for complex tasks
+4. [Prompts in Production](Notes/04-Prompt-Engineering-for-Production.md) - real-world engineering concerns
+5. [Prompt Optimization & Automation](Notes/05-Prompt-Optimization-and-Automation.md) - scale beyond manual iteration
+6. [Q&A Review Bank](Notes/06-Interview-QA-Bank.md) - consolidated review across all topics
+7. [Knowledge Check](../Interview-Questions/02-Prompt-Engineering.md) - concise Q&A for final review
 
 ## Navigation
 
-[Previous: 01 — LLM Models](../01-LLM-Models/INDEX.md) | [Next: 03 — RAGs](../03-RAGs/INDEX.md)
+[Previous: 01 - LLM Models](../01-LLM-Models/INDEX.md) | [Next: 03 - RAGs](../03-RAGs/INDEX.md)

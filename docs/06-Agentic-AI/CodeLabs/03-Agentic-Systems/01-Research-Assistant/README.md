@@ -61,10 +61,10 @@ State: {
 
 ## Implementations
 
-- [LangChain](LangChain/system.py) — LCEL chains with AgentExecutor for each agent
-- [LangGraph](LangGraph/system.py) — State graph with `Send()` for parallel execution
-- [CrewAI](CrewAI/system.py) — Research crew with defined roles and tasks
-- [ADK](ADK/system.py) — ParallelAgent + SequentialAgent composition
+- [LangChain](LangChain/system.py) - LCEL chains with AgentExecutor for each agent
+- [LangGraph](LangGraph/system.py) - State graph with `Send()` for parallel execution
+- [CrewAI](CrewAI/system.py) - Research crew with defined roles and tasks
+- [ADK](ADK/system.py) - ParallelAgent + SequentialAgent composition
 
 ## Running
 
@@ -73,4 +73,4 @@ State: {
 python 03-Agentic-Systems/01-Research-Assistant/LangGraph/system.py
 ```
 
-The system uses mock search tools — no external API keys needed beyond `GOOGLE_API_KEY`.
+The system uses mock search tools - no external API keys needed beyond `GOOGLE_API_KEY`.

@@ -4,7 +4,7 @@
 
 ### Concept
 
-Dense retrieval uses bi-encoder models to embed both queries and documents into the same vector space, then retrieves by approximate nearest neighbor (ANN) search. It is the backbone of modern RAG — semantically equivalent text has similar vectors regardless of exact word choice.
+Dense retrieval uses bi-encoder models to embed both queries and documents into the same vector space, then retrieves by approximate nearest neighbor (ANN) search. It is the backbone of modern RAG - semantically equivalent text has similar vectors regardless of exact word choice.
 
 **How it works:**
 1. Offline: embed every document chunk → store in vector index
@@ -16,7 +16,7 @@ Dense retrieval uses bi-encoder models to embed both queries and documents into 
 - No index to maintain when query vocabulary changes
 
 **Weaknesses (important for interviews):**
-- **Lexical gap for rare terms**: Product codes, proper nouns, abbreviations ("CVE-2024-1234", "SOC2 Type II") — embedding models trained on general text may not represent these precisely
+- **Lexical gap for rare terms**: Product codes, proper nouns, abbreviations ("CVE-2024-1234", "SOC2 Type II") - embedding models trained on general text may not represent these precisely
 - **Recall ceiling**: Even the best bi-encoder misses ~10-15% of relevant documents that BM25 finds, especially for exact-match queries
 - **Out-of-distribution queries**: Queries far from the training distribution of the embedding model retrieve poorly
 
@@ -64,7 +64,7 @@ Where:
 ```
 
 **Why BM25 outperforms raw TF-IDF:**
-1. **Saturation**: TF-IDF gives unbounded reward for high-frequency terms. BM25's `k₁` parameter saturates the term frequency reward — a term appearing 100 times is not 100x more relevant than appearing once. The formula asymptotes to `(k₁+1) × IDF` as frequency → ∞.
+1. **Saturation**: TF-IDF gives unbounded reward for high-frequency terms. BM25's `k₁` parameter saturates the term frequency reward - a term appearing 100 times is not 100x more relevant than appearing once. The formula asymptotes to `(k₁+1) × IDF` as frequency → ∞.
 2. **Length normalization**: BM25 normalizes by document length via the `b` parameter, preventing long documents from always winning. TF-IDF has no length normalization.
 
 **Worked example:**
@@ -89,7 +89,7 @@ import math
 # BM25 retriever (uses rank_bm25 under the hood)
 bm25_retriever = BM25Retriever.from_documents(chunks, k=10)
 
-# Custom BM25 from scratch (for interviews — shows you understand the algorithm)
+# Custom BM25 from scratch (for interviews - shows you understand the algorithm)
 class SimpleBM25:
     def __init__(self, corpus: list[list[str]], k1: float = 1.5, b: float = 0.75):
         self.k1, self.b = k1, b
@@ -131,7 +131,7 @@ class SimpleBM25:
 
 ### Concept
 
-Hybrid search combines dense retrieval (semantic) and sparse retrieval (keyword) to get the best of both. Dense retrieval handles semantic matching; sparse retrieval handles exact keyword matching. Together, they achieve higher recall than either alone — empirically 5-15% Recall@10 improvement.
+Hybrid search combines dense retrieval (semantic) and sparse retrieval (keyword) to get the best of both. Dense retrieval handles semantic matching; sparse retrieval handles exact keyword matching. Together, they achieve higher recall than either alone - empirically 5-15% Recall@10 improvement.
 
 **Reciprocal Rank Fusion (RRF)**
 
@@ -147,9 +147,9 @@ Where:
 ```
 
 **Why RRF over score combination:**
-- Dense and sparse scores are on completely different scales (cosine similarity vs BM25 score) — you cannot add them directly without normalization
-- RRF only uses rank positions, not scores — robust to scale differences
-- The `k=60` constant means rank 1 gets score 1/61 ≈ 0.016, rank 10 gets 1/70 ≈ 0.014 — top results from both systems are always promoted
+- Dense and sparse scores are on completely different scales (cosine similarity vs BM25 score) - you cannot add them directly without normalization
+- RRF only uses rank positions, not scores - robust to scale differences
+- The `k=60` constant means rank 1 gets score 1/61 ≈ 0.016, rank 10 gets 1/70 ≈ 0.014 - top results from both systems are always promoted
 - Documents appearing at the top of BOTH lists get a strong boost (sum of two high RRF scores)
 
 **Alpha weighting (alternative to RRF):**
@@ -157,7 +157,7 @@ Some systems use normalized score interpolation:
 ```
 final_score(d) = α × dense_score(d) + (1-α) × bm25_score(d)
 ```
-This requires normalizing both score distributions to [0,1]. α is tuned on a validation set — typically 0.5-0.7 for general domains, lower for jargon-heavy domains.
+This requires normalizing both score distributions to [0,1]. α is tuned on a validation set - typically 0.5-0.7 for general domains, lower for jargon-heavy domains.
 
 ### Code
 
@@ -206,21 +206,21 @@ First-stage retrieval (ANN search) optimizes for speed using bi-encoders that pr
 **Re-ranking latency math:**
 - Dense retrieval: embed query (~10ms) + ANN search (~5ms) = ~15ms
 - Re-ranking top-20: cross-encoder inference on 20 (query, doc) pairs = 80-200ms
-- Total: ~100-220ms — acceptable for most RAG systems
+- Total: ~100-220ms - acceptable for most RAG systems
 
-**Bi-Encoder vs Cross-Encoder — deep dive:**
+**Bi-Encoder vs Cross-Encoder - deep dive:**
 
 | Dimension | Bi-Encoder (Dual Encoder) | Cross-Encoder |
 |---|---|---|
 | **Input encoding** | Query and document encoded independently into separate vectors | Query and document concatenated as one input: `[CLS] query [SEP] document [SEP]` |
-| **Precomputation** | Document embeddings computed offline and cached | Cannot precompute — requires the query at inference time |
+| **Precomputation** | Document embeddings computed offline and cached | Cannot precompute - requires the query at inference time |
 | **Speed** | Fast: ANN search on precomputed vectors (~5–15ms) | Slow: full model forward pass per (query, doc) pair (~5–10ms per pair; 100–200ms for 20 pairs) |
 | **Accuracy** | Good for broad recall; misses subtle contextual cues (negations, conditionals) | High precision; full token-level attention between query and document captures nuanced relevance |
 | **Scalability** | Scales to billions of documents (ANN index) | Not scalable to first-stage retrieval; limited to re-scoring ~20–50 candidates |
 | **Use case** | First-stage retrieval: cast a wide net efficiently | Second-stage reranking: precision filter over candidate set |
 | **Example models** | `text-embedding-004`, `BAAI/bge-m3`, `E5-mistral-7b` | `cross-encoder/ms-marco-MiniLM-L-6-v2`, `Cohere Rerank`, Vertex AI ReRanker |
 
-**Interview tip:** "Bi-encoders are efficient for broad retrieval but miss subtle contextual cues — a query like 'what causes X NOT to work' can retrieve documents about 'X works well' because the negation is lost in the aggregate embedding. Cross-encoders attend to every token in both query and document jointly, so they correctly score the negative. The two-stage pattern uses bi-encoders to recall 20 candidates cheaply, then cross-encoders to re-score those 20 with full attention — you get recall efficiency plus precision quality."
+**Interview tip:** "Bi-encoders are efficient for broad retrieval but miss subtle contextual cues - a query like 'what causes X NOT to work' can retrieve documents about 'X works well' because the negation is lost in the aggregate embedding. Cross-encoders attend to every token in both query and document jointly, so they correctly score the negative. The two-stage pattern uses bi-encoders to recall 20 candidates cheaply, then cross-encoders to re-score those 20 with full attention - you get recall efficiency plus precision quality."
 
 **Cross-encoder models:**
 
@@ -359,28 +359,28 @@ mmr_retriever = vectorstore.as_retriever(
 ## Interview Q&A
 
 **Q: Explain the BM25 formula and why it outperforms TF-IDF.** `[Hard]`
-A: BM25 = Σ IDF(term) × saturation(TF) × length_normalization. The two key improvements over TF-IDF: (1) **Saturation**: BM25 uses a saturation function so term frequency contributes logarithmically rather than linearly — doubling occurrences doesn't double the score. This prevents very repetitive documents from dominating. (2) **Length normalization**: the `b` parameter (typically 0.75) normalizes scores by document length relative to corpus average. Short focused documents aren't penalized vs long comprehensive ones. TF-IDF has neither, so it rewards raw term frequency and long documents systematically.
+A: BM25 = Σ IDF(term) × saturation(TF) × length_normalization. The two key improvements over TF-IDF: (1) **Saturation**: BM25 uses a saturation function so term frequency contributes logarithmically rather than linearly - doubling occurrences doesn't double the score. This prevents very repetitive documents from dominating. (2) **Length normalization**: the `b` parameter (typically 0.75) normalizes scores by document length relative to corpus average. Short focused documents aren't penalized vs long comprehensive ones. TF-IDF has neither, so it rewards raw term frequency and long documents systematically.
 
 **Q: When does sparse retrieval beat dense retrieval?** `[Medium]`
-A: Three scenarios: (1) Rare exact-match terms — product codes, CVE IDs, model numbers, regulatory citations that appear infrequently in the embedding model's training data; the model can't represent them precisely. (2) Short queries with no context for semantic matching — a one-word query "churn" could mean many things; BM25 returns documents containing the exact word. (3) Highly technical jargon in specialized domains where the embedding model was trained on general-purpose text.
+A: Three scenarios: (1) Rare exact-match terms - product codes, CVE IDs, model numbers, regulatory citations that appear infrequently in the embedding model's training data; the model can't represent them precisely. (2) Short queries with no context for semantic matching - a one-word query "churn" could mean many things; BM25 returns documents containing the exact word. (3) Highly technical jargon in specialized domains where the embedding model was trained on general-purpose text.
 
 **Q: What is Reciprocal Rank Fusion and why is it preferred over score interpolation for hybrid search?** `[Hard]`
-A: RRF(d) = Σ 1/(k + rank(d, r)) summed over each retriever r. It's preferred because dense and sparse retrieval scores are on incomparable scales — BM25 scores might range 0-20, cosine similarity 0-1. Normalizing these distributions to combine them requires assumptions about their shape (min-max, z-score, sigmoid). RRF sidesteps normalization by only using rank positions. It's also theoretically grounded: documents appearing at the top of multiple independent ranked lists are likely more relevant than those appearing in only one. The k=60 constant prevents rank 1 from getting a score 60x higher than rank 60, maintaining robustness.
+A: RRF(d) = Σ 1/(k + rank(d, r)) summed over each retriever r. It's preferred because dense and sparse retrieval scores are on incomparable scales - BM25 scores might range 0-20, cosine similarity 0-1. Normalizing these distributions to combine them requires assumptions about their shape (min-max, z-score, sigmoid). RRF sidesteps normalization by only using rank positions. It's also theoretically grounded: documents appearing at the top of multiple independent ranked lists are likely more relevant than those appearing in only one. The k=60 constant prevents rank 1 from getting a score 60x higher than rank 60, maintaining robustness.
 
 **Q: Your RAG system is giving good results for most queries but failing on queries containing product version numbers (e.g., "bug in v3.4.2"). What's wrong and how do you fix it?** `[Medium]`
-A: This is a lexical gap issue — version numbers are rare tokens not well-represented in the embedding model's training data. Dense retrieval will fail for exact version matches. Fix: add BM25 to the retrieval pipeline (hybrid search). Specifically, add the version string "v3.4.2" as a metadata filter OR ensure BM25 can exact-match on the tokenized version string. Also consider adding version numbers as metadata fields during indexing and using metadata pre-filtering before ANN search.
+A: This is a lexical gap issue - version numbers are rare tokens not well-represented in the embedding model's training data. Dense retrieval will fail for exact version matches. Fix: add BM25 to the retrieval pipeline (hybrid search). Specifically, add the version string "v3.4.2" as a metadata filter OR ensure BM25 can exact-match on the tokenized version string. Also consider adding version numbers as metadata fields during indexing and using metadata pre-filtering before ANN search.
 
 **Q: A user says "the system retrieves the same document 3 times in different chunks." How do you fix this without degrading relevance?** `[Medium]`
-A: Use MMR (Maximal Marginal Relevance) retrieval — it penalizes chunks that are similar to already-selected chunks, promoting diversity. Set λ=0.7 to retain 70% relevance weighting and 30% diversity. Alternatively, apply a post-retrieval deduplication step: cluster retrieved chunks by source document and keep only the highest-scoring chunk per source. If parent-child chunking is set up, this is solved architecturally — small chunks retrieve, parent chunks return.
+A: Use MMR (Maximal Marginal Relevance) retrieval - it penalizes chunks that are similar to already-selected chunks, promoting diversity. Set λ=0.7 to retain 70% relevance weighting and 30% diversity. Alternatively, apply a post-retrieval deduplication step: cluster retrieved chunks by source document and keep only the highest-scoring chunk per source. If parent-child chunking is set up, this is solved architecturally - small chunks retrieve, parent chunks return.
 
 **Q: How would you tune the alpha weight in hybrid search (dense + sparse)?** `[Medium]`
 A: Hold out 100-500 query-answer pairs from production traffic as a validation set. For each alpha value (e.g., 0.3, 0.5, 0.7), compute Recall@5 on the validation set. The optimal alpha typically varies by domain: lexically rich domains (legal, technical documentation) often benefit from higher sparse weight (alpha=0.4-0.5), while conversational/general domains benefit from higher dense weight (alpha=0.6-0.7). Re-run this periodically as your corpus and query distribution evolves.
 
 **Q: Explain the two-stage retrieval architecture. Why not just use a cross-encoder for all retrieval?** `[Easy]`
-A: A cross-encoder must process each (query, document) pair jointly — for a 1M-document corpus, that's 1M model inference calls per query, taking minutes. The two-stage approach: first-stage bi-encoder ANN search (milliseconds) narrows down to top-20-100 candidates, then a cross-encoder re-scores only those 20-100 pairs (100-200ms). You get 99%+ of cross-encoder quality at bi-encoder speed, because the cross-encoder only needs to distinguish among the already-good first-stage candidates.
+A: A cross-encoder must process each (query, document) pair jointly - for a 1M-document corpus, that's 1M model inference calls per query, taking minutes. The two-stage approach: first-stage bi-encoder ANN search (milliseconds) narrows down to top-20-100 candidates, then a cross-encoder re-scores only those 20-100 pairs (100-200ms). You get 99%+ of cross-encoder quality at bi-encoder speed, because the cross-encoder only needs to distinguish among the already-good first-stage candidates.
 
 **Q: What is HyDE and when should you use caution with it?** `[Hard]`
-A: HyDE embeds a hypothetical document generated by the LLM instead of the raw query, bringing the query representation closer to the document distribution. Use with caution when: (1) the LLM's generated hypothesis might be confidently wrong — this contaminates the embedding with incorrect information and retrieves documents about the wrong topic. (2) The domain requires precise terminology — a wrong hypothesis in medical/legal domains could retrieve dangerously misleading documents. Monitor HyDE vs direct-query recall on a test set; HyDE rarely helps when queries are already well-phrased.
+A: HyDE embeds a hypothetical document generated by the LLM instead of the raw query, bringing the query representation closer to the document distribution. Use with caution when: (1) the LLM's generated hypothesis might be confidently wrong - this contaminates the embedding with incorrect information and retrieves documents about the wrong topic. (2) The domain requires precise terminology - a wrong hypothesis in medical/legal domains could retrieve dangerously misleading documents. Monitor HyDE vs direct-query recall on a test set; HyDE rarely helps when queries are already well-phrased.
 
 **Q: How do you handle multi-hop questions in standard (non-agentic) RAG?** `[Hard]`
 A: Multi-query expansion is the simplest approach: decompose the question into 2-3 sub-questions, retrieve for each, merge and deduplicate the results, then provide all chunks as context. For example, "What was the revenue of Company A's UK division in the year their CTO resigned?" decomposes into (1) "Company A UK division revenue by year", (2) "Company A CTO resignation date." The caveat is that context window stuffing can occur if sub-questions retrieve many chunks. A better solution for complex multi-hop is Agentic RAG, where an agent iteratively retrieves and synthesizes.

@@ -1,4 +1,4 @@
-# LangGraph — Complex Agent
+# LangGraph - Complex Agent
 
 ## What We Are Building
 

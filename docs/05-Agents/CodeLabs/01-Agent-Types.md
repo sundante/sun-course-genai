@@ -1,4 +1,4 @@
-# Code Labs — 01: Agent Types
+# Code Labs - 01: Agent Types
 
 Build single agents from scratch across three complexity levels in all four frameworks. Each level adds a new capability layer on top of the previous.
 
@@ -85,12 +85,12 @@ After completing all four simple agents, compare: same task, four different appr
 
 ## What to Read Alongside
 
-- [Agent Fundamentals](../Notes/01-Agent-Fundamentals.md) — the ReAct loop, tool use, memory types
-- [Agent Patterns](../Notes/02-Agent-Patterns.md) — planning and reflection patterns used at Level 3
+- [Agent Fundamentals](../Notes/01-Agent-Fundamentals.md) - the ReAct loop, tool use, memory types
+- [Agent Patterns](../Notes/02-Agent-Patterns.md) - planning and reflection patterns used at Level 3
 - Framework-specific deep-dives: [GCP ADK](../GCP-ADK/INDEX.md) · [LangChain](../LangChain/INDEX.md) · [LangGraph](../LangGraph/INDEX.md) · [CrewAI](../CrewAI/INDEX.md)
 
 ---
 
 ## Next: Architecture Patterns
 
-Once you've built single agents, move to [02 — Architecture Patterns](../../06-Agentic-AI/CodeLabs/02-Architectures.md) to see how multiple agents coordinate.
+Once you've built single agents, move to [02 - Architecture Patterns](../../06-Agentic-AI/CodeLabs/02-Architectures.md) to see how multiple agents coordinate.

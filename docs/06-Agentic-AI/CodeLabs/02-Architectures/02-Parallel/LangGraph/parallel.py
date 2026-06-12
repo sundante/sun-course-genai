@@ -1,5 +1,5 @@
 """
-Parallel Architecture — LangGraph
+Parallel Architecture - LangGraph
 Pattern: Fan-out via Send() → Independent city nodes → Aggregate
 
 LangGraph's Send() API dispatches the same node to run simultaneously
@@ -49,10 +49,10 @@ def fan_out(state: OverallState):
 
 
 def research_city(state: CityState) -> dict:
-    """Research one city — runs in parallel for all cities."""
+    """Research one city - runs in parallel for all cities."""
     city = state["city"]
     d = CITY_DATA.get(city.lower(), {})
-    raw = f"{city} — Weather: {d.get('weather','N/A')} | Safety: {d.get('safety','N/A')} | Time: {d.get('time','N/A')}"
+    raw = f"{city} - Weather: {d.get('weather','N/A')} | Safety: {d.get('safety','N/A')} | Time: {d.get('time','N/A')}"
 
     response = llm.invoke([
         SystemMessage(content="Write a structured 3-line city travel report: Weather, Safety, Recommendation."),

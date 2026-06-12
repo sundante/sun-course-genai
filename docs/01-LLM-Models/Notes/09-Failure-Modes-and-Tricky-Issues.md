@@ -25,16 +25,16 @@ After fine-tuning:
 ```
 
 **Why it's especially problematic for LLMs:**
-- LLMs' general capabilities (reasoning, instruction following, factual recall) are diffuse — distributed across all weights
-- Task-specific fine-tuning gradients are "dense" — they update all weights significantly
-- RLHF/SFT on narrow datasets can cause what's called "alignment tax" — reduced performance on benchmarks
+- LLMs' general capabilities (reasoning, instruction following, factual recall) are diffuse - distributed across all weights
+- Task-specific fine-tuning gradients are "dense" - they update all weights significantly
+- RLHF/SFT on narrow datasets can cause what's called "alignment tax" - reduced performance on benchmarks
 
 ---
 
 ### Mitigations
 
 **1. LoRA / PEFT (most effective in practice):**
-The base model weights are **frozen** — gradients never update the original parameters. Only the LoRA adapter (BA) is trained. Since the base model cannot be modified, catastrophic forgetting is theoretically impossible.
+The base model weights are **frozen** - gradients never update the original parameters. Only the LoRA adapter (BA) is trained. Since the base model cannot be modified, catastrophic forgetting is theoretically impossible.
 
 ```
 W_new = W_0 + B·A
@@ -63,7 +63,7 @@ Maintain a small buffer of samples from the original training data. Mix original
 Training batch = new_task_samples + old_task_samples (e.g., 80:20 ratio)
 ```
 
-Simple but requires access to the original training data — often not available for proprietary LLMs.
+Simple but requires access to the original training data - often not available for proprietary LLMs.
 
 **4. Continual Learning approaches:**
 - PackNet: prune unneeded weights for task N, train new tasks in freed capacity
@@ -71,7 +71,7 @@ Simple but requires access to the original training data — often not available
 - Distillation: use the original model as a teacher; penalize KL divergence from its outputs
 
 **Interview tricky Q:** *You fine-tune LLaMA-3 8B on customer support data and notice general reasoning degrades. What are your options?*  
-1. Switch to LoRA (most practical — preserves base model, add adapter only)
+1. Switch to LoRA (most practical - preserves base model, add adapter only)
 2. Mix customer support data with general instruction data in fine-tuning
 3. Reduce learning rate and number of epochs
 4. Add EWC regularization if willing to compute Fisher information
@@ -96,7 +96,7 @@ Model performance:
   Key info in Doc 17 (end):   ~80% accuracy
 ```
 
-The model shows primacy bias (start) and recency bias (end) — both ends of the context are reliably attended to; the middle is not.
+The model shows primacy bias (start) and recency bias (end) - both ends of the context are reliably attended to; the middle is not.
 
 **Why this happens:**
 1. **Attention patterns:** In practice, attention weights concentrate heavily at the beginning and end of sequences (special tokens, recent tokens dominate attention)
@@ -111,7 +111,7 @@ The model shows primacy bias (start) and recency bias (end) — both ends of the
 **Mitigations:**
 1. **Reranking:** Put most relevant retrieved chunks at the start and end of the context, not the middle
 2. **Lost in the middle-aware chunking:** Break long documents into independent smaller queries
-3. **Re-reading prompts:** "Read this document twice: [doc]" — empirically helps in some evaluations
+3. **Re-reading prompts:** "Read this document twice: [doc]" - empirically helps in some evaluations
 4. **Hierarchical summarization:** Summarize large documents first, use summary + selected chunks
 5. **Better attention:** Flash Attention 3, sparse attention patterns may help, but fundamental bias persists
 
@@ -135,7 +135,7 @@ Hallucination occurs when an LLM generates factually incorrect, fabricated, or u
 **Why LLMs hallucinate:**
 1. **Training distribution:** Models are trained to produce plausible text. Plausible ≠ true.
 2. **No explicit uncertainty:** The model has no mechanism to say "I don't know" unless trained specifically for this
-3. **Knowledge cutoff:** Questions about post-training events have no correct answer in the model's parameters — it must extrapolate or fabricate
+3. **Knowledge cutoff:** Questions about post-training events have no correct answer in the model's parameters - it must extrapolate or fabricate
 4. **Poorly represented training data:** If a fact appeared rarely in training, the model has weak confidence but may still generate a plausible-sounding (wrong) answer
 
 **Mitigation strategies:**
@@ -149,8 +149,8 @@ Hallucination occurs when an LLM generates factually incorrect, fabricated, or u
 | Constitutional AI | Self-critique against principles | Doesn't eliminate hallucination, reduces rate |
 | Factuality fine-tuning | Fine-tune on factuality-preserving datasets | Requires curated data; may reduce fluency |
 
-**Interview Q:** *RAG reduces hallucination — why doesn't it eliminate it?*
-Three reasons: (1) Retrieved chunks may be irrelevant — model hallucinates anyway. (2) Lost-in-the-middle: key information in context is overlooked. (3) Closed-domain hallucination: model ignores context even when relevant (especially for unfamiliar or complex claims).
+**Interview Q:** *RAG reduces hallucination - why doesn't it eliminate it?*
+Three reasons: (1) Retrieved chunks may be irrelevant - model hallucinates anyway. (2) Lost-in-the-middle: key information in context is overlooked. (3) Closed-domain hallucination: model ignores context even when relevant (especially for unfamiliar or complex claims).
 
 ---
 
@@ -167,7 +167,7 @@ Sycophantic model: "You raise an interesting point! The Earth's age is indeed de
 Correct model: "The Earth is approximately 4.5 billion years old based on radiometric dating..."
 ```
 
-**Root cause — RLHF feedback loop:**
+**Root cause - RLHF feedback loop:**
 1. Human raters (used for RLHF reward model training) tend to prefer responses that validate their views
 2. The reward model learns to score agreeable responses higher
 3. PPO optimizes for high reward → model learns to be agreeable
@@ -191,10 +191,10 @@ Correct model: "The Earth is approximately 4.5 billion years old based on radiom
 
 ### Concept
 
-As a prompt approaches the model's context window limit, performance degrades — even if the total token count technically fits.
+As a prompt approaches the model's context window limit, performance degrades - even if the total token count technically fits.
 
 **What causes degradation near the limit:**
-1. **Attention entropy:** With many tokens, each position's attention is spread thin — signal diluted by noise
+1. **Attention entropy:** With many tokens, each position's attention is spread thin - signal diluted by noise
 2. **Position encoding limits:** Learned absolute positions or RoPE may extrapolate poorly near the training length
 3. **Memory concentration:** The model may "forget" early context when recent context is very long
 4. **Computational precision:** Floating-point operations accumulate small errors across many attention steps
@@ -221,7 +221,7 @@ Greedy decoding (temperature=0) has a well-known failure mode: **degeneration lo
 **Why it happens:**
 - Once a token sequence creates a high-probability context for repeating, greedy selection locks in the loop
 - Example: "The cat sat on the mat. The cat sat on the mat. The cat sat on the mat..."
-- This is an attractor state — the conditional probability of continuing the loop is higher than breaking out of it
+- This is an attractor state - the conditional probability of continuing the loop is higher than breaking out of it
 
 **The n-gram repetition problem:**
 - Common with models fine-tuned on repetitive data (e.g., boilerplate legal text)
@@ -243,8 +243,8 @@ The way text tokenizes creates systematic model failures that are easy to overlo
 
 **Number tokenization:**
 - "9.11" tokenizes as `["9", ".", "1", "1"]` and "9.9" as `["9", ".", "9"]`
-- The model sees sequences of digit tokens, not numbers — it must reason about digit sequences to compare values
-- This is why "9.11 > 9.9 — true or false?" is a known failure mode
+- The model sees sequences of digit tokens, not numbers - it must reason about digit sequences to compare values
+- This is why "9.11 > 9.9 - true or false?" is a known failure mode
 
 **Currency and numbers:**
 - "$1,000,000" might tokenize as `["$", "1", ",", "000", ",", "000"]`
@@ -252,10 +252,10 @@ The way text tokenizes creates systematic model failures that are easy to overlo
 
 **Cross-token word completion:**
 - "ChatGPT" might tokenize as `["Chat", "G", "PT"]`
-- Asking "spell ChatGPT letter by letter" requires the model to decompose the token sequence into individual letters — non-trivial
+- Asking "spell ChatGPT letter by letter" requires the model to decompose the token sequence into individual letters - non-trivial
 
 **Case and punctuation sensitivity:**
-- "Hello" and "hello" are different tokens — different token IDs, different embedding vectors
+- "Hello" and "hello" are different tokens - different token IDs, different embedding vectors
 - The model doesn't natively understand they represent the same word
 
 **Mitigation:** For tasks requiring exact number comparison or letter-by-letter operations, use tools (Python interpreter, regex) rather than relying on the model's probabilistic token predictions.
@@ -268,7 +268,7 @@ The way text tokenizes creates systematic model failures that are easy to overlo
 
 When providing few-shot examples, models exhibit bias toward the **label distribution at the end of the example list** and toward **majority labels** in the example set.
 
-**Order bias:** If all your few-shot examples have label "positive" at the end, the model is more likely to predict "positive" for the test input — regardless of its content.
+**Order bias:** If all your few-shot examples have label "positive" at the end, the model is more likely to predict "positive" for the test input - regardless of its content.
 
 **Label distribution bias:** If 4/5 examples are "positive," the model is biased toward predicting "positive" even when the test input signals "negative."
 
@@ -291,8 +291,8 @@ When providing few-shot examples, models exhibit bias toward the **label distrib
 - Number tokenization → arithmetic failures → use Python tools for computation
 
 **Quick recall Q&A:**
-- *What is catastrophic forgetting and how does LoRA prevent it?* Fine-tuning overwrites general capabilities by updating all weights. LoRA freezes base model weights — only adapters (BA matrices) are updated, making forgetting impossible.
+- *What is catastrophic forgetting and how does LoRA prevent it?* Fine-tuning overwrites general capabilities by updating all weights. LoRA freezes base model weights - only adapters (BA matrices) are updated, making forgetting impossible.
 - *Why does lost-in-the-middle happen?* Attention concentrates on beginning (primacy) and recent (recency) tokens; middle positions receive diluted attention.
 - *Why does RLHF cause sycophancy?* Human raters prefer agreeable responses → reward model scores them higher → PPO optimizes for agreement → model learns to be sycophantic.
-- *What is intrinsic hallucination?* A response that contradicts the provided source context — the model generates facts that conflict with what's in the prompt.
+- *What is intrinsic hallucination?* A response that contradicts the provided source context - the model generates facts that conflict with what's in the prompt.
 - *How do you debug "my model keeps repeating itself"?* Use sampling (temperature > 0), set `repetition_penalty=1.2`, or `no_repeat_ngram_size=3` to break attractor loops.

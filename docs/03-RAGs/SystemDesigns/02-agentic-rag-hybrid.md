@@ -16,13 +16,13 @@
 
 | Limitation | Why It Breaks This Use Case |
 |---|---|
-| Single-hop retrieval | Question requires: Drug → Protein → Disease (×2) → Trial — 4 hops across entity types |
+| Single-hop retrieval | Question requires: Drug → Protein → Disease (×2) → Trial - 4 hops across entity types |
 | No entity relationships | Vector search returns similar text, not connected facts |
 | No structured reasoning | "Both Alzheimer's AND Type 2 Diabetes" requires set intersection, not similarity |
 | Context window bottleneck | 2M papers → top-5 chunks rarely co-contain all hops |
 | No iterative refinement | Answer to hop 1 should inform retrieval for hop 2 |
 
-**The solution:** Hybrid Data — pair a Vector Index (semantic document retrieval) with a Knowledge Graph (structured entity relationships). An agent orchestrates multi-hop traversal across both stores.
+**The solution:** Hybrid Data - pair a Vector Index (semantic document retrieval) with a Knowledge Graph (structured entity relationships). An agent orchestrates multi-hop traversal across both stores.
 
 ---
 
@@ -30,12 +30,12 @@
 
 | Question | Why It Matters |
 |---|---|
-| What entity types exist in the domain? (drugs, proteins, genes, diseases, trials?) | Defines graph schema — nodes and edge types |
+| What entity types exist in the domain? (drugs, proteins, genes, diseases, trials?) | Defines graph schema - nodes and edge types |
 | Is the molecular database structured (SQL/graph) or unstructured (papers only)? | Structured → import directly to graph; unstructured → NER extraction pipeline |
 | How often is data updated? (daily trial updates? weekly paper ingestion?) | Incremental graph update strategy vs. full rebuild |
 | What is the maximum acceptable latency? (research tool: 10s OK; clinical decision: 3s max) | Determines whether multi-hop can be synchronous or needs streaming |
 | Does the agent need to take actions (flag a trial, create a report) or only answer? | Read-only vs. read-write agent design |
-| Are there compliance requirements? (FDA, HIPAA — PII in trial documents?) | Drives data masking and audit logging depth |
+| Are there compliance requirements? (FDA, HIPAA - PII in trial documents?) | Drives data masking and audit logging depth |
 
 ---
 
@@ -140,7 +140,7 @@
 | Edge | From → To | Properties |
 |---|---|---|
 | `TARGETS` | Drug → Protein | mechanism, affinity_nM, confidence |
-| `ENCODES` | Gene → Protein | — |
+| `ENCODES` | Gene → Protein | - |
 | `ASSOCIATED_WITH` | Protein → Disease | evidence_type, score, pmid |
 | `IMPLICATED_IN` | Gene → Disease | gwas_p_value, effect_size |
 | `TESTED_IN` | Drug → ClinicalTrial | primary_endpoint, result |
@@ -251,7 +251,7 @@ Thought 2: Now I need proteins linked to Type 2 Diabetes with same criteria.
 Action 2: graph_query(entity_name="Type 2 Diabetes", entity_type="Disease", query_type="traversal", hops=1, filters={edge_type: "ASSOCIATED_WITH", min_score: 0.7})
 Observation 2: [IDE, APOE, INSR, GLP1R, IRS1] with association scores
 
-Thought 3: Compute the intersection — proteins in both lists.
+Thought 3: Compute the intersection - proteins in both lists.
 Action 3: entity_intersection([[APOE, tau, TREM2, CLU], [IDE, APOE, INSR, IRS1]], entity_type="Protein")
 Observation 3: [APOE]
 
@@ -316,13 +316,13 @@ Observation 7: Final answer with citations
 
 ### Agent Scalability
 
-**Problem:** ReAct loops are inherently sequential — each action depends on the prior observation.
+**Problem:** ReAct loops are inherently sequential - each action depends on the prior observation.
 
 **Mitigations:**
-1. **Parallel tool calls within a step** — when sub-queries are independent (e.g., "proteins in AD" and "proteins in T2D"), execute both graph queries concurrently. ADK supports parallel tool dispatch.
-2. **Materialized sub-graph caching** — pre-compute and cache common sub-graphs (e.g., "all proteins implicated in Alzheimer's") in Redis. Graph traversal for common starting nodes takes 1ms (cache hit) vs. 300ms (live query).
-3. **Iteration cap** — hard limit of 8 ReAct iterations with timeout of 15s. If exceeded, return partial answer with "further research needed" flag.
-4. **Query complexity classifier** — simple single-hop queries (entity lookup) bypass the agent loop entirely and go directly to vector search + graph_query.
+1. **Parallel tool calls within a step** - when sub-queries are independent (e.g., "proteins in AD" and "proteins in T2D"), execute both graph queries concurrently. ADK supports parallel tool dispatch.
+2. **Materialized sub-graph caching** - pre-compute and cache common sub-graphs (e.g., "all proteins implicated in Alzheimer's") in Redis. Graph traversal for common starting nodes takes 1ms (cache hit) vs. 300ms (live query).
+3. **Iteration cap** - hard limit of 8 ReAct iterations with timeout of 15s. If exceeded, return partial answer with "further research needed" flag.
+4. **Query complexity classifier** - simple single-hop queries (entity lookup) bypass the agent loop entirely and go directly to vector search + graph_query.
 
 ### Ingestion Scalability: 2M Papers
 
@@ -357,12 +357,12 @@ Full initial load of 2M papers: ~3–4 days. Incremental updates (100 papers/day
 | Agent infinite loop | ReAct exceeds iteration cap | Hard 8-iteration + 15s timeout; return partial answer |
 | Stale graph data | Drug candidate phase changed | Graph edges have `last_updated` timestamp; warn if >30 days |
 | High-degree node explosion | Query returns 50k edges | Degree-bounded traversal (LIMIT 100 per hop) |
-| Hallucinated graph paths | Agent invents relationships | Synthesis tool only uses `graph_facts` actually returned — no interpolation |
+| Hallucinated graph paths | Agent invents relationships | Synthesis tool only uses `graph_facts` actually returned - no interpolation |
 | NER extraction errors | Wrong entity extracted | Human-in-the-loop review queue for low-confidence extractions; threshold 0.85 |
 
 ---
 
-## Simple RAG vs. Agentic RAG Hybrid — Decision Matrix
+## Simple RAG vs. Agentic RAG Hybrid - Decision Matrix
 
 | Criterion | Simple RAG | Agentic RAG Hybrid |
 |---|---|---|
@@ -373,8 +373,8 @@ Full initial load of 2M papers: ~3–4 days. Incremental updates (100 papers/day
 | Set operations needed? | No | Yes (intersection, union) |
 | Agent complexity | Low | High (ReAct loop) |
 | Operational cost | Low | High (graph infra + agent) |
-| Use Simple RAG when... | Q&A, summarization, policy lookup | — |
-| Use Hybrid when... | — | Drug discovery, compliance tracing, financial fraud chains |
+| Use Simple RAG when... | Q&A, summarization, policy lookup | - |
+| Use Hybrid when... | - | Drug discovery, compliance tracing, financial fraud chains |
 
 ---
 
@@ -382,40 +382,40 @@ Full initial load of 2M papers: ~3–4 days. Incremental updates (100 papers/day
 
 **Q1: Why can't a standard RAG pipeline answer multi-hop questions like "proteins implicated in both Disease A and Disease B"? What specifically breaks?** `[Medium]`
 
-A: Three structural failures: (1) **No set operations** — vector similarity returns the most similar chunks, not the intersection of entity sets. A query for "both Alzheimer's AND T2D" may retrieve chunks about each disease separately but has no mechanism to compute the protein overlap. (2) **No entity relationship traversal** — the relationship `Drug TARGETS Protein` is implicit in text but not navigable. A chunk that says "Lecanemab binds APOE" and a chunk that says "APOE is associated with T2D" exist in different embedding neighborhoods — the system has no way to connect them without explicitly traversing an edge. (3) **Context window bottleneck** — even if you retrieved all relevant chunks (hundreds), the LLM would struggle to compute a precise intersection from unstructured prose across a 100k-token context window. Knowledge graphs make these relationships explicit and queryable.
+A: Three structural failures: (1) **No set operations** - vector similarity returns the most similar chunks, not the intersection of entity sets. A query for "both Alzheimer's AND T2D" may retrieve chunks about each disease separately but has no mechanism to compute the protein overlap. (2) **No entity relationship traversal** - the relationship `Drug TARGETS Protein` is implicit in text but not navigable. A chunk that says "Lecanemab binds APOE" and a chunk that says "APOE is associated with T2D" exist in different embedding neighborhoods - the system has no way to connect them without explicitly traversing an edge. (3) **Context window bottleneck** - even if you retrieved all relevant chunks (hundreds), the LLM would struggle to compute a precise intersection from unstructured prose across a 100k-token context window. Knowledge graphs make these relationships explicit and queryable.
 
 ---
 
 **Q2: What is the risk of an unbounded graph traversal in the agent's `graph_query` tool, and how do you design against it?** `[Hard]`
 
-A: Unbounded traversal from a high-degree node (e.g., "APOE", which may connect to 50,000 papers and 10,000 proteins in a large biomedical graph) can return millions of nodes, consuming all available memory and timing out the agent within seconds. Three defenses: (1) **Hard `LIMIT` per hop** — cap results at 100–500 edges per traversal level; the agent sees the most relevant (by confidence score) rather than all. (2) **Hop depth limit** — cap at 2–3 hops; queries requiring 4+ hops should be decomposed by the agent into chained 2-hop queries. (3) **Degree pruning** — edges are sorted by `confidence` or `evidence_count` before applying the limit, ensuring high-quality edges are retained. The agent must be designed to recognize "too many results" as a signal to add more filters, not to use all results.
+A: Unbounded traversal from a high-degree node (e.g., "APOE", which may connect to 50,000 papers and 10,000 proteins in a large biomedical graph) can return millions of nodes, consuming all available memory and timing out the agent within seconds. Three defenses: (1) **Hard `LIMIT` per hop** - cap results at 100–500 edges per traversal level; the agent sees the most relevant (by confidence score) rather than all. (2) **Hop depth limit** - cap at 2–3 hops; queries requiring 4+ hops should be decomposed by the agent into chained 2-hop queries. (3) **Degree pruning** - edges are sorted by `confidence` or `evidence_count` before applying the limit, ensuring high-quality edges are retained. The agent must be designed to recognize "too many results" as a signal to add more filters, not to use all results.
 
 ---
 
-**Q3: Describe the role of Spanner Graph specifically — why not use Neo4j, or just use AlloyDB with a graph extension?** `[Hard]`
+**Q3: Describe the role of Spanner Graph specifically - why not use Neo4j, or just use AlloyDB with a graph extension?** `[Hard]`
 
-A: Spanner Graph is the right choice for this use case for three reasons: (1) **ACID + global scale** — Spanner provides externally consistent transactions across regions. For a pharmaceutical knowledge graph where an incorrect drug-protein edge could affect drug safety decisions, transactional consistency matters — you cannot have partial edge inserts. Neo4j Community provides ACID locally but not across multi-region deployments without enterprise licensing. (2) **GQL (Graph Query Language) ISO standard** — Spanner Graph supports the ISO/IEC GQL standard, making queries portable and the team's skills transferable. (3) **GCP-native integration** — Spanner integrates natively with Dataflow (ingestion), IAM (access control), VPC Service Controls (compliance perimeter), and Cloud Monitoring — all required for enterprise pharma. AlloyDB with Apache AGE provides graph extensions but is better suited for small graphs (<10M nodes) where SQL-first modeling is more natural; at 100M+ node scale, native graph storage with graph-optimized query execution (like Spanner Graph) significantly outperforms.
+A: Spanner Graph is the right choice for this use case for three reasons: (1) **ACID + global scale** - Spanner provides externally consistent transactions across regions. For a pharmaceutical knowledge graph where an incorrect drug-protein edge could affect drug safety decisions, transactional consistency matters - you cannot have partial edge inserts. Neo4j Community provides ACID locally but not across multi-region deployments without enterprise licensing. (2) **GQL (Graph Query Language) ISO standard** - Spanner Graph supports the ISO/IEC GQL standard, making queries portable and the team's skills transferable. (3) **GCP-native integration** - Spanner integrates natively with Dataflow (ingestion), IAM (access control), VPC Service Controls (compliance perimeter), and Cloud Monitoring - all required for enterprise pharma. AlloyDB with Apache AGE provides graph extensions but is better suited for small graphs (<10M nodes) where SQL-first modeling is more natural; at 100M+ node scale, native graph storage with graph-optimized query execution (like Spanner Graph) significantly outperforms.
 
 ---
 
-**Q4: The agent is hallucinating graph paths — claiming Drug X targets Protein Y when that edge doesn't exist. How do you prevent this?** `[Hard]`
+**Q4: The agent is hallucinating graph paths - claiming Drug X targets Protein Y when that edge doesn't exist. How do you prevent this?** `[Hard]`
 
-A: This happens when the synthesis step extrapolates from implicit context rather than explicit graph facts. Three-layer fix: (1) **Structural grounding constraint** — the synthesis tool prompt explicitly prohibits generating relationship claims not present in the `graph_facts` parameter: "Only state relationships that appear verbatim in the provided graph facts. Do not infer or extrapolate." (2) **Citation enforcement** — every relationship claim in the answer must be tagged with its source: either a graph edge ID (e.g., `[Graph: Drug-Protein edge #4521, confidence=0.92]`) or a document citation. Any uncited relational claim is flagged as unverified. (3) **Post-generation fact check** — after generation, extract all relational claims from the answer and verify each against the knowledge graph with a `graph_query(query_type="entity_lookup")`. Any claim not found in the graph is either removed or flagged with "not confirmed in knowledge base." This adds ~200ms but eliminates hallucinated relationships.
+A: This happens when the synthesis step extrapolates from implicit context rather than explicit graph facts. Three-layer fix: (1) **Structural grounding constraint** - the synthesis tool prompt explicitly prohibits generating relationship claims not present in the `graph_facts` parameter: "Only state relationships that appear verbatim in the provided graph facts. Do not infer or extrapolate." (2) **Citation enforcement** - every relationship claim in the answer must be tagged with its source: either a graph edge ID (e.g., `[Graph: Drug-Protein edge #4521, confidence=0.92]`) or a document citation. Any uncited relational claim is flagged as unverified. (3) **Post-generation fact check** - after generation, extract all relational claims from the answer and verify each against the knowledge graph with a `graph_query(query_type="entity_lookup")`. Any claim not found in the graph is either removed or flagged with "not confirmed in knowledge base." This adds ~200ms but eliminates hallucinated relationships.
 
 ---
 
 **Q5: How do you handle the cold-start problem when the knowledge graph is first populated from 2M unstructured research papers?** `[Hard]`
 
-A: Cold-start is a 3–4 day batch pipeline, not an online process. (1) **Entity extraction at scale** — use Vertex AI Gemini Flash batch prediction to run NER across all 2M papers in parallel. Each paper produces a JSON of extracted entities: `{drugs: [], proteins: [], diseases: [], relations: []}`. At Flash pricing, 2M papers cost ~$200–400. (2) **Deduplication** — entities must be canonicalized before graph insertion. "amyloid-beta", "Aβ", "A-beta" must map to the same protein node (UniProt Q9Y287). Use fuzzy string matching (Jaro-Winkler > 0.92) + lookup against MeSH, UniProt, and ChEMBL canonical name dictionaries. Run in Dataflow. (3) **Confidence scoring** — each extracted edge gets a confidence score based on: extraction model confidence + number of papers supporting the claim + whether the paper is a review article (higher weight) vs. a single study. Only edges with confidence > 0.7 are inserted at cold-start; lower-confidence edges are stored in a review queue. (4) **Incremental updates** — after cold-start, new papers trigger streaming Pub/Sub messages → Dataflow → NER → graph upsert, keeping the graph current within hours of new publications.
+A: Cold-start is a 3–4 day batch pipeline, not an online process. (1) **Entity extraction at scale** - use Vertex AI Gemini Flash batch prediction to run NER across all 2M papers in parallel. Each paper produces a JSON of extracted entities: `{drugs: [], proteins: [], diseases: [], relations: []}`. At Flash pricing, 2M papers cost ~$200–400. (2) **Deduplication** - entities must be canonicalized before graph insertion. "amyloid-beta", "Aβ", "A-beta" must map to the same protein node (UniProt Q9Y287). Use fuzzy string matching (Jaro-Winkler > 0.92) + lookup against MeSH, UniProt, and ChEMBL canonical name dictionaries. Run in Dataflow. (3) **Confidence scoring** - each extracted edge gets a confidence score based on: extraction model confidence + number of papers supporting the claim + whether the paper is a review article (higher weight) vs. a single study. Only edges with confidence > 0.7 are inserted at cold-start; lower-confidence edges are stored in a review queue. (4) **Incremental updates** - after cold-start, new papers trigger streaming Pub/Sub messages → Dataflow → NER → graph upsert, keeping the graph current within hours of new publications.
 
 ---
 
 **Q6: A researcher reports that the agent gives inconsistent answers to the same question on different days. What are the likely causes and how do you build reproducibility?** `[Hard]`
 
-A: Three sources of non-determinism: (1) **Graph data changes** — new papers added edges between old cold-start queries. The answer was correct both times given the graph state at that moment. Fix: log the graph state snapshot (edge version IDs) used for each query in BigQuery. Reproducibility means replaying a query against the same graph version. (2) **LLM temperature > 0** — synthesis step uses sampling, producing different phrasings or emphasis on different runs. Fix: set temperature=0 for synthesis in research/compliance contexts; accept that some variation is normal in phrasing but ensure core entity claims are deterministic from graph facts. (3) **Semantic cache invalidation race** — cached response from Day 1 returned on Day 2, but graph was updated in between; then cache expired and live query returned different (more current) answer. Fix: cache keys include `graph_version_hash` so cache entries are invalidated when the underlying graph changes. Include the query timestamp and graph version in the response so researchers know which data generation answered their question.
+A: Three sources of non-determinism: (1) **Graph data changes** - new papers added edges between old cold-start queries. The answer was correct both times given the graph state at that moment. Fix: log the graph state snapshot (edge version IDs) used for each query in BigQuery. Reproducibility means replaying a query against the same graph version. (2) **LLM temperature > 0** - synthesis step uses sampling, producing different phrasings or emphasis on different runs. Fix: set temperature=0 for synthesis in research/compliance contexts; accept that some variation is normal in phrasing but ensure core entity claims are deterministic from graph facts. (3) **Semantic cache invalidation race** - cached response from Day 1 returned on Day 2, but graph was updated in between; then cache expired and live query returned different (more current) answer. Fix: cache keys include `graph_version_hash` so cache entries are invalidated when the underlying graph changes. Include the query timestamp and graph version in the response so researchers know which data generation answered their question.
 
 ---
 
 **Q7: Design the observability stack for this system. What metrics do you track at each layer?** `[Medium]`
 
-A: Four layers: (1) **Infrastructure** (Cloud Monitoring): Cloud Run CPU/memory per service, Spanner read/write latency P50/P99, Vector Search query latency, Redis cache hit rate. Alert on: Spanner P99 > 500ms, cache hit rate < 10%, Cloud Run error rate > 1%. (2) **Agent** (Cloud Trace + custom spans): total ReAct loop duration, iterations per query, tool call latency per tool type (graph_query vs. vector_search), timeout rate. Track `mean_iterations_per_query` — if it rises, queries are getting more complex or the agent is getting confused. (3) **Retrieval quality** (BigQuery + offline eval): graph traversal recall (did the graph path exist?), vector search MRR@5, entity extraction precision/recall on a labeled test set. Run RAGAS weekly on a sample of queries. (4) **Answer quality** (human feedback + LLM-as-judge): thumbs up/down from researchers, LLM-as-judge faithfulness score (are answer claims grounded in graph facts?), hallucination rate on labeled golden set. Dashboard in Looker Studio.
+A: Four layers: (1) **Infrastructure** (Cloud Monitoring): Cloud Run CPU/memory per service, Spanner read/write latency P50/P99, Vector Search query latency, Redis cache hit rate. Alert on: Spanner P99 > 500ms, cache hit rate < 10%, Cloud Run error rate > 1%. (2) **Agent** (Cloud Trace + custom spans): total ReAct loop duration, iterations per query, tool call latency per tool type (graph_query vs. vector_search), timeout rate. Track `mean_iterations_per_query` - if it rises, queries are getting more complex or the agent is getting confused. (3) **Retrieval quality** (BigQuery + offline eval): graph traversal recall (did the graph path exist?), vector search MRR@5, entity extraction precision/recall on a labeled test set. Run RAGAS weekly on a sample of queries. (4) **Answer quality** (human feedback + LLM-as-judge): thumbs up/down from researchers, LLM-as-judge faithfulness score (are answer claims grounded in graph facts?), hallucination rate on labeled golden set. Dashboard in Looker Studio.

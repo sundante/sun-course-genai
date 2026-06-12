@@ -41,7 +41,7 @@ SFT trains the model on labeled (input, output) pairs using the standard CLM los
 }
 ```
 
-**Critical technique — loss masking:**
+**Critical technique - loss masking:**
 
 During SFT, you only compute the loss on the **completion tokens** (the output), not the instruction tokens. This is crucial:
 
@@ -53,7 +53,7 @@ Loss mask:     [  0  ]  0  0   0  [  0  ]  1   1     1     1   1  ...
 Why? You want the model to learn to generate good outputs, not to memorize the instruction phrasing. Computing loss on the instruction would also wastefully push the model toward strange completions of instruction fragments.
 
 **Tricky Q:** *Why do you mask the instruction tokens during SFT loss computation?*  
-If you include instruction tokens in the loss, you're computing gradients to "predict" arbitrary instruction text — but instructions vary across examples and have no consistent pattern to learn. More importantly, you want to optimize output quality, not instruction completion. Masking ensures gradients only flow from the target output.
+If you include instruction tokens in the loss, you're computing gradients to "predict" arbitrary instruction text - but instructions vary across examples and have no consistent pattern to learn. More importantly, you want to optimize output quality, not instruction completion. Masking ensures gradients only flow from the target output.
 
 **SFT data quality > quantity:**
 - 1,000 high-quality diverse instruction-response pairs often outperform 100,000 noisy ones (LIMA paper, 2023)
@@ -62,7 +62,7 @@ If you include instruction tokens in the loss, you're computing gradients to "pr
 
 ---
 
-## RLHF — Reinforcement Learning from Human Feedback
+## RLHF - Reinforcement Learning from Human Feedback
 
 ### Concept
 
@@ -85,14 +85,14 @@ Stage 3: Reinforcement Learning (PPO)
 ```
 
 **Why RLHF is hard:**
-- Reward models are imperfect proxies for human preference — they can be gamed
+- Reward models are imperfect proxies for human preference - they can be gamed
 - PPO is unstable: too many updates → reward hacking (model exploits reward model flaws)
 - Expensive: requires thousands of human preference annotations
 - Distribution shift: fine-tuned model wanders from the SFT distribution → capability regression
 
 ---
 
-## DPO — Direct Preference Optimization
+## DPO - Direct Preference Optimization
 
 ### Concept
 
@@ -112,7 +112,7 @@ Where:
   β = temperature controlling how far policy deviates from reference
 ```
 
-In plain English: increase the log-probability of preferred responses relative to the reference model; decrease the log-probability of rejected responses — all in one supervised loss without RL.
+In plain English: increase the log-probability of preferred responses relative to the reference model; decrease the log-probability of rejected responses - all in one supervised loss without RL.
 
 **Why DPO is preferred in 2024:**
 - No separate reward model training
@@ -131,13 +131,13 @@ In plain English: increase the log-probability of preferred responses relative t
 
 ---
 
-## RFT and GRPO — Modern Alignment Alternatives
+## RFT and GRPO - Modern Alignment Alternatives
 
 ### Concept
 
 **RFT (Reward Function Fine-Tuning):** Trains the model directly with reward signals without running the full PPO loop. Simpler than RLHF and often more stable, though less expressive than full RL. Best used when you want alignment improvements with less complexity than RLHF.
 
-**GRPO (Group Relative Policy Optimization):** A generative RL algorithm that optimizes model policies with better sample efficiency than PPO. Instead of a value function, GRPO estimates baselines from groups of sampled outputs — making it more stable and scalable to long-sequence generation.
+**GRPO (Group Relative Policy Optimization):** A generative RL algorithm that optimizes model policies with better sample efficiency than PPO. Instead of a value function, GRPO estimates baselines from groups of sampled outputs - making it more stable and scalable to long-sequence generation.
 
 ```
 GRPO vs PPO key difference:
@@ -148,7 +148,7 @@ GRPO: samples a group of outputs, uses relative reward within the group as basel
 ```
 
 **Why GRPO matters for reasoning models:**
-- DeepSeek-R1 (2025) used GRPO to train long chain-of-thought reasoning — the model learns to produce extended reasoning traces that score higher on math/code benchmarks
+- DeepSeek-R1 (2025) used GRPO to train long chain-of-thought reasoning - the model learns to produce extended reasoning traces that score higher on math/code benchmarks
 - GRPO's group-relative baseline naturally handles sparse rewards (e.g., "is the final answer correct?") which PPO struggles with at long horizons
 - Enables "thinking out loud" behavior where intermediate steps are rewarded
 
@@ -175,11 +175,11 @@ Full fine-tuning updates all model parameters. For a 7B model, that's 7 billion 
 
 ---
 
-## LoRA — Low-Rank Adaptation
+## LoRA - Low-Rank Adaptation
 
 ### Concept
 
-LoRA (Hu et al., 2021) is the dominant PEFT method. The key insight: the change in weights during fine-tuning has low intrinsic rank — it can be approximated by two small matrices.
+LoRA (Hu et al., 2021) is the dominant PEFT method. The key insight: the change in weights during fine-tuning has low intrinsic rank - it can be approximated by two small matrices.
 
 **The math:**
 ```
@@ -193,7 +193,7 @@ Forward pass:
   output = x·W_0 + x·(B·A) = x·W_0 + x·ΔW
 ```
 
-- **W_0** (base model weights): **frozen** — never updated
+- **W_0** (base model weights): **frozen** - never updated
 - **A** (right matrix): initialized with random Gaussian
 - **B** (left matrix): initialized with zeros → ΔW = B×A = 0 at start → training starts from the base model behavior
 - **r** (rank): hyperparameter, typically 4–64. Lower rank = fewer parameters, potentially lower quality
@@ -215,16 +215,16 @@ output = x·W_0 + (α/r) × x·(B·A)
 
 ---
 
-## QLoRA — Quantized LoRA
+## QLoRA - Quantized LoRA
 
 ### Concept
 
 QLoRA (Dettmers et al., 2023) enables fine-tuning very large models on consumer hardware by:
-1. **Quantizing the base model to NF4** (4-bit NormalFloat) — reduces base model memory by 4×
-2. **Training LoRA adapters in BF16** — the adapters are small, full-precision
-3. **Double quantization** — quantize the quantization constants themselves for extra savings
+1. **Quantizing the base model to NF4** (4-bit NormalFloat) - reduces base model memory by 4×
+2. **Training LoRA adapters in BF16** - the adapters are small, full-precision
+3. **Double quantization** - quantize the quantization constants themselves for extra savings
 
-**Why NF4?** LLM weights have a distribution close to normal. NF4 places quantization bins at equal probability intervals of the normal distribution — better coverage of likely weight values than uniform INT4.
+**Why NF4?** LLM weights have a distribution close to normal. NF4 places quantization bins at equal probability intervals of the normal distribution - better coverage of likely weight values than uniform INT4.
 
 **VRAM comparison for fine-tuning LLaMA-3 8B:**
 ```
@@ -344,7 +344,7 @@ class MultiTaskModel(nn.Module):
     def forward(self, input_ids, attention_mask, task="classification"):
         outputs = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
         hidden_states = outputs.last_hidden_state  # [batch, seq, hidden]
-        cls_embedding = hidden_states[:, 0, :]     # [batch, hidden] — CLS token
+        cls_embedding = hidden_states[:, 0, :]     # [batch, hidden] - CLS token
         
         if task == "classification":
             return self.classification_head(cls_embedding)
@@ -359,8 +359,8 @@ class MultiTaskModel(nn.Module):
 # Multi-task training strategy
 model = MultiTaskModel("bert-base-uncased", num_classes_intent=10, num_entity_types=9)
 
-# Option 1: Joint training — interleave batches from all tasks
-# Option 2: Sequential training — train task 1 then task 2 (catastrophic forgetting risk!)
+# Option 1: Joint training - interleave batches from all tasks
+# Option 2: Sequential training - train task 1 then task 2 (catastrophic forgetting risk!)
 # Option 3: Task-specific learning rates
 optimizer = torch.optim.AdamW([
     {"params": model.encoder.parameters(), "lr": 2e-5},      # small lr for shared encoder
@@ -371,10 +371,10 @@ optimizer = torch.optim.AdamW([
 ```
 
 **Multi-task interference mitigation:**
-- **Gradient surgery (PCGrad):** Projects gradients from one task onto the perpendicular of conflicting gradients from another task — reduces destructive interference
-- **Task-specific adapters:** Freeze the shared backbone and train separate LoRA adapters per task — no interference possible
+- **Gradient surgery (PCGrad):** Projects gradients from one task onto the perpendicular of conflicting gradients from another task - reduces destructive interference
+- **Task-specific adapters:** Freeze the shared backbone and train separate LoRA adapters per task - no interference possible
 - **Careful task weighting:** Weight task losses to prevent one task dominating gradient updates
-- **Sample difficulty:** Easy tasks can hurt hard tasks if they dominate the batch — use balanced sampling
+- **Sample difficulty:** Easy tasks can hurt hard tasks if they dominate the batch - use balanced sampling
 
 ---
 
@@ -425,7 +425,7 @@ After fine-tuning, you need to verify that quality improved on the target task w
 | Human Feedback | Thumbs-up/down, rating | Real-world helpfulness and satisfaction | LangSmith, TruLens, custom dashboards |
 | Live Monitoring | Latency, fail rates, usage stats | Operational metrics in production | OpenTelemetry, MLflow, Weights & Biases |
 
-**Code snippet — ROUGE + BERTScore evaluation:**
+**Code snippet - ROUGE + BERTScore evaluation:**
 
 ```python
 import evaluate
@@ -440,23 +440,23 @@ print(rouge.compute(predictions=predictions, references=references))
 print(bertscore.compute(predictions=predictions, references=references, lang="en"))
 ```
 
-**Regression testing:** Always keep a fixed "golden set" of prompts and expected behaviors. After each fine-tuning run, check that scores on this set don't degrade — catches catastrophic forgetting before deployment.
+**Regression testing:** Always keep a fixed "golden set" of prompts and expected behaviors. After each fine-tuning run, check that scores on this set don't degrade - catches catastrophic forgetting before deployment.
 
 ---
 
 ## Study Notes
 
 **Must-know for interviews:**
-- SFT loss is masked on instruction tokens — gradients only from output tokens
-- RLHF: reward model + PPO; DPO: direct preference on pairs without RL — DPO is now dominant
+- SFT loss is masked on instruction tokens - gradients only from output tokens
+- RLHF: reward model + PPO; DPO: direct preference on pairs without RL - DPO is now dominant
 - LoRA: ΔW ≈ BA where rank r << min(d,k); base model is frozen; ~0.5% trainable params at r=16
 - QLoRA = NF4 quantized base + BF16 LoRA adapters → enables 7B fine-tuning on a 24GB GPU
 - Multi-head fine-tuning: shared encoder + task-specific heads; task interference → use gradient surgery or per-task LoRA adapters
 - When to fine-tune: task-specific format/style that prompting can't achieve consistently
 
 **Quick recall Q&A:**
-- *Why mask instruction tokens in SFT?* To only optimize on output quality — instructions vary per example with no consistent target distribution.
+- *Why mask instruction tokens in SFT?* To only optimize on output quality - instructions vary per example with no consistent target distribution.
 - *What is the LoRA initialization strategy and why?* B=zeros, A=random → ΔW=BA=0 at init → training starts exactly from base model behavior.
-- *What is NF4?* 4-bit NormalFloat — bins placed at equal probability intervals of a normal distribution, optimal for LLM weights.
-- *What is the KL penalty in RLHF PPO?* KL(π_θ || π_SFT) penalizes deviating too far from the SFT model — prevents reward hacking.
+- *What is NF4?* 4-bit NormalFloat - bins placed at equal probability intervals of a normal distribution, optimal for LLM weights.
+- *What is the KL penalty in RLHF PPO?* KL(π_θ || π_SFT) penalizes deviating too far from the SFT model - prevents reward hacking.
 - *Why is DPO easier than RLHF?* No separate reward model training; no PPO instability; single supervised training stage.

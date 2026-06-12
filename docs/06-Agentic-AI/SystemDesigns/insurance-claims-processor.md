@@ -19,7 +19,7 @@ The problem is intentionally vague. These questions must be answered before comm
 | Question | Why It Matters |
 |---|---|
 | What evidence does the claimant submit? (photos, videos, police reports, written descriptions?) | Determines whether we need vision, audio transcription, or document parsing capabilities |
-| Which legacy systems must the agent interface with? (Claims Management System, CRM, policy DB?) | Defines the integration surface — tools the agents need to call |
+| Which legacy systems must the agent interface with? (Claims Management System, CRM, policy DB?) | Defines the integration surface - tools the agents need to call |
 | Has an insurance assessor already visited the site? | If yes, we have a structured assessment report; if no, the agent must infer damage from raw evidence alone |
 | What is the claim value threshold for auto-approval vs. mandatory human review? | Sets the HITL escalation policy |
 | What data is available on past claims? (for fraud detection and cost benchmarking) | Determines viability of RAG-based retrieval vs. fine-tuning |
@@ -110,7 +110,7 @@ The problem is intentionally vague. These questions must be answered before comm
 ## Agent Breakdown
 
 ### 1. Orchestrator Agent
-**Model:** Multi-modal foundation model (Gemini 1.5 Pro or Claude) — single model maintains coherent reasoning across text and image evidence without context loss between handoffs.
+**Model:** Multi-modal foundation model (Gemini 1.5 Pro or Claude) - single model maintains coherent reasoning across text and image evidence without context loss between handoffs.
 
 | Responsibility | Details |
 |---|---|
@@ -133,12 +133,12 @@ The problem is intentionally vague. These questions must be answered before comm
 
 - Pulls the claimant's active policy at the exact date of loss
 - Checks perils covered, deductibles, sub-limits, exclusions
-- Returns a structured policy summary — does **not** make a coverage decision
+- Returns a structured policy summary - does **not** make a coverage decision
 
 ### 4. Cost Estimator
 **Tools:** RAG over repair cost database (Xactimate / regional benchmarks), depreciation tables
 
-- Retrieves comparable repair costs from RAG — avoids hallucinated cost estimates
+- Retrieves comparable repair costs from RAG - avoids hallucinated cost estimates
 - Applies ACV (Actual Cash Value) or RCV (Replacement Cost Value) per policy terms
 - Drafts a preliminary settlement offer amount for the human adjuster
 
@@ -159,10 +159,10 @@ Outputs one of three structured recommendations with a **fraud risk score (Low /
 - Cost estimate significantly exceeds regional benchmark → soft flag with justification required
 
 ### 6. Legacy System Connector
-**Tools:** CMS API, CRM API — reads claimant history, writes claim status at each lifecycle transition.
+**Tools:** CMS API, CRM API - reads claimant history, writes claim status at each lifecycle transition.
 
 ### 7. Notification Agent
-**Tools:** Email, SMS, customer portal, contractor referral DB — delivers decision letters, triggers payment, provides approved contractors.
+**Tools:** Email, SMS, customer portal, contractor referral DB - delivers decision letters, triggers payment, provides approved contractors.
 
 ---
 
@@ -180,7 +180,7 @@ Outputs one of three structured recommendations with a **fraud risk score (Low /
 
 **HITL:** The agent is decision support, not a decision maker. The final approval rests with a human adjuster:
 - **Auto-approve path:** Adjuster receives summary + 48-hour override window
-- **Escalation path:** Adjuster receives full package — damage report, policy summary, cost estimate, fraud score, draft settlement offer
+- **Escalation path:** Adjuster receives full package - damage report, policy summary, cost estimate, fraud score, draft settlement offer
 
 **Security:**
 
@@ -292,7 +292,7 @@ flowchart TD
     B -->|Photo shows MINOR\nText claims MAJOR| C[🚩 Flag discrepancy\nDowngrade recommendation\nEscalate to adjuster]
     B -->|EXIF date ≠\nclaimed date of loss| D[🚩 Raise fraud flag\nBlock auto-approve\nRequire adjuster sign-off]
     B -->|Cost estimate >>\nregional benchmark| E[⚠️ Soft flag\nSynthesizer must justify\nin recommendation]
-    B -->|Policy exclusion\npartially applies| F[⚠️ Ambiguity flag\nEscalate — do not decide]
+    B -->|Policy exclusion\npartially applies| F[⚠️ Ambiguity flag\nEscalate - do not decide]
     B -->|All consistent| G[Proceed to recommendation\nwith fraud risk score]
 
     C --> H[DISPATCH HUMAN ASSESSOR]
@@ -331,21 +331,21 @@ stateDiagram-v2
 
 ```mermaid
 gantt
-    title Claim Processing Timeline — Target under 10 min for auto-approve
+    title Claim Processing Timeline - Target under 10 min for auto-approve
     dateFormat  mm:ss
     axisFormat  %M:%S
 
     section Ingestion
-    Security Layer — PII redaction · image auth   :a0, 00:00, 00:30
+    Security Layer - PII redaction · image auth   :a0, 00:00, 00:30
 
     section Parallel Analysis
-    Damage Analyst — vision + weather + EXIF       :a1, after a0, 02:00
-    Policy Auditor — coverage + exclusions         :a2, after a0, 00:45
-    Legacy Connector — CMS + CRM lookup            :a3, after a0, 00:30
+    Damage Analyst - vision + weather + EXIF       :a1, after a0, 02:00
+    Policy Auditor - coverage + exclusions         :a2, after a0, 00:45
+    Legacy Connector - CMS + CRM lookup            :a3, after a0, 00:30
 
     section Cost & Synthesis
-    Cost Estimator — RAG retrieval + ACV/RCV       :a4, after a1, 00:45
-    Synthesizer — conflict check + recommendation  :a5, after a4, 00:30
+    Cost Estimator - RAG retrieval + ACV/RCV       :a4, after a1, 00:45
+    Synthesizer - conflict check + recommendation  :a5, after a4, 00:30
 
     section Decision & Notify
     Orchestrator routing                           :a6, after a5, 00:10

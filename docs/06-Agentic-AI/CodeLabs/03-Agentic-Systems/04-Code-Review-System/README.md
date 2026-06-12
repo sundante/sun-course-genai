@@ -33,7 +33,7 @@ Code Diff Input
 | Style Check Agent | Naming conventions, code formatting, documentation quality | Style issues and suggestions |
 | Complexity Agent | Cyclomatic complexity, function length, code smells | Refactoring recommendations |
 | Aggregator | Merges all reviews, deduplicates, prioritizes | Structured review report |
-| Critic | Evaluates report quality — are all issues covered? | Approval or revision request |
+| Critic | Evaluates report quality - are all issues covered? | Approval or revision request |
 
 ## Sample Code Diff
 
@@ -49,7 +49,7 @@ The example reviews a Python function with intentional issues: missing error han
 
 ## Implementations
 
-- [LangChain](LangChain/system.py) — ThreadPoolExecutor for parallel + LCEL aggregation chain
-- [LangGraph](LangGraph/system.py) — Send() fan-out, state accumulation, conditional reflexion
-- [CrewAI](CrewAI/system.py) — Parallel process crew with specialized reviewer agents
-- [ADK](ADK/system.py) — ParallelAgent for reviews + SequentialAgent for aggregation
+- [LangChain](LangChain/system.py) - ThreadPoolExecutor for parallel + LCEL aggregation chain
+- [LangGraph](LangGraph/system.py) - Send() fan-out, state accumulation, conditional reflexion
+- [CrewAI](CrewAI/system.py) - Parallel process crew with specialized reviewer agents
+- [ADK](ADK/system.py) - ParallelAgent for reviews + SequentialAgent for aggregation

@@ -1,5 +1,5 @@
 """
-Hierarchical Architecture — LangGraph
+Hierarchical Architecture - LangGraph
 Pattern: Supervisor node routes to specialist subgraphs
 
 A supervisor node decides which specialist to call next.

@@ -2,7 +2,7 @@
 LangChain Simple Agent
 ======================
 Framework : LangChain (LCEL)
-Level     : 01 — Simple
+Level     : 01 - Simple
 Model     : gemini-2.0-flash via langchain-google-genai
 
 What this demonstrates:

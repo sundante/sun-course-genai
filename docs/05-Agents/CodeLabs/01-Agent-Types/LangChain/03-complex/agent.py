@@ -2,7 +2,7 @@
 LangChain Complex Agent
 ========================
 Framework : LangChain (LCEL)
-Level     : 03 — Complex
+Level     : 03 - Complex
 Model     : gemini-2.0-flash
 
 New concepts vs Intermediate:

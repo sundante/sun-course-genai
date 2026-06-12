@@ -4,18 +4,18 @@
 {{ super() }}
 <!-- Open Graph / social card -->
 <meta property="og:title"       content="Learn AI: Generative AI to Agentic AI" />
-<meta property="og:description" content="A structured curriculum covering the full AI stack — from foundational LLMs and Generative AI through fully autonomous Agentic systems." />
+<meta property="og:description" content="A structured curriculum covering the full AI stack - from foundational LLMs and Generative AI through fully autonomous Agentic systems." />
 <meta property="og:image"       content="https://learngenai.sunmintz.com/assets/social-card.png" />
 <meta property="og:url"         content="https://learngenai.sunmintz.com/" />
 <meta property="og:type"        content="website" />
 <meta name="twitter:card"        content="summary_large_image" />
 <meta name="twitter:title"      content="Learn AI: Generative AI to Agentic AI" />
-<meta name="twitter:description" content="A structured curriculum covering the full AI stack — from foundational LLMs and Generative AI through fully autonomous Agentic systems." />
+<meta name="twitter:description" content="A structured curriculum covering the full AI stack - from foundational LLMs and Generative AI through fully autonomous Agentic systems." />
 <meta name="twitter:image"      content="https://learngenai.sunmintz.com/assets/social-card.png" />
 <!-- Supabase JS client -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
-/* ── Signup widget — Solar Yellow theme ─────────────────────────────────── */
+/* ── Signup widget - Solar Yellow theme ─────────────────────────────────── */
 
 /* Floating action button */
 #su-fab {
@@ -60,7 +60,7 @@
 }
 #su-overlay.su-open { display: flex; }
 
-/* Modal card — adapts to MkDocs light/dark mode */
+/* Modal card - adapts to MkDocs light/dark mode */
 #su-modal {
   position: relative;
   background: var(--md-default-bg-color, #ffffff);
@@ -75,7 +75,7 @@
   border: 1.5px solid rgba(255,218,71,0.3);
 }
 
-/* Close button — always visible */
+/* Close button - always visible */
 #su-close {
   position: absolute;
   top: 1rem;
@@ -356,7 +356,7 @@ body.su-gated .md-content {
   color: #111111 !important;
 }
 
-/* Colored left edge on mode buttons — mirrors content block bars */
+/* Colored left edge on mode buttons - mirrors content block bars */
 .aud-btn[data-mode="tech"] { border-left: 3px solid #FFDA47; }
 .aud-btn[data-mode="biz"]  { border-left: 3px solid #3b82f6; }
 </style>
@@ -644,7 +644,7 @@ body.su-gated .md-content {
     m.classList.remove('su-voluntary');
     document.getElementById('su-title').textContent = "You're on a roll.";
     document.getElementById('su-sub').textContent =
-      "Create your free account to keep reading — and get early access to new modules, code labs, and study guides as they drop.";
+      "Create your free account to keep reading - and get early access to new modules, code labs, and study guides as they drop.";
     document.getElementById('su-overlay').classList.add('su-open');
   }
 
@@ -692,9 +692,9 @@ body.su-gated .md-content {
     btn.textContent = 'Subscribing…';
 
     try {
-      if (!client) throw new Error('Client not ready — please refresh and try again.');
+      if (!client) throw new Error('Client not ready - please refresh and try again.');
 
-      /* Upsert subscriber row — no duplicate, preserves confirmed status on re-subscribe */
+      /* Upsert subscriber row - no duplicate, preserves confirmed status on re-subscribe */
       var upsertRes = await client.from('subscribers').upsert({
         email:           email,
         name:            name,
@@ -732,7 +732,7 @@ body.su-gated .md-content {
     el.classList.remove('su-on');
   }
 
-  /* ── Gate check — session + cool-down only, no counter increment ── */
+  /* ── Gate check - session + cool-down only, no counter increment ── */
   async function checkGate() {
     if (!client || isAuthed) return;
     var sess = await client.auth.getSession();
@@ -743,7 +743,7 @@ body.su-gated .md-content {
     if (dismissed) {
       var daysSince = (Date.now() - dismissed) / 86400000;
       if (daysSince < COOL_DAYS) return;       // still in cool-down
-      localStorage.removeItem(DISMISS_KEY);     // cool-down expired — reset
+      localStorage.removeItem(DISMISS_KEY);     // cool-down expired - reset
       localStorage.setItem(IC_KEY, '0');
     }
   }
@@ -779,7 +779,7 @@ body.su-gated .md-content {
 
     checkGate();
 
-    /* Click-interaction counter — fires on every click except modal + FAB */
+    /* Click-interaction counter - fires on every click except modal + FAB */
     document.addEventListener('click', function (e) {
       if (isAuthed) return;
       if (e.target.closest('#su-overlay') || e.target.closest('#su-fab')) return;
@@ -857,7 +857,7 @@ body.su-gated .md-content {
     var old = document.getElementById('aud-bar');
     if (old) old.remove();
 
-    /* only inject on content pages — skip the home page */
+    /* only inject on content pages - skip the home page */
     var inner = document.querySelector('.md-content__inner');
     if (!inner) return;
     var article = document.querySelector('article.md-content__inner');
@@ -879,7 +879,7 @@ body.su-gated .md-content {
   /* initial load */
   document.addEventListener('DOMContentLoaded', injectBar);
 
-  /* SPA navigation — Material's document$ observable */
+  /* SPA navigation - Material's document$ observable */
   if (typeof document$ !== 'undefined') {
     document$.subscribe(injectBar);
   }

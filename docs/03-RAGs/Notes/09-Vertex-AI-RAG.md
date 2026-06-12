@@ -1,6 +1,6 @@
 # Vertex AI RAG
 
-GCP offers three distinct managed services for RAG. Choosing the wrong one is a common interview mistake — each occupies a different point on the control vs. convenience spectrum.
+GCP offers three distinct managed services for RAG. Choosing the wrong one is a common interview mistake - each occupies a different point on the control vs. convenience spectrum.
 
 ---
 
@@ -71,7 +71,7 @@ Cloud Run (query service)
 
 ### Concept
 
-Vertex AI Search (formerly Enterprise Search / Generative AI App Builder) is a fully managed search and answer service over your enterprise data. You don't write retrieval code — you configure data stores and search apps via the console or API.
+Vertex AI Search (formerly Enterprise Search / Generative AI App Builder) is a fully managed search and answer service over your enterprise data. You don't write retrieval code - you configure data stores and search apps via the console or API.
 
 **Key components:**
 - **Data stores**: containers for your documents. Types: Unstructured (PDFs, HTML, DOCX), Structured (BigQuery tables, JSON), Website (crawled URLs), Healthcare FHIR
@@ -157,7 +157,7 @@ answer = llm.invoke(f"Context:\n{context}\n\nQuestion: What is the refund policy
 Vertex AI RAG Engine is the closest to a "managed RAG backend" on GCP. It provides:
 - **RagCorpus**: a named collection of documents (equivalent to a vector store)
 - **RagFile**: individual documents uploaded to a corpus
-- **RetrieveContexts**: the retrieval API — returns relevant chunks for a query
+- **RetrieveContexts**: the retrieval API - returns relevant chunks for a query
 - **Gemini native integration**: directly wire a corpus to a Gemini model via `tool_config`
 
 **Key differentiator from Vertex AI Search:**
@@ -167,7 +167,7 @@ RAG Engine is purpose-built for retrieval to feed into Gemini. It exposes a retr
 - Google Drive
 - Google Cloud Storage (PDFs, text files)
 - Inline text
-- Slack, Jira (via connectors — in preview)
+- Slack, Jira (via connectors - in preview)
 
 ### Code
 
@@ -236,8 +236,8 @@ print(response.text)
 Grounding is a distinct capability: rather than retrieving from your own corpus, you ground Gemini's responses in live Google Search results. This is Gemini's way of accessing up-to-date public information without you maintaining a search index.
 
 **Two grounding modes:**
-1. **Google Search grounding** — Gemini automatically searches Google when the query warrants it. Returns grounded answers with web citations.
-2. **Custom corpus grounding** — Ground in your own Vertex AI Search data store or RAG Engine corpus (overlaps with Vertex AI Search integration above).
+1. **Google Search grounding** - Gemini automatically searches Google when the query warrants it. Returns grounded answers with web citations.
+2. **Custom corpus grounding** - Ground in your own Vertex AI Search data store or RAG Engine corpus (overlaps with Vertex AI Search integration above).
 
 **Dynamic retrieval threshold:**
 You control how often grounding activates via a `dynamic_retrieval_config`. Setting `dynamic_threshold=0.3` means "ground if model confidence in its parametric answer is below 0.3." Higher threshold = more grounding (more accurate, slightly slower). Lower = less grounding (faster, but higher hallucination risk for recent events).
@@ -245,7 +245,7 @@ You control how often grounding activates via a `dynamic_retrieval_config`. Sett
 **When to use Google Search grounding vs RAG Engine:**
 - **Google Search grounding**: for queries about public, recent information (news, prices, public company data)
 - **RAG Engine**: for queries about your private internal documents
-- **Both together**: combine a RAG corpus tool and Google Search retrieval tool — Gemini decides which to call
+- **Both together**: combine a RAG corpus tool and Google Search retrieval tool - Gemini decides which to call
 
 ### Code
 
@@ -297,7 +297,7 @@ if response.candidates[0].grounding_metadata:
 
 ### Concept
 
-When you need full control — custom embedding model, custom chunking, hybrid search, your own reranker — you build RAG yourself on GCP components.
+When you need full control - custom embedding model, custom chunking, hybrid search, your own reranker - you build RAG yourself on GCP components.
 
 **Stack options:**
 
@@ -328,7 +328,7 @@ AlloyDB (PostgreSQL + pgvector extension)
 ### Code
 
 ```python
-# Vertex AI Vector Search — building and querying an index
+# Vertex AI Vector Search - building and querying an index
 from google.cloud import aiplatform
 
 aiplatform.init(project=PROJECT_ID, location="us-central1")
@@ -399,7 +399,7 @@ def hybrid_alloydb_search(query: str, department: str, k: int = 5) -> list:
 
 ### Concept
 
-Vertex AI Vector Search (formerly Matching Engine) is Google's managed ANN service, built on ScaNN (Scalable Approximate Nearest Neighbors) — Google's own ANN algorithm used in production at Google Search and YouTube recommendations scale.
+Vertex AI Vector Search (formerly Matching Engine) is Google's managed ANN service, built on ScaNN (Scalable Approximate Nearest Neighbors) - Google's own ANN algorithm used in production at Google Search and YouTube recommendations scale.
 
 **Index types:**
 - **Tree-AH (Recommended)**: Combines tree-based space partitioning with asymmetric hashing. Best recall at most scales.
@@ -407,7 +407,7 @@ Vertex AI Vector Search (formerly Matching Engine) is Google's managed ANN servi
 
 **Key configuration parameters:**
 - `dimensions`: must match your embedding model (768 for text-embedding-004)
-- `approximate_neighbors_count`: affects recall — 10-20 is typical
+- `approximate_neighbors_count`: affects recall - 10-20 is typical
 - `leaf_node_embedding_count` + `leaf_nodes_to_search_percent`: trade-off between recall and speed
 - `distance_measure_type`: COSINE_DISTANCE, DOT_PRODUCT_DISTANCE, SQUARED_L2_DISTANCE
 
@@ -463,9 +463,9 @@ Vertex AI provides a managed cross-encoder reranker (`text-reranker@001`) that i
 | Recall@5 | 0.70 | 0.75 |
 | Precision@5 | 0.68 | 0.84 |
 | Faithfulness (downstream RAGAS) | 0.72 | 0.86 |
-| Latency added | — | ~80–150ms |
+| Latency added | - | ~80–150ms |
 
-Precision improvement is larger than recall improvement — the reranker primarily reduces noise rather than recovering missed documents.
+Precision improvement is larger than recall improvement - the reranker primarily reduces noise rather than recovering missed documents.
 
 **Best practices:**
 - Over-retrieve at stage 1: set k=15–25 before reranking; narrowing from k=5 gives no room for the reranker to improve
@@ -551,10 +551,10 @@ def rag_with_reranker(
 ## Interview Q&A
 
 **Q: What are the three main Vertex AI RAG services and when would you choose each?** `[Medium]`
-A: Vertex AI Search for managed enterprise search where you want a search UI + API with no retrieval code to write; it handles chunking, embedding, and ranking automatically. Vertex AI RAG Engine for managed retrieval directly integrated with Gemini — you get a RagCorpus, file import, and retrieval API, but you're tied to Gemini as the generator. Custom RAG (Vertex AI Vector Search + Cloud Run + your own LLM) when you need control over chunking strategy, embedding model choice, hybrid search, or multi-tenancy at scale. The custom path is most work but most flexible.
+A: Vertex AI Search for managed enterprise search where you want a search UI + API with no retrieval code to write; it handles chunking, embedding, and ranking automatically. Vertex AI RAG Engine for managed retrieval directly integrated with Gemini - you get a RagCorpus, file import, and retrieval API, but you're tied to Gemini as the generator. Custom RAG (Vertex AI Vector Search + Cloud Run + your own LLM) when you need control over chunking strategy, embedding model choice, hybrid search, or multi-tenancy at scale. The custom path is most work but most flexible.
 
 **Q: How does Vertex AI RAG Engine integrate with Gemini natively?** `[Medium]`
-A: You create a `Tool.from_retrieval()` wrapping a `VertexRagStore` with your corpus name, then pass it to `GenerativeModel`. When Gemini generates a response, it automatically queries the RAG corpus as a tool call, retrieves relevant chunks, and grounds its answer. You don't write the retrieval-augment-generate loop explicitly — Gemini decides when to call the retrieval tool. This is the simplest path to production RAG on GCP if you're already using Gemini.
+A: You create a `Tool.from_retrieval()` wrapping a `VertexRagStore` with your corpus name, then pass it to `GenerativeModel`. When Gemini generates a response, it automatically queries the RAG corpus as a tool call, retrieves relevant chunks, and grounds its answer. You don't write the retrieval-augment-generate loop explicitly - Gemini decides when to call the retrieval tool. This is the simplest path to production RAG on GCP if you're already using Gemini.
 
 **Q: When would you use Google Search grounding vs your own RAG corpus?** `[Easy]`
 A: Google Search grounding for public, recent information (current events, public company financials, latest product specs) where maintaining your own index would be stale or impractical. Your own RAG corpus for private internal documents (policy manuals, internal wikis, proprietary research, customer data) that are not public and cannot be retrieved via web search. Many production systems use both: RAG corpus for internal knowledge + Google Search grounding for current public context.
@@ -563,10 +563,10 @@ A: Google Search grounding for public, recent information (current events, publi
 A: The dynamic_threshold (0.0-1.0) controls when grounding activates. Below the threshold, the model uses parametric knowledge without retrieval. Above it, the model grounds in Google Search. A higher threshold means more queries trigger grounding. Tuning: start with 0.5, evaluate on a test set of queries where you know whether grounding is needed. For time-sensitive domains (news, prices), use 0.3-0.5 to trigger grounding more often. For general knowledge Q&A, use 0.7-0.8 to avoid unnecessary retrieval overhead. Monitor the `grounding_metadata` in responses to see how often grounding fires.
 
 **Q: How does Vertex AI Vector Search differ from FAISS in production?** `[Medium]`
-A: FAISS is a library — you manage the index in memory, handle persistence, and scale it yourself. Vertex AI Vector Search is a managed service: it handles horizontal scaling, replication, index serving infrastructure, health checks, and auto-scaling based on QPS. You pay per query and per GB stored. FAISS is appropriate for development, small corpora (<1M vectors), or when you need full control over the ANN algorithm. Vertex AI Vector Search is appropriate for production at any scale where you want a managed endpoint with SLAs, especially when already on GCP.
+A: FAISS is a library - you manage the index in memory, handle persistence, and scale it yourself. Vertex AI Vector Search is a managed service: it handles horizontal scaling, replication, index serving infrastructure, health checks, and auto-scaling based on QPS. You pay per query and per GB stored. FAISS is appropriate for development, small corpora (<1M vectors), or when you need full control over the ANN algorithm. Vertex AI Vector Search is appropriate for production at any scale where you want a managed endpoint with SLAs, especially when already on GCP.
 
 **Q: How would you design a multi-tenant RAG system on Vertex AI where each customer's data must be completely isolated?** `[Hard]`
-A: Two approaches: (1) **Separate RAG Engine corpora per tenant** — create one RagCorpus per customer, store the corpus name per customer in your database, query only the customer's corpus per request. Strong isolation, simple access control, but N corpora to manage. (2) **Vertex AI Vector Search with namespace-based filtering** — one index with `restricts` (metadata filters) scoped to tenant_id; every query includes a mandatory `numeric_restricts` or `restricts` filter. The second approach is more operationally efficient at scale (one index endpoint vs hundreds of corpora), but requires strict enforcement of the tenant filter at the application layer — a missed filter leaks data. For enterprise SLA and compliance, approach 1 (corpus-per-tenant) is safer.
+A: Two approaches: (1) **Separate RAG Engine corpora per tenant** - create one RagCorpus per customer, store the corpus name per customer in your database, query only the customer's corpus per request. Strong isolation, simple access control, but N corpora to manage. (2) **Vertex AI Vector Search with namespace-based filtering** - one index with `restricts` (metadata filters) scoped to tenant_id; every query includes a mandatory `numeric_restricts` or `restricts` filter. The second approach is more operationally efficient at scale (one index endpoint vs hundreds of corpora), but requires strict enforcement of the tenant filter at the application layer - a missed filter leaks data. For enterprise SLA and compliance, approach 1 (corpus-per-tenant) is safer.
 
 **Q: What are the limitations of Vertex AI RAG Engine compared to building custom RAG?** `[Medium]`
-A: Key limitations: (1) **Gemini-only** — the native tool integration only works with Gemini models; you can use `RetrieveContexts` API with any generator, but lose the native tool flow. (2) **Limited chunking control** — you specify chunk_size and chunk_overlap, but can't use semantic chunking or custom chunking logic. (3) **No hybrid search** — pure dense retrieval; no BM25 or hybrid fusion. (4) **No custom embedding model** — uses Google's internal embeddings, which may not be optimal for specialized domains (legal, medical, code). (5) **No reranker integration** — no cross-encoder reranking step. For production quality on specialized domains, custom RAG on Vertex AI Vector Search + your own embedding + Cohere Rerank often achieves 15-25% better Recall@5.
+A: Key limitations: (1) **Gemini-only** - the native tool integration only works with Gemini models; you can use `RetrieveContexts` API with any generator, but lose the native tool flow. (2) **Limited chunking control** - you specify chunk_size and chunk_overlap, but can't use semantic chunking or custom chunking logic. (3) **No hybrid search** - pure dense retrieval; no BM25 or hybrid fusion. (4) **No custom embedding model** - uses Google's internal embeddings, which may not be optimal for specialized domains (legal, medical, code). (5) **No reranker integration** - no cross-encoder reranking step. For production quality on specialized domains, custom RAG on Vertex AI Vector Search + your own embedding + Cohere Rerank often achieves 15-25% better Recall@5.

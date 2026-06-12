@@ -1,7 +1,7 @@
 """
-Document Processor — LangChain Implementation
+Document Processor - LangChain Implementation
 =============================================
-System    : 02 — Document Processor
+System    : 02 - Document Processor
 Framework : LangChain (LCEL)
 Model     : gemini-2.0-flash via langchain-google-genai
 
@@ -72,7 +72,7 @@ def classify_document(document_text: str) -> dict:
 
 def hitl_confirm(classification: dict) -> str:
     """HITL Gate: simulated human confirmation when confidence is low."""
-    print(f"\n[HITL Gate] Low confidence ({classification['confidence']:.2f}) — requesting human review")
+    print(f"\n[HITL Gate] Low confidence ({classification['confidence']:.2f}) - requesting human review")
     print(f"[HITL Gate] Classifier suggested: '{classification['document_type']}'")
     print(f"[HITL Gate] [SIMULATED] Human confirms: 'invoice'")
     return "invoice"  # Simulated human input
@@ -123,7 +123,7 @@ def validate_extraction(extracted: dict, doc_type: str) -> dict:
         issues.append(f"Extraction error: {extracted['error']}")
 
     status = "PASSED" if valid else "FAILED"
-    print(f"[Validator] Validation {status}" + (f" — {issues}" if issues else ""))
+    print(f"[Validator] Validation {status}" + (f" - {issues}" if issues else ""))
     return {"valid": valid, "issues": issues}
 
 
@@ -177,7 +177,7 @@ def process_document(document_text: str) -> dict:
 
 if __name__ == "__main__":
     print("\n" + "="*60)
-    print("DOCUMENT PROCESSOR — LangChain")
+    print("DOCUMENT PROCESSOR - LangChain")
     print("="*60)
 
     result = process_document(SAMPLE_INVOICE)

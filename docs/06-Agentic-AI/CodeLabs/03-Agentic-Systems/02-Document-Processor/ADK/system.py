@@ -1,7 +1,7 @@
 """
-Document Processor — Google ADK Implementation
+Document Processor - Google ADK Implementation
 ==============================================
-System    : 02 — Document Processor
+System    : 02 - Document Processor
 Framework : Google Agent Development Kit (ADK)
 Model     : gemini-2.0-flash
 
@@ -81,7 +81,7 @@ def check_routing_rules(document_type: str, validation_passed: bool) -> dict:
         dict with destination and reason
     """
     if not validation_passed:
-        return {"destination": "error_queue", "reason": "Validation failed — manual review required"}
+        return {"destination": "error_queue", "reason": "Validation failed - manual review required"}
 
     destinations = {
         "invoice": "accounts_payable_system",
@@ -101,7 +101,7 @@ classifier_agent = Agent(
     description="Classifies document type and confidence",
     instruction="""You are a document classification specialist. Given a document:
     1. Identify the document type: invoice, contract, resume, or other
-    2. Estimate your confidence (0.0-1.0) — be honest, use low values for ambiguous documents
+    2. Estimate your confidence (0.0-1.0) - be honest, use low values for ambiguous documents
     3. Explain your reasoning briefly
 
     Output format:
@@ -186,7 +186,7 @@ def process_document(document_text: str) -> str:
 
 if __name__ == "__main__":
     print("\n" + "="*60)
-    print("DOCUMENT PROCESSOR — ADK")
+    print("DOCUMENT PROCESSOR - ADK")
     print("="*60)
 
     result = process_document(SAMPLE_INVOICE)

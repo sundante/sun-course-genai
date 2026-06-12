@@ -1,4 +1,4 @@
-# GCP ADK — Simple Agent
+# GCP ADK - Simple Agent
 
 ## What We Are Building
 

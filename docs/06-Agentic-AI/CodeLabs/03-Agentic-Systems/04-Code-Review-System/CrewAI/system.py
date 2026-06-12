@@ -1,7 +1,7 @@
 """
-Code Review System — CrewAI Implementation
+Code Review System - CrewAI Implementation
 ==========================================
-System    : 04 — Code Review System
+System    : 04 - Code Review System
 Framework : CrewAI
 Model     : gemini-2.0-flash via langchain-google-genai
 
@@ -51,7 +51,7 @@ security_reviewer = Agent(
     role="Security Review Specialist",
     goal="Find all security vulnerabilities and risks in the code",
     backstory="""You are a security engineer specialized in finding vulnerabilities.
-    You think like an attacker — SQL injection, hardcoded secrets, XSS, authentication bypass.
+    You think like an attacker - SQL injection, hardcoded secrets, XSS, authentication bypass.
     You classify each issue by OWASP category and provide specific remediation steps.""",
     llm=llm, verbose=True,
 )
@@ -157,8 +157,8 @@ def build_review_crew(code_diff: str) -> Crew:
         Missing any category of issues?
 
         Provide your assessment and end with:
-        VERDICT: APPROVED — if report is comprehensive and actionable
-        VERDICT: NEEDS_REVISION: [specific gaps] — if important issues were missed""",
+        VERDICT: APPROVED - if report is comprehensive and actionable
+        VERDICT: NEEDS_REVISION: [specific gaps] - if important issues were missed""",
         expected_output="Quality assessment with specific findings and APPROVED or NEEDS_REVISION verdict",
         agent=quality_critic,
         context=[aggregate_task],
@@ -176,7 +176,7 @@ def build_review_crew(code_diff: str) -> Crew:
 
 if __name__ == "__main__":
     print("\n" + "="*60)
-    print("CODE REVIEW SYSTEM — CrewAI")
+    print("CODE REVIEW SYSTEM - CrewAI")
     print("="*60)
 
     crew = build_review_crew(SAMPLE_DIFF)

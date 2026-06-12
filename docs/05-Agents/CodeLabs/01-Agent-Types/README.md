@@ -1,8 +1,8 @@
-# 01 — Agent Types
+# 01 - Agent Types
 
 ## What This Section Teaches
 
-A single AI agent, built four different ways, growing in complexity across three levels. The goal is to understand how each framework approaches the same core problem — and how the agent itself evolves as you add memory, planning, and reflection.
+A single AI agent, built four different ways, growing in complexity across three levels. The goal is to understand how each framework approaches the same core problem - and how the agent itself evolves as you add memory, planning, and reflection.
 
 ---
 

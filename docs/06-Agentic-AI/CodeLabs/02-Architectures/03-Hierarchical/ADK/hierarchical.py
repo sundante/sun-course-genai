@@ -1,5 +1,5 @@
 """
-Hierarchical Architecture — Google ADK
+Hierarchical Architecture - Google ADK
 Pattern: Root agent delegates to sub-agents
 
 ADK supports multi-agent hierarchy via sub_agents= parameter.
@@ -92,7 +92,7 @@ STEP 3: Synthesize all results into a hierarchical travel report:
   - '### [City]' section per city with weather + safety
   - '## Executive Summary' with top city recommendation
 
-You orchestrate — specialists do the data collection.""",
+You orchestrate - specialists do the data collection.""",
     sub_agents=[weather_agent, safety_agent],
 )
 

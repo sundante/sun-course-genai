@@ -1,5 +1,5 @@
 """
-Pipeline Architecture — Google ADK
+Pipeline Architecture - Google ADK
 Pattern: ETL pipeline via tool-based steps
 
 ADK models pipeline stages as tools with explicit step instructions.
@@ -59,9 +59,9 @@ agent = Agent(
     description="Runs an ETL pipeline on travel data: extract, transform, then format a report.",
     instruction="""You are an ETL pipeline agent. Follow these steps:
 
-STEP 1 — EXTRACT: Call extract_records() with the raw data string.
-STEP 2 — TRANSFORM: Call enrich_and_rank() with the JSON of extracted records.
-STEP 3 — LOAD (format): Using the enriched records, write a markdown report:
+STEP 1 - EXTRACT: Call extract_records() with the raw data string.
+STEP 2 - TRANSFORM: Call enrich_and_rank() with the JSON of extracted records.
+STEP 3 - LOAD (format): Using the enriched records, write a markdown report:
   ## Travel Data Pipeline Report
   ### Rankings (sorted by combined score)
   | Rank | City | Weather Score | Safety Score | Combined |

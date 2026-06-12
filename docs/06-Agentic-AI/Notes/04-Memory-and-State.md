@@ -14,7 +14,7 @@ Without memory, an agent:
 - Cannot build on knowledge accumulated from previous tasks
 - Will repeat work it has already done
 
-Memory is what enables agents to operate over extended horizons. But memory is not one thing — there are four distinct types, each serving a different purpose and operating at a different timescale.
+Memory is what enables agents to operate over extended horizons. But memory is not one thing - there are four distinct types, each serving a different purpose and operating at a different timescale.
 
 ---
 
@@ -73,12 +73,12 @@ While these numbers seem large, a 10-step agent task can easily accumulate 50–
 ### What Happens When Context Fills Up
 
 When context approaches the limit:
-1. The model starts to lose attention to early content — it focuses on recent tokens
+1. The model starts to lose attention to early content - it focuses on recent tokens
 2. The original goal, stated at the beginning, gets "pushed out" of effective attention
-3. Reasoning quality degrades — the agent starts contradicting its earlier work
+3. Reasoning quality degrades - the agent starts contradicting its earlier work
 4. The API will return an error if you exceed the hard limit
 
-This degradation before hitting the hard limit is called **context drift** — and it's much harder to detect than a hard error.
+This degradation before hitting the hard limit is called **context drift** - and it's much harder to detect than a hard error.
 
 ### Managing In-Context Memory
 
@@ -279,7 +279,7 @@ class TaskCheckpointer:
         self.redis.delete(f"task:{task_id}:checkpoint")
 ```
 
-LangGraph has built-in checkpointing via its `MemorySaver` and `SqliteSaver` backends — every state transition is automatically persisted.
+LangGraph has built-in checkpointing via its `MemorySaver` and `SqliteSaver` backends - every state transition is automatically persisted.
 
 ```python
 from langgraph.checkpoint.sqlite import SqliteSaver
@@ -294,7 +294,7 @@ result = graph.invoke(inputs, config)  # continues from where it left off
 
 ### State Machines
 
-Some agents benefit from modeling their execution as an explicit state machine — where the current "state" determines what actions are valid and what transitions are possible.
+Some agents benefit from modeling their execution as an explicit state machine - where the current "state" determines what actions are valid and what transitions are possible.
 
 ```python
 from enum import Enum
@@ -322,7 +322,7 @@ def transition(current: AgentState, next_state: AgentState) -> AgentState:
     return next_state
 ```
 
-State machines make reasoning about the system much easier — you can see at a glance what states are possible, what transitions are valid, and what could cause the system to get stuck.
+State machines make reasoning about the system much easier - you can see at a glance what states are possible, what transitions are valid, and what could cause the system to get stuck.
 
 ---
 
@@ -330,7 +330,7 @@ State machines make reasoning about the system much easier — you can see at a 
 
 **What it is:** An append-only sequential record of everything the agent did. Every LLM call, tool call, agent assignment, HITL decision, error, and state transition is logged.
 
-**What it is NOT:** Episodic memory is not used for retrieval during the current task. It is written to during execution and read after execution — for debugging, auditing, cost analysis, and generating training data.
+**What it is NOT:** Episodic memory is not used for retrieval during the current task. It is written to during execution and read after execution - for debugging, auditing, cost analysis, and generating training data.
 
 ```python
 from dataclasses import dataclass, field
@@ -460,7 +460,7 @@ def extract_training_examples(
 
 ### Storing to Semantic Memory
 
-Not every output should be stored. Use selective storage — only store information that is likely to be useful in future tasks.
+Not every output should be stored. Use selective storage - only store information that is likely to be useful in future tasks.
 
 ```python
 from langchain.vectorstores import Chroma
@@ -475,7 +475,7 @@ class Memory:
     memory_type: str           # "fact", "preference", "template", "procedure"
     source_task_id: str
     tags: list[str]
-    importance: float          # 0.0 to 1.0 — used for pruning
+    importance: float          # 0.0 to 1.0 - used for pruning
     created_at: str
     last_accessed: str
 
@@ -678,19 +678,19 @@ class AgentMemoryManager:
 ## Q&A Review Bank
 
 **Q1: What are the four memory types and what is the primary purpose of each?** `[Easy]`
-A: In-Context Memory is the LLM's active context window — everything it can "see" in a given API call; its primary purpose is providing the model with immediate, task-relevant context. Working Memory is structured state maintained outside the context window by the orchestration layer (task ledger, partial results, assignments); its purpose is preserving task progress across steps and agent restarts. Episodic Memory is an append-only event log of everything the agent did (tool calls, LLM calls, errors, HITL decisions); its purpose is debugging, auditing, and training data generation. Semantic Memory is a vector store of accumulated knowledge across sessions (facts, preferences, past research); its purpose is giving agents access to relevant knowledge from previous tasks without repeating work.
+A: In-Context Memory is the LLM's active context window - everything it can "see" in a given API call; its primary purpose is providing the model with immediate, task-relevant context. Working Memory is structured state maintained outside the context window by the orchestration layer (task ledger, partial results, assignments); its purpose is preserving task progress across steps and agent restarts. Episodic Memory is an append-only event log of everything the agent did (tool calls, LLM calls, errors, HITL decisions); its purpose is debugging, auditing, and training data generation. Semantic Memory is a vector store of accumulated knowledge across sessions (facts, preferences, past research); its purpose is giving agents access to relevant knowledge from previous tasks without repeating work.
 
 **Q2: What is context drift and what is the most reliable prevention?** `[Medium]`
-A: Context drift is the gradual degradation of agent reasoning quality as the context window fills — the agent starts losing attention to early content (including the original goal), its reasoning becomes inconsistent, and it may repeat work or contradict earlier decisions. The most reliable prevention is the task ledger: a compact, structured record of the goal and remaining subtasks that is always present at the top of the context, never summarized away, and updated after every step. Even if all historical messages are summarized, the task ledger ensures the agent always knows exactly what it set out to do and what remains.
+A: Context drift is the gradual degradation of agent reasoning quality as the context window fills - the agent starts losing attention to early content (including the original goal), its reasoning becomes inconsistent, and it may repeat work or contradict earlier decisions. The most reliable prevention is the task ledger: a compact, structured record of the goal and remaining subtasks that is always present at the top of the context, never summarized away, and updated after every step. Even if all historical messages are summarized, the task ledger ensures the agent always knows exactly what it set out to do and what remains.
 
 **Q3: Why is checkpointing critical for production agentic systems?** `[Medium]`
-A: A multi-step agent task may involve 10–50 LLM calls and many tool calls. Without checkpointing, any failure — network timeout, process crash, server restart, budget exceeded — causes the entire task to fail and requires restarting from scratch, wasting all computation and API costs already incurred. With checkpointing (serializing task state to persistent storage after every step), a resumed task picks up from the last successful step. This is especially important for long-running tasks where restarting from scratch is expensive, tasks that involve HITL gates (the human may have already approved an action), and systems that need to handle failures gracefully rather than crashing.
+A: A multi-step agent task may involve 10–50 LLM calls and many tool calls. Without checkpointing, any failure - network timeout, process crash, server restart, budget exceeded - causes the entire task to fail and requires restarting from scratch, wasting all computation and API costs already incurred. With checkpointing (serializing task state to persistent storage after every step), a resumed task picks up from the last successful step. This is especially important for long-running tasks where restarting from scratch is expensive, tasks that involve HITL gates (the human may have already approved an action), and systems that need to handle failures gracefully rather than crashing.
 
 **Q4: What is memory pollution and what three mechanisms prevent it?** `[Hard]`
-A: Memory pollution is the accumulation of incorrect, outdated, or low-quality information in semantic (long-term) memory, which then degrades agent performance in future tasks when retrieved as "authoritative knowledge." Three prevention mechanisms: (1) Quality gates — verify before storing; use an LLM to confirm a fact is accurate and worth preserving; skip low-importance information (importance < threshold). (2) TTL and pruning — set a maximum age for memories; automatically delete memories that haven't been accessed recently AND have low importance scores; facts that are regularly relevant will be re-accessed and survive pruning. (3) Memory correction — when a stored fact is discovered to be wrong, find and delete it from the vector store and replace it with the corrected version; this requires explicit correction logic, not just a new write (which would create a contradiction).
+A: Memory pollution is the accumulation of incorrect, outdated, or low-quality information in semantic (long-term) memory, which then degrades agent performance in future tasks when retrieved as "authoritative knowledge." Three prevention mechanisms: (1) Quality gates - verify before storing; use an LLM to confirm a fact is accurate and worth preserving; skip low-importance information (importance < threshold). (2) TTL and pruning - set a maximum age for memories; automatically delete memories that haven't been accessed recently AND have low importance scores; facts that are regularly relevant will be re-accessed and survive pruning. (3) Memory correction - when a stored fact is discovered to be wrong, find and delete it from the vector store and replace it with the corrected version; this requires explicit correction logic, not just a new write (which would create a contradiction).
 
 **Q5: When should you retrieve from semantic memory vs read from working memory?** `[Medium]`
-A: Retrieve from semantic memory (vector search) when you need knowledge that was accumulated across previous tasks — facts from past research, user preferences, domain knowledge, successful templates. It requires a similarity search and should happen at task initialization and at specific steps where the agent needs external knowledge. Read from working memory (structured state) when you need the current task's state — the task ledger, partial results, agent assignments, error log. Working memory is always available as structured data (no search required) and is read/written continuously throughout the task. The distinction: semantic memory is "what do I know from past experience?"; working memory is "what is the current state of this specific task?"
+A: Retrieve from semantic memory (vector search) when you need knowledge that was accumulated across previous tasks - facts from past research, user preferences, domain knowledge, successful templates. It requires a similarity search and should happen at task initialization and at specific steps where the agent needs external knowledge. Read from working memory (structured state) when you need the current task's state - the task ledger, partial results, agent assignments, error log. Working memory is always available as structured data (no search required) and is read/written continuously throughout the task. The distinction: semantic memory is "what do I know from past experience?"; working memory is "what is the current state of this specific task?"
 
 **Q6: Describe a complete memory access pattern for a multi-step agent task.** `[Hard]`
 A: At task start: query semantic memory (vector search) for knowledge relevant to the goal; load working memory (task state from checkpoint) if resuming; initialize in-context memory (system prompt + task ledger + retrieved semantic memories); start appending to episodic memory. Each step: LLM reads full in-context memory; after the step, update working memory (mark subtask progress, append tool results to intermediate outputs); append the step as an event to episodic memory; optionally query semantic memory for step-specific knowledge needs. At task end: extract high-quality findings from the final output and write them to semantic memory for future use; finalize working memory (mark task done, store final output); archive the episodic trace; discard in-context memory (session ends). This full lifecycle ensures the agent benefits from past experience (semantic), recovers from failures (working + checkpointing), and produces debuggable traces (episodic).

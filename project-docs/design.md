@@ -316,7 +316,7 @@ A: Architectural deep-dive with trade-offs
 
 | # | Topic | Notes | Code Labs | Q&A | Status |
 |---|-------|-------|-----------|-----|--------|
-| 01 | Name | X files | ✅/— | Y+ Q&A | Complete/WIP |
+| 01 | Name | X files | ✅/- | Y+ Q&A | Complete/WIP |
 
 ## Quick Start
 
@@ -425,12 +425,12 @@ vibes/
 
 | Topic | Files | Code | Q&A | Estimated Hours |
 |-------|-------|------|-----|-----------------|
-| Fundamentals | 12 | — | 68 | 20 |
+| Fundamentals | 12 | - | 68 | 20 |
 | Intermediate-A | 8 | 12 patterns | 50 | 25 |
 | Intermediate-B | 10 | 8 patterns | 60 | 22 |
 | Advanced-A | 6 | 3 systems | 40 | 18 |
 | Advanced-B | 8 | 4 systems | 45 | 20 |
-| Advanced-C | 6 | — | 35 | 15 |
+| Advanced-C | 6 | - | 35 | 15 |
 | **Total** | **50 notes** | **27 code labs** | **298 Q&A** | **120 hours** |
 
 ---

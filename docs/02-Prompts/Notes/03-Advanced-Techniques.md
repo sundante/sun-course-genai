@@ -4,22 +4,22 @@ The core techniques (zero-shot, few-shot, CoT, ReAct) get you most of the way. B
 
 The historical arc:
 ```
-2021: Generated Knowledge (Liu et al.) — augment with model-generated facts
-2022: Self-Consistency (Wang et al.)   — sample many paths, vote on best
-2022: Least-to-Most (Zhou et al.)     — decompose before solving
-2023: Tree of Thought (Yao et al.)    — systematic search over reasoning space
-2023: Meta-prompting                  — model improves its own prompts
+2021: Generated Knowledge (Liu et al.) - augment with model-generated facts
+2022: Self-Consistency (Wang et al.)   - sample many paths, vote on best
+2022: Least-to-Most (Zhou et al.)     - decompose before solving
+2023: Tree of Thought (Yao et al.)    - systematic search over reasoning space
+2023: Meta-prompting                  - model improves its own prompts
 ```
 
 ---
 
 ## Why Core Techniques Have Limits
 
-**The single-path problem:** Standard CoT generates one reasoning chain. If the model takes a wrong turn on step 3 of a 10-step problem, the entire chain is corrupted — and it arrives at a confident wrong answer with apparently coherent reasoning.
+**The single-path problem:** Standard CoT generates one reasoning chain. If the model takes a wrong turn on step 3 of a 10-step problem, the entire chain is corrupted - and it arrives at a confident wrong answer with apparently coherent reasoning.
 
 **The format generalization problem:** Few-shot provides examples, but examples are finite. Novel inputs that fall outside the distribution of your examples may not be handled correctly.
 
-**The decomposition problem:** Some tasks are too complex for a single prompt. "Research this topic, synthesize the findings, and write a 5-page report" is not a single-step task — it requires breaking down into manageable sub-tasks.
+**The decomposition problem:** Some tasks are too complex for a single prompt. "Research this topic, synthesize the findings, and write a 5-page report" is not a single-step task - it requires breaking down into manageable sub-tasks.
 
 Advanced techniques address these limits systematically.
 
@@ -27,7 +27,7 @@ Advanced techniques address these limits systematically.
 
 ## Tree of Thought (ToT)
 
-Tree of Thought (Yao et al., 2023) generalizes CoT from a linear chain to a **tree search**. Instead of one reasoning path, the model generates multiple candidate "thoughts" at each step, evaluates them, and explores the most promising branches — backtracking when a branch leads to a dead end.
+Tree of Thought (Yao et al., 2023) generalizes CoT from a linear chain to a **tree search**. Instead of one reasoning path, the model generates multiple candidate "thoughts" at each step, evaluates them, and explores the most promising branches - backtracking when a branch leads to a dead end.
 
 ```
 Standard CoT:
@@ -43,7 +43,7 @@ Problem → Root ─── ┼── Branch B1 → B2 → B3 → Answer ✓
 
 ToT requires three components:
 1. **Thought generator:** Produce multiple candidate next steps (typically 2–5)
-2. **State evaluator:** Score each candidate — "is this on the right track?" The evaluator is also an LLM call
+2. **State evaluator:** Score each candidate - "is this on the right track?" The evaluator is also an LLM call
 3. **Search algorithm:** BFS (explore all nodes at each depth) or DFS (go deep on one branch, backtrack on failure)
 
 ```python
@@ -83,7 +83,7 @@ Score (just the number):"""
 
 ### When ToT Is Worth the Cost
 
-Cost: ToT makes O(breadth × depth) LLM calls for a problem that CoT solves in 1 call. A breadth=3, depth=4 search makes ~12 calls plus evaluation calls — roughly 20–30× the cost of CoT.
+Cost: ToT makes O(breadth × depth) LLM calls for a problem that CoT solves in 1 call. A breadth=3, depth=4 search makes ~12 calls plus evaluation calls - roughly 20–30× the cost of CoT.
 
 ToT is worth it when:
 - The problem requires creative exploration (planning, puzzle-solving, code architecture design)
@@ -95,7 +95,7 @@ ToT is overkill when:
 - Cost and latency matter more than accuracy
 - The problem is solvable with CoT 90%+ of the time
 
-> **Tricky interview point:** ToT requires a good **evaluator function** — the component that scores each reasoning branch. If the evaluator is unreliable (which it often is, since it's also an LLM), ToT may systematically explore the wrong branches and perform worse than CoT. The evaluator is the hardest part to get right, and it adds its own hallucination risk. In practice, ToT works best when the evaluation criterion is verifiable (e.g., code that runs, math with checkable answers) rather than subjective.
+> **Tricky interview point:** ToT requires a good **evaluator function** - the component that scores each reasoning branch. If the evaluator is unreliable (which it often is, since it's also an LLM), ToT may systematically explore the wrong branches and perform worse than CoT. The evaluator is the hardest part to get right, and it adds its own hallucination risk. In practice, ToT works best when the evaluation criterion is verifiable (e.g., code that runs, math with checkable answers) rather than subjective.
 
 ---
 
@@ -131,15 +131,15 @@ def self_consistent_answer(prompt, n_samples=5, temperature=0.7):
 
 ### Why High Temperature Is Intentional
 
-Self-consistency requires **diverse** chains, not identical ones. High temperature (0.7–1.0) introduces variation in the reasoning paths. If you use temperature=0, all chains are identical and the vote adds nothing. The diversity is the mechanism — different paths may take different wrong turns, and the correct answer is more likely to be in the majority.
+Self-consistency requires **diverse** chains, not identical ones. High temperature (0.7–1.0) introduces variation in the reasoning paths. If you use temperature=0, all chains are identical and the vote adds nothing. The diversity is the mechanism - different paths may take different wrong turns, and the correct answer is more likely to be in the majority.
 
 ### When Self-Consistency Helps (and When It Doesn't)
 
-**Works well:** Tasks with a single verifiable correct answer — math problems, factual questions, classification. The majority vote is meaningful because "correct" is well-defined.
+**Works well:** Tasks with a single verifiable correct answer - math problems, factual questions, classification. The majority vote is meaningful because "correct" is well-defined.
 
-**Does not work:** Open-ended generation tasks (writing, summarization, creative tasks). If you ask for a summary and get 5 different summaries, there is no "majority vote" — they're all different. Self-consistency requires an answer space where multiple responses can be compared and votes can be counted.
+**Does not work:** Open-ended generation tasks (writing, summarization, creative tasks). If you ask for a summary and get 5 different summaries, there is no "majority vote" - they're all different. Self-consistency requires an answer space where multiple responses can be compared and votes can be counted.
 
-> **Tricky interview point:** Self-consistency multiplies your API cost by N. For a task where standard CoT is correct 85% of the time, self-consistency with N=5 might push that to 94% — but costs 5× as much. The question for a production system is whether that 9% accuracy improvement justifies the 5× cost. In most cases, it does not — use it selectively for high-stakes or high-confidence tasks where accuracy justifies cost.
+> **Tricky interview point:** Self-consistency multiplies your API cost by N. For a task where standard CoT is correct 85% of the time, self-consistency with N=5 might push that to 94% - but costs 5× as much. The question for a production system is whether that 9% accuracy improvement justifies the 5× cost. In most cases, it does not - use it selectively for high-stakes or high-confidence tasks where accuracy justifies cost.
 
 ---
 
@@ -249,7 +249,7 @@ Write an improved prompt that will produce better outputs. Focus on:
 Improved prompt:""")
 ```
 
-> **Tricky interview point:** Meta-prompting can create **prompt brittleness** — prompts that are highly optimized for a narrow distribution of inputs but fail on anything slightly different. The model that generates the improved prompt is also the model that will use it — so the improvements are biased toward what the model finds easy to follow, not necessarily what produces correct outputs for your actual evaluation criteria. Always evaluate generated prompts against a held-out test set.
+> **Tricky interview point:** Meta-prompting can create **prompt brittleness** - prompts that are highly optimized for a narrow distribution of inputs but fail on anything slightly different. The model that generates the improved prompt is also the model that will use it - so the improvements are biased toward what the model finds easy to follow, not necessarily what produces correct outputs for your actual evaluation criteria. Always evaluate generated prompts against a held-out test set.
 
 ---
 
@@ -258,10 +258,10 @@ Improved prompt:""")
 Least-to-Most Prompting (Zhou et al., 2022) solves the **decomposition challenge** in complex tasks by explicitly breaking a problem into sub-problems, solving the simplest first, and using each solution as context for harder sub-problems.
 
 ```
-Stage 1 — Decompose:
+Stage 1 - Decompose:
 "To solve [hard problem], I first need to solve: [sub-problem 1], then [sub-problem 2], then..."
 
-Stage 2 — Sequential solving:
+Stage 2 - Sequential solving:
 Solve sub-problem 1 → add solution to context
 Solve sub-problem 2 using sub-problem 1's answer as context
 ...
@@ -300,7 +300,7 @@ Least-to-most is particularly effective for:
 
 ## Generated Knowledge Prompting
 
-Generated Knowledge Prompting (Liu et al., 2021) was an early technique for improving model accuracy on knowledge-intensive tasks — a predecessor to RAG. The idea: before answering a question, ask the model to generate relevant background knowledge, then use that knowledge to answer.
+Generated Knowledge Prompting (Liu et al., 2021) was an early technique for improving model accuracy on knowledge-intensive tasks - a predecessor to RAG. The idea: before answering a question, ask the model to generate relevant background knowledge, then use that knowledge to answer.
 
 ```python
 def generated_knowledge(question):
@@ -330,7 +330,7 @@ Generated Knowledge is "pre-retrieval from the model's own weights." It forces t
 
 The critical limitation: the model can hallucinate the generated facts. A fabricated "relevant fact" that is added to the context will be treated as ground truth in step 2, potentially generating a confident, coherent, but wrong answer. This is why RAG (retrieving real external documents) superseded Generated Knowledge for production knowledge-intensive tasks.
 
-> **Tricky interview point:** Generated Knowledge can actually **amplify hallucinations** in a failure mode: the model generates a plausible-sounding but incorrect fact in step 1, and that incorrect fact becomes the primary basis for the step 2 answer. The final output is confident and coherent because it correctly applied the "facts" — they just weren't real. Always verify generated knowledge against a ground truth source for high-stakes tasks.
+> **Tricky interview point:** Generated Knowledge can actually **amplify hallucinations** in a failure mode: the model generates a plausible-sounding but incorrect fact in step 1, and that incorrect fact becomes the primary basis for the step 2 answer. The final output is confident and coherent because it correctly applied the "facts" - they just weren't real. Always verify generated knowledge against a ground truth source for high-stakes tasks.
 
 ---
 
@@ -375,10 +375,10 @@ Directional stimuli work by shifting the probability distribution at the point i
 ## Interview Q&A
 
 **Q: What problem does self-consistency solve that CoT alone cannot?** `[Easy]`  
-CoT generates a single reasoning chain — if it takes a wrong turn, the final answer is wrong. Self-consistency generates multiple diverse chains and takes a majority vote. Individual chains may err in different places, but the correct answer tends to appear in the majority, improving aggregate accuracy.
+CoT generates a single reasoning chain - if it takes a wrong turn, the final answer is wrong. Self-consistency generates multiple diverse chains and takes a majority vote. Individual chains may err in different places, but the correct answer tends to appear in the majority, improving aggregate accuracy.
 
 **Q: When should you choose Tree of Thought over Chain-of-Thought?** `[Medium]`  
-When the task requires exploring multiple solution approaches simultaneously — planning problems, creative design, complex puzzles. ToT is 20-30× more expensive than CoT, so only use it when (a) CoT consistently fails on the specific task class and (b) the improved accuracy justifies the cost. For most tasks, CoT is sufficient.
+When the task requires exploring multiple solution approaches simultaneously - planning problems, creative design, complex puzzles. ToT is 20-30× more expensive than CoT, so only use it when (a) CoT consistently fails on the specific task class and (b) the improved accuracy justifies the cost. For most tasks, CoT is sufficient.
 
 **Q: What is the key risk of meta-prompting (using an LLM to improve its own prompts)?** `[Medium]`  
 The model generates prompts that are easy for *it* to follow, not necessarily prompts that produce correct outputs on your actual evaluation criteria. Generated prompts can be highly optimized for a narrow input distribution and brittle on anything different. Always evaluate generated prompts against a held-out test set rather than trusting the improvement intuitively.
@@ -387,13 +387,13 @@ The model generates prompts that are easy for *it* to follow, not necessarily pr
 Generated Knowledge asks the model to produce relevant facts from its parametric memory, then uses those facts to answer. RAG retrieves real documents from an external knowledge base. The critical difference: generated knowledge can hallucinate; retrieved documents contain ground-truth information. RAG eliminates the hallucination risk in the knowledge-gathering step, at the cost of requiring a retrieval infrastructure.
 
 **Q: Explain error propagation in prompt chaining and how to mitigate it.** `[Hard]`  
-Each step in a prompt chain uses the previous step's output as input. An error in step 1 (wrong extraction, missed information) propagates to step 2, which builds on it, producing step 3 output that is incorrect in a compounding way. Mitigation: (1) validate intermediate outputs — use a separate "checker" prompt to verify each step's output before proceeding; (2) include error recovery logic that retries or falls back; (3) design chains so each step is independently evaluable against a known schema or constraint; (4) pass the original source document through the entire chain so later steps can cross-reference it.
+Each step in a prompt chain uses the previous step's output as input. An error in step 1 (wrong extraction, missed information) propagates to step 2, which builds on it, producing step 3 output that is incorrect in a compounding way. Mitigation: (1) validate intermediate outputs - use a separate "checker" prompt to verify each step's output before proceeding; (2) include error recovery logic that retries or falls back; (3) design chains so each step is independently evaluable against a known schema or constraint; (4) pass the original source document through the entire chain so later steps can cross-reference it.
 
 **Q: Self-consistency doesn't work for "what is the best marketing slogan for our product?" Why?** `[Hard]`  
-Self-consistency requires a verifiable correct answer that can be determined by majority vote. Slogans are subjective and open-ended — 5 diverse outputs will be 5 completely different slogans. There is no "majority vote" mechanism applicable to open-ended creative outputs. Self-consistency is a technique for tasks with convergent answers (math, factual questions, classification), not divergent creative tasks.
+Self-consistency requires a verifiable correct answer that can be determined by majority vote. Slogans are subjective and open-ended - 5 diverse outputs will be 5 completely different slogans. There is no "majority vote" mechanism applicable to open-ended creative outputs. Self-consistency is a technique for tasks with convergent answers (math, factual questions, classification), not divergent creative tasks.
 
 **Q: A customer asks you to build a prompt that achieves 95% accuracy on a medical QA benchmark. You're currently at 85% with standard CoT. Walk through your approach.** `[Hard]`  
-Step 1: Analyze the 15% errors — are they systematic (specific topics, question types) or random? Systematic errors suggest the need for domain-specific few-shot examples or a specialized system prompt. Random errors suggest self-consistency might help. Step 2: Test self-consistency with N=5 (costs 5×, expected gain ~5–8%). Step 3: For systematic errors in specific topics, build a dynamic few-shot retrieval system that selects the most relevant examples per question. Step 4: Test Generated Knowledge or chain a "recall relevant medical facts first" step before answering. Step 5: Evaluate each intervention independently against a held-out test set. Step 6: If still below 95%, the gap may require RAG with a medical knowledge base rather than prompt engineering alone — parametric knowledge has limits.
+Step 1: Analyze the 15% errors - are they systematic (specific topics, question types) or random? Systematic errors suggest the need for domain-specific few-shot examples or a specialized system prompt. Random errors suggest self-consistency might help. Step 2: Test self-consistency with N=5 (costs 5×, expected gain ~5–8%). Step 3: For systematic errors in specific topics, build a dynamic few-shot retrieval system that selects the most relevant examples per question. Step 4: Test Generated Knowledge or chain a "recall relevant medical facts first" step before answering. Step 5: Evaluate each intervention independently against a held-out test set. Step 6: If still below 95%, the gap may require RAG with a medical knowledge base rather than prompt engineering alone - parametric knowledge has limits.
 
 **Q: Why might Directional Stimulus Prompting outperform explicit instruction for steering model focus?** `[Hard]`  
 Explicit instructions ("Focus on X") operate at the beginning of generation and may be partially "forgotten" over long outputs due to attention decay across position. A directional stimulus at the end of the prompt is placed close to where generation begins, exploiting the recency effect in attention. It's closer to showing the model what to do than telling it at a distance. Additionally, stimuli that are framed as observations ("The key tension involves...") can activate relevant knowledge representations more strongly than instructions ("Please focus on...").

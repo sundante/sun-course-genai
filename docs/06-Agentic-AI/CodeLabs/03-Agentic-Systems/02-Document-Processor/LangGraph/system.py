@@ -1,7 +1,7 @@
 """
-Document Processor — LangGraph Implementation
+Document Processor - LangGraph Implementation
 =============================================
-System    : 02 — Document Processor
+System    : 02 - Document Processor
 Framework : LangGraph
 Model     : gemini-2.0-flash via langchain-google-genai
 
@@ -77,15 +77,15 @@ SAMPLE_DOCS = {
     Python, Go, Kubernetes, Spark, TensorFlow, PostgreSQL, Redis
 
     EXPERIENCE
-    Senior Software Engineer — TechCorp (2021-present)
+    Senior Software Engineer - TechCorp (2021-present)
     - Led migration of ML pipeline to Kubernetes, reducing inference latency by 40%
     - Built real-time feature store serving 50M requests/day
 
-    Software Engineer — StartupXYZ (2018-2021)
+    Software Engineer - StartupXYZ (2018-2021)
     - Designed event-driven architecture processing 1B events/day
 
     EDUCATION
-    B.S. Computer Science — UC Berkeley, 2016
+    B.S. Computer Science - UC Berkeley, 2016
     """,
 
     "ambiguous": """
@@ -113,7 +113,7 @@ def classify_document(state: DocumentState) -> dict:
           "confidence": 0.0-1.0,
           "reasoning": "brief explanation"
         }
-        Be honest about confidence — use low values when the document is ambiguous."""),
+        Be honest about confidence - use low values when the document is ambiguous."""),
         HumanMessage(content=f"Document:\n{state['document_text']}")
     ]).content
 
@@ -264,7 +264,7 @@ def handle_error(state: DocumentState) -> dict:
             "validation": state["validation_result"],
             "routed_to": "error_queue",
             "status": "failed",
-            "error": "Validation failed — manual review required",
+            "error": "Validation failed - manual review required",
         }
     }
 
@@ -326,7 +326,7 @@ if __name__ == "__main__":
     # Test with different documents
     for doc_name, doc_text in SAMPLE_DOCS.items():
         print(f"\n{'='*60}")
-        print(f"DOCUMENT PROCESSOR — LangGraph")
+        print(f"DOCUMENT PROCESSOR - LangGraph")
         print(f"Processing: {doc_name} document")
         print(f"{'='*60}")
 

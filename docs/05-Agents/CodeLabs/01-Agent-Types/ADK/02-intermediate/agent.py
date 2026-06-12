@@ -2,7 +2,7 @@
 ADK Intermediate Agent
 ======================
 Framework : Google Agent Development Kit (ADK)
-Level     : 02 — Intermediate
+Level     : 02 - Intermediate
 Model     : gemini-2.0-flash
 
 New concepts vs Simple:
@@ -109,7 +109,7 @@ agent = Agent(
     instruction="""You are a professional travel intelligence assistant.
 When asked about a city, always check weather, local time, AND travel advisory before responding.
 Build a complete picture using all three tools, then synthesize into a structured briefing.
-Remember context from earlier in the conversation — if the user mentioned a preference, use it.""",
+Remember context from earlier in the conversation - if the user mentioned a preference, use it.""",
     tools=[get_weather, get_time, get_travel_advisory],
     output_schema=TravelBriefing,  # forces final response into this Pydantic schema
 )
@@ -149,7 +149,7 @@ async def main():
 
     turns = [
         "Give me a full travel briefing for Tokyo.",
-        "Now do the same for Bangalore. I prefer warm weather — which would you recommend?",
+        "Now do the same for Bangalore. I prefer warm weather - which would you recommend?",
         "Based on what you told me, what's the safer city to visit?",
     ]
 

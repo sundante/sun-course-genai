@@ -6,7 +6,7 @@
 
 ## Production Architecture
 
-A production agentic system is not just agents and tools — it is a layered architecture where each layer has a distinct responsibility. Getting the layers right is what separates a reliable system from a fragile demo.
+A production agentic system is not just agents and tools - it is a layered architecture where each layer has a distinct responsibility. Getting the layers right is what separates a reliable system from a fragile demo.
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -22,7 +22,7 @@ A production agentic system is not just agents and tools — it is a layered arc
 ├─────────────────────────────────────────────────────┤
 │  Tool Layer                                          │
 │  APIs, search engines, code execution, databases,    │
-│  file systems — each sandboxed and rate-limited      │
+│  file systems - each sandboxed and rate-limited      │
 ├─────────────────────────────────────────────────────┤
 │  Memory Layer                                        │
 │  Short-term (context), working (state), long-term   │
@@ -41,7 +41,7 @@ The entry point where tasks arrive and results are returned. Responsibilities:
 - Task queuing (accept task, return task ID, let system process async)
 - Result delivery (webhook, polling endpoint, or streaming)
 
-**Key design choice:** Synchronous vs asynchronous. For tasks that take more than a few seconds, always design for async — accept the task, return a job ID, allow the caller to poll or receive a webhook when done.
+**Key design choice:** Synchronous vs asynchronous. For tasks that take more than a few seconds, always design for async - accept the task, return a job ID, allow the caller to poll or receive a webhook when done.
 
 ### Orchestration Layer
 
@@ -59,7 +59,7 @@ The brain of the system. Responsibilities:
 
 ### Agent Pool
 
-Each agent in the pool has a fixed identity: a specific role, system prompt, model, and tool set. Agents are stateless workers — they receive a task, execute it, and return a result.
+Each agent in the pool has a fixed identity: a specific role, system prompt, model, and tool set. Agents are stateless workers - they receive a task, execute it, and return a result.
 
 ```python
 class Agent:
@@ -124,7 +124,7 @@ class CircuitBreaker:
 
     def call(self, fn, *args, **kwargs):
         if self.state == "open":
-            raise CircuitOpenError("Service unavailable — circuit open")
+            raise CircuitOpenError("Service unavailable - circuit open")
         try:
             result = fn(*args, **kwargs)
             self._on_success()
@@ -141,8 +141,8 @@ Not all failures warrant a retry. Classify failures before retrying.
 | Error Type | Action |
 |-----------|--------|
 | Transient (network timeout, rate limit) | Retry with exponential backoff |
-| Input error (bad arguments, validation failure) | Don't retry — fix the input |
-| Permanent (resource deleted, permission denied) | Don't retry — escalate or abort |
+| Input error (bad arguments, validation failure) | Don't retry - fix the input |
+| Permanent (resource deleted, permission denied) | Don't retry - escalate or abort |
 | Unknown | Retry once, then escalate |
 
 ---
@@ -171,7 +171,7 @@ def requires_hitl(action: Action) -> bool:
 When presenting an action for human approval, include:
 
 1. **What the agent wants to do** (the specific action, not a vague description)
-2. **Why** (the agent's reasoning — what goal is this serving?)
+2. **Why** (the agent's reasoning - what goal is this serving?)
 3. **Consequences** (what happens if approved? what happens if rejected?)
 4. **Preview** (for content: show the exact email/message/document to be sent)
 5. **Alternative** (if the action is rejected, what will the agent do instead?)
@@ -251,7 +251,7 @@ def build_agent_context(state: WorkflowState, agent_role: str) -> list[Message]:
     if memories:
         messages.append(HumanMessage(content=f"Relevant prior knowledge:\n{format_memories(memories)}"))
 
-    # 3. Task ledger (always include — small, stable, critical)
+    # 3. Task ledger (always include - small, stable, critical)
     messages.append(HumanMessage(content=f"Task progress:\n{state.task_ledger.to_markdown()}"))
 
     # 4. Recent history (truncated if too long)
@@ -265,7 +265,7 @@ def build_agent_context(state: WorkflowState, agent_role: str) -> list[Message]:
 
 ## Cost Management
 
-Agentic systems can be expensive. A system that runs 20 LLM calls per task at $0.01 each costs $0.20 per task — which adds up fast at scale.
+Agentic systems can be expensive. A system that runs 20 LLM calls per task at $0.01 each costs $0.20 per task - which adds up fast at scale.
 
 ### Token Budget Per Task
 
@@ -327,8 +327,8 @@ Vulnerable agent follows the injected instruction.
 
 **Mitigations:**
 - **Input sanitization:** Strip or escape instruction-like patterns from external content before including in prompts
-- **Role separation:** Have a separate "content agent" that processes external content and a "reasoning agent" that acts — never mix external content directly into the reasoning agent's context
-- **Action validation:** Before executing any action, validate it against the original user intent and the agent's role — not just the most recent instruction
+- **Role separation:** Have a separate "content agent" that processes external content and a "reasoning agent" that acts - never mix external content directly into the reasoning agent's context
+- **Action validation:** Before executing any action, validate it against the original user intent and the agent's role - not just the most recent instruction
 - **Least privilege:** Each agent should only have the tools it needs for its role. A research agent should not have email-sending tools.
 
 ### Tool Sandboxing
@@ -397,7 +397,7 @@ result = agent_system.get_result(task_id)
 
 - **Layer separation is what makes systems maintainable.** When everything is in one place (orchestration + agents + tools + monitoring all mixed together), changes break unintended things. Keep the layers clean.
 - **Async by default** for anything that takes more than a few seconds. Users don't wait; systems poll or receive webhooks.
-- **Cost management is a first-class concern** in production, not an afterthought. Instrument every LLM call from day one — you will need this data.
+- **Cost management is a first-class concern** in production, not an afterthought. Instrument every LLM call from day one - you will need this data.
 - **Security in multi-agent systems is different from single-model security.** Prompt injection via multi-hop (external content → agent A → agent B → malicious action) is the key new threat. Role separation and action validation are the primary defenses.
 - **Design for the failure path before the happy path.** What does the system do when a subagent times out? When an external API returns a 503? When the user doesn't respond to a HITL prompt? These paths must be designed, not discovered in production.
 
@@ -406,19 +406,19 @@ result = agent_system.get_result(task_id)
 ## Q&A Review Bank
 
 **Q1: Name the six layers of a production agentic system and their primary responsibilities.** `[Medium]`
-A: Interface Layer (API gateway, auth, input validation, async task queuing and result delivery), Orchestration Layer (workflow decomposition, agent assignment, dependency management, HITL gates, retry and error handling), Agent Pool (specialized stateless agents each with a fixed role, system prompt, model, and tool set), Tool Layer (external APIs, search, code execution, databases — each sandboxed and rate-limited), Memory Layer (short-term context window, working state in a database, long-term vector store, episodic event log), and Monitoring Layer (tracing, logging, cost tracking, alerting). Layer separation is what makes the system maintainable — changes in one layer don't break others.
+A: Interface Layer (API gateway, auth, input validation, async task queuing and result delivery), Orchestration Layer (workflow decomposition, agent assignment, dependency management, HITL gates, retry and error handling), Agent Pool (specialized stateless agents each with a fixed role, system prompt, model, and tool set), Tool Layer (external APIs, search, code execution, databases - each sandboxed and rate-limited), Memory Layer (short-term context window, working state in a database, long-term vector store, episodic event log), and Monitoring Layer (tracing, logging, cost tracking, alerting). Layer separation is what makes the system maintainable - changes in one layer don't break others.
 
 **Q2: What is a circuit breaker and when should it open in an agentic system?** `[Hard]`
-A: A circuit breaker monitors calls to a downstream dependency (API, database) and temporarily stops sending requests when that dependency is repeatedly failing — instead of flooding a struggling service with retries. It has three states: Closed (normal, all calls pass through), Open (tripped after N consecutive failures — reject calls immediately with an error), and Half-Open (after a recovery timeout, allow one test call; if it succeeds, close the circuit; if it fails, keep it open). It should open when a service shows repeated transient failures suggesting it's overloaded or down. Without circuit breakers, a failing downstream API causes every agent step to hang until timeout, cascading into system-wide latency spikes and wasted LLM context.
+A: A circuit breaker monitors calls to a downstream dependency (API, database) and temporarily stops sending requests when that dependency is repeatedly failing - instead of flooding a struggling service with retries. It has three states: Closed (normal, all calls pass through), Open (tripped after N consecutive failures - reject calls immediately with an error), and Half-Open (after a recovery timeout, allow one test call; if it succeeds, close the circuit; if it fails, keep it open). It should open when a service shows repeated transient failures suggesting it's overloaded or down. Without circuit breakers, a failing downstream API causes every agent step to hang until timeout, cascading into system-wide latency spikes and wasted LLM context.
 
 **Q3: Why should long-running agentic tasks always be designed as asynchronous?** `[Easy]`
-A: Long-running tasks (anything beyond a few seconds) should not block the caller waiting for a result — this creates poor user experience and server resource exhaustion (connections held open, timeouts). The correct pattern is: accept the task and return a task ID immediately, process the task asynchronously in a worker, and deliver the result via a webhook callback or polling endpoint. This also enables horizontal scaling (multiple workers process the queue), natural retry on worker crash (the task is still in the queue), and back-pressure handling (the queue absorbs traffic spikes without crashing workers).
+A: Long-running tasks (anything beyond a few seconds) should not block the caller waiting for a result - this creates poor user experience and server resource exhaustion (connections held open, timeouts). The correct pattern is: accept the task and return a task ID immediately, process the task asynchronously in a worker, and deliver the result via a webhook callback or polling endpoint. This also enables horizontal scaling (multiple workers process the queue), natural retry on worker crash (the task is still in the queue), and back-pressure handling (the queue absorbs traffic spikes without crashing workers).
 
 **Q4: What are the four memory types in an agentic system and what is each used for?** `[Hard]`
-A: Short-term memory (the LLM's active context window — current session history, tool results, task state; lost when the session ends), Working memory (structured agent state maintained by the orchestration layer — task ledger, agent assignments, partial results, error log; survives agent restarts via database), Long-term memory (a vector store of semantic knowledge accumulated across tasks — past research, user preferences, previously solved problems; queried semantically when relevant to the current task), and Episodic memory (a sequential append-only event log of everything that happened — every LLM call, tool call, HITL decision, error; used for debugging, auditing, and training data generation). A production system uses all four; which one is queried at a given moment depends on the agent's current need.
+A: Short-term memory (the LLM's active context window - current session history, tool results, task state; lost when the session ends), Working memory (structured agent state maintained by the orchestration layer - task ledger, agent assignments, partial results, error log; survives agent restarts via database), Long-term memory (a vector store of semantic knowledge accumulated across tasks - past research, user preferences, previously solved problems; queried semantically when relevant to the current task), and Episodic memory (a sequential append-only event log of everything that happened - every LLM call, tool call, HITL decision, error; used for debugging, auditing, and training data generation). A production system uses all four; which one is queried at a given moment depends on the agent's current need.
 
 **Q5: How does prompt injection in a multi-agent system differ from single-agent injection, and what is the primary defense?** `[Hard]`
-A: In a single-agent system, injection requires the malicious content to be in the agent's direct context. In multi-agent systems, injection can be multi-hop: malicious content in a web page is processed by Agent A (the research agent), injected into its output, passed to Agent B (the writer), which then passes the injected instruction to Agent C (the email agent) which takes an unauthorized action — all three hops are required for the attack, and the injection is invisible in any single agent's trace. The primary defense is role separation: the agent that processes external content (research agent) and the agent that takes actions (email agent) should never share a context window. The research agent's output should be validated and sanitized before it reaches any action-taking agent.
+A: In a single-agent system, injection requires the malicious content to be in the agent's direct context. In multi-agent systems, injection can be multi-hop: malicious content in a web page is processed by Agent A (the research agent), injected into its output, passed to Agent B (the writer), which then passes the injected instruction to Agent C (the email agent) which takes an unauthorized action - all three hops are required for the attack, and the injection is invisible in any single agent's trace. The primary defense is role separation: the agent that processes external content (research agent) and the agent that takes actions (email agent) should never share a context window. The research agent's output should be validated and sanitized before it reaches any action-taking agent.
 
 **Q6: Why is routing tasks to different model sizes a cost strategy, and what is the decision criterion?** `[Medium]`
-A: LLM pricing scales with model capability — larger models that handle complex reasoning cost 10-50× more per token than smaller models for simple tasks. An orchestrator that sends every task to the most powerful model regardless of complexity wastes most of that budget on tasks that a smaller model handles equally well. The decision criterion is task complexity: simple classification, formatting, and structured extraction tasks go to small fast models (Gemini Flash Lite); research, analysis, and multi-step reasoning go to medium models (Gemini 2.0 Flash); planning, adversarial evaluation, and complex synthesis go to large models (Gemini 1.5 Pro). In practice, instrument actual cost per agent type first, then optimize by routing the highest-volume cheap tasks to smaller models.
+A: LLM pricing scales with model capability - larger models that handle complex reasoning cost 10-50× more per token than smaller models for simple tasks. An orchestrator that sends every task to the most powerful model regardless of complexity wastes most of that budget on tasks that a smaller model handles equally well. The decision criterion is task complexity: simple classification, formatting, and structured extraction tasks go to small fast models (Gemini Flash Lite); research, analysis, and multi-step reasoning go to medium models (Gemini 2.0 Flash); planning, adversarial evaluation, and complex synthesis go to large models (Gemini 1.5 Pro). In practice, instrument actual cost per agent type first, then optimize by routing the highest-volume cheap tasks to smaller models.

@@ -26,7 +26,7 @@ Each primitive has a discovery mechanism (`list`), an access mechanism (`get`/`c
 
 ## 1. Tools
 
-Tools are the most powerful and consequential primitive. They are executable functions that may have **side effects** — writing data, calling external APIs, modifying system state.
+Tools are the most powerful and consequential primitive. They are executable functions that may have **side effects** - writing data, calling external APIs, modifying system state.
 
 ### Capability declaration
 ```json
@@ -150,7 +150,7 @@ Tools can carry behavioral hints via annotations:
 | `idempotentHint: true` | Calling multiple times = same result |
 | `openWorldHint: true` | Tool interacts with the external world (web, APIs) |
 
-**Warning:** Annotations are advisory — they come from the server and are untrusted unless the server is from a verified source.
+**Warning:** Annotations are advisory - they come from the server and are untrusted unless the server is from a verified source.
 
 ---
 
@@ -285,7 +285,7 @@ When a server supports `resources.subscribe`, clients can watch specific resourc
 }
 ```
 
-- `audience`: Who the resource is intended for — `"user"` (display in UI), `"assistant"` (include in LLM context)
+- `audience`: Who the resource is intended for - `"user"` (display in UI), `"assistant"` (include in LLM context)
 - `priority`: 0.0–1.0, hint for context prioritization when context window is limited
 - `lastModified`: ISO 8601 timestamp for caching decisions
 
@@ -350,7 +350,7 @@ Prompts are reusable, parameterized templates for LLM interactions. Users invoke
   }
 }
 
-// Response — the server constructs the full conversation context
+// Response - the server constructs the full conversation context
 {
   "result": {
     "description": "Code review for PR #142 (security focus)",
@@ -378,13 +378,13 @@ Prompts are reusable, parameterized templates for LLM interactions. Users invoke
 }
 ```
 
-Prompt messages can include text, images, audio, or embedded resources — giving the server full control over what context is assembled for the LLM.
+Prompt messages can include text, images, audio, or embedded resources - giving the server full control over what context is assembled for the LLM.
 
 ---
 
 ## 4. Sampling
 
-Sampling lets a **server** request that the **host's LLM** generate text. The server never holds API keys or model-specific code — the host mediates everything.
+Sampling lets a **server** request that the **host's LLM** generate text. The server never holds API keys or model-specific code - the host mediates everything.
 
 ### Client declares support
 ```json
@@ -442,7 +442,7 @@ Sampling lets a **server** request that the **host's LLM** generate text. The se
 | `speedPriority` | Minimize latency | Real-time interactions |
 | `intelligencePriority` | Maximize capability | Complex reasoning, synthesis |
 
-Hints are treated as **substrings** (not exact names) and are advisory — the host makes the final model selection. Multiple hints are ranked in preference order.
+Hints are treated as **substrings** (not exact names) and are advisory - the host makes the final model selection. Multiple hints are ranked in preference order.
 
 ---
 
@@ -523,7 +523,7 @@ Elicitation lets a **server** request structured information or confirmation fro
 | `boolean` | `default` | Confirmation checkbox |
 | Enum | `enum` (values) + `enumNames` (display) | Dropdown selection |
 
-**Important constraints:** Elicitation schemas must be flat objects of primitive properties only. No nested objects, no arrays of objects — designed to be renderable by any Host UI.
+**Important constraints:** Elicitation schemas must be flat objects of primitive properties only. No nested objects, no arrays of objects - designed to be renderable by any Host UI.
 
 **Security rule:** Servers **MUST NOT** request sensitive information (passwords, credit cards, social security numbers) via Elicitation. The Host should display which server is making the request and allow users to review before submitting.
 
@@ -567,7 +567,7 @@ Roots let the **client** declare filesystem boundaries that **servers** should r
 
 The server should call `roots/list` again after receiving this notification.
 
-**Security:** Roots are `file://` URIs only. Servers must validate all file paths against declared roots before accessing them — never traverse outside declared boundaries. Path traversal attacks (e.g., `../../../../etc/passwd`) must be validated against the root list.
+**Security:** Roots are `file://` URIs only. Servers must validate all file paths against declared roots before accessing them - never traverse outside declared boundaries. Path traversal attacks (e.g., `../../../../etc/passwd`) must be validated against the root list.
 
 ---
 
@@ -607,13 +607,13 @@ Tools, Resources, and Prompts all support cursor-based pagination for large list
 
 **Q1: What are all six MCP primitives and which side exposes each?** `[Easy]`
 
-A: Server-side (servers expose to clients): Tools (executable functions with potential side effects, model-controlled), Resources (passive data sources, application-controlled), and Prompts (reusable templates, user-controlled). Client-side (clients expose back to servers): Sampling (server requests LLM text generation from the host), Elicitation (server requests structured user input or confirmation), and Roots (client declares filesystem boundaries the server may access). The controller distinction — model, app, or user — determines which party decides when each primitive is used.
+A: Server-side (servers expose to clients): Tools (executable functions with potential side effects, model-controlled), Resources (passive data sources, application-controlled), and Prompts (reusable templates, user-controlled). Client-side (clients expose back to servers): Sampling (server requests LLM text generation from the host), Elicitation (server requests structured user input or confirmation), and Roots (client declares filesystem boundaries the server may access). The controller distinction - model, app, or user - determines which party decides when each primitive is used.
 
 ---
 
 **Q2: What are tool annotations and why are they untrusted by default?** `[Medium]`
 
-A: Tool annotations are metadata hints attached to tool definitions describing behavior: `readOnlyHint` (no side effects), `destructiveHint` (may delete data), `idempotentHint` (safe to call multiple times), `openWorldHint` (interacts with external systems). They're untrusted by default because they originate from the server — any server can claim `readOnlyHint: true` on a tool that actually deletes records. Hosts and users must verify behavior from trusted server sources rather than relying on self-reported annotations. Treating annotations as verified facts is a security vulnerability.
+A: Tool annotations are metadata hints attached to tool definitions describing behavior: `readOnlyHint` (no side effects), `destructiveHint` (may delete data), `idempotentHint` (safe to call multiple times), `openWorldHint` (interacts with external systems). They're untrusted by default because they originate from the server - any server can claim `readOnlyHint: true` on a tool that actually deletes records. Hosts and users must verify behavior from trusted server sources rather than relying on self-reported annotations. Treating annotations as verified facts is a security vulnerability.
 
 ---
 
@@ -625,10 +625,10 @@ A: `resources.listChanged` means the server will send `notifications/resources/l
 
 **Q4: Elicitation schemas have strict constraints (flat, primitive only). What problem does this solve?** `[Hard]`
 
-A: The constraint that Elicitation schemas must be flat objects of primitive properties (no nested objects, no arrays of objects) ensures every MCP Host — from a desktop GUI to a CLI to a voice interface — can render a confirmation dialog without needing a general-purpose form renderer. A schema with nested objects and arrays would require a complex UI component; a flat schema of strings, numbers, booleans, and enums maps directly to text fields, number inputs, checkboxes, and dropdowns that every UI toolkit provides. This is a deliberate protocol-level tradeoff: some expressive power is sacrificed to guarantee universal renderability across all Host implementations.
+A: The constraint that Elicitation schemas must be flat objects of primitive properties (no nested objects, no arrays of objects) ensures every MCP Host - from a desktop GUI to a CLI to a voice interface - can render a confirmation dialog without needing a general-purpose form renderer. A schema with nested objects and arrays would require a complex UI component; a flat schema of strings, numbers, booleans, and enums maps directly to text fields, number inputs, checkboxes, and dropdowns that every UI toolkit provides. This is a deliberate protocol-level tradeoff: some expressive power is sacrificed to guarantee universal renderability across all Host implementations.
 
 ---
 
 **Q5: A server uses the Sampling primitive to call `sampling/createMessage` with `intelligencePriority: 1.0` and a hint of `claude-opus`. Can it guarantee that model will be used?** `[Hard]`
 
-A: No — model preferences are advisory, not binding. The Host makes the final model selection based on its own configuration, available models, cost policies, and rate limits. The hints are treated as substring matches, not exact model names, so `"claude-opus"` might match `claude-opus-4-7` or `claude-3-opus-20240229` depending on what the Host has configured. `intelligencePriority: 1.0` signals strong preference for capability over cost/speed, which the Host should weight heavily, but it cannot override the Host's access controls or billing constraints. This design is intentional: servers remain model-agnostic and never hold model credentials.
+A: No - model preferences are advisory, not binding. The Host makes the final model selection based on its own configuration, available models, cost policies, and rate limits. The hints are treated as substring matches, not exact model names, so `"claude-opus"` might match `claude-opus-4-7` or `claude-3-opus-20240229` depending on what the Host has configured. `intelligencePriority: 1.0` signals strong preference for capability over cost/speed, which the Host should weight heavily, but it cannot override the Host's access controls or billing constraints. This design is intentional: servers remain model-agnostic and never hold model credentials.

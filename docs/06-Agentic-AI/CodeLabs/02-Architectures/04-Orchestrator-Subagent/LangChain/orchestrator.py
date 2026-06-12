@@ -1,5 +1,5 @@
 """
-Orchestrator-Subagent Architecture — LangChain
+Orchestrator-Subagent Architecture - LangChain
 Pattern: Planner chain → dynamically selects + calls specialist sub-chains
 
 The orchestrator chain decides which specialists to invoke and in what order.

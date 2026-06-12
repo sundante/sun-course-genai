@@ -1,9 +1,9 @@
 """
-Parallel Architecture — CrewAI
+Parallel Architecture - CrewAI
 Pattern: Fan-out (3 city researchers) → Aggregate (ranker)
 
 CrewAI achieves parallelism with Process.sequential where research tasks
-have NO context dependencies on each other — they can run independently.
+have NO context dependencies on each other - they can run independently.
 The aggregator task has context=[all_research_tasks].
 
 Note: CrewAI also supports Process.parallel (experimental) for true concurrency.
@@ -50,7 +50,7 @@ class RankedReport(BaseModel):
 
 # ── Agents ────────────────────────────────────────────────────────────────────
 
-# Three identical researcher agents — one per city (true role separation)
+# Three identical researcher agents - one per city (true role separation)
 researcher_tokyo = Agent(
     role="Tokyo Researcher", goal="Research Tokyo travel data.",
     backstory="You specialize in Japan travel intelligence.",
@@ -77,7 +77,7 @@ aggregator = Agent(
 # ── Crew builder ──────────────────────────────────────────────────────────────
 
 def build_crew() -> Crew:
-    # Independent research tasks — no context dependency = parallel-capable
+    # Independent research tasks - no context dependency = parallel-capable
     task_tokyo = Task(
         description="Research Tokyo: call research_city('Tokyo') and report weather, safety, time.",
         expected_output="Structured Tokyo travel data with scores.",
@@ -120,7 +120,7 @@ if __name__ == "__main__":
         print("RANKED REPORT")
         print("="*50)
         for r in report.rankings:
-            print(f"  {r.rank}. {r.city} — {r.reason}")
+            print(f"  {r.rank}. {r.city} - {r.reason}")
         print(f"\nTop Pick: {report.top_pick}")
         print(f"Why: {report.top_pick_reason}")
     else:

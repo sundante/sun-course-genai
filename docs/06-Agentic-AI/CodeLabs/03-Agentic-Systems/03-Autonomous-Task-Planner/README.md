@@ -1,6 +1,6 @@
 # Autonomous Task Planner System
 
-An agentic system that takes a high-level goal, decomposes it into a structured plan, executes each subtask, monitors results, and replans when subtasks fail — until the goal is achieved or the system hits its limits.
+An agentic system that takes a high-level goal, decomposes it into a structured plan, executes each subtask, monitors results, and replans when subtasks fail - until the goal is achieved or the system hits its limits.
 
 ## Architecture
 
@@ -62,7 +62,7 @@ Each subtask has: `id`, `description`, `dependencies`, `status` (pending/done/fa
 
 ## Implementations
 
-- [LangChain](LangChain/system.py) — Plan-and-execute loop with conditional replanning
-- [LangGraph](LangGraph/system.py) — State graph with planner → execute → monitor → replan loop
-- [CrewAI](CrewAI/system.py) — Hierarchical crew with manager, executors, and quality reviewer
-- [ADK](ADK/system.py) — SequentialAgent with feedback loop
+- [LangChain](LangChain/system.py) - Plan-and-execute loop with conditional replanning
+- [LangGraph](LangGraph/system.py) - State graph with planner → execute → monitor → replan loop
+- [CrewAI](CrewAI/system.py) - Hierarchical crew with manager, executors, and quality reviewer
+- [ADK](ADK/system.py) - SequentialAgent with feedback loop

@@ -24,9 +24,9 @@ Google's Agent Development Kit is a framework for building, deploying, and manag
 
 | File | Topic |
 |------|-------|
-| [01 — ADK Fundamentals](01-ADK-Fundamentals.md) | Core concepts, setup |
-| [02 — Simple Agent](02-Simple-Agent.md) | Single-tool agent walkthrough |
-| [03 — Complex Agent](03-Complex-Agent.md) | Multi-tool, stateful agent |
+| [01 - ADK Fundamentals](01-ADK-Fundamentals.md) | Core concepts, setup |
+| [02 - Simple Agent](02-Simple-Agent.md) | Single-tool agent walkthrough |
+| [03 - Complex Agent](03-Complex-Agent.md) | Multi-tool, stateful agent |
 
 ## Navigation
 

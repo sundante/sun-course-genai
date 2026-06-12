@@ -1,4 +1,4 @@
-# LangChain — Fundamentals
+# LangChain - Fundamentals
 
 ## LangChain Overview and Philosophy
 

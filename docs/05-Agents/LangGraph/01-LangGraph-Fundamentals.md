@@ -1,4 +1,4 @@
-# LangGraph — Fundamentals
+# LangGraph - Fundamentals
 
 ## LangGraph Overview and Philosophy
 

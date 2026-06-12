@@ -1,5 +1,5 @@
 """
-Orchestrator-Subagent Architecture — Google ADK
+Orchestrator-Subagent Architecture - Google ADK
 Pattern: Orchestrator agent with specialist sub-agents
 
 The orchestrator holds the plan; sub-agents are the executors.

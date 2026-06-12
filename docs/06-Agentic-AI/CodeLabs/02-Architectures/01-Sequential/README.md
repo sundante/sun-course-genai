@@ -13,7 +13,7 @@ Each agent receives the previous agent's output as its input. No agent starts un
 
 ## When to Use
 
-- Tasks with strict ordering — each step depends on the last
+- Tasks with strict ordering - each step depends on the last
 - Document processing pipelines (extract → analyze → format)
 - Multi-stage transformations where context must flow forward
 
@@ -21,16 +21,16 @@ Each agent receives the previous agent's output as its input. No agent starts un
 
 | Pro | Con |
 |---|---|
-| Simple to reason about | Slow — no parallelism |
+| Simple to reason about | Slow - no parallelism |
 | Easy to debug (clear handoffs) | One bottleneck stalls everything |
 | Output is fully traceable | Later agents can't correct earlier ones |
 
 ## The Mock Task
 
 **Topic research report pipeline:**
-1. `ResearchAgent` — collects bullet facts about a topic (mock tool)
-2. `SummaryAgent` — condenses the bullets into 2–3 sentences
-3. `FormatterAgent` — wraps summary into a structured markdown report
+1. `ResearchAgent` - collects bullet facts about a topic (mock tool)
+2. `SummaryAgent` - condenses the bullets into 2–3 sentences
+3. `FormatterAgent` - wraps summary into a structured markdown report
 
 ## Implementations
 

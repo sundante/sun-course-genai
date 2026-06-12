@@ -20,9 +20,9 @@ LangGraph is built on top of LangChain and adds graph-based state machines for m
 
 | File | Topic |
 |------|-------|
-| [01 — LangChain Fundamentals](01-LangChain-Fundamentals.md) | Core abstractions, setup |
-| [02 — Simple Agent](02-Simple-Agent.md) | Basic agent with tools |
-| [03 — Complex Agent](03-Complex-Agent.md) | Multi-tool, memory-enabled agent |
+| [01 - LangChain Fundamentals](01-LangChain-Fundamentals.md) | Core abstractions, setup |
+| [02 - Simple Agent](02-Simple-Agent.md) | Basic agent with tools |
+| [03 - Complex Agent](03-Complex-Agent.md) | Multi-tool, memory-enabled agent |
 
 ## Navigation
 

@@ -2,14 +2,14 @@
 LangGraph Complex Agent
 ========================
 Framework : LangGraph
-Level     : 03 — Complex
+Level     : 03 - Complex
 Model     : gemini-2.0-flash
 
 New concepts vs Intermediate:
   - Explicit planning node (separate from execution)
   - Reflexion loop: critic node scores output, conditional edge retries if score < 7
   - Richer state: tracks plan, draft, critique, attempt count
-  - Streaming with graph.stream() — see every node transition
+  - Streaming with graph.stream() - see every node transition
   - Conditional edges based on custom state fields (not just tool_calls)
 
 Domain: multi-city trip planner with plan → research → draft → critique → conditional retry.

@@ -2,7 +2,7 @@
 LangGraph Intermediate Agent
 =============================
 Framework : LangGraph
-Level     : 02 — Intermediate
+Level     : 02 - Intermediate
 Model     : gemini-2.0-flash
 
 New concepts vs Simple:
@@ -83,7 +83,7 @@ def get_travel_advisory(city: str) -> dict:
 tools = [get_weather, get_time, get_travel_advisory]
 
 # ── Richer State ──────────────────────────────────────────────────────────────
-# Intermediate: state holds more than just messages — structured extraction fields
+# Intermediate: state holds more than just messages - structured extraction fields
 
 class AgentState(TypedDict):
     messages: Annotated[list, add_messages]
@@ -140,7 +140,7 @@ graph = builder.compile(checkpointer=checkpointer)
 
 
 def run(query: str, thread_id: str = "thread_01") -> str:
-    # thread_id acts like a session ID — same thread = shared memory
+    # thread_id acts like a session ID - same thread = shared memory
     config = {"configurable": {"thread_id": thread_id}}
     result = graph.invoke(
         {"messages": [HumanMessage(content=query)]},
@@ -155,7 +155,7 @@ if __name__ == "__main__":
 
     turns = [
         "Give me a full travel briefing for Tokyo.",
-        "Now do the same for Bangalore. I prefer warm weather — which would you recommend?",
+        "Now do the same for Bangalore. I prefer warm weather - which would you recommend?",
         "Based on what you told me, what's the safer city to visit?",
     ]
 

@@ -1,8 +1,8 @@
-# 02 — Agentic AI Architectures
+# 02 - Agentic AI Architectures
 
 ## What This Section Teaches
 
-How multiple agents coordinate to solve problems too complex for a single agent. Each pattern is implemented in all four frameworks using the **same mock task** — making the cross-framework comparison explicit.
+How multiple agents coordinate to solve problems too complex for a single agent. Each pattern is implemented in all four frameworks using the **same mock task** - making the cross-framework comparison explicit.
 
 ---
 

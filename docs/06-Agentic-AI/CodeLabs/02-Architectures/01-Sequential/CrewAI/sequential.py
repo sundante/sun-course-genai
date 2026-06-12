@@ -1,5 +1,5 @@
 """
-Sequential Architecture — CrewAI
+Sequential Architecture - CrewAI
 Pattern: Research → Summarize → Format report (A → B → C pipeline)
 
 Three agents with distinct roles chained via Task context dependencies.
@@ -43,7 +43,7 @@ class TravelReport(BaseModel):
 researcher = Agent(
     role="Travel Data Researcher",
     goal="Fetch and structure raw travel data for the given city.",
-    backstory="You gather factual travel data — weather, safety, time, attractions — from data sources.",
+    backstory="You gather factual travel data - weather, safety, time, attractions - from data sources.",
     tools=[fetch_city_data],
     llm=gemini,
     verbose=False,

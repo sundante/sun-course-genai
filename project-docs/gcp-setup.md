@@ -8,7 +8,7 @@
 
 ---
 
-## Step 1 — Install the Google Cloud CLI
+## Step 1 - Install the Google Cloud CLI
 
 ```bash
 # macOS (Homebrew)
@@ -20,7 +20,7 @@ gcloud version
 
 ---
 
-## Step 2 — Authenticate
+## Step 2 - Authenticate
 
 ```bash
 # Login to your Google account
@@ -32,7 +32,7 @@ gcloud auth application-default login
 
 ---
 
-## Step 3 — Configure Your Project
+## Step 3 - Configure Your Project
 
 ```bash
 # Replace YOUR_PROJECT_ID with your GCP project ID
@@ -44,7 +44,7 @@ gcloud config list
 
 ---
 
-## Step 4 — Enable Required APIs
+## Step 4 - Enable Required APIs
 
 ```bash
 gcloud services enable aiplatform.googleapis.com
@@ -53,7 +53,7 @@ gcloud services enable generativelanguage.googleapis.com
 
 ---
 
-## Step 5 — Set Environment Variables
+## Step 5 - Set Environment Variables
 
 Add to your `.env` file (copy from `.env.example`):
 
@@ -64,7 +64,7 @@ GOOGLE_CLOUD_LOCATION=us-central1
 
 ---
 
-## Step 6 — Verify Vertex AI Access
+## Step 6 - Verify Vertex AI Access
 
 ```python
 import vertexai
@@ -102,7 +102,7 @@ All ADK examples in `vertex-ai-real-world/` use this flag.
 
 | Model | Use Case |
 |---|---|
-| `gemini-2.0-flash` | Fast, cost-efficient — default for most examples |
+| `gemini-2.0-flash` | Fast, cost-efficient - default for most examples |
 | `gemini-2.0-pro` | Higher reasoning quality |
 | `gemini-1.5-pro` | Long context (1M tokens) |
 | `gemini-1.5-flash` | Balanced speed + quality |

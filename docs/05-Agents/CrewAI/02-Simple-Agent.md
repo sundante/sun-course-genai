@@ -1,4 +1,4 @@
-# CrewAI — Simple Agent
+# CrewAI - Simple Agent
 
 ## What We Are Building
 

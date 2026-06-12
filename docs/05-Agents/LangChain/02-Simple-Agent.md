@@ -1,4 +1,4 @@
-# LangChain — Simple Agent
+# LangChain - Simple Agent
 
 ## What We Are Building
 

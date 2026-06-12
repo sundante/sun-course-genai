@@ -1,4 +1,4 @@
-# 07 — Reflexion Architecture
+# 07 - Reflexion Architecture
 
 ## Pattern: Generate → Evaluate → Conditionally Rewrite
 

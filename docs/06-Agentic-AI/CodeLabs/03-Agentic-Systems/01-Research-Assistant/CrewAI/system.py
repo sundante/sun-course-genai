@@ -1,7 +1,7 @@
 """
-Research Assistant — CrewAI Implementation
+Research Assistant - CrewAI Implementation
 ==========================================
-System    : 01 — Research Assistant
+System    : 01 - Research Assistant
 Framework : CrewAI
 Model     : gemini-2.0-flash via langchain-google-genai
 
@@ -59,7 +59,7 @@ class MarketSearchTool(BaseTool):
             "solid-state batteries": [
                 "Global solid-state battery market projected at $8.8B by 2031 (CAGR 36%)",
                 "EV sector accounts for 72% of demand; consumer electronics 18%",
-                "Japan leads in patents — Toyota holds 1,300+ solid-state battery patents",
+                "Japan leads in patents - Toyota holds 1,300+ solid-state battery patents",
                 "China government invested $15B in battery R&D since 2020",
                 "Key players: Toyota, Samsung SDI, QuantumScape, CATL, Panasonic, Solid Power",
             ]
@@ -238,7 +238,7 @@ if __name__ == "__main__":
     query = "solid-state batteries"
 
     print("\n" + "="*60)
-    print("RESEARCH ASSISTANT — CrewAI")
+    print("RESEARCH ASSISTANT - CrewAI")
     print(f"Query: {query}")
     print("="*60)
 

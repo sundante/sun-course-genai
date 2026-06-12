@@ -4,13 +4,13 @@
 
 ### Concept
 
-Pretraining is the large-scale phase where a model learns general language understanding from massive unlabeled text corpora. It requires enormous compute and data but is done only once — the resulting base model is then fine-tuned for specific tasks.
+Pretraining is the large-scale phase where a model learns general language understanding from massive unlabeled text corpora. It requires enormous compute and data but is done only once - the resulting base model is then fine-tuned for specific tasks.
 
 **The three stages of an LLM's life:**
 ```
 1. Pretraining   → Base model (knows language, world knowledge, no instruction following)
 2. Fine-tuning   → Instruction-tuned model (follows instructions, behaves as assistant)
-3. Alignment     → RLHF / DPO (safe, helpful, honest — reduced harmful outputs)
+3. Alignment     → RLHF / DPO (safe, helpful, honest - reduced harmful outputs)
 ```
 
 **Scale of pretraining:**
@@ -27,11 +27,11 @@ Pretraining is the large-scale phase where a model learns general language under
 The quality of pretraining data is at least as important as model architecture. "Garbage in, garbage out" applies at trillion-token scale.
 
 **Data sources:**
-- **Common Crawl:** Web scrapes of the entire internet — petabytes of raw text; requires aggressive filtering
-- **Books:** Project Gutenberg, BooksCorpus, Books3 — high-quality, diverse language
-- **Wikipedia:** Clean, factual, structured — high signal-to-noise
-- **Code:** GitHub — improves reasoning capabilities, not just coding
-- **Academic papers:** ArXiv — improves scientific understanding
+- **Common Crawl:** Web scrapes of the entire internet - petabytes of raw text; requires aggressive filtering
+- **Books:** Project Gutenberg, BooksCorpus, Books3 - high-quality, diverse language
+- **Wikipedia:** Clean, factual, structured - high signal-to-noise
+- **Code:** GitHub - improves reasoning capabilities, not just coding
+- **Academic papers:** ArXiv - improves scientific understanding
 - **Curated datasets:** Refinedweb, RedPajama, SlimPajama, Dolma
 
 **Data processing pipeline:**
@@ -42,9 +42,9 @@ URL/domain filtering (block adult content, spam, known low-quality domains)
     ↓
 Language detection (keep target languages)
     ↓
-Exact deduplication (MinHash, exact hash) — removes copy-pasted content
+Exact deduplication (MinHash, exact hash) - removes copy-pasted content
     ↓
-Near-deduplication (SimHash, n-gram overlap) — removes near-duplicates
+Near-deduplication (SimHash, n-gram overlap) - removes near-duplicates
     ↓
 Quality filtering:
   - Perplexity filtering (low-perplexity text from a reference model → good quality)
@@ -75,7 +75,7 @@ LLaMA-3 8B training mix:
 
 Before training, all text is converted to token sequences using a fixed vocabulary tokenizer built from the training data.
 
-**Byte-Pair Encoding (BPE) — step by step:**
+**Byte-Pair Encoding (BPE) - step by step:**
 
 ```
 Initial vocabulary: all individual bytes (256 symbols)
@@ -96,7 +96,7 @@ Example:
   ...continues until target vocab size
 ```
 
-**Tokenization algorithms — full comparison:**
+**Tokenization algorithms - full comparison:**
 
 | Algorithm | Description | Characteristics | Used by | Pros | Cons |
 |-----------|-------------|-----------------|---------|------|------|
@@ -112,10 +112,10 @@ Example:
 | tiktoken (OpenAI) | GPT-custom BPE | Special tokens, efficient | GPT-3, GPT-4 | Very fast | Custom, undocumented |
 
 **Key practical notes:**
-- **SentencePiece (LLaMA, Gemma):** Works on raw bytes without pre-tokenization — handles all languages and code uniformly; no whitespace issues.
-- **tiktoken (GPT-4):** Uses cl100k_base with a 100K vocabulary — larger vocab reduces token counts, improving efficiency for English and code.
+- **SentencePiece (LLaMA, Gemma):** Works on raw bytes without pre-tokenization - handles all languages and code uniformly; no whitespace issues.
+- **tiktoken (GPT-4):** Uses cl100k_base with a 100K vocabulary - larger vocab reduces token counts, improving efficiency for English and code.
 - **Multilingual/emoji-rich datasets:** Always use byte-level tokenization to avoid OOV.
-- **Training vs inference:** Tokenizer must match exactly — inconsistency causes silent failures.
+- **Training vs inference:** Tokenizer must match exactly - inconsistency causes silent failures.
 
 **Tokenizer implementations across provider ecosystems:**
 
@@ -150,16 +150,16 @@ Example:
 
 ### Concept
 
-**Causal Language Modeling (CLM) — Decoder-only:**
+**Causal Language Modeling (CLM) - Decoder-only:**
 ```
 Input:   "The cat sat on the mat"
 Targets: "cat sat on the mat <EOS>"
 Loss:    CrossEntropy(logits, targets) averaged over all non-padding positions
 ```
 
-The model sees tokens 0..t-1 and predicts token t. This is why causal masking is applied during training — the model must predict each position without seeing future tokens. The loss is the average cross-entropy over all predicted positions in the sequence.
+The model sees tokens 0..t-1 and predicts token t. This is why causal masking is applied during training - the model must predict each position without seeing future tokens. The loss is the average cross-entropy over all predicted positions in the sequence.
 
-**Masked Language Modeling (MLM) — Encoder-only (BERT):**
+**Masked Language Modeling (MLM) - Encoder-only (BERT):**
 ```
 Input:   "The [MASK] sat on the [MASK]"
 Targets: "cat" and "mat"
@@ -168,7 +168,7 @@ Loss:    CrossEntropy only on masked positions
 
 15% of tokens are replaced: 80% with [MASK], 10% with a random token, 10% kept unchanged (this mix helps the model generalize beyond just masked positions).
 
-**Span Corruption — Encoder-Decoder (T5):**
+**Span Corruption - Encoder-Decoder (T5):**
 ```
 Input:   "The <X> on the mat. The <Y> is fluffy."  (spans replaced by sentinels)
 Target:  "<X> cat sat <Y> cat"
@@ -186,7 +186,7 @@ Neural scaling laws describe how model performance improves predictably with sca
 **Kaplan scaling laws (original):**
 - Loss scales as a power law in compute, parameters, and data independently
 - For a fixed compute budget: larger model + less data tends to be better
-- This led to GPT-3 (175B) being undertrained — not enough tokens for the model size
+- This led to GPT-3 (175B) being undertrained - not enough tokens for the model size
 
 **Chinchilla scaling law (the correction):**
 Hoffmann et al. showed the Kaplan law overweighted parameters. Their revised finding:
@@ -195,7 +195,7 @@ Optimal: tokens = 20 × parameters
 ```
 
 - A 7B model should train on 140B tokens for "compute-optimal" training
-- LLaMA-1's 65B model was trained on only 1.4T tokens — compute-optimal would be 1.3T, so roughly right
+- LLaMA-1's 65B model was trained on only 1.4T tokens - compute-optimal would be 1.3T, so roughly right
 - **LLaMA-2 and LLaMA-3 deliberately overtrain** beyond Chinchilla optimal because the serving cost of a smaller model is more valuable than training efficiency at a fixed compute budget
 
 **The inference-aware scaling insight (LLaMA philosophy):**
@@ -213,9 +213,9 @@ Chinchilla optimizes for minimum training loss. But in practice, you want a mode
 
 ### Concept
 
-A 70B model in BF16 requires 140 GB of VRAM just for weights — that's more than any single GPU. Training is even worse (4× for optimizer states — see [GPU and Hardware](08-GPU-and-Hardware.md)). Distributed training splits work across many GPUs.
+A 70B model in BF16 requires 140 GB of VRAM just for weights - that's more than any single GPU. Training is even worse (4× for optimizer states - see [GPU and Hardware](08-GPU-and-Hardware.md)). Distributed training splits work across many GPUs.
 
-**Data Parallelism (DDP — DistributedDataParallel):**
+**Data Parallelism (DDP - DistributedDataParallel):**
 - Replicate the full model on each GPU
 - Split the batch across GPUs (different data, same model)
 - After each backward pass, average gradients across all GPUs (all-reduce)
@@ -225,19 +225,19 @@ A 70B model in BF16 requires 140 GB of VRAM just for weights — that's more tha
 - Split individual weight matrices across GPUs
 - Attention heads split across GPUs: head 1–8 on GPU 1, head 9–16 on GPU 2, etc.
 - FFN layers split across GPUs: first half of d_ffn on GPU 1, second half on GPU 2
-- Requires all-reduce after each layer — high communication overhead
+- Requires all-reduce after each layer - high communication overhead
 - Essential for models too large to fit on one GPU
 
 **Pipeline Parallelism:**
 - Split layers (not weights) across GPUs: layers 1–16 on GPU 1, layers 17–32 on GPU 2
 - Micro-batching: split the batch into micro-batches so GPUs overlap computation ("bubble" reduction)
-- Communication: only activations at layer boundaries cross GPU — less bandwidth than tensor parallelism
-- Bubble overhead: GPUs still idle when waiting for previous stage — mitigated by micro-batching
+- Communication: only activations at layer boundaries cross GPU - less bandwidth than tensor parallelism
+- Bubble overhead: GPUs still idle when waiting for previous stage - mitigated by micro-batching
 
-**ZeRO (Zero Redundancy Optimizer) — covered in detail in [GPU and Hardware](08-GPU-and-Hardware.md):**
+**ZeRO (Zero Redundancy Optimizer) - covered in detail in [GPU and Hardware](08-GPU-and-Hardware.md):**
 - Shards optimizer states, gradients, and parameters across GPUs
 - Eliminates redundant copies present in pure DDP
-- ZeRO-3: full parameter sharding — enables training models much larger than per-GPU memory
+- ZeRO-3: full parameter sharding - enables training models much larger than per-GPU memory
 
 **Practical training setup for 7B model:**
 - 8× A100-80GB: enough for BF16 training with ZeRO-2
@@ -328,7 +328,7 @@ Cosine decay (T_warmup → T_total):
   lr = min_lr + 0.5 × (max_lr - min_lr) × (1 + cos(π × t / T_decay))
 ```
 
-**Why warmup?** At the start of training, gradients are large and inconsistent — high learning rates cause instability. Warmup gradually increases lr while the model's parameter estimates stabilize.
+**Why warmup?** At the start of training, gradients are large and inconsistent - high learning rates cause instability. Warmup gradually increases lr while the model's parameter estimates stabilize.
 
 **Gradient clipping:** Clips the global gradient norm to a maximum value (typically 1.0):
 ```
@@ -354,7 +354,7 @@ Prevents gradient explosions from occasional bad batches. Essential for stable p
 
 **Quick recall Q&A:**
 - *What is the Chinchilla scaling law?* Optimal token count ≈ 20× parameter count for compute-efficient training.
-- *Why does LLaMA-3 overtrain beyond Chinchilla?* Inference cost dominates training cost over millions of requests — a smaller, well-trained model costs less to serve.
+- *Why does LLaMA-3 overtrain beyond Chinchilla?* Inference cost dominates training cost over millions of requests - a smaller, well-trained model costs less to serve.
 - *What is gradient checkpointing?* Trading compute for memory by discarding and recomputing activations during backward pass.
 - *Why is data deduplication critical?* Duplicate data causes memorization of specific text rather than learning generalizable patterns; also reduces privacy risk.
 - *What is the CLM training objective?* Predict the next token given all preceding tokens; minimize cross-entropy averaged over all positions.

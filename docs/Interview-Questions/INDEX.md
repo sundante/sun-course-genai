@@ -1,4 +1,4 @@
-# Knowledge Check — Master Index
+# Knowledge Check - Master Index
 
 All concept review Q&A files consolidated in one place, organized by topic.
 
@@ -35,4 +35,4 @@ All concept review Q&A files consolidated in one place, organized by topic.
 
 ## Back to Main Curriculum
 
-[Learn AI: Generative AI to Agentic AI — Home](../index.md)
+[Learn AI: Generative AI to Agentic AI - Home](../index.md)

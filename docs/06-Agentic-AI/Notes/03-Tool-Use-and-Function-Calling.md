@@ -17,13 +17,13 @@ Tools change this. A **tool** is a callable function that the agent can invoke d
 | Outputs may hallucinate facts | Outputs grounded in tool results |
 | Single-turn by nature | Can operate over multiple steps |
 
-The set of tools an agent has access to defines what it can do. Designing good tools — clear descriptions, predictable schemas, robust error handling — is one of the most important skills in agentic engineering.
+The set of tools an agent has access to defines what it can do. Designing good tools - clear descriptions, predictable schemas, robust error handling - is one of the most important skills in agentic engineering.
 
 ---
 
 ## How Function Calling Works at the API Level
 
-Function calling is the mechanism by which an LLM produces a structured tool invocation rather than free text. The LLM does not execute the tool — it outputs a specification of what to call and with what arguments. The framework executes the tool and returns the result.
+Function calling is the mechanism by which an LLM produces a structured tool invocation rather than free text. The LLM does not execute the tool - it outputs a specification of what to call and with what arguments. The framework executes the tool and returns the result.
 
 The flow has four steps:
 
@@ -34,7 +34,7 @@ The flow has four steps:
 4. RETURN    → Result fed back to LLM
 ```
 
-### Step 1: Define — Describe Tools in the Request
+### Step 1: Define - Describe Tools in the Request
 
 Every API call that supports tools includes a `tools` parameter that describes each available function:
 
@@ -52,7 +52,7 @@ tools = [
             "properties": {
                 "query": {
                     "type": "string",
-                    "description": "The search query. Be specific — 'OpenAI CEO 2024' "
+                    "description": "The search query. Be specific - 'OpenAI CEO 2024' "
                                    "is better than 'who runs OpenAI'."
                 }
             },
@@ -82,7 +82,7 @@ tools = [
 ]
 ```
 
-### Step 2: Decide — LLM Produces a Tool Call
+### Step 2: Decide - LLM Produces a Tool Call
 
 When the LLM decides a tool is needed, it does not continue generating text. Instead, it outputs a structured tool call:
 
@@ -100,9 +100,9 @@ When the LLM decides a tool is needed, it does not continue generating text. Ins
 }
 ```
 
-The `id` is critical — it ties the tool call to its result when multiple tools are called in parallel.
+The `id` is critical - it ties the tool call to its result when multiple tools are called in parallel.
 
-### Step 3: Execute — Framework Runs the Function
+### Step 3: Execute - Framework Runs the Function
 
 The framework (or your loop controller) intercepts the tool call and dispatches it to the actual function:
 
@@ -118,7 +118,7 @@ def dispatch_tool(tool_name: str, tool_input: dict) -> str:
     return tool_registry[tool_name](**tool_input)
 ```
 
-### Step 4: Return — Result Fed Back to LLM
+### Step 4: Return - Result Fed Back to LLM
 
 The result is appended to the messages array as a `tool_result`:
 
@@ -155,8 +155,8 @@ The tool description is the LLM's instruction manual for using that tool. **The 
         "billing history, or contact details. "
         "Input: either 'customer_id' (format: CUST-XXXXXX) or 'email' (not both). "
         "Output: customer object with name, email, plan, and billing info. "
-        "Do NOT use this for order lookups — use get_order instead. "
-        "Do NOT use this to search by name — it only supports exact ID or email match."
+        "Do NOT use this for order lookups - use get_order instead. "
+        "Do NOT use this to search by name - it only supports exact ID or email match."
     ),
     "input_schema": {
         "type": "object",
@@ -227,8 +227,8 @@ The schema defines the structure of tool inputs. A well-designed schema prevents
 
 **Rules:**
 - Mark parameters `required` only if there is no sensible default
-- For constrained values, use `enum` — the LLM will always pick from the list
-- Include `default` in the description (not just in code) — the LLM reads the description, not the code
+- For constrained values, use `enum` - the LLM will always pick from the list
+- Include `default` in the description (not just in code) - the LLM reads the description, not the code
 - Use specific types: `"integer"` not `"number"` when decimals don't make sense
 
 ### Nested Objects
@@ -330,7 +330,7 @@ def get_order(order_id: str) -> dict:
     return order
 ```
 
-With a structured error, the LLM can reason: "The order ID format was wrong — I should try again with the correct format" or "The order doesn't exist — I should tell the user." Without it, the agent crashes or produces a confusing error message.
+With a structured error, the LLM can reason: "The order ID format was wrong - I should try again with the correct format" or "The order doesn't exist - I should tell the user." Without it, the agent crashes or produces a confusing error message.
 
 ### Retryable vs Fatal Error Classification
 
@@ -358,7 +358,7 @@ def execute_with_retry(tool_fn, args, max_retries=3):
 
 ## Tool Chaining
 
-Tool chaining is when the output of one tool determines the input of the next. The LLM manages chaining naturally in its reasoning loop — it just reads the result of step 1 and uses it in step 2.
+Tool chaining is when the output of one tool determines the input of the next. The LLM manages chaining naturally in its reasoning loop - it just reads the result of step 1 and uses it in step 2.
 
 **Example: Research a company and summarize their latest news**
 
@@ -372,7 +372,7 @@ Step 2: read_url("https://anthropic.com/news/...")   ← URL from step 1
 Step 3: [LLM synthesizes article text into summary]
 ```
 
-The LLM decides to chain these without any explicit instruction — it understands that the URL from step 1 is the input for step 2.
+The LLM decides to chain these without any explicit instruction - it understands that the URL from step 1 is the input for step 2.
 
 **Deep chaining example: data pipeline**
 
@@ -398,7 +398,7 @@ Step 5: [LLM summarizes: "Your Laptop is currently on sale for $999 (was $1299)"
 
 ## Parallel Tool Calls
 
-When multiple tool calls are independent — the result of one doesn't affect the input of another — they can be executed simultaneously.
+When multiple tool calls are independent - the result of one doesn't affect the input of another - they can be executed simultaneously.
 
 ```python
 # The LLM produces multiple tool calls in one response
@@ -421,7 +421,7 @@ async def execute_parallel(tool_calls: list) -> list[dict]:
 
 **Latency comparison:**
 - Sequential (3 calls × 200ms each): 600ms total
-- Parallel (3 calls × 200ms each): 200ms total — 3× faster
+- Parallel (3 calls × 200ms each): 200ms total - 3× faster
 
 Most LLMs will naturally produce parallel calls when they recognize the queries are independent. You can encourage this:
 
@@ -435,7 +435,7 @@ relevant tools at once rather than one at a time. This is faster and preferred."
 
 ## Tool Security
 
-Tools are a privilege, not just a feature. Every tool call is an action in the real world — or at least on a real system. Security considerations are non-negotiable.
+Tools are a privilege, not just a feature. Every tool call is an action in the real world - or at least on a real system. Security considerations are non-negotiable.
 
 ### Principle of Least Privilege
 
@@ -451,7 +451,7 @@ WRITER_TOOLS = [read_state, write_draft]
 EMAIL_TOOLS = [compose_email, send_email]
 ```
 
-If an attacker injects a malicious instruction into data processed by the research agent, the worst they can do is redirect searches — not send emails.
+If an attacker injects a malicious instruction into data processed by the research agent, the worst they can do is redirect searches - not send emails.
 
 ### Input Sanitization
 
@@ -592,7 +592,7 @@ registry.register(Tool(
 
 ## Idempotent Tools
 
-A tool is **idempotent** if calling it multiple times with the same arguments produces the same result. Idempotency is essential because agents retry on failure — a non-idempotent tool creates duplicates on retry.
+A tool is **idempotent** if calling it multiple times with the same arguments produces the same result. Idempotency is essential because agents retry on failure - a non-idempotent tool creates duplicates on retry.
 
 **Non-idempotent (dangerous for retry):**
 ```python
@@ -618,13 +618,13 @@ def create_invoice(customer_id: str, amount: float, idempotency_key: str) -> dic
     return {"invoice_id": invoice.id, "created": True}
 ```
 
-The `idempotency_key` is generated from the task ID + step number — so retrying the exact same step always returns the same result.
+The `idempotency_key` is generated from the task ID + step number - so retrying the exact same step always returns the same result.
 
 ---
 
 ## Study Notes
 
-- **The description is the tool's API contract with the LLM.** Write it as if you are writing documentation for a developer — because you are, except the developer is a language model. Be explicit about inputs, outputs, limitations, and when NOT to use the tool.
+- **The description is the tool's API contract with the LLM.** Write it as if you are writing documentation for a developer - because you are, except the developer is a language model. Be explicit about inputs, outputs, limitations, and when NOT to use the tool.
 - **Structure every return value.** Free-text returns are harder for the LLM to reason about. A dict with named fields is easier to extract from and less likely to cause misinterpretation.
 - **Always include structured error returns.** A raw exception in the tool loop breaks the agent. A structured error gives the LLM enough information to reason about what went wrong and what to do next.
 - **Least privilege prevents cascading injection.** Giving the research agent email-sending tools means a successful prompt injection attack on any document it reads could exfiltrate data. Strict tool-per-role limits blast radius.
@@ -635,19 +635,19 @@ The `idempotency_key` is generated from the task ID + step number — so retryin
 ## Q&A Review Bank
 
 **Q1: What are the four steps of a tool call and what happens at each step?** `[Easy]`
-A: Define — the tool's name, description, and parameter schema are included in the API request; this tells the LLM what tools are available and how to call them. Decide — the LLM, if it determines a tool is needed, outputs a structured tool call (JSON with name, arguments, and a call ID) instead of free text; the LLM does not execute the tool. Execute — the framework intercepts the tool call, dispatches it to the actual function using the arguments the LLM specified, and gets the result. Return — the result is appended to the messages array as a `tool_result` tied to the call ID; the LLM reads this on its next invocation and continues reasoning.
+A: Define - the tool's name, description, and parameter schema are included in the API request; this tells the LLM what tools are available and how to call them. Decide - the LLM, if it determines a tool is needed, outputs a structured tool call (JSON with name, arguments, and a call ID) instead of free text; the LLM does not execute the tool. Execute - the framework intercepts the tool call, dispatches it to the actual function using the arguments the LLM specified, and gets the result. Return - the result is appended to the messages array as a `tool_result` tied to the call ID; the LLM reads this on its next invocation and continues reasoning.
 
 **Q2: Why should tool descriptions say when NOT to use the tool?** `[Medium]`
-A: Without negative guidance, the LLM will use the tool any time the description loosely matches the current task. For example, a `search_customer` tool described only as "find customer information" will be called when the agent needs order details — because order details are a type of customer information. Adding "Do NOT use for order lookups — use get_order instead" tells the model exactly which adjacent use cases to avoid. This prevents wrong tool selection, which is one of the most common single-step failure modes in production agents. The tool description is the model's instruction manual; it should cover both the intended and unintended use cases.
+A: Without negative guidance, the LLM will use the tool any time the description loosely matches the current task. For example, a `search_customer` tool described only as "find customer information" will be called when the agent needs order details - because order details are a type of customer information. Adding "Do NOT use for order lookups - use get_order instead" tells the model exactly which adjacent use cases to avoid. This prevents wrong tool selection, which is one of the most common single-step failure modes in production agents. The tool description is the model's instruction manual; it should cover both the intended and unintended use cases.
 
 **Q3: What makes a tool return value "good" and why does it matter?** `[Medium]`
 A: A good tool return value is structured (a dict with named fields, not a freeform string), includes explicit error states (a dict with `error`, `message`, and `retryable` fields when something goes wrong), and contains exactly the fields the LLM will need for its next reasoning step. It matters because the LLM reads the return value and uses it to reason. Freeform text requires the LLM to parse prose to extract a fact, which it does inconsistently. A structured dict lets the LLM pick the field it needs directly: `result["status"]` rather than "I need to find the status in this paragraph." Structured error returns are especially important: without them, the LLM sees an opaque failure and either retries blindly or produces a confusing error message.
 
 **Q4: What is the difference between a retryable and a fatal tool error?** `[Medium]`
-A: A retryable error is a transient failure that may succeed if the call is made again — network timeout, rate limit exceeded, service temporarily unavailable. The correct response is to wait (with exponential backoff) and retry. A fatal error is a logical or permanent failure that will not resolve by retrying — the resource doesn't exist, the input format is wrong, the caller lacks permission. Retrying a fatal error wastes time and resources. The return value should classify the error: `"retryable": true` or `"retryable": false`. The agent loop uses this to decide whether to retry or to report failure and ask the user for clarification.
+A: A retryable error is a transient failure that may succeed if the call is made again - network timeout, rate limit exceeded, service temporarily unavailable. The correct response is to wait (with exponential backoff) and retry. A fatal error is a logical or permanent failure that will not resolve by retrying - the resource doesn't exist, the input format is wrong, the caller lacks permission. Retrying a fatal error wastes time and resources. The return value should classify the error: `"retryable": true` or `"retryable": false`. The agent loop uses this to decide whether to retry or to report failure and ask the user for clarification.
 
 **Q5: What is tool argument hallucination, and what two mechanisms prevent it?** `[Hard]`
-A: Tool argument hallucination is when the LLM invents parameter values — generating an argument that was not derived from the conversation context. Example: the user says "look up order 555" and the agent calls `get_order(order_id="ORD-999")` with a completely fabricated ID. Prevention mechanism 1 — schema constraints: use `enum` for constrained values, `pattern` for formatted strings, and `minimum`/`maximum` for numeric ranges; the LLM respects these constraints and won't generate out-of-range values. Prevention mechanism 2 — description grounding: explicitly state in the description where the argument should come from: "Use the exact customer ID provided by the user — do not generate or guess IDs." This grounds the LLM's argument selection in the conversation, not in its weights.
+A: Tool argument hallucination is when the LLM invents parameter values - generating an argument that was not derived from the conversation context. Example: the user says "look up order 555" and the agent calls `get_order(order_id="ORD-999")` with a completely fabricated ID. Prevention mechanism 1 - schema constraints: use `enum` for constrained values, `pattern` for formatted strings, and `minimum`/`maximum` for numeric ranges; the LLM respects these constraints and won't generate out-of-range values. Prevention mechanism 2 - description grounding: explicitly state in the description where the argument should come from: "Use the exact customer ID provided by the user - do not generate or guess IDs." This grounds the LLM's argument selection in the conversation, not in its weights.
 
 **Q6: Why does each agent in a multi-agent system need a restricted tool set rather than access to all tools?** `[Hard]`
-A: Least privilege limits blast radius from both bugs and attacks. If every agent has every tool, a single prompt injection attack — malicious content embedded in a web page that a research agent processes — can cause any downstream agent to take any action (send emails, delete records, make payments). With tool-per-role restrictions, the research agent's tools (search, read) cannot cause actions even if the agent is successfully injected. The attacker would need to compromise a chain of agents, each with progressively more powerful tools, to reach an impactful action. This is dramatically harder. In addition, a smaller tool set reduces the LLM's decision space: an agent with 3 tools makes better tool-selection decisions than one with 30, because the model's attention is not diluted across irrelevant options.
+A: Least privilege limits blast radius from both bugs and attacks. If every agent has every tool, a single prompt injection attack - malicious content embedded in a web page that a research agent processes - can cause any downstream agent to take any action (send emails, delete records, make payments). With tool-per-role restrictions, the research agent's tools (search, read) cannot cause actions even if the agent is successfully injected. The attacker would need to compromise a chain of agents, each with progressively more powerful tools, to reach an impactful action. This is dramatically harder. In addition, a smaller tool set reduces the LLM's decision space: an agent with 3 tools makes better tool-selection decisions than one with 30, because the model's attention is not diluted across irrelevant options.

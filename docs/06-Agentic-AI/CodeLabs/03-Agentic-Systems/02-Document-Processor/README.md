@@ -1,6 +1,6 @@
 # Document Processor System
 
-An agentic pipeline that ingests a document, classifies its type, extracts structured data, validates the extraction, and routes it to the appropriate handler — with a HITL gate for low-confidence classifications.
+An agentic pipeline that ingests a document, classifies its type, extracts structured data, validates the extraction, and routes it to the appropriate handler - with a HITL gate for low-confidence classifications.
 
 ## Architecture
 
@@ -49,14 +49,14 @@ Document Input
 ## What This Demonstrates
 
 1. Sequential pipeline pattern with typed stage interfaces
-2. Confidence-gated HITL — low-confidence triggers human review
+2. Confidence-gated HITL - low-confidence triggers human review
 3. Conditional routing based on validation results
 4. Schema-based extraction (different schemas per document type)
 5. Graceful error handling and partial results
 
 ## Implementations
 
-- [LangChain](LangChain/system.py) — Chain pipeline with conditional branching
-- [LangGraph](LangGraph/system.py) — State graph with conditional edges for HITL and validation
-- [CrewAI](CrewAI/system.py) — Sequential crew with classification, extraction, and validation tasks
-- [ADK](ADK/system.py) — SequentialAgent with conditional subagent routing
+- [LangChain](LangChain/system.py) - Chain pipeline with conditional branching
+- [LangGraph](LangGraph/system.py) - State graph with conditional edges for HITL and validation
+- [CrewAI](CrewAI/system.py) - Sequential crew with classification, extraction, and validation tasks
+- [ADK](ADK/system.py) - SequentialAgent with conditional subagent routing

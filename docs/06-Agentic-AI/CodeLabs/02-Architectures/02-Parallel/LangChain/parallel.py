@@ -1,5 +1,5 @@
 """
-Parallel Architecture — LangChain
+Parallel Architecture - LangChain
 Pattern: Fan-out (3 city researchers) → Aggregate (ranker)
 
 asyncio.gather() runs all city research chains simultaneously.
@@ -29,7 +29,7 @@ CITY_DATA = {
 
 def get_city_raw_data(city: str) -> str:
     d = CITY_DATA.get(city.lower(), {})
-    return f"{city} — Weather: {d.get('weather','N/A')} | Safety: {d.get('safety','N/A')} | Time: {d.get('time','N/A')}"
+    return f"{city} - Weather: {d.get('weather','N/A')} | Safety: {d.get('safety','N/A')} | Time: {d.get('time','N/A')}"
 
 
 # ── Parallel researcher chain (one per city) ─────────────────────────────────

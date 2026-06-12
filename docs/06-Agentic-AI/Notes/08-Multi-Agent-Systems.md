@@ -10,7 +10,7 @@ A single agent has hard limits. When a task pushes past those limits, the soluti
 
 ### 1. Task Decomposition
 
-Some tasks are too complex to reason about holistically. A single agent trying to "build a full market analysis" will produce worse results than one agent that researches, one that structures findings, and one that writes — because each subtask requires focused attention.
+Some tasks are too complex to reason about holistically. A single agent trying to "build a full market analysis" will produce worse results than one agent that researches, one that structures findings, and one that writes - because each subtask requires focused attention.
 
 The key question: does the task have natural seams where it can be split? If splitting is forced and artificial, multi-agent adds overhead with no benefit.
 
@@ -35,7 +35,7 @@ This only applies to **genuinely independent** subtasks. Tasks with dependencies
 
 ### 4. Fault Isolation
 
-When one agent fails, it fails in isolation. The orchestrator can retry that agent, substitute a fallback, or skip the subtask — without the whole system crashing. This is fundamentally different from a single agent where any failure terminates the entire task.
+When one agent fails, it fails in isolation. The orchestrator can retry that agent, substitute a fallback, or skip the subtask - without the whole system crashing. This is fundamentally different from a single agent where any failure terminates the entire task.
 
 ---
 
@@ -45,7 +45,7 @@ Coordination answers: how do agents decide what to do and in what order?
 
 ### Centralized (Orchestrator-Controlled)
 
-A single orchestrator holds the plan and assigns tasks to agents. Agents are workers — they execute assigned tasks and report results. They have no knowledge of the broader plan.
+A single orchestrator holds the plan and assigns tasks to agents. Agents are workers - they execute assigned tasks and report results. They have no knowledge of the broader plan.
 
 ```
 Orchestrator (has the plan)
@@ -57,13 +57,13 @@ Orchestrator (has the plan)
 ```
 
 **Advantages:**
-- Easy to reason about — one place holds the plan state
-- Easy to debug — trace the orchestrator's decisions
-- Easy to add HITL — insert approval gate in the orchestrator
+- Easy to reason about - one place holds the plan state
+- Easy to debug - trace the orchestrator's decisions
+- Easy to add HITL - insert approval gate in the orchestrator
 
 **Disadvantages:**
 - Orchestrator is a single point of failure
-- Orchestrator bottleneck — all coordination flows through one LLM
+- Orchestrator bottleneck - all coordination flows through one LLM
 - Doesn't scale to very large agent counts
 
 **Best for:** Most production systems. Orchestrator-Subagent is the default pattern.
@@ -82,11 +82,11 @@ Agent_3 waits for A and B → both done → executes task_C → writes result
 
 **Advantages:**
 - No single point of failure
-- Self-organizing — agents pick up work without assignment
+- Self-organizing - agents pick up work without assignment
 - Scales to many agents naturally
 
 **Disadvantages:**
-- Harder to reason about — behavior emerges from agent interactions
+- Harder to reason about - behavior emerges from agent interactions
 - Race conditions if agents don't use proper locking when claiming tasks
 - Difficult to implement HITL
 - Debugging is much harder
@@ -129,7 +129,7 @@ class AgentMessage:
 All agents read from and write to a shared state object. The state is the communication channel.
 
 ```python
-# LangGraph uses this approach — the state is the "graph state"
+# LangGraph uses this approach - the state is the "graph state"
 class WorkflowState(TypedDict):
     goal: str
     research_results: list[str]
@@ -168,7 +168,7 @@ State is what enables an agentic system to do more than a single-turn agent. Wit
 
 | State Component | Purpose |
 |----------------|---------|
-| Conversation history | Context for the LLM — what has been said and done |
+| Conversation history | Context for the LLM - what has been said and done |
 | Tool results | Outputs from previous tool calls |
 | Task ledger | List of planned subtasks + their status (pending/done/failed) |
 | Intermediate outputs | Partial results from each agent |
@@ -206,7 +206,7 @@ Step 11: Summarize steps 1-5 into a compact summary; keep steps 6-11 in full
 Step 16: Summarize steps 6-10 into a compact summary; keep steps 11-16 in full
 ```
 
-The summary must preserve the key facts, decisions, and tool results — not just "some work was done."
+The summary must preserve the key facts, decisions, and tool results - not just "some work was done."
 
 ### Task Ledger
 
@@ -238,27 +238,27 @@ class TaskLedger:
 
 ## Central State Management Patterns
 
-The "State Management" section above describes *what* state contains. This section covers *how* to design the state object so multiple agents can share it without conflict — a distinction that becomes critical in production.
+The "State Management" section above describes *what* state contains. This section covers *how* to design the state object so multiple agents can share it without conflict - a distinction that becomes critical in production.
 
 ### The Naive State Passing Problem
 
 The most common beginner mistake in multi-agent systems is chaining state between agents:
 
 ```python
-# The naive pattern — quickly becomes a nightmare
+# The naive pattern - quickly becomes a nightmare
 order_data = order_agent.create_order(...)
 inventory_data = inventory_agent.check_stock(order_data)
 payment_data = payment_agent.process_payment(order_data, inventory_data)
 shipping_data = shipping_agent.ship_order(order_data, inventory_data, payment_data)
 ```
 
-This creates **tight coupling**: every new agent needs data from all previous agents. Adding a fifth agent means updating the signatures of agents three and four. The system is brittle — a change to `order_data`'s schema breaks every downstream agent.
+This creates **tight coupling**: every new agent needs data from all previous agents. Adding a fifth agent means updating the signatures of agents three and four. The system is brittle - a change to `order_data`'s schema breaks every downstream agent.
 
 The alternative: all agents read from and write to a **shared central state object** they all own equally.
 
 ### The Agent-as-Tool State Conflict
 
-A subtler problem appears when agents are composed using the "agent as tool" pattern — where a specialist agent is wrapped as a callable tool for an orchestrator:
+A subtler problem appears when agents are composed using the "agent as tool" pattern - where a specialist agent is wrapped as a callable tool for an orchestrator:
 
 ```python
 @tool
@@ -279,14 +279,14 @@ The fix: route all state mutations through a single shared state object that exi
 
 **Best for:** Small teams, simple workflows, rapid prototyping, 1–3 agents.
 
-All tools are attached to a single orchestrator agent. Because there is only one agent, there is only one state object. No coordination logic needed — the orchestrator's state is the central store.
+All tools are attached to a single orchestrator agent. Because there is only one agent, there is only one state object. No coordination logic needed - the orchestrator's state is the central store.
 
 ```python
 from dataclasses import dataclass, field
 from typing import Any
 
 class CentralState:
-    """Single source of truth — lives outside any agent."""
+    """Single source of truth - lives outside any agent."""
     def __init__(self):
         self._store: dict[str, Any] = {}
 
@@ -344,7 +344,7 @@ Data flow:
 
 **Best for:** Medium complexity, multiple specialized agents, production systems.
 
-A dedicated state management class lives outside all agents. Each agent gets its own role and tool set, but all tools read from and write to the same shared manager instance. No agent owns the state — they all borrow it.
+A dedicated state management class lives outside all agents. Each agent gets its own role and tool set, but all tools read from and write to the same shared manager instance. No agent owns the state - they all borrow it.
 
 ```python
 from dataclasses import dataclass, field
@@ -388,10 +388,10 @@ class GlobalOrderState:
         with self._lock:
             self.orders[order_id].update({"status": "shipped", "tracking": tracking})
 
-# One shared instance — created once, imported everywhere
+# One shared instance - created once, imported everywhere
 global_state = GlobalOrderState()
 
-# Tools for each agent — they all close over global_state
+# Tools for each agent - they all close over global_state
 def create_order_tool(order_id: str, customer_id: str, items: str) -> str:
     items_list = [i.strip() for i in items.split(",")]
     global_state.create_order(order_id, customer_id, items_list)
@@ -408,7 +408,7 @@ def process_payment_tool() -> str:
     global_state.mark_paid(order_id)
     return f"Payment confirmed for order {order_id}"
 
-# Specialized agents — each has a focused role and tool set
+# Specialized agents - each has a focused role and tool set
 order_agent     = Agent(name="order_agent",     tools=[create_order_tool])
 inventory_agent = Agent(name="inventory_agent", tools=[check_inventory_tool])
 payment_agent   = Agent(name="payment_agent",   tools=[process_payment_tool])
@@ -423,7 +423,7 @@ Data flow:
 ```
 
 **Pros:** Loose coupling between agents; adding a new agent requires only a new tool that closes over `global_state`, no changes to existing agents; thread-safe; easy to unit test state logic in isolation.  
-**Cons:** More initial setup; requires explicit thread-safety (locking); the global singleton can become a bottleneck at very high concurrency — at that scale, move to a distributed store (Redis, DynamoDB).
+**Cons:** More initial setup; requires explicit thread-safety (locking); the global singleton can become a bottleneck at very high concurrency - at that scale, move to a distributed store (Redis, DynamoDB).
 
 ---
 
@@ -480,7 +480,7 @@ class ReactiveOrderState:
         bus.subscribe(OrderEvent.PAYMENT_PROCESSED,  self._on_payment_processed)
         bus.subscribe(OrderEvent.FAILED,             self._on_order_failed)
 
-    # State mutations — always publish an event after changing state
+    # State mutations - always publish an event after changing state
     def create_order(self, order_id: str, customer_id: str, items: list, source: str):
         order = {"order_id": order_id, "customer_id": customer_id,
                  "items": items, "status": "created"}
@@ -498,13 +498,13 @@ class ReactiveOrderState:
     # Automatic side effects (reactions)
     def _on_order_created(self, event: Event):
         order = event.data["order"]
-        self.notifications.append(f"[{order['order_id']}] Order created — pipeline started")
+        self.notifications.append(f"[{order['order_id']}] Order created - pipeline started")
 
     def _on_inventory_reserved(self, event: Event):
-        self.notifications.append(f"[{event.data['order_id']}] Inventory locked — proceed to payment")
+        self.notifications.append(f"[{event.data['order_id']}] Inventory locked - proceed to payment")
 
     def _on_payment_processed(self, event: Event):
-        self.notifications.append(f"[{event.data['order_id']}] Payment confirmed — scheduling shipment")
+        self.notifications.append(f"[{event.data['order_id']}] Payment confirmed - scheduling shipment")
 
     def _on_order_failed(self, event: Event):
         order_id = event.data["order_id"]
@@ -527,8 +527,8 @@ Data flow:
                                           → triggers next-stage notification
 ```
 
-**Pros:** Complete audit trail in `bus.history` for free; side effects are automatic and consistent; agents are completely decoupled — they only know about events, not each other; easy to add new reactions without modifying existing code.  
-**Cons:** Harder to debug (no single linear trace — reconstruct from event history); risk of event loops if a handler publishes the same event it handles; event ordering requires careful design in distributed deployments.
+**Pros:** Complete audit trail in `bus.history` for free; side effects are automatic and consistent; agents are completely decoupled - they only know about events, not each other; easy to add new reactions without modifying existing code.  
+**Cons:** Harder to debug (no single linear trace - reconstruct from event history); risk of event loops if a handler publishes the same event it handles; event ordering requires careful design in distributed deployments.
 
 ---
 
@@ -603,7 +603,7 @@ Design tools so that calling the same tool with the same arguments multiple time
 ```python
 @tool
 def create_user(email: str) -> dict:
-    """Create a user. Safe to retry — returns existing user if already exists."""
+    """Create a user. Safe to retry - returns existing user if already exists."""
     existing = db.users.find_one({"email": email})
     if existing:
         return {"user_id": existing["id"], "created": False}
@@ -627,7 +627,7 @@ Return a partial result with metadata about what succeeded and failed, rather th
 
 ```python
 final_output = {
-    "research": research_result or "Research failed — see errors",
+    "research": research_result or "Research failed - see errors",
     "analysis": analysis_result or "Analysis skipped due to research failure",
     "errors": [str(e) for e in errors],
     "completeness": "partial" if errors else "complete"
@@ -640,7 +640,7 @@ final_output = {
 
 - Multi-agent is not always better. The overhead of coordination (extra LLM calls, state management, error handling) is real. Measure whether the multi-agent version actually outperforms a well-designed single agent for your specific task.
 - Start with **centralized coordination** (orchestrator-subagent). It's much easier to debug and reason about. Move to decentralized only if you have a specific reason.
-- The task ledger pattern is underused. It gives you replanning capability for free — if the orchestrator knows what's been done and what remains, it can update the plan when something goes wrong.
+- The task ledger pattern is underused. It gives you replanning capability for free - if the orchestrator knows what's been done and what remains, it can update the plan when something goes wrong.
 - Every multi-agent system needs **structured communication interfaces** (typed outputs from each agent). Unstructured handoffs (agent A just returns a paragraph that agent B has to parse) are a major source of bugs.
 - Design for failure from the start. Cascading failures are the most common production issue in multi-agent systems, and they're cheap to prevent if the defensive patterns are built in from day one.
 
@@ -649,25 +649,25 @@ final_output = {
 ## Q&A Review Bank
 
 **Q1: What are the four reasons to go multi-agent, and what mistake do teams most often make when choosing this architecture?** `[Medium]`
-A: The four reasons are: Task Decomposition (the task has natural seams that benefit from focused sub-tasks), Specialization (different agents optimized with different prompts, models, and tools outperform a generalist), Parallelism (independent subtasks running concurrently reduce wall-clock time), and Fault Isolation (one agent's failure doesn't crash the whole system). The most common mistake is choosing multi-agent because it sounds more capable, without checking whether the overhead of coordination — extra LLM calls, state management, structured communication, error handling — actually produces better results than a well-designed single agent. Always measure whether the multi-agent version outperforms the single-agent version on your specific task before committing to the complexity.
+A: The four reasons are: Task Decomposition (the task has natural seams that benefit from focused sub-tasks), Specialization (different agents optimized with different prompts, models, and tools outperform a generalist), Parallelism (independent subtasks running concurrently reduce wall-clock time), and Fault Isolation (one agent's failure doesn't crash the whole system). The most common mistake is choosing multi-agent because it sounds more capable, without checking whether the overhead of coordination - extra LLM calls, state management, structured communication, error handling - actually produces better results than a well-designed single agent. Always measure whether the multi-agent version outperforms the single-agent version on your specific task before committing to the complexity.
 
 **Q2: What is cascading failure in multi-agent systems and what are the two primary defenses?** `[Hard]`
-A: Cascading failure is when Agent A fails and passes a bad output silently to Agent B, which produces a worse output, which is passed to Agent C — resulting in a wrong final answer with no visible error. The system appears to complete successfully while all downstream results are garbage. The two primary defenses are: (1) explicit error propagation — each agent validates its inputs and returns a typed error if they are malformed, rather than trying to process bad data; (2) orchestrator error detection — the orchestrator compares each subagent's output against expected structure before passing it downstream, halting or rerouting rather than blindly continuing. These defenses are cheap to implement at design time and expensive to retrofit after a production incident.
+A: Cascading failure is when Agent A fails and passes a bad output silently to Agent B, which produces a worse output, which is passed to Agent C - resulting in a wrong final answer with no visible error. The system appears to complete successfully while all downstream results are garbage. The two primary defenses are: (1) explicit error propagation - each agent validates its inputs and returns a typed error if they are malformed, rather than trying to process bad data; (2) orchestrator error detection - the orchestrator compares each subagent's output against expected structure before passing it downstream, halting or rerouting rather than blindly continuing. These defenses are cheap to implement at design time and expensive to retrofit after a production incident.
 
 **Q3: Compare centralized (orchestrator) vs decentralized (peer-to-peer) coordination.** `[Medium]`
-A: Centralized: one orchestrator holds the plan and assigns tasks; agents are stateless workers with no knowledge of the broader plan. Advantages — easy to reason about, easy to debug (single trace), easy to add HITL gates. Disadvantages — orchestrator is a single point of failure and a bottleneck. Decentralized: agents observe shared state and self-assign work; coordination emerges from agent behavior. Advantages — no single point of failure, scales to many agents, self-organizing. Disadvantages — race conditions, harder to add HITL, much harder to debug. Use centralized for almost all production systems; use decentralized only when you have a specific fault-tolerance requirement and the team has experience debugging distributed systems.
+A: Centralized: one orchestrator holds the plan and assigns tasks; agents are stateless workers with no knowledge of the broader plan. Advantages - easy to reason about, easy to debug (single trace), easy to add HITL gates. Disadvantages - orchestrator is a single point of failure and a bottleneck. Decentralized: agents observe shared state and self-assign work; coordination emerges from agent behavior. Advantages - no single point of failure, scales to many agents, self-organizing. Disadvantages - race conditions, harder to add HITL, much harder to debug. Use centralized for almost all production systems; use decentralized only when you have a specific fault-tolerance requirement and the team has experience debugging distributed systems.
 
 **Q4: What is a task ledger and why is it critical for long-running agentic systems?** `[Hard]`
-A: A task ledger is a structured, external-to-context-window record of all planned subtasks, their status (pending/in-progress/done/failed), their dependencies, and their outputs. It's critical because conversation history eventually exceeds the context window and gets summarized or truncated — the task ledger is never summarized, so the agent always knows exactly what remains to be done and what has been completed. It also enables replanning: if a subtask fails, the orchestrator reads the ledger to determine what was completed, updates the remaining plan, and continues — without losing work done so far. The ledger is the difference between an agent that can recover from failure and one that has to start over from scratch.
+A: A task ledger is a structured, external-to-context-window record of all planned subtasks, their status (pending/in-progress/done/failed), their dependencies, and their outputs. It's critical because conversation history eventually exceeds the context window and gets summarized or truncated - the task ledger is never summarized, so the agent always knows exactly what remains to be done and what has been completed. It also enables replanning: if a subtask fails, the orchestrator reads the ledger to determine what was completed, updates the remaining plan, and continues - without losing work done so far. The ledger is the difference between an agent that can recover from failure and one that has to start over from scratch.
 
 **Q5: What is an idempotent action and give an example of making a non-idempotent tool idempotent?** `[Medium]`
-A: An idempotent action produces the same result whether executed once or multiple times with the same inputs. It's critical for agentic systems because agents retry on failure — if a tool creates a duplicate record each time it's called, retries cause data corruption. Example: a `create_user(email)` tool is non-idempotent by default (multiple calls create duplicate users). To make it idempotent: before inserting, check if a user with that email already exists; if yes, return the existing user record; if no, create and return the new user. The check-then-act pattern, upserts, and idempotency keys (unique per task+step token sent with each API request) are the standard implementation approaches.
+A: An idempotent action produces the same result whether executed once or multiple times with the same inputs. It's critical for agentic systems because agents retry on failure - if a tool creates a duplicate record each time it's called, retries cause data corruption. Example: a `create_user(email)` tool is non-idempotent by default (multiple calls create duplicate users). To make it idempotent: before inserting, check if a user with that email already exists; if yes, return the existing user record; if no, create and return the new user. The check-then-act pattern, upserts, and idempotency keys (unique per task+step token sent with each API request) are the standard implementation approaches.
 
 **Q6: Why do agents using event-driven (pub/sub) communication need special care compared to shared state?** `[Hard]`
-A: Event-driven communication is highly decoupled — agents publish events and subscribe to events from others, with no direct coupling. This is ideal for long-running async systems and horizontal scaling. However, it introduces event ordering challenges (an agent may receive events out of order), duplicate event delivery (message brokers guarantee at-least-once delivery, not exactly-once), and complex debugging (there's no single trace to follow — you must reconstruct the sequence from distributed logs). You also lose the natural barrier checking of shared state (where you can easily see what's been written). Use event-driven when you need async processing, true decoupling, or need to fan out to many consumers; use shared state for simpler synchronous pipelines where debuggability is more important than decoupling.
+A: Event-driven communication is highly decoupled - agents publish events and subscribe to events from others, with no direct coupling. This is ideal for long-running async systems and horizontal scaling. However, it introduces event ordering challenges (an agent may receive events out of order), duplicate event delivery (message brokers guarantee at-least-once delivery, not exactly-once), and complex debugging (there's no single trace to follow - you must reconstruct the sequence from distributed logs). You also lose the natural barrier checking of shared state (where you can easily see what's been written). Use event-driven when you need async processing, true decoupling, or need to fan out to many consumers; use shared state for simpler synchronous pipelines where debuggability is more important than decoupling.
 
 **Q7: What is the "agent-as-tool state conflict" and how does central state management solve it?** `[Hard]`
-A: The agent-as-tool state conflict occurs when a specialist agent is wrapped as a callable tool for an orchestrator, and both the orchestrator and the specialist have tools that mutate the same state. Because each agent maintains its own isolated state object, the two agents end up with divergent views of the world — one writes to its own state, the other writes to its own state, and neither sees the other's changes. This produces silent data corruption that is very hard to reproduce because it only manifests when specific tool call sequences occur. Central state management solves this by moving the authoritative state outside both agents entirely — into a shared Python object (Global State Manager pattern) or event bus (Event-Driven pattern). Tools close over the shared object; neither the orchestrator nor the specialist owns the state, so there is no conflict regardless of call order.
+A: The agent-as-tool state conflict occurs when a specialist agent is wrapped as a callable tool for an orchestrator, and both the orchestrator and the specialist have tools that mutate the same state. Because each agent maintains its own isolated state object, the two agents end up with divergent views of the world - one writes to its own state, the other writes to its own state, and neither sees the other's changes. This produces silent data corruption that is very hard to reproduce because it only manifests when specific tool call sequences occur. Central state management solves this by moving the authoritative state outside both agents entirely - into a shared Python object (Global State Manager pattern) or event bus (Event-Driven pattern). Tools close over the shared object; neither the orchestrator nor the specialist owns the state, so there is no conflict regardless of call order.
 
 **Q8: When should you move from the Global State Manager pattern to the Event-Driven pattern?** `[Medium]`
-A: Move to Event-Driven when you need three things the Global State Manager cannot cleanly provide: (1) Automatic side effects — when a state change in one part of the system must trigger actions in other parts and you don't want every agent to manually call downstream systems; the event bus fires handlers automatically on state transitions. (2) Built-in audit trail — every state mutation is represented as an immutable event in the bus history, giving you a complete, timestamped record of what happened and who caused it; this is often a compliance or regulatory requirement. (3) Complete decoupling for large teams — agents don't need to know about each other, only about events; adding a new agent means subscribing to existing events, not modifying existing agents. Stay with Global State Manager if you don't need any of these three — event-driven systems are significantly harder to debug and the added complexity is only justified when the benefits are actively needed.
+A: Move to Event-Driven when you need three things the Global State Manager cannot cleanly provide: (1) Automatic side effects - when a state change in one part of the system must trigger actions in other parts and you don't want every agent to manually call downstream systems; the event bus fires handlers automatically on state transitions. (2) Built-in audit trail - every state mutation is represented as an immutable event in the bus history, giving you a complete, timestamped record of what happened and who caused it; this is often a compliance or regulatory requirement. (3) Complete decoupling for large teams - agents don't need to know about each other, only about events; adding a new agent means subscribing to existing events, not modifying existing agents. Stay with Global State Manager if you don't need any of these three - event-driven systems are significantly harder to debug and the added complexity is only justified when the benefits are actively needed.

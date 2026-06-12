@@ -1,5 +1,5 @@
 """
-Parallel Architecture — Google ADK
+Parallel Architecture - Google ADK
 Pattern: Fan-out (parallel tool calls) → Aggregate
 
 ADK achieves parallelism via the LLM's native ability to call multiple tools
@@ -60,10 +60,10 @@ agent = Agent(
     description="Researches multiple cities in parallel and produces a ranked travel report.",
     instruction="""You are a travel analyst. When given a list of cities to compare:
 
-PHASE 1 — PARALLEL RESEARCH: Call get_weather() AND get_safety() for ALL cities simultaneously.
+PHASE 1 - PARALLEL RESEARCH: Call get_weather() AND get_safety() for ALL cities simultaneously.
   Do not wait for one city before starting another. Call all tools at once.
 
-PHASE 2 — AGGREGATE & RANK: Using all collected data:
+PHASE 2 - AGGREGATE & RANK: Using all collected data:
   - Rank cities best to worst by combined weather + safety score
   - Show scores for each city
   - Name the top pick with a clear reason
@@ -71,7 +71,7 @@ PHASE 2 — AGGREGATE & RANK: Using all collected data:
 Format output as:
   ## Parallel Travel Report
   ### Rankings
-  1. [City] — Weather: X/10, Safety: X/10, Total: X/20
+  1. [City] - Weather: X/10, Safety: X/10, Total: X/20
   2. ...
   ## Top Pick: [City]
   [Reason]""",
