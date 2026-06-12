@@ -24,19 +24,17 @@ jobs:
           node-version: "20"
 
       - name: Install dependencies
-        working-directory: app
         run: npm ci
 
       - name: Build static export
-        working-directory: app
         run: npm run build
 
       - name: Show build output structure
         run: |
           echo "=== Files to be deployed ==="
-          find ./app/out -type f | head -30
+          find ./out -type f | head -30
           echo "=== Total files ==="
-          find ./app/out -type f | wc -l
+          find ./out -type f | wc -l
 
       - name: Show FTP target
         run: |
@@ -50,7 +48,7 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./app/out/
+          local-dir: ./out/
           server-dir: /domains/sunmintz.com/public_html/learngenai/
           dangerous-clean-slate: false
           log-level: verbose
