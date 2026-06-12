@@ -4,7 +4,7 @@ import matter from "gray-matter";
 import { getNavigationTree, getPageRef, getPrevNext } from "./nav";
 import type { PageContent, PageRef, TocItem } from "@/types/content";
 
-const DOCS_DIR = path.join(process.cwd(), "../docs");
+const DOCS_DIR = path.join(process.cwd(), "content");
 
 function extractToc(markdown: string): TocItem[] {
   const toc: TocItem[] = [];

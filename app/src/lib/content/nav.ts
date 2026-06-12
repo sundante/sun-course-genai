@@ -3,7 +3,7 @@ import path from "path";
 import yaml from "js-yaml";
 import type { NavItem, NavModule, NavigationTree, PageRef } from "@/types/content";
 
-const DOCS_DIR = path.join(process.cwd(), "../docs");
+const DOCS_DIR = path.join(process.cwd(), "content");
 const NAV_PATH = path.join(DOCS_DIR, "nav.yml");
 
 /** Map from top-level nav section title to URL module slug */
