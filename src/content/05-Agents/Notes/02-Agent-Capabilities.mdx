@@ -1,0 +1,128 @@
+# Agent Capabilities
+
+What separates a capable AI agent from a basic chatbot is a set of specific capabilities that work together. Understanding each one helps you build better agents and diagnose why an agent fails.
+
+---
+
+## 1. Perception & Context Understanding
+
+An agent must understand what it's been given — not just the user's words but the full context:
+
+- **Structured data** — JSON responses, database records, CSV files
+- **Unstructured text** — emails, documents, web pages, code
+- **Tool output** — results from previous actions in the current session
+- **Environmental state** — what has already been done, what failed
+
+Good agents are built to handle noisy, incomplete, or unexpected input gracefully.
+
+---
+
+## 2. Reasoning & Chain-of-Thought
+
+The LLM core doesn't just answer — it **thinks through** the problem:
+
+- **Chain-of-Thought (CoT)** — the model generates intermediate reasoning steps before giving a final answer
+- **ReAct** — interleaves Reasoning and Acting: think, act, observe, think again
+- **Self-ask** — the model asks itself follow-up questions before committing to an action
+
+The quality of reasoning determines whether the agent stays on track or spirals into loops.
+
+---
+
+## 3. Planning
+
+Planning is how an agent handles **multi-step goals** that can't be solved in a single LLM call:
+
+| Planning Style | How it Works | Best For |
+|---|---|---|
+| **Reactive (ReAct)** | Decide one step at a time, adapt as results come in | Short tasks, uncertain environments |
+| **Plan-and-Execute** | Generate a full plan first, then execute each step | Well-defined tasks with predictable steps |
+| **Hierarchical** | High-level planner breaks tasks into sub-tasks for specialized sub-agents | Complex workflows, multi-agent systems |
+
+The risk with planning: **over-planning**. Agents that make a detailed 10-step plan upfront often fail at step 3 and don't know how to recover.
+
+---
+
+## 4. Tool Use & Function Calling
+
+Tools are what make agents useful in the real world. Without tools, an agent can only generate text.
+
+**Common tool categories:**
+
+| Tool Type | Examples |
+|---|---|
+| **Search & retrieval** | Web search, vector DB search, document lookup |
+| **Computation** | Code execution, calculator, data analysis |
+| **External APIs** | Weather, maps, payment systems, CRM |
+| **File operations** | Read/write files, parse PDFs, generate reports |
+| **Communication** | Send email, post to Slack, create calendar events |
+| **Agent spawning** | Launch sub-agents to handle sub-tasks in parallel |
+
+Function calling (supported natively by GPT-4, Claude, Gemini) lets the LLM output a structured tool call that the framework executes and feeds back as a result.
+
+---
+
+## 5. Memory
+
+Memory is how an agent avoids "goldfish mode" — forgetting everything after each step.
+
+| Memory Type | Where Stored | Duration | Best For |
+|---|---|---|---|
+| **In-context** | The active prompt window | Single session | Short tasks, recent history |
+| **External (vector DB)** | Pinecone, ChromaDB, pgvector | Persistent | Long sessions, knowledge bases |
+| **Key-value store** | Redis, DynamoDB | Persistent | User preferences, task state |
+| **Episodic** | Summarized session logs | Persistent | Long-running agents that need to recall past runs |
+
+The challenge: the context window is finite. Long-running agents must **compress and offload** older memories to avoid running out of space.
+
+---
+
+## 6. Multi-Agent Collaboration
+
+Some tasks are too big or too complex for a single agent. Multi-agent systems distribute the work:
+
+- **Orchestrator + Worker** — a planner agent breaks the task, worker agents execute sub-tasks
+- **Peer-to-peer** — agents communicate directly (e.g., debate to reach consensus)
+- **Specialist crews** — predefined roles (researcher, writer, critic) each with specific tools and instructions
+
+Frameworks like **CrewAI** and **LangGraph** are specifically designed for multi-agent coordination.
+
+---
+
+## 7. Self-Correction & Reflection
+
+Capable agents don't just fail silently — they detect errors and recover:
+
+- **Output validation** — checking if the tool result makes sense before proceeding
+- **Retry logic** — calling a tool again with different parameters if the first attempt failed
+- **Reflection prompts** — asking the LLM to critique its own output before returning it
+- **Fallback strategies** — switching to a different tool or approach if the primary path fails
+
+**Reflection loop example:**
+```
+1. Generate answer
+2. Critique: "Is this correct? What could be wrong?"
+3. If issues found → revise and repeat
+4. If confident → return final answer
+```
+
+---
+
+## Capability Maturity Model
+
+| Level | Capabilities | Example |
+|---|---|---|
+| **Basic** | Single LLM call, no tools | Chatbot |
+| **Tool-augmented** | Function calling, 1-2 tools | Q&A with search |
+| **Autonomous** | Multi-step planning, memory, error recovery | Research agent |
+| **Multi-agent** | Orchestration, specialist roles, parallel execution | Enterprise workflow |
+
+---
+
+## Study Notes
+
+- Tools = hands, Memory = notepad, Reasoning = brain — all three are required for a capable agent
+- **Function calling** is the mechanism; **tools** are what get called — don't conflate them
+- Memory management is often the hardest engineering problem in production agents
+- Self-correction dramatically improves reliability but adds latency — tune the balance for your use case
+- Multi-agent systems are powerful but harder to debug: start single-agent, add agents when justified

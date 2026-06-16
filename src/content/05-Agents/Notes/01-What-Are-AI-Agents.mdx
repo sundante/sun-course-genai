@@ -1,0 +1,116 @@
+# What Are AI Agents
+
+## The One-Line Definition
+
+An AI Agent is a software system that **perceives its environment, reasons about a goal, plans a sequence of actions, and executes those actions autonomously** — repeating this loop until the goal is achieved or it decides to stop.
+
+Unlike a chatbot that responds to a single prompt, an agent can take multiple steps, use external tools, remember previous actions, and adapt when things go wrong.
+
+---
+
+## Chatbot vs Automation vs AI Agent
+
+| | Chatbot | RPA / Automation Script | AI Agent |
+|---|---|---|---|
+| **Input** | Natural language prompt | Predefined trigger / schedule | Natural language goal |
+| **Reasoning** | Single LLM call | Hardcoded logic | Multi-step LLM reasoning |
+| **Actions** | Text response only | Fixed sequence of steps | Dynamic tool selection |
+| **Adaptability** | None — reruns from scratch | None — breaks on unexpected input | High — replans on failure |
+| **Memory** | Context window only | None (stateless) or DB | Short-term + optional long-term |
+| **Example** | "Summarize this email" | "Every day at 9am, send report" | "Research competitors and draft a report, then email it to the team" |
+
+---
+
+## The Four Pillars of an AI Agent
+
+### 1. Perceive
+The agent takes in context — a user request, tool output, memory, environment state. This is the raw input that feeds the reasoning engine.
+
+### 2. Reason
+The LLM at the agent's core interprets the input, decides what to do next, and generates a plan or action. This is where chain-of-thought, ReAct, and other reasoning strategies apply.
+
+### 3. Plan
+For multi-step goals, the agent sequences sub-tasks. Some agents plan upfront (Plan-and-Execute), others plan one step at a time (ReAct), and some use a separate planner LLM.
+
+### 4. Act
+The agent executes an action — calling a tool, writing to a file, sending an API request, spawning a sub-agent. The result feeds back into the next Perceive step.
+
+This **Perceive → Reason → Plan → Act** loop runs until the task is complete.
+
+---
+
+## Anatomy of an Agent
+
+```
+┌─────────────────────────────────────────────────────┐
+│                     AI Agent                        │
+│                                                     │
+│  ┌─────────────┐    ┌─────────────┐                │
+│  │  LLM Core   │◄──►│ Orchestrator│                │
+│  │ (Reasoning) │    │  (Loop Mgr) │                │
+│  └─────────────┘    └──────┬──────┘                │
+│                            │                        │
+│         ┌──────────────────┼──────────────────┐    │
+│         ▼                  ▼                  ▼    │
+│  ┌─────────────┐  ┌─────────────┐  ┌───────────┐  │
+│  │  Tool Layer │  │   Memory    │  │  Output   │  │
+│  │ (APIs, DBs, │  │ (In-context,│  │ (Actions, │  │
+│  │  code exec) │  │  vector DB) │  │  responses│  │
+│  └─────────────┘  └─────────────┘  └───────────┘  │
+└─────────────────────────────────────────────────────┘
+```
+
+| Component | Role |
+|---|---|
+| **LLM Core** | Reasoning engine — decides what to do next |
+| **Orchestrator** | Manages the agent loop, tracks state, handles retries |
+| **Tool Layer** | Connects to the real world — APIs, databases, code execution |
+| **Memory** | Stores context — in-context window, external vector DB, key-value store |
+| **Output** | Final answer, file written, email sent, API called |
+
+---
+
+## The Autonomy Spectrum
+
+Not all AI systems are fully autonomous agents. Think of it as a dial:
+
+```
+Low Autonomy                                    High Autonomy
+     │                                               │
+     ▼                                               ▼
+ Copilot          Assistant          Autonomous Agent
+(human drives)  (human confirms)    (agent decides)
+
+ GitHub Copilot   ChatGPT plugins    AutoGPT / CrewAI
+ Code suggestions  Single tool call   Full research loop
+```
+
+| Level | Human Role | Best For |
+|---|---|---|
+| **Copilot** | Reviews and accepts every suggestion | Code completion, writing assistance |
+| **Assistant** | Approves key decisions, reviews output | Customer support, data lookup |
+| **Autonomous** | Sets goal and reviews final result | Complex research, multi-step pipelines |
+
+Most production systems sit at **Assistant** level — agents that can do significant work but check in at decision points.
+
+---
+
+## What Makes an Agent "Intelligent"
+
+The intelligence comes from combining these capabilities:
+
+1. **Tool use** — the ability to call external functions (search, calculate, query a DB) rather than hallucinating answers
+2. **Multi-step reasoning** — breaking a complex goal into smaller steps and executing them in sequence
+3. **Self-correction** — detecting when a tool call failed or an answer is wrong and trying a different approach
+4. **Memory** — not forgetting what was done 5 steps ago in a long task
+5. **Goal orientation** — staying focused on the original objective across many intermediate steps
+
+---
+
+## Study Notes
+
+- An agent is defined by its **autonomy** — it decides what to do next, not just responds
+- The core loop is always **Perceive → Reason → Plan → Act → repeat**
+- The LLM is the **brain**, tools are the **hands**, memory is the **notepad**
+- Autonomy exists on a **spectrum** — most production agents are semi-autonomous (human confirms key decisions)
+- The difference between an agent and a chain: a **chain** has a fixed sequence, an **agent** decides the sequence dynamically
