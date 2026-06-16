@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import type { TocItem } from "@/types/content";
 
-export function TableOfContents({ toc }: { toc: TocItem[] }) {
+interface Props {
+  toc: TocItem[];
+}
+
+export function TableOfContents({ toc }: Props) {
   const [activeId, setActiveId] = useState<string>("");
 
   useEffect(() => {
-    const headings = toc.map((t) => document.getElementById(t.id)).filter(Boolean) as HTMLElement[];
-    if (!headings.length) return;
-
     const observer = new IntersectionObserver(
       (entries) => {
         const visible = entries.filter((e) => e.isIntersecting);
@@ -18,7 +19,11 @@ export function TableOfContents({ toc }: { toc: TocItem[] }) {
       { rootMargin: "0px 0px -60% 0px", threshold: 0 }
     );
 
-    headings.forEach((el) => observer.observe(el));
+    toc.forEach(({ id }) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
     return () => observer.disconnect();
   }, [toc]);
 
@@ -28,10 +33,10 @@ export function TableOfContents({ toc }: { toc: TocItem[] }) {
         On this page
       </p>
       <ul className="space-y-0.5">
-        {toc.map((item, i) => {
-          const active = item.id === activeId;
+        {toc.map((item) => {
+          const active = activeId === item.id;
           return (
-            <li key={`${i}-${item.id}`} style={{ paddingLeft: `${(item.level - 1) * 10}px` }}>
+            <li key={item.id} style={{ paddingLeft: `${(item.level - 1) * 10}px` }}>
               <a
                 href={`#${item.id}`}
                 className={`block text-sm py-1 px-2 rounded-md transition-colors leading-snug line-clamp-2 ${

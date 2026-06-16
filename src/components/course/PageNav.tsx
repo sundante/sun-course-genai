@@ -25,6 +25,7 @@ export function PageNav({ prev, next, className }: Props) {
       ) : (
         <div />
       )}
+
       {next && (
         <Link
           href={next.href}

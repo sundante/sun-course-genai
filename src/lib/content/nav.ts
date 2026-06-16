@@ -3,111 +3,105 @@ import path from "path";
 import yaml from "js-yaml";
 import type { NavItem, NavModule, NavigationTree, PageRef } from "@/types/content";
 
-const DOCS_DIR = path.join(process.cwd(), "content");
-const NAV_PATH = path.join(DOCS_DIR, "nav.yml");
+const CONTENT_DIR = path.join(process.cwd(), "src/content");
 
-/** Map from top-level nav section title to URL module slug */
 const MODULE_SLUG_MAP: Record<string, string> = {
   "LLM Models": "llm-models",
   "Prompt Engineering": "prompt-engineering",
-  RAG: "rag",
-  MCP: "mcp",
-  Agents: "agents",
+  "RAG": "rag",
+  "MCP": "mcp",
+  "Agents": "agents",
   "Agentic AI": "agentic-ai",
   "Knowledge Check": "knowledge-check",
 };
 
-function filePathToSlug(filePath: string): string {
-  // 01-LLM-Models/Notes/01-LLM-Fundamentals.md → 01-llm-fundamentals
-  const base = path.basename(filePath, ".md");
-  return base.toLowerCase().replace(/_/g, "-");
-}
+// Maps module slug → root directory prefix in content/
+export const MODULE_DIR_MAP: Record<string, string> = {
+  "llm-models": "01-LLM-Models",
+  "prompt-engineering": "02-Prompts",
+  "rag": "03-RAGs",
+  "mcp": "04-MCP",
+  "agents": "05-Agents",
+  "agentic-ai": "06-Agentic-AI",
+  "knowledge-check": "",
+};
 
-function buildHref(moduleSlug: string, filePath: string): string {
-  const slug = filePathToSlug(filePath);
-  if (filePath === "index.md") return "/";
-  return `/learn/${moduleSlug}/${slug}`;
-}
-
-type MkDocsNavEntry = string | Record<string, string | MkDocsNavEntry[]>;
-
-function parseNavEntry(
-  entry: MkDocsNavEntry,
-  moduleSlug: string,
-  depth = 0
-): NavItem | null {
-  if (typeof entry === "string") return null; // bare string, skip
-
-  const [title, value] = Object.entries(entry)[0];
-
-  if (typeof value === "string") {
-    // Leaf page
-    const filePath = value;
-    return {
-      title,
-      href: buildHref(moduleSlug, filePath),
-      filePath,
-    };
+export function filePathToSlug(filePath: string, moduleRootDir: string): string {
+  // Strip the module root dir prefix
+  let relative = filePath;
+  if (moduleRootDir && filePath.startsWith(moduleRootDir + "/")) {
+    relative = filePath.slice(moduleRootDir.length + 1);
   }
-
-  if (Array.isArray(value)) {
-    // Section with children
-    const children: NavItem[] = [];
-    for (const child of value) {
-      const item = parseNavEntry(child, moduleSlug, depth + 1);
-      if (item) children.push(item);
-    }
-    return { title, href: "", children };
-  }
-
-  return null;
+  // Strip .md/.mdx extension
+  relative = relative.replace(/\.mdx?$/, "");
+  // Split, kebab-case each segment, join with -
+  return relative
+    .split("/")
+    .map((seg) => seg.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""))
+    .join("-");
 }
 
 let _cache: NavigationTree | null = null;
 
+type NavYaml = { nav: NavEntry[] };
+type NavEntry = string | Record<string, string | NavEntry[]>;
+
+function parseItems(
+  entries: NavEntry[],
+  moduleSlug: string,
+  moduleRootDir: string,
+  flatPages: PageRef[]
+): NavItem[] {
+  const items: NavItem[] = [];
+
+  for (const entry of entries) {
+    if (typeof entry === "string") continue;
+
+    for (const [title, value] of Object.entries(entry)) {
+      if (typeof value === "string") {
+        // Leaf page
+        const filePath = value;
+        const slug = filePathToSlug(filePath, moduleRootDir);
+        const href = `/learn/${moduleSlug}/${slug}`;
+        const ref: PageRef = { title, href, filePath, module: moduleSlug, slug };
+        flatPages.push(ref);
+        items.push({ title, href, filePath });
+      } else if (Array.isArray(value)) {
+        // Section with children
+        const children = parseItems(value, moduleSlug, moduleRootDir, flatPages);
+        items.push({ title, href: children[0]?.href ?? "#", children });
+      }
+    }
+  }
+
+  return items;
+}
+
 export function getNavigationTree(): NavigationTree {
   if (_cache) return _cache;
 
-  const raw = fs.readFileSync(NAV_PATH, "utf-8");
-  const config = yaml.load(raw) as { nav: MkDocsNavEntry[] };
+  const navFile = path.join(CONTENT_DIR, "nav.yml");
+  const raw = fs.readFileSync(navFile, "utf-8");
+  const parsed = yaml.load(raw) as NavYaml;
 
   const modules: NavModule[] = [];
   const flatPages: PageRef[] = [];
 
-  for (const topEntry of config.nav) {
-    if (typeof topEntry === "string") continue;
-    const [title, children] = Object.entries(topEntry)[0];
+  for (const entry of parsed.nav) {
+    if (typeof entry === "string") continue;
 
-    if (title === "Home") continue; // skip home
+    for (const [title, value] of Object.entries(entry)) {
+      if (title === "Home") continue;
 
-    const moduleSlug = MODULE_SLUG_MAP[title] ?? title.toLowerCase().replace(/\s+/g, "-");
+      const moduleSlug = MODULE_SLUG_MAP[title];
+      if (!moduleSlug) continue;
 
-    if (!Array.isArray(children)) continue;
+      const moduleRootDir = MODULE_DIR_MAP[moduleSlug] ?? "";
+      const entries = Array.isArray(value) ? value : [];
+      const items = parseItems(entries, moduleSlug, moduleRootDir, flatPages);
 
-    const items: NavItem[] = [];
-    for (const child of children) {
-      const item = parseNavEntry(child, moduleSlug);
-      if (item) items.push(item);
+      modules.push({ title, slug: moduleSlug, items });
     }
-
-    modules.push({ title, slug: moduleSlug, items });
-
-    // Collect flat leaf pages
-    function collectLeaves(navItems: NavItem[]) {
-      for (const item of navItems) {
-        if (item.filePath && item.href) {
-          flatPages.push({
-            title: item.title,
-            href: item.href,
-            filePath: item.filePath,
-            module: moduleSlug,
-            slug: filePathToSlug(item.filePath),
-          });
-        }
-        if (item.children) collectLeaves(item.children);
-      }
-    }
-    collectLeaves(items);
   }
 
   _cache = { modules, flatPages };

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Home } from "lucide-react";
 
-interface UnderDevelopmentProps {
+interface Props {
   title?: string;
   description?: string;
 }
@@ -12,34 +12,18 @@ interface UnderDevelopmentProps {
 export function UnderDevelopment({
   title = "Under Development",
   description = "This page is being built. Check back soon.",
-}: UnderDevelopmentProps) {
+}: Props) {
   const router = useRouter();
 
   return (
     <div className="min-h-screen bg-sun-bg flex items-center justify-center px-4">
       <div className="text-center max-w-md">
-        {/* Animated blocks */}
         <div className="flex items-end justify-center gap-2 mb-10 h-16">
-          <div
-            className="w-4 bg-sun-yellow rounded-sm animate-bounce"
-            style={{ height: "2.5rem", animationDelay: "0ms" }}
-          />
-          <div
-            className="w-4 bg-sun-yellow rounded-sm animate-bounce"
-            style={{ height: "3.5rem", animationDelay: "150ms" }}
-          />
-          <div
-            className="w-4 bg-sun-yellow rounded-sm animate-bounce"
-            style={{ height: "2rem", animationDelay: "300ms" }}
-          />
-          <div
-            className="w-4 bg-sun-yellow rounded-sm animate-bounce"
-            style={{ height: "4rem", animationDelay: "100ms" }}
-          />
-          <div
-            className="w-4 bg-sun-yellow rounded-sm animate-bounce"
-            style={{ height: "2.5rem", animationDelay: "250ms" }}
-          />
+          <div className="w-4 bg-sun-yellow rounded-sm animate-bounce" style={{ height: "2.5rem", animationDelay: "0ms" }} />
+          <div className="w-4 bg-sun-yellow rounded-sm animate-bounce" style={{ height: "3.5rem", animationDelay: "150ms" }} />
+          <div className="w-4 bg-sun-yellow rounded-sm animate-bounce" style={{ height: "2rem",   animationDelay: "300ms" }} />
+          <div className="w-4 bg-sun-yellow rounded-sm animate-bounce" style={{ height: "4rem",   animationDelay: "100ms" }} />
+          <div className="w-4 bg-sun-yellow rounded-sm animate-bounce" style={{ height: "2.5rem", animationDelay: "250ms" }} />
         </div>
 
         <h1 className="text-2xl font-bold text-sun-dark mb-3">{title}</h1>
@@ -53,6 +37,7 @@ export function UnderDevelopment({
             <ArrowLeft className="h-4 w-4" />
             Go Back
           </button>
+
           <Link
             href="/"
             className="inline-flex items-center gap-1.5 text-sm font-semibold bg-sun-yellow text-sun-dark hover:bg-sun-yellow-dk rounded-md px-4 py-2 transition-colors"

@@ -1,11 +1,10 @@
-import { Sidebar } from "@/components/course/Sidebar";
-import { MobileNav } from "@/components/course/MobileNav";
 import { Header } from "@/components/course/Header";
+import { MobileNav } from "@/components/course/MobileNav";
+import { Sidebar } from "@/components/course/Sidebar";
 import { getNavigationTree } from "@/lib/content/nav";
 
 export default function CourseLayout({ children }: { children: React.ReactNode }) {
   const nav = getNavigationTree();
-
   return (
     <div className="min-h-screen bg-sun-bg overflow-x-hidden">
       <Header />

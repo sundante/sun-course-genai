@@ -1,47 +1,49 @@
 import Link from "next/link";
 import { getNavigationTree } from "@/lib/content/nav";
 
-const MODULE_META: Record<string, { subtitle: string; description: string; notes: string; qa: string; num: string }> = {
-  "llm-models":         { num: "01", subtitle: "The Engine",    description: "How LLMs work - architecture, attention, training, inference, and production deployment.", notes: "12 notes", qa: "68+ Q&A" },
-  "prompt-engineering": { num: "02", subtitle: "The Interface", description: "Prompting strategies, chain-of-thought, few-shot, and production-grade prompt optimization.", notes: "6 notes",  qa: "65+ Q&A" },
-  "rag":                { num: "03", subtitle: "The Memory",    description: "Embeddings, vector stores, chunking, retrieval strategies, and advanced RAG architectures.", notes: "12 notes", qa: "80+ Q&A" },
-  "mcp":                { num: "04", subtitle: "The Protocol",  description: "Model Context Protocol - how AI systems talk to tools, APIs, and external services.", notes: "9 notes",  qa: "40+ Q&A" },
-  "agents":             { num: "05", subtitle: "The Actors",    description: "Agent fundamentals and patterns across GCP ADK, LangChain, LangGraph, and CrewAI.", notes: "8 notes",  qa: "50+ Q&A" },
-  "agentic-ai":         { num: "06", subtitle: "The Systems",   description: "Multi-agent systems, planning, memory, evaluation, and full agentic system design.", notes: "12 notes", qa: "60+ Q&A" },
+const MODULE_META: Record<string, { num: string; subtitle: string; description: string; notes: string; qa: string }> = {
+  "llm-models":         { num: "01", subtitle: "The Engine",    description: "How large language models work under the hood — transformers, attention, training, fine-tuning, and inference optimization.", notes: "12 notes", qa: "68+ Q&A" },
+  "prompt-engineering": { num: "02", subtitle: "The Interface", description: "The art and science of talking to models — from basics to advanced techniques and production prompt systems.", notes: "6 notes",  qa: "65+ Q&A" },
+  "rag":                { num: "03", subtitle: "The Memory",    description: "Retrieval-Augmented Generation — how to give LLMs access to your own knowledge and keep answers grounded.", notes: "12 notes", qa: "80+ Q&A" },
+  "mcp":                { num: "04", subtitle: "The Protocol",  description: "Model Context Protocol — the emerging standard that lets AI models securely interact with tools, APIs, and data sources.", notes: "9 notes",  qa: "40+ Q&A" },
+  "agents":             { num: "05", subtitle: "The Actors",    description: "AI agents and frameworks — LangChain, LangGraph, CrewAI, and GCP ADK from simple to complex agent architectures.", notes: "8 notes",  qa: "50+ Q&A" },
+  "agentic-ai":         { num: "06", subtitle: "The Systems",   description: "Full agentic AI systems — architectural patterns, multi-agent coordination, evaluation, and production deployment.", notes: "12 notes", qa: "60+ Q&A" },
 };
 
 const LEARNING_PATHS = [
-  { label: "A", title: "Conceptual",     desc: "New to GenAI - start here for a guided overview" },
-  { label: "B", title: "Interview Prep", desc: "Accelerated deep-dive through Q&A banks" },
-  { label: "C", title: "Hands-On",       desc: "Code labs across 4 frameworks" },
-  { label: "D", title: "Full Sequence",  desc: "Complete curriculum from LLMs to Agentic AI" },
+  { label: "A", title: "Conceptual",     desc: "New to GenAI — start here for a guided conceptual overview of the full stack." },
+  { label: "B", title: "Interview Prep", desc: "Accelerated deep-dive through Q&A banks to ace GenAI engineering interviews." },
+  { label: "C", title: "Hands-On",       desc: "Code labs across 4 agent frameworks: LangChain, LangGraph, CrewAI, GCP ADK." },
+  { label: "D", title: "Full Sequence",  desc: "Complete curriculum from LLMs to Agentic AI — the recommended path." },
 ];
 
-const STACK_PILLS = ["LLMs", "Prompts", "RAG", "MCP", "Agents", "Agentic AI"];
+function StarSvg() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+    </svg>
+  );
+}
 
 export default function HomePage() {
-  const nav = getNavigationTree();
+  const { modules } = getNavigationTree();
 
   return (
-    <div className="min-h-screen flex flex-col">
-
-      {/* ── Header ─────────────────────────────────────────────────────── */}
+    <div className="min-h-screen flex flex-col bg-sun-bg">
+      {/* Header */}
       <header className="bg-white border-b-2 border-sun-yellow px-4 sm:px-6 h-13 flex items-center justify-between gap-3 sticky top-0 z-40">
         <span className="font-bold text-sun-dark tracking-tight text-sm">Learn GenAI</span>
         <div className="flex items-center gap-2">
           <a
             href="https://github.com/sundante/sun-course-genai"
-            target="_blank"
-            rel="noopener noreferrer"
+            target="_blank" rel="noopener noreferrer"
             className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold bg-sun-yellow text-sun-dark hover:bg-sun-yellow-dk rounded-md px-2.5 py-1 transition-colors"
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
-            Github
+            <StarSvg /> Github
           </a>
           <a
             href="https://sunmintz.com/"
-            target="_blank"
-            rel="noopener noreferrer"
+            target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center text-xs font-semibold bg-sun-yellow text-sun-dark hover:bg-sun-yellow-dk rounded-md px-3 py-1.5 transition-colors"
           >
             sunmintz.com
@@ -49,7 +51,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* ── Hero ───────────────────────────────────────────────────────── */}
+      {/* Hero */}
       <section className="bg-sun-dark text-white px-4 sm:px-6 py-10 border-b-2 border-sun-yellow">
         <div className="max-w-3xl mx-auto text-center">
           <p className="text-xs font-bold uppercase tracking-widest text-sun-yellow mb-3">
@@ -63,12 +65,11 @@ export default function HomePage() {
             A structured, practical curriculum from foundational LLMs to fully autonomous Agentic systems.
           </p>
 
-          {/* Stack pills */}
           <div className="flex flex-wrap justify-center gap-2 mb-7">
-            {STACK_PILLS.map((pill, i) => (
+            {["LLMs", "Prompts", "RAG", "MCP", "Agents", "Agentic AI"].map((pill, i, arr) => (
               <span key={pill} className="flex items-center gap-1.5 text-xs font-medium text-white/80">
                 <span className="bg-white/10 border border-white/20 rounded px-2 py-0.5">{pill}</span>
-                {i < STACK_PILLS.length - 1 && <span className="text-sun-yellow text-xs">→</span>}
+                {i < arr.length - 1 && <span className="text-sun-yellow text-xs">→</span>}
               </span>
             ))}
           </div>
@@ -90,17 +91,16 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Module Grid ────────────────────────────────────────────────── */}
+      {/* Module grid */}
       <section className="px-4 sm:px-6 py-8 bg-sun-bg">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-sun-muted mb-4">Curriculum</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {nav.modules.filter(m => MODULE_META[m.slug]).map((mod) => {
+          <h2 className="text-xs font-bold uppercase tracking-widest text-sun-muted mb-5">Curriculum</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {modules.map((mod) => {
               const meta = MODULE_META[mod.slug];
-              const firstLeaf = mod.items.find(i => i.filePath);
-              const firstSlug = firstLeaf?.filePath?.split("/").pop()?.replace(".md", "").toLowerCase().replace(/_/g, "-");
-              const href = firstSlug ? `/learn/${mod.slug}/${firstSlug}` : "#";
-
+              if (!meta) return null;
+              const firstPage = mod.items[0];
+              const href = firstPage?.href ?? `/learn/${mod.slug}/index`;
               return (
                 <Link
                   key={mod.slug}
@@ -128,15 +128,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Stats Strip ────────────────────────────────────────────────── */}
+      {/* Stats strip */}
       <section className="bg-sun-yellow px-4 sm:px-6 py-5">
         <div className="max-w-5xl mx-auto flex flex-wrap justify-center sm:justify-between gap-4">
-          {[
-            ["150+", "Deep-dive notes"],
-            ["4",    "Agent frameworks"],
-            ["298+", "Interview Q&A"],
-            ["Free", "Always"],
-          ].map(([stat, label]) => (
+          {[["150+", "Deep-dive notes"], ["4", "Agent frameworks"], ["298+", "Interview Q&A"], ["Free", "Always"]].map(([stat, label]) => (
             <div key={label} className="text-center">
               <div className="text-xl font-bold text-sun-dark">{stat}</div>
               <div className="text-xs font-medium text-sun-dark/70">{label}</div>
@@ -145,7 +140,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Learning Paths ─────────────────────────────────────────────── */}
+      {/* Learning paths */}
       <section className="px-4 sm:px-6 py-8 bg-sun-bg border-t border-sun-yellow-bdr">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-xs font-bold uppercase tracking-widest text-sun-muted mb-4">Learning Paths</h2>
@@ -163,10 +158,15 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Footer ─────────────────────────────────────────────────────── */}
+      {/* Footer */}
       <footer className="bg-sun-dark text-white/60 px-4 sm:px-6 py-6 mt-auto border-t-2 border-sun-yellow">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-          <span>© 2026 <a href="https://sunmintz.com/" className="text-sun-yellow hover:text-white transition-colors">sunmintz.com</a>. Built by Suryaprakash Singh.</span>
+          <span>
+            © 2026{" "}
+            <a href="https://sunmintz.com/" className="text-sun-yellow hover:text-white transition-colors">
+              sunmintz.com
+            </a>. Built by Suryaprakash Singh.
+          </span>
           <div className="flex items-center gap-4">
             <a href="https://github.com/sundante/sun-course-genai" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">GitHub</a>
             <a href="https://www.linkedin.com/in/suryaprakash-s-singh/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">LinkedIn</a>
@@ -174,7 +174,6 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
-
     </div>
   );
 }
