@@ -131,6 +131,39 @@ Personal productivity agents are where most hobby/weekend projects start — low
 
 ---
 
+## When NOT to Use an Agent
+
+Agents are powerful but not universally appropriate. Applying an agent to the wrong problem adds cost, latency, and unpredictability without any benefit.
+
+### The Core Question: Can You Predict the Path?
+
+If the majority of user interactions follow predictable paths that can be mapped in advance, a **deterministic workflow** is almost always the better choice. Agents exist to handle complexity and edge cases — if there are none, they add overhead with no upside.
+
+Use this framework to decide:
+
+| Question | If Yes → |
+|---|---|
+| Can you predict 80%+ of user paths in advance? | Build a deterministic workflow |
+| Do unpredictable edge cases regularly break the experience? | Consider an agent |
+| Does the task span multiple data sources with complex conditional logic? | Agents are well-suited |
+| Is unpredictability in outputs unacceptable (compliance, safety-critical)? | Avoid agents, or enforce strict guardrails |
+
+### Concrete Contrast
+
+**Deterministic workflow — Lead qualification:**
+A company size, industry, and engagement score map to a known scoring rubric. Every input follows the same logic tree. A rules engine or simple script handles this reliably, with full auditability. No agent needed.
+
+**Agent-based — Complex loan application:**
+Variable income sources, mixed credit histories, regional regulations, missing documents, and unusual property types create thousands of possible paths. A fixed workflow breaks on edge cases constantly. An agent can reason over the specifics of each application and adapt its approach — this is where agents earn their complexity cost.
+
+### The Simplest Heuristic
+
+> If you can fully map the decision logic before writing a single line of code, build it deterministically.
+
+Only reach for an agent when the *unpredictability of the task itself* is the core challenge.
+
+---
+
 ## Choosing a Use Case to Start With
 
 If you're new to building agents, pick something that is:

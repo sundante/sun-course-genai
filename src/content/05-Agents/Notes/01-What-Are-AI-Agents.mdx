@@ -39,6 +39,58 @@ This **Perceive → Reason → Plan → Act** loop runs until the task is comple
 
 ---
 
+## Why an LLM + a Database Is Not an Agent
+
+A common misconception is that connecting an LLM to a data source creates an agent. It doesn't. The LLM can now retrieve facts — but it still can't *act* on the world.
+
+A functioning agent system requires four coordinated components:
+
+| Component | Role |
+|---|---|
+| **AI Model** | Reasoning engine — interprets context and decides what to do |
+| **Data Layer** | Real-time access to live systems (databases, APIs, documents) |
+| **Code Execution** | Runs computations, calls APIs, performs actions |
+| **Specialized Models** | Handles domain-specific sub-tasks (vision, classification, scoring) |
+
+The power of an agent comes from **orchestrating these four components together** — not from any single component in isolation. Swapping in a smarter model without the surrounding system produces a smarter chatbot, not an agent.
+
+---
+
+## The Four Characteristics of an Agent
+
+Beyond the perceive-reason-plan-act loop, agents are defined by four behavioral characteristics:
+
+### Reflective
+An agent monitors its own outputs and adjusts its approach when something isn't working. For example, if a classification agent's accuracy starts dropping on a new data distribution, it can detect this signal and revise its strategy — without human intervention.
+
+### Interactive
+An agent communicates across multiple parties — users, other agents, and external systems. It adapts its communication style to context (technical when querying an API, plain language when responding to a user).
+
+### Reactive and Proactive
+An agent doesn't just respond to what has happened — it also anticipates what's needed. A reactive agent responds to a user's request; a proactive agent notices a missing document mid-task and requests it *before* being asked, rather than failing later.
+
+### Autonomous
+An agent operates across a sequence of steps without requiring human confirmation at each one. Once given a goal, it makes the intermediate decisions itself.
+
+---
+
+## The Perception Component
+
+The Perceive step in the agent loop is more than just reading a user message. A full perception layer:
+
+- Receives inputs across multiple modalities: **text, audio, images, structured data**
+- Processes and normalizes them into a unified representation the LLM can reason over
+- Updates the agent's current state before each reasoning step
+
+**Perception cycle:**
+```
+Sensors (inputs) → Processing (normalization, extraction) → State Update (agent context refreshed)
+```
+
+**Example:** A health monitoring agent doesn't just read a user's text question. It simultaneously ingests meal photos, dietary preference data, and health metrics — processes all of them — then updates its understanding of the user's current state before deciding what to recommend.
+
+---
+
 ## Anatomy of an Agent
 
 ```
