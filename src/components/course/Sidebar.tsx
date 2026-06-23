@@ -25,18 +25,23 @@ function containsPath(items: NavItem[], pathname: string): boolean {
   return false;
 }
 
-function NavLeaf({ item, depth = 0 }: { item: NavItem; depth?: number }) {
+function NavLeaf({ item, index }: { item: NavItem; index?: number }) {
   const pathname = usePathname();
   const active = pathname === item.href;
   return (
     <Link
       href={item.href}
-      className={`block text-sm py-1 px-3 rounded-md transition-colors leading-snug ${
+      className={`flex items-baseline gap-1.5 text-sm py-1 px-3 rounded-md transition-colors leading-snug ${
         active
           ? "bg-sun-yellow-dim text-sun-amber font-semibold"
           : "text-sun-muted hover:text-sun-dark hover:bg-sun-yellow-dim"
       }`}
     >
+      {index !== undefined && (
+        <span className="shrink-0 text-[10px] font-bold tabular-nums opacity-50">
+          {String(index + 1).padStart(2, "0")}
+        </span>
+      )}
       {item.title}
     </Link>
   );
@@ -60,8 +65,8 @@ function NavSection({ item }: { item: NavItem }) {
       </button>
       {open && (
         <div className="pl-2 border-l border-sun-yellow-bdr space-y-0.5">
-          {item.children!.map((child) =>
-            child.children ? <NavSection key={child.href} item={child} /> : <NavLeaf key={child.href} item={child} />
+          {item.children!.map((child, i) =>
+            child.children ? <NavSection key={child.href} item={child} /> : <NavLeaf key={child.href} item={child} index={i} />
           )}
         </div>
       )}
@@ -69,7 +74,7 @@ function NavSection({ item }: { item: NavItem }) {
   );
 }
 
-function ModuleSection({ mod }: { mod: NavModule }) {
+function ModuleSection({ mod, index }: { mod: NavModule; index: number }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(() => containsPath(mod.items, pathname));
 
@@ -80,6 +85,7 @@ function ModuleSection({ mod }: { mod: NavModule }) {
         className="flex items-center gap-1.5 w-full text-left text-xs font-bold uppercase tracking-widest text-sun-dark py-2 px-1 hover:text-sun-amber transition-colors"
       >
         {open ? <ChevronDown className="h-3.5 w-3.5 shrink-0" /> : <ChevronRight className="h-3.5 w-3.5 shrink-0" />}
+        <span className="text-sun-yellow mr-0.5">{String(index + 1).padStart(2, "0")}.</span>
         {mod.title}
       </button>
       {open && (
@@ -131,8 +137,8 @@ export function Sidebar({ nav, mobile = false }: Props) {
   if (mobile) {
     return (
       <div className="py-5 px-4">
-        {nav.modules.map((mod) => (
-          <ModuleSection key={mod.slug} mod={mod} />
+        {nav.modules.map((mod, i) => (
+          <ModuleSection key={mod.slug} mod={mod} index={i} />
         ))}
       </div>
     );
@@ -158,8 +164,8 @@ export function Sidebar({ nav, mobile = false }: Props) {
             </button>
           </div>
           <div className="flex-1 overflow-y-auto px-4 pb-5">
-            {nav.modules.map((mod) => (
-              <ModuleSection key={mod.slug} mod={mod} />
+            {nav.modules.map((mod, i) => (
+              <ModuleSection key={mod.slug} mod={mod} index={i} />
             ))}
           </div>
         </>

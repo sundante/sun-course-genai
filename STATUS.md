@@ -82,20 +82,29 @@ The remote root must look like:
 ### UI Components
 - [x] `Header` — sticky, social links, GitHub star button
 - [x] `Sidebar` — collapsible rail, expandable modules, active link tracking
+- [x] `Sidebar` — module-level chapter numbers (`01. LLM Models` … `07. Knowledge Check`)
+- [x] `Sidebar` — sub-concept leaf item numbers (`01 What Are AI Agents`, `02 Agent Capabilities` …)
 - [x] `MobileNav` — sheet drawer for mobile
 - [x] `AudienceToggle` — All / Technical / Non-Technical modes, persists to localStorage
-- [x] `TableOfContents` — sticky, IntersectionObserver active heading tracking
+- [x] `TableOfContents` — sticky, IntersectionObserver active heading tracking, independently scrollable
 - [x] `PageNav` — prev/next navigation footer
 - [x] `UnderDevelopment` — animated placeholder for WIP pages
 
-### Course Content (105 files → 103 HTML pages)
+### Course Content (107 files → 105 HTML pages)
 - [x] 01 — LLM Models (12 notes + Q&A)
 - [x] 02 — Prompt Engineering (6 notes + Q&A)
 - [x] 03 — RAG (12 notes + system designs + Q&A)
 - [x] 04 — MCP (9 notes + Q&A)
-- [x] 05 — Agents (LangChain, LangGraph, CrewAI, GCP ADK)
+- [x] 05 — Agents (4 concept notes + LangChain, LangGraph, CrewAI, GCP ADK framework labs)
 - [x] 06 — Agentic AI (12 notes + system designs + code labs + Q&A)
 - [x] Knowledge Check — all interview questions
+
+### Chapter 05 — Agents Concept Notes
+
+- [x] `01-What-Are-AI-Agents.mdx` — definition, 4 pillars, anatomy, autonomy spectrum
+- [x] `02-Agent-Capabilities.mdx` — perception, reasoning, planning, tool use, memory, self-correction
+- [x] `03-Agent-Use-Cases.mdx` — use cases across industries (software, healthcare, finance, productivity)
+- [x] `04-Enterprise-vs-Personal-Agents.mdx` — security, observability, cost governance, HITL patterns
 
 ---
 
