@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronDown, ChevronRight, PanelLeftClose, PanelLeftOpen } from "lucide-react";
@@ -17,17 +17,39 @@ function getModuleAbbr(title: string): string {
   return title.slice(0, 3).toUpperCase();
 }
 
+function normalizePath(p: string) {
+  return p.replace(/\/$/, "");
+}
+
 function containsPath(items: NavItem[], pathname: string): boolean {
+  const normalized = normalizePath(pathname);
   for (const item of items) {
-    if (item.href === pathname) return true;
-    if (item.children && containsPath(item.children, pathname)) return true;
+    if (normalizePath(item.href) === normalized) return true;
+    if (item.children && containsPath(item.children, normalized)) return true;
   }
   return false;
 }
 
 function NavLeaf({ item, index }: { item: NavItem; index?: number }) {
   const pathname = usePathname();
-  const active = pathname === item.href;
+  const active = normalizePath(pathname) === normalizePath(item.href);
+
+  if (item.wip) {
+    return (
+      <span className="flex items-baseline gap-1.5 text-sm py-1 px-3 rounded-md leading-snug cursor-default select-none">
+        {index !== undefined && (
+          <span className="shrink-0 text-[10px] font-bold tabular-nums opacity-30">
+            {String(index + 1).padStart(2, "0")}
+          </span>
+        )}
+        <span className="text-sun-wip italic truncate">{item.title}</span>
+        <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wide text-sun-wip/70 border border-sun-wip/40 rounded px-1 py-px ml-auto">
+          WIP
+        </span>
+      </span>
+    );
+  }
+
   return (
     <Link
       href={item.href}
@@ -51,6 +73,11 @@ function NavSection({ item }: { item: NavItem }) {
   const pathname = usePathname();
   const hasChildren = item.children && item.children.length > 0;
   const [open, setOpen] = useState(() => containsPath(item.children ?? [], pathname));
+
+  useEffect(() => {
+    const shouldOpen = containsPath(item.children ?? [], pathname);
+    setOpen(shouldOpen);
+  }, [pathname, item.children]);
 
   if (!hasChildren) return <NavLeaf item={item} />;
 
@@ -77,6 +104,11 @@ function NavSection({ item }: { item: NavItem }) {
 function ModuleSection({ mod, index }: { mod: NavModule; index: number }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(() => containsPath(mod.items, pathname));
+
+  useEffect(() => {
+    const shouldOpen = containsPath(mod.items, pathname);
+    setOpen(shouldOpen);
+  }, [pathname, mod.items]);
 
   return (
     <div className="mb-1">
@@ -167,6 +199,11 @@ export function Sidebar({ nav, mobile = false }: Props) {
             {nav.modules.map((mod, i) => (
               <ModuleSection key={mod.slug} mod={mod} index={i} />
             ))}
+          </div>
+          <div className="px-4 py-2.5 border-t border-sun-yellow-bdr bg-sun-bg/60">
+            <p className="text-[10px] text-sun-wip leading-snug">
+              <span className="font-semibold">WIP</span> pages are under active development - content is coming soon.
+            </p>
           </div>
         </>
       )}

@@ -3,6 +3,7 @@ export interface NavItem {
   href: string;
   filePath?: string;
   children?: NavItem[];
+  wip?: boolean;
 }
 
 export interface NavModule {

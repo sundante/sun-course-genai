@@ -1,4 +1,4 @@
-# Agent Capabilities
+# AI Agent Capabilities
 
 What separates a capable AI agent from a basic chatbot is a set of specific capabilities that work together. Understanding each one helps you build better agents and diagnose why an agent fails.
 
@@ -6,12 +6,12 @@ What separates a capable AI agent from a basic chatbot is a set of specific capa
 
 ## 1. Perception & Context Understanding
 
-An agent must understand what it's been given — not just the user's words but the full context:
+An agent must understand what it's been given - not just the user's words but the full context:
 
-- **Structured data** — JSON responses, database records, CSV files
-- **Unstructured text** — emails, documents, web pages, code
-- **Tool output** — results from previous actions in the current session
-- **Environmental state** — what has already been done, what failed
+- **Structured data** - JSON responses, database records, CSV files
+- **Unstructured text** - emails, documents, web pages, code
+- **Tool output** - results from previous actions in the current session
+- **Environmental state** - what has already been done, what failed
 
 Good agents are built to handle noisy, incomplete, or unexpected input gracefully.
 
@@ -19,11 +19,11 @@ Good agents are built to handle noisy, incomplete, or unexpected input gracefull
 
 ## 2. Reasoning & Chain-of-Thought
 
-The LLM core doesn't just answer — it **thinks through** the problem:
+The LLM core doesn't just answer - it **thinks through** the problem:
 
-- **Chain-of-Thought (CoT)** — the model generates intermediate reasoning steps before giving a final answer
-- **ReAct** — interleaves Reasoning and Acting: think, act, observe, think again
-- **Self-ask** — the model asks itself follow-up questions before committing to an action
+- **Chain-of-Thought (CoT)** - the model generates intermediate reasoning steps before giving a final answer
+- **ReAct** - interleaves Reasoning and Acting: think, act, observe, think again
+- **Self-ask** - the model asks itself follow-up questions before committing to an action
 
 The quality of reasoning determines whether the agent stays on track or spirals into loops.
 
@@ -64,7 +64,7 @@ Function calling (supported natively by GPT-4, Claude, Gemini) lets the LLM outp
 
 ## 5. Memory
 
-Memory is how an agent avoids "goldfish mode" — forgetting everything after each step.
+Memory is how an agent avoids "goldfish mode" - forgetting everything after each step.
 
 | Memory Type | Where Stored | Duration | Best For |
 |---|---|---|---|
@@ -81,9 +81,9 @@ The challenge: the context window is finite. Long-running agents must **compress
 
 Some tasks are too big or too complex for a single agent. Multi-agent systems distribute the work:
 
-- **Orchestrator + Worker** — a planner agent breaks the task, worker agents execute sub-tasks
-- **Peer-to-peer** — agents communicate directly (e.g., debate to reach consensus)
-- **Specialist crews** — predefined roles (researcher, writer, critic) each with specific tools and instructions
+- **Orchestrator + Worker** - a planner agent breaks the task, worker agents execute sub-tasks
+- **Peer-to-peer** - agents communicate directly (e.g., debate to reach consensus)
+- **Specialist crews** - predefined roles (researcher, writer, critic) each with specific tools and instructions
 
 Frameworks like **CrewAI** and **LangGraph** are specifically designed for multi-agent coordination.
 
@@ -91,12 +91,12 @@ Frameworks like **CrewAI** and **LangGraph** are specifically designed for multi
 
 ## 7. Self-Correction & Reflection
 
-Capable agents don't just fail silently — they detect errors and recover:
+Capable agents don't just fail silently - they detect errors and recover:
 
-- **Output validation** — checking if the tool result makes sense before proceeding
-- **Retry logic** — calling a tool again with different parameters if the first attempt failed
-- **Reflection prompts** — asking the LLM to critique its own output before returning it
-- **Fallback strategies** — switching to a different tool or approach if the primary path fails
+- **Output validation** - checking if the tool result makes sense before proceeding
+- **Retry logic** - calling a tool again with different parameters if the first attempt failed
+- **Reflection prompts** - asking the LLM to critique its own output before returning it
+- **Fallback strategies** - switching to a different tool or approach if the primary path fails
 
 **Reflection loop example:**
 ```
@@ -121,8 +121,8 @@ Capable agents don't just fail silently — they detect errors and recover:
 
 ## Study Notes
 
-- Tools = hands, Memory = notepad, Reasoning = brain — all three are required for a capable agent
-- **Function calling** is the mechanism; **tools** are what get called — don't conflate them
+- Tools = hands, Memory = notepad, Reasoning = brain - all three are required for a capable agent
+- **Function calling** is the mechanism; **tools** are what get called - don't conflate them
 - Memory management is often the hardest engineering problem in production agents
-- Self-correction dramatically improves reliability but adds latency — tune the balance for your use case
+- Self-correction dramatically improves reliability but adds latency - tune the balance for your use case
 - Multi-agent systems are powerful but harder to debug: start single-agent, add agents when justified

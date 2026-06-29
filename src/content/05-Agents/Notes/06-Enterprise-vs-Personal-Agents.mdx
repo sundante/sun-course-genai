@@ -1,6 +1,6 @@
 # Enterprise vs Personal AI Agents
 
-Building an AI agent for a weekend project and building one that runs in a hospital or bank are fundamentally different engineering challenges. The gap isn't the AI model — it's everything around it: reliability, security, auditability, and governance.
+Building an AI agent for a weekend project and building one that runs in a hospital or bank are fundamentally different engineering challenges. The gap isn't the AI model - it's everything around it: reliability, security, auditability, and governance.
 
 ---
 
@@ -10,7 +10,7 @@ Building an AI agent for a weekend project and building one that runs in a hospi
 |---|---|---|
 | **Goal** | Learn, explore, automate a personal task | Solve a business problem at scale, reliably |
 | **Users** | Just you (or a small group) | Employees, customers, regulators |
-| **Stakes** | Low — a wrong answer is annoying | High — a wrong answer can mean legal liability or patient harm |
+| **Stakes** | Low - a wrong answer is annoying | High - a wrong answer can mean legal liability or patient harm |
 | **Scale** | Tens of runs | Thousands of concurrent runs |
 | **Budget** | Willing to pay a few dollars | Must optimize cost per run at scale |
 | **Maintenance** | You fix it when it breaks | Must be monitored 24/7; SLA commitments |
@@ -51,32 +51,32 @@ Building an AI agent for a weekend project and building one that runs in a hospi
 
 ### Reliability & Correctness
 
-- **Structured output validation** — every LLM response parsed and validated against a schema before acting on it
-- **Retry + fallback logic** — if a tool call fails, retry with backoff; if it still fails, gracefully degrade
-- **Human-in-the-loop checkpoints** — for consequential actions (send email, process payment), require human confirmation
-- **Graceful failure modes** — agent failing should not silently corrupt data
+- **Structured output validation** - every LLM response parsed and validated against a schema before acting on it
+- **Retry + fallback logic** - if a tool call fails, retry with backoff; if it still fails, gracefully degrade
+- **Human-in-the-loop checkpoints** - for consequential actions (send email, process payment), require human confirmation
+- **Graceful failure modes** - agent failing should not silently corrupt data
 
 ### Security & Access Control
 
-- **Least-privilege tool access** — the agent only has access to the data and APIs it needs for the specific task
-- **No hardcoded credentials** — secrets managed by a secrets manager (AWS Secrets Manager, HashiCorp Vault)
-- **Input sanitization** — protect against prompt injection (malicious content in tool results trying to hijack the agent)
-- **Output filtering** — PII masking, content policy checks before responses reach end users
-- **Authentication** — agent actions tied to a user identity for audit purposes
+- **Least-privilege tool access** - the agent only has access to the data and APIs it needs for the specific task
+- **No hardcoded credentials** - secrets managed by a secrets manager (AWS Secrets Manager, HashiCorp Vault)
+- **Input sanitization** - protect against prompt injection (malicious content in tool results trying to hijack the agent)
+- **Output filtering** - PII masking, content policy checks before responses reach end users
+- **Authentication** - agent actions tied to a user identity for audit purposes
 
 ### Observability & Auditability
 
-- **Trace every agent step** — full log of: input received, reasoning trace, tool called, result, final output
-- **Latency and cost tracking** — per-run cost (token count × price) and time-to-complete
-- **Error rate dashboards** — track failure modes in production
-- **Compliance audit trail** — in regulated industries, you may need to prove what the agent did and why
+- **Trace every agent step** - full log of: input received, reasoning trace, tool called, result, final output
+- **Latency and cost tracking** - per-run cost (token count × price) and time-to-complete
+- **Error rate dashboards** - track failure modes in production
+- **Compliance audit trail** - in regulated industries, you may need to prove what the agent did and why
 
 ### Cost Governance
 
-- **Token budgets** — hard limits on tokens per run to prevent runaway loops burning through API quota
-- **Caching** — cache repeated tool calls (e.g., the same document lookup in the same session)
-- **Model tiering** — use a cheaper/faster model for routine steps; escalate to a capable model only when needed
-- **Rate limiting** — protect downstream APIs from being hammered by agent loops
+- **Token budgets** - hard limits on tokens per run to prevent runaway loops burning through API quota
+- **Caching** - cache repeated tool calls (e.g., the same document lookup in the same session)
+- **Model tiering** - use a cheaper/faster model for routine steps; escalate to a capable model only when needed
+- **Rate limiting** - protect downstream APIs from being hammered by agent loops
 
 ---
 
@@ -98,7 +98,7 @@ Is this for personal use only?
 
 | Situation | Recommendation |
 |---|---|
-| Learning / prototyping | LangChain, CrewAI — fast to get started |
+| Learning / prototyping | LangChain, CrewAI - fast to get started |
 | Simple internal tool | LangChain/LangGraph with custom tools |
 | Complex multi-agent system | LangGraph (controllable state machines) or CrewAI (role-based crews) |
 | GCP/Vertex AI ecosystem | Google ADK |
@@ -126,18 +126,18 @@ The right pattern depends on the **cost of a wrong action**. High cost → more 
 
 ## Common Enterprise Anti-Patterns
 
-1. **Giving the agent too much access** — an agent that can read and write all tables in your database is a prompt injection attack away from a data breach
-2. **No token budget** — a loop that halluccinates a goal and keeps calling tools until it hits your API rate limit (and your bill)
-3. **Ignoring latency** — a 30-second agent response is fine for async tasks but terrible for real-time customer interactions
-4. **No fallback** — when the LLM or a tool is unavailable, the agent should degrade gracefully, not crash the workflow
-5. **Logging the model's reasoning but not the tool calls** — you need both to understand why an agent did what it did
+1. **Giving the agent too much access** - an agent that can read and write all tables in your database is a prompt injection attack away from a data breach
+2. **No token budget** - a loop that halluccinates a goal and keeps calling tools until it hits your API rate limit (and your bill)
+3. **Ignoring latency** - a 30-second agent response is fine for async tasks but terrible for real-time customer interactions
+4. **No fallback** - when the LLM or a tool is unavailable, the agent should degrade gracefully, not crash the workflow
+5. **Logging the model's reasoning but not the tool calls** - you need both to understand why an agent did what it did
 
 ---
 
 ## Study Notes
 
-- The model is often the **smallest part** of the engineering challenge for enterprise agents — the hard work is reliability, security, and observability
+- The model is often the **smallest part** of the engineering challenge for enterprise agents - the hard work is reliability, security, and observability
 - Start with hobby projects to understand how agents behave; bring those lessons when building production systems
-- Human-in-the-loop is not a limitation — for high-stakes domains it's **the correct design**
-- Cost governance is not an afterthought — a misconfigured agent loop can spend thousands of dollars in minutes
+- Human-in-the-loop is not a limitation - for high-stakes domains it's **the correct design**
+- Cost governance is not an afterthought - a misconfigured agent loop can spend thousands of dollars in minutes
 - Prompt injection is a real attack vector: any content that enters the agent's context from an external source is untrusted input

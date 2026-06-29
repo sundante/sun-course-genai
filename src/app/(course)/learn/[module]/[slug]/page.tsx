@@ -4,12 +4,15 @@ import remarkGfm from "remark-gfm";
 import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeHighlight from "rehype-highlight";
+import rehypeRaw from "rehype-raw";
 import { getAllPages, getPageWithNavigation } from "@/lib/content/loader";
 import { getNavigationTree } from "@/lib/content/nav";
 import { remarkRewriteMdLinks } from "@/lib/content/remarkRewriteMdLinks";
 import { AudienceToggle } from "@/components/course/AudienceToggle";
 import { TableOfContents } from "@/components/course/TableOfContents";
 import { PageNav } from "@/components/course/PageNav";
+import { DisclaimerNote } from "@/components/course/DisclaimerNote";
+import { mdxComponents } from "@/components/course/MdxComponents";
 
 interface Props {
   params: Promise<{ module: string; slug: string }>;
@@ -49,6 +52,7 @@ export default async function CoursePage({ params }: Props) {
         remarkRewriteMdLinks(page.filePath, flatPages) as never,
       ],
       rehypePlugins: [
+        rehypeRaw,
         rehypeSlug,
         [rehypeAutolinkHeadings, { behavior: "wrap" }],
         rehypeHighlight,
@@ -74,7 +78,7 @@ export default async function CoursePage({ params }: Props) {
           <AudienceToggle />
           <article>
             <div className="prose prose-base max-w-none">
-              <MDXRemote source={page.rawContent} options={mdxOptions} />
+              <MDXRemote source={page.rawContent} options={mdxOptions} components={mdxComponents} />
             </div>
           </article>
         </div>
@@ -85,9 +89,14 @@ export default async function CoursePage({ params }: Props) {
         )}
       </div>
 
-      {/* Sticky prev/next footer */}
-      <div className="sticky bottom-0 z-10 bg-sun-bg border-t-2 border-sun-yellow px-6 lg:px-8 py-3">
-        <PageNav prev={prev} next={next} className="flex justify-between" />
+      {/* Sticky prev/next + disclaimer footer */}
+      <div className="sticky bottom-0 z-10 bg-sun-bg border-t-2 border-sun-yellow">
+        <div className="px-6 lg:px-8 py-3">
+          <PageNav prev={prev} next={next} className="flex justify-between" />
+        </div>
+        <div className="border-t border-sun-coral-bdr/50">
+          <DisclaimerNote />
+        </div>
       </div>
     </div>
   );
