@@ -1,6 +1,7 @@
 import { Header } from "@/components/course/Header";
 import { MobileNav } from "@/components/course/MobileNav";
 import { Sidebar } from "@/components/course/Sidebar";
+import { DisclaimerModal } from "@/components/course/DisclaimerModal";
 import { getNavigationTree } from "@/lib/content/nav";
 
 export default function CourseLayout({ children }: { children: React.ReactNode }) {
@@ -15,6 +16,7 @@ export default function CourseLayout({ children }: { children: React.ReactNode }
           {children}
         </main>
       </div>
+      <DisclaimerModal />
     </div>
   );
 }

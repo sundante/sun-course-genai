@@ -10,7 +10,7 @@ const MODULE_SLUG_MAP: Record<string, string> = {
   "Prompt Engineering": "prompt-engineering",
   "RAG": "rag",
   "MCP": "mcp",
-  "Agents": "agents",
+  "AI Agents": "agents",
   "Agentic AI": "agentic-ai",
   "Knowledge Check": "knowledge-check",
 };
@@ -43,6 +43,19 @@ export function filePathToSlug(filePath: string, moduleRootDir: string): string 
 
 let _cache: NavigationTree | null = null;
 
+function isStubFile(filePath: string): boolean {
+  const fullPath = path.join(CONTENT_DIR, filePath);
+  if (!fs.existsSync(fullPath)) return true;
+  const content = fs.readFileSync(fullPath, "utf-8");
+  const lines = content.split("\n");
+  // Count lines with actual body content (not headings, HR, empty, or table rows)
+  const bodyLines = lines.filter((l) => {
+    const t = l.trim();
+    return t.length > 0 && !t.startsWith("#") && !t.startsWith("---") && !t.startsWith("|") && !t.startsWith(">");
+  });
+  return bodyLines.length < 8;
+}
+
 type NavYaml = { nav: NavEntry[] };
 type NavEntry = string | Record<string, string | NavEntry[]>;
 
@@ -63,9 +76,10 @@ function parseItems(
         const filePath = value;
         const slug = filePathToSlug(filePath, moduleRootDir);
         const href = `/learn/${moduleSlug}/${slug}`;
+        const wip = isStubFile(filePath);
         const ref: PageRef = { title, href, filePath, module: moduleSlug, slug };
         flatPages.push(ref);
-        items.push({ title, href, filePath });
+        items.push({ title, href, filePath, wip });
       } else if (Array.isArray(value)) {
         // Section with children
         const children = parseItems(value, moduleSlug, moduleRootDir, flatPages);
