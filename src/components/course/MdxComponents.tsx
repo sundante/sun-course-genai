@@ -1,4 +1,5 @@
 import { MermaidDiagram } from "./MermaidDiagram";
+import { AgentUseCaseMindmap } from "./AgentUseCaseMindmap";
 import { ComponentPropsWithoutRef, ReactElement } from "react";
 
 function CustomPre(props: ComponentPropsWithoutRef<"pre">) {
@@ -8,14 +9,21 @@ function CustomPre(props: ComponentPropsWithoutRef<"pre">) {
     child &&
     typeof child === "object" &&
     "props" in child &&
-    typeof child.props.className === "string" &&
-    child.props.className.includes("language-mermaid")
+    typeof child.props.className === "string"
   ) {
-    const value =
-      typeof child.props.children === "string"
-        ? child.props.children.trim()
-        : "";
-    return <MermaidDiagram value={value} />;
+    const className = child.props.className;
+
+    if (className.includes("language-mermaid")) {
+      const value =
+        typeof child.props.children === "string"
+          ? child.props.children.trim()
+          : "";
+      return <MermaidDiagram value={value} />;
+    }
+
+    if (className.includes("language-agent-navigator")) {
+      return <AgentUseCaseMindmap />;
+    }
   }
 
   return <pre {...props} />;

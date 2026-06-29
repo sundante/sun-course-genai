@@ -1,25 +1,23 @@
 # AI Agent Use Cases
 
-AI Agents aren't a solution looking for a problem - they're most valuable for tasks that are **multi-step, context-dependent, require tool access, and would be tedious for a human to do repeatedly**. Here's where they shine today and where the industry is heading.
+AI Agents aren't a solution looking for a problem - they're most valuable for tasks that are **multi-step, context-dependent, require tool access, and would be tedious for a human to do repeatedly**.
+
+Use the interactive navigator below to: (1) check if your problem warrants an agent, (2) explore real use cases by domain, (3) pick the right complexity tier and agent type.
+
+```agent-navigator
+```
 
 ---
 
-## The Right Problem for an AI Agent
+## Domain Deep-Dives
 
-Before picking a use case, ask:
-
-1. **Does this require multiple steps?** If yes → agent may help
-2. **Does it require external data or actions?** If yes → agent with tools
-3. **Is the path unpredictable?** If yes → agent (not a hardcoded pipeline)
-4. **Does it repeat frequently?** If yes → automation ROI is high
-
-If the answer to all four is no - a single LLM call or a simple script is probably better.
+The navigator above gives you the overview. The sections below go deeper on the most important domains.
 
 ---
-
-## Use Cases by Domain
 
 ### Software Development
+
+Agents shine here because debugging and refactoring require multi-step reasoning across many files, running code, reading errors, and replanning.
 
 | Task | What the Agent Does |
 |---|---|
@@ -35,6 +33,8 @@ If the answer to all four is no - a single LLM call or a simple script is probab
 
 ### Customer Support & Service
 
+**Why agents vs chatbots:** A chatbot gives a canned response. An agent actually looks up the order, checks the return policy, processes the refund, and sends confirmation - all in one flow.
+
 | Task | What the Agent Does |
 |---|---|
 | **Tier-1 triage** | Classify incoming tickets, pull relevant history, draft reply |
@@ -42,57 +42,44 @@ If the answer to all four is no - a single LLM call or a simple script is probab
 | **Returns/refunds** | Apply policy rules, process in system, confirm via email |
 | **Escalation routing** | Detect sentiment/urgency, route to right team |
 
-**Why agents vs chatbots:** A chatbot gives a canned response. An agent actually looks up the order, checks the return policy, processes the refund, and sends confirmation - all in one flow.
-
 ---
 
 ### Research & Information Synthesis
 
+This is where agents provide the clearest value over a single LLM call - synthesising information from **many sources** in a structured way.
+
 | Task | What the Agent Does |
 |---|---|
 | **Competitive analysis** | Search web, gather data from multiple sources, produce structured report |
-| **Literature review** | Search papers, summarize findings, identify gaps |
+| **Literature review** | Search papers, summarise findings, identify gaps |
 | **Market research** | Aggregate news, filings, trends; extract key signals |
 | **Due diligence** | Pull financial data, flag risks, generate summary memo |
-
-This is where agents provide the clearest value over a single LLM call - synthesizing information from **many sources** in a structured way.
-
----
-
-### Data Analysis & Reporting
-
-| Task | What the Agent Does |
-|---|---|
-| **Ad-hoc queries** | Translate natural language to SQL, run query, explain results |
-| **Report generation** | Pull data, compute metrics, generate charts, write narrative |
-| **Anomaly detection** | Monitor metrics, flag anomalies, identify root cause |
-| **Forecasting** | Gather historical data, run model, summarize outlook |
 
 ---
 
 ### Document Processing
+
+High-volume document processing is one of the fastest ROI categories in enterprise AI.
 
 | Task | What the Agent Does |
 |---|---|
 | **Invoice extraction** | Parse PDF, extract line items, validate, post to ERP |
 | **Contract review** | Identify key clauses, flag non-standard terms, compare to template |
 | **Form processing** | Read form, validate data, trigger downstream workflow |
-| **Meeting notes** | Transcribe, summarize, extract action items, send to task tracker |
-
-High-volume document processing is one of the fastest ROI categories in enterprise AI.
+| **Meeting notes** | Transcribe, summarise, extract action items, send to task tracker |
 
 ---
 
 ### Healthcare
 
+Healthcare agents require strict human-in-the-loop at decision points due to regulatory requirements.
+
 | Task | What the Agent Does |
 |---|---|
-| **Prior authorization** | Check eligibility rules, gather clinical docs, submit to payer |
+| **Prior authorisation** | Check eligibility rules, gather clinical docs, submit to payer |
 | **Patient triage** | Assess symptoms, pull history, suggest urgency level |
 | **Clinical summary** | Read notes, labs, imaging; produce SOAP note or discharge summary |
 | **Coding & billing** | Map clinical notes to ICD/CPT codes, flag discrepancies |
-
-Healthcare agents require strict human-in-the-loop at decision points due to regulatory requirements.
 
 ---
 
@@ -102,21 +89,8 @@ Healthcare agents require strict human-in-the-loop at decision points due to reg
 |---|---|
 | **Compliance checks** | Screen transactions against rules, flag violations, generate SAR |
 | **Earnings analysis** | Parse financial statements, compute ratios, compare to guidance |
-| **Legal discovery** | Search document corpus, tag relevant docs, summarize |
+| **Legal discovery** | Search document corpus, tag relevant docs, summarise |
 | **Contract drafting** | Start from template, fill in terms, flag open issues |
-
----
-
-### Personal Productivity
-
-| Task | What the Agent Does |
-|---|---|
-| **Email management** | Triage inbox, draft replies, unsubscribe, schedule follow-ups |
-| **Calendar scheduling** | Find availability, book meetings, send invites |
-| **Travel planning** | Search flights/hotels, compare options, build itinerary |
-| **Research assistant** | "Find me 5 articles on X, summarize each in 3 bullets" |
-
-Personal productivity agents are where most hobby/weekend projects start - low stakes, high learning value.
 
 ---
 
@@ -168,12 +142,12 @@ Only reach for an agent when the *unpredictability of the task itself* is the co
 
 If you're new to building agents, pick something that is:
 
-- ✅ Well-scoped (clear start/end, measurable success)
-- ✅ Internally facing (lower stakes if it makes mistakes)
-- ✅ Repetitive (high frequency = high ROI)
-- ✅ Already partially manual (you understand the steps)
+- Well-scoped (clear start/end, measurable success)
+- Internally facing (lower stakes if it makes mistakes)
+- Repetitive (high frequency = high ROI)
+- Already partially manual (you understand the steps)
 
-Good first projects: internal research summarizer, ticket triage draft, meeting notes generator, SQL query assistant.
+Good first projects: internal research summariser, ticket triage draft, meeting notes generator, SQL query assistant.
 
 ---
 
@@ -184,3 +158,4 @@ Good first projects: internal research summarizer, ticket triage draft, meeting 
 - Healthcare, finance, and legal use cases require **human-in-the-loop** by design - autonomy is regulated
 - Personal productivity agents are ideal for learning - low stakes, immediate feedback
 - Computer use and long-horizon tasks are the next frontier - production-ready patterns are still evolving
+- Start simple (single ReAct agent) and only graduate to multi-agent or orchestrator when the single agent demonstrably can't handle the task
