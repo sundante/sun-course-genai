@@ -40,113 +40,7 @@ Prior authorization is a multi-stakeholder workflow. These questions must be ans
 
 ## System Architecture Overview
 
-```
-┌──────────────────────────────────────────────────────────────────────────────────┐
-│                         SUBMISSION SURFACE                                        │
-│                                                                                   │
-│   ┌──────────────────┐   ┌──────────────────┐   ┌───────────────────────────┐   │
-│   │  Provider Portal  │   │  EHR Auto-Trigger │   │  Fax / Legacy Payer       │   │
-│   │  (web / mobile)   │   │  (Epic / Cerner   │   │  Portal Ingestion         │   │
-│   │  Staff-submitted  │   │   FHIR R4 event)  │   │  (OCR + eFax gateway)    │   │
-│   └────────┬──────────┘   └────────┬──────────┘   └──────────────┬────────────┘  │
-└────────────┼──────────────────────┼─────────────────────────────┼───────────────┘
-             └──────────────────────┴──────────────┬──────────────┘
-                                                   │  PA request + metadata
-                                                   ▼
-┌──────────────────────────────────────────────────────────────────────────────────┐
-│                    SECURITY & COMPLIANCE LAYER                                    │
-│                                                                                   │
-│   • PHI De-identification: strip / tokenize patient identifiers before           │
-│     passing clinical text to any cloud LLM                                       │
-│   • Prompt Injection Guard: sanitise all free-text clinical note fields          │
-│   • BAA Verification: confirm model provider has signed Business Associate       │
-│     Agreement; route to on-prem model if not                                     │
-│   • Audit Log Init: create immutable audit record (required for HIPAA)           │
-└──────────────────────────────┬───────────────────────────────────────────────────┘
-                               │  Sanitised PA package + urgency flag
-                               ▼
-┌──────────────────────────────────────────────────────────────────────────────────┐
-│                       ORCHESTRATOR AGENT                                          │
-│                                                                                   │
-│   Model: Multi-modal Foundation Model (Claude / Gemini)                          │
-│   Pattern: Plan → Dispatch → Reflect → Route                                     │
-│                                                                                   │
-│   • Routes to URGENT (4hr) or STANDARD (24hr) queue                             │
-│   • Dispatches Evidence Aggregator + Policy Interpreter in parallel              │
-│   • Detects conflicts between evidence and policy findings                       │
-│   • Applies escalation rules before routing to reviewer                          │
-└──────┬──────────────────────────┬──────────────────────────────────┬─────────────┘
-       │                          │                                  │
-       ▼                          ▼                                  ▼
-┌─────────────────┐   ┌───────────────────────┐         ┌───────────────────────┐
-│    EVIDENCE     │   │     POLICY            │         │  LEGACY SYSTEM        │
-│   AGGREGATOR    │   │    INTERPRETER        │         │   CONNECTOR           │
-│                 │   │                       │         │                       │
-│ • FHIR R4 API  │   │ • RAG over payer      │         │ • EHR read (Epic)     │
-│   (labs, meds, │   │   policy PDF library  │         │ • Submit to payer     │
-│   diagnoses)   │   │ • Structured criteria │         │   portal / eFax       │
-│ • OCR scanned  │   │   checklist output    │         │ • Prior PA history    │
-│   docs         │   │ • Policy versioning   │         │ • CMS status updates  │
-└────────┬────────┘   └──────────┬────────────┘         └───────────┬───────────┘
-         └───────────────────────┴──────────────────────────────────┘
-                                 │  Evidence bundle + Policy criteria + Prior PA history
-                                 ▼
-┌──────────────────────────────────────────────────────────────────────────────────┐
-│                    SUBMISSION READINESS AGENT                                     │
-│                                                                                   │
-│   CRITERIA CHECK          │  STATUS     │  ACTION                                │
-│   Diagnosis codes present │  ✅ Found   │  -                                     │
-│   Clinical notes ≥ 90 days│  ✅ Found   │  -                                     │
-│   Lab result: HbA1c       │  ❌ Missing │  Request from provider                 │
-│   Prior treatment failed  │  ⚠️ Partial │  Needs clarification                   │
-│   Step therapy documented │  ✅ Found   │  -                                     │
-│                                                                                   │
-│   Output: COMPLETE (proceed) or INCOMPLETE (notify provider of gaps)            │
-└──────────────────────────────┬───────────────────────────────────────────────────┘
-                               │
-             ┌─────────────────┴──────────────────┐
-             │                                     │
-             ▼                                     ▼
-     INCOMPLETE                               COMPLETE
-  Notify provider ◄── provider responds          │
-  of specific gaps ──────────────────► re-run    ▼
-                                        DECISION SUPPORT AGENT
-                                        Evidence → Criteria Mapping
-                                        Confidence Score + Recommendation
-                                               │
-                                               ▼
-┌──────────────────────────────────────────────────────────────────────────────────┐
-│               HUMAN-IN-THE-LOOP - CLINICAL REVIEWER QUEUE                        │
-│                                                                                   │
-│   AI is decision SUPPORT. Final approve / deny rests with a licensed reviewer.  │
-│                                                                                   │
-│   RECOMMENDATION  │  CONFIDENCE  │  CONDITIONS                                   │
-│   ✅ Approve       │  HIGH (92%)  │  All criteria met, no conflicts               │
-│   ⚠️ Approve w/   │  MEDIUM      │  Minor gap or borderline criterion            │
-│      conditions   │  (68–85%)    │  - reviewer must confirm                      │
-│   ❌ Likely Deny  │  HIGH        │  Required criterion unmet                     │
-│   🔍 Peer-to-Peer │  LOW (<68%)  │  Conflicting evidence or ambiguous policy     │
-│                                                                                   │
-│   SLA routing:                                                                    │
-│   URGENT / Concurrent → reviewer within 1 hour                                  │
-│   EXPEDITED → reviewer within 4 hours                                           │
-│   STANDARD → reviewer within 24 hours                                           │
-└──────────────────────────────┬───────────────────────────────────────────────────┘
-                               │
-              ┌────────────────┼────────────────────────┐
-              ▼                ▼                        ▼
-          APPROVED          DENIED              PEER-TO-PEER
-              │           Denial letter +       Scheduled call
-              │           appeal rights         provider MD ↔ payer MD
-              └────────────────┴────────────────────────┘
-                               │
-              ┌────────────────────────────────┐
-              │       NOTIFICATION AGENT        │
-              │  EHR in-basket · Letter         │
-              │  CMS / payer portal update      │
-              │  Audit log finalised            │
-              └────────────────────────────────┘
-```
+See the [End-to-End Agent Orchestration Flow](#end-to-end-agent-orchestration-flow) diagram in the Diagrams section below for the full architecture - submission surface, security & compliance layer, orchestrator, the three parallel sub-agents, submission readiness gap check, decision support, clinical reviewer queue, and notification agent.
 
 ---
 
@@ -259,64 +153,32 @@ All tiers use the same pipeline - urgency flag sets queue priority and SLA alert
 
 ## Data Flow
 
-```
-Provider submits PA request (EHR auto-trigger / portal / fax)
-        │
-        ▼
-Security Layer: PHI de-identification · prompt injection guard · audit log init
-        │
-        ▼
-Orchestrator: parse service code · set urgency tier · create context window
-        │
-        ├──► [PARALLEL] Evidence Aggregator ──► evidence bundle (FHIR + OCR)
-        └──► [PARALLEL] Policy Interpreter  ──► criteria checklist + citations
-        │
-        ▼ (both complete)
-Legacy System Connector ──► prior PA history + patient clinical context
-        │
-        ▼
-Submission Readiness Agent
-        │
-   ┌────┴────────────────┐
-   │                     │
-COMPLETE            INCOMPLETE
-   │            Notify provider of gaps
-   │            ◄── provider responds
-   ▼
-Decision Support Agent → evidence → criteria mapping → confidence score
-        │
-        ▼
-Clinical Reviewer Queue (SLA by urgency tier)
-        │
-   ┌────┴────────────────┬──────────────────┐
-   │                     │                  │
-APPROVED             DENIED          PEER-TO-PEER
-   └─────────────────────┴──────────────────┘
-                         │
-        Notification Agent → EHR in-basket · letter · payer portal update
-        Audit Log → finalise immutable record
+```mermaid
+flowchart TD
+    A["📥 Provider submits PA request<br/>(EHR auto-trigger / portal / fax)"] --> B["🔒 Security Layer<br/>PHI de-id · prompt injection guard · audit log init"]
+    B --> C["🧭 Orchestrator<br/>parse service code · set urgency tier"]
+    C --> D["📋 Evidence Aggregator (parallel)"]
+    C --> E["📚 Policy Interpreter (parallel)"]
+    D --> F["🔌 Legacy System Connector<br/>prior PA history + clinical context"]
+    E --> F
+    F --> G["✅ Submission Readiness Agent"]
+    G -->|COMPLETE| H["🧠 Decision Support Agent<br/>evidence → criteria mapping → confidence score"]
+    G -->|INCOMPLETE| I["📨 Notify Provider of gaps"]
+    I -->|provider responds| G
+    H --> J["👩‍⚕️ Clinical Reviewer Queue<br/>SLA by urgency tier"]
+    J --> K["✅ APPROVED"]
+    J --> L["❌ DENIED"]
+    J --> M["🔍 PEER-TO-PEER"]
+    K --> N["🔔 Notification Agent<br/>EHR in-basket · letter · payer portal update<br/>Audit log finalised"]
+    L --> N
+    M --> N
 ```
 
 ---
 
 ## PA State Machine
 
-```
-SUBMITTED → EVIDENCE_GATHERING → READINESS_CHECK
-                                      │
-                         ┌────────────┴────────────┐
-                         ▼                         ▼
-                    PENDING_INFO              UNDER_REVIEW
-                (provider notified)        (SLA clock running)
-                         │                         │
-                provider responds      ┌───────────┼───────────┐
-                         │             ▼           ▼           ▼
-                         └──► re-run APPROVED   DENIED   PEER_TO_PEER
-                              READINESS    │         │         │
-                                          └────┬────┘         │
-                                               ▼              │
-                                            CLOSED  ◄─────────┘
-```
+See the [PA State Machine](#pa-state-machine-1) diagram in the Diagrams section below for the full state transition graph (SUBMITTED → EVIDENCE_GATHERING → ... → CLOSED).
 
 ---
 

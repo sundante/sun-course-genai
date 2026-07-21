@@ -41,83 +41,33 @@
 
 ## System Architecture Overview
 
-```
-┌────────────────────────────────────────────────────────────────────────────┐
-│                         INGESTION PIPELINE                                  │
-│                                                                              │
-│  Sources:                                                                    │
-│  ├── Cloud Storage: research papers (PDF), internal trial docs (PDF/Word)   │
-│  └── Cloud SQL: molecular interaction DB (structured rows)                  │
-│                                                                              │
-│                    ┌──────────────────────────────────────┐                 │
-│  PDF/Word ─────►  │  Cloud Run: Document Parser           │                 │
-│                    │  ├── Document AI (OCR, layout)        │                 │
-│                    │  └── Named Entity Recognizer          │                 │
-│                    │      (Vertex AI NLP API + custom NER) │                 │
-│                    │  Output: text chunks + entities JSON  │                 │
-│                    └──────────────┬───────────────────────┘                 │
-│                                   │                                          │
-│                    ┌──────────────▼────────────────────────┐                │
-│  Structured DB ──► │  Cloud Run: Graph Builder             │                │
-│                    │  ├── Entity deduplication (fuzzy match)│                │
-│                    │  ├── Relation extraction (LLM-assisted)│                │
-│                    │  └── Upsert to Spanner Graph           │                │
-│                    └──────────────┬────────────────────────┘                │
-│                                   │                                          │
-│             ┌─────────────────────▼───────────────────────┐                 │
-│             │  Spanner Graph (knowledge graph)              │                │
-│             │  Nodes: Drug, Protein, Gene, Disease, Trial   │                │
-│             │  Edges: TARGETS, ASSOCIATED_WITH, TESTED_IN   │                │
-│             └───────────────────────────────────────────────┘                │
-│                                                                              │
-│             ┌───────────────────────────────────────────────┐                │
-│             │  Cloud Run: Chunker + Embedder                 │                │
-│             │  → Vertex AI Vector Search (dense index)       │                │
-│             └───────────────────────────────────────────────┘                │
-└────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph INGEST["📥 Ingestion Pipeline"]
+        PDF["📄 Cloud Storage<br/>research papers, trial docs"] --> DP["⚙️ Cloud Run: Document Parser<br/>Document AI (OCR, layout)<br/>Named Entity Recognizer<br/>Output: text chunks + entities JSON"]
+        SQL["🗃️ Cloud SQL<br/>molecular interaction DB"] --> GB["⚙️ Cloud Run: Graph Builder<br/>Entity deduplication (fuzzy match)<br/>Relation extraction (LLM-assisted)<br/>Upsert to Spanner Graph"]
+        DP --> GB
+        GB --> SG[("🕸️ Spanner Graph<br/>Nodes: Drug, Protein, Gene, Disease, Trial<br/>Edges: TARGETS, ASSOCIATED_WITH, TESTED_IN")]
+        DP --> CE["⚙️ Cloud Run: Chunker + Embedder"]
+        CE --> VS[("📡 Vertex AI Vector Search<br/>dense index")]
+    end
 
-┌────────────────────────────────────────────────────────────────────────────┐
-│                         AGENTIC QUERY PIPELINE                              │
-│                                                                              │
-│  Researcher Query                                                            │
-│       │                                                                      │
-│       ▼                                                                      │
-│  ┌───────────────────────────────────────────────────┐                      │
-│  │  Cloud Run: Orchestrator Agent (ADK / LangGraph)  │                      │
-│  │                                                    │                      │
-│  │  Step 1: Query Decomposition                       │                      │
-│  │  "Which drug candidates interact with proteins     │                      │
-│  │   implicated in both AD and T2D with trials?"      │                      │
-│  │   → Sub-queries:                                   │                      │
-│  │     a) proteins linked to Alzheimer's              │                      │
-│  │     b) proteins linked to Type 2 Diabetes          │                      │
-│  │     c) intersection of (a) ∩ (b)                   │                      │
-│  │     d) drug candidates targeting those proteins    │                      │
-│  │     e) clinical trials for those drugs             │                      │
-│  └───────────────────┬───────────────────────────────┘                      │
-│                       │  calls tools                                         │
-│         ┌─────────────┼─────────────────────┐                               │
-│         ▼             ▼                     ▼                               │
-│  ┌─────────────┐ ┌──────────────┐ ┌─────────────────┐                      │
-│  │ graph_query │ │ vector_search│ │ synthesis_tool  │                      │
-│  │             │ │              │ │                 │                      │
-│  │ Spanner     │ │ Vertex AI    │ │ Gemini 1.5 Pro  │                      │
-│  │ Graph GQL   │ │ Vector Search│ │ (answer builder)│                      │
-│  │ traversal   │ │ + AlloyDB    │ │                 │                      │
-│  └─────────────┘ └──────────────┘ └─────────────────┘                      │
-│         │                │                 │                                │
-│         └────────────────┴─────────────────┘                               │
-│                          │                                                   │
-│                          ▼                                                   │
-│  ┌───────────────────────────────────────────────────┐                      │
-│  │  ReAct Loop (Reasoning + Acting)                  │                      │
-│  │  Thought → Action → Observation → Thought → ...  │                      │
-│  │  Max 8 iterations, timeout 15s                    │                      │
-│  └───────────────────────────────────────────────────┘                      │
-│                          │                                                   │
-│                          ▼                                                   │
-│  Final Answer: entities + citations + graph path + source papers             │
-└────────────────────────────────────────────────────────────────────────────┘
+    subgraph AGENT["🤖 Agentic Query Pipeline"]
+        RQ["🧑‍🔬 Researcher Query"] --> ORCH["🧭 Orchestrator Agent (ADK / LangGraph)<br/>Query Decomposition into sub-queries:<br/>a) proteins linked to Alzheimer's<br/>b) proteins linked to T2D<br/>c) intersection (a) ∩ (b)<br/>d) drug candidates targeting those proteins<br/>e) clinical trials for those drugs"]
+        ORCH --> GQ["🔧 graph_query<br/>Spanner Graph GQL traversal"]
+        ORCH --> VSRCH["🔧 vector_search<br/>Vector Search + AlloyDB"]
+        ORCH --> SYN["🔧 synthesis_tool<br/>Gemini 1.5 Pro answer builder"]
+        GQ --> REACT["🔁 ReAct Loop<br/>Thought → Action → Observation → ...<br/>Max 8 iterations, timeout 15s"]
+        VSRCH --> REACT
+        SYN --> REACT
+        REACT --> FINAL(["✅ Final Answer<br/>entities + citations + graph path + source papers"])
+    end
+
+    SG -.-> GQ
+    VS -.-> VSRCH
+
+    style INGEST fill:#e8f4fd,stroke:#4a9eca
+    style AGENT fill:#d4edda,stroke:#28a745
 ```
 
 ---

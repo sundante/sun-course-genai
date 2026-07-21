@@ -61,12 +61,15 @@ The term is useful because it distinguishes *coordination complexity* from *mode
 
 Agentic AI is not binary - it's a spectrum. Systems become more agentic as they gain more autonomy, capability, and persistence.
 
-```
-Chatbot → RAG System → Single Agent → Multi-Agent → Agentic System
-  ↑           ↑              ↑               ↑              ↑
-Reactive   Knowledge     Tool use       Coordination    Goal-driven,
-response   injection     + reasoning    + parallelism   persistent,
-                                                         self-managing
+```mermaid
+flowchart LR
+    A["💬 Chatbot<br/>Reactive response"] --> B["📚 RAG System<br/>Knowledge injection"]
+    B --> C["🤖 Single Agent<br/>Tool use + reasoning"]
+    C --> D["👥 Multi-Agent<br/>Coordination + parallelism"]
+    D --> E["🧠 Agentic System<br/>Goal-driven, persistent,<br/>self-managing"]
+
+    style A fill:#d4edda,stroke:#28a745
+    style E fill:#f8d7da,stroke:#dc3545
 ```
 
 **Level 1 - Chatbot**
@@ -140,16 +143,12 @@ Example: The system notices that the first three web searches returned paywalled
 
 Agentic AI is not a replacement for RAG or standard agents - it's a composition of them, operating at a higher level of abstraction.
 
-```
-Agentic System (goal-directed, persistent, self-managing)
-    ↓ uses
-Multi-Agent Coordination (orchestrator + specialized subagents)
-    ↓ each agent uses
-Standard Agent Loop (LLM + tools + ReAct reasoning)
-    ↓ tools may use
-RAG (knowledge retrieval), APIs, code execution, databases
-    ↓ RAG uses
-Embeddings + Vector Stores (semantic search over your documents)
+```mermaid
+flowchart TD
+    A["🧠 Agentic System<br/>goal-directed, persistent, self-managing"] -->|uses| B["👥 Multi-Agent Coordination<br/>orchestrator + specialized subagents"]
+    B -->|each agent uses| C["🔁 Standard Agent Loop<br/>LLM + tools + ReAct reasoning"]
+    C -->|tools may use| D["🔧 RAG, APIs, code execution, databases"]
+    D -->|RAG uses| E["📡 Embeddings + Vector Stores<br/>semantic search over your documents"]
 ```
 
 **RAG provides knowledge** - the ability to answer questions grounded in your documents.

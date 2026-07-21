@@ -2,26 +2,12 @@
 
 ## Pattern: Pure Data-Flow, No Shared State
 
-```
-Raw Data
-   │
-   ▼
-┌──────────┐
-│ Extract  │  parse raw → structured dict
-└────┬─────┘
-     │
-     ▼
-┌──────────┐
-│ Transform│  enrich, score, normalize
-└────┬─────┘
-     │
-     ▼
-┌──────────┐
-│  Load    │  format for output / storage
-└────┬─────┘
-     │
-     ▼
-  Output
+```mermaid
+flowchart TD
+    A["📄 Raw Data"] --> B["📥 Extract<br/>parse raw → structured dict"]
+    B --> C["🔧 Transform<br/>enrich, score, normalize"]
+    C --> D["📦 Load<br/>format for output / storage"]
+    D --> E(["✅ Output"])
 ```
 
 ## Pipeline vs Sequential

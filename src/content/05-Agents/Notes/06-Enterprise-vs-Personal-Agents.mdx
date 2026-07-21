@@ -82,14 +82,18 @@ Building an AI agent for a weekend project and building one that runs in a hospi
 
 ## The Decision Framework: What Level Do You Need?
 
-```
-Is this for personal use only?
-├── Yes → Hobby agent. Keep it simple.
-└── No → Who are the users?
-    ├── Internal (employees only) → Internal enterprise agent
-    │   Needs: auth, logging, cost controls
-    └── External (customers, patients, public) → Production enterprise agent
-        Needs: all of the above + compliance, PII handling, SLAs, legal review
+```mermaid
+flowchart TD
+    Q1{"Is this for<br/>personal use only?"}
+    Q1 -->|Yes| A["🏠 Hobby agent<br/>Keep it simple"]
+    Q1 -->|No| Q2{"Who are the users?"}
+    Q2 -->|"Internal (employees only)"| B["🏢 Internal enterprise agent<br/>Needs: auth, logging, cost controls"]
+    Q2 -->|"External (customers, patients, public)"| C["🏭 Production enterprise agent<br/>Needs: all of the above +<br/>compliance, PII handling, SLAs, legal review"]
+
+    style Q1 fill:#fff3cd,stroke:#f0a500
+    style Q2 fill:#fff3cd,stroke:#f0a500
+    style A fill:#d4edda,stroke:#28a745
+    style C fill:#f8d7da,stroke:#dc3545
 ```
 
 ---

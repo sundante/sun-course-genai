@@ -4,16 +4,21 @@ A multi-agent system that accepts a code diff, fans out to specialized reviewers
 
 ## Architecture
 
-```
-Code Diff Input
-      ↓
-[Orchestrator]
-      ├──→ [Static Analysis Agent]  ──┐
-      ├──→ [Security Review Agent]  ──→ [Aggregator Agent] → Review Draft
-      ├──→ [Style Check Agent]      ──┘        ↓
-      └──→ [Complexity Agent]       ──┘   [Reflexion: Critic]
-                                                ↓
-                                         Final Report
+```mermaid
+flowchart TD
+    D["📄 Code Diff Input"] --> O["🧭 Orchestrator"]
+    O --> A["🔍 Static Analysis Agent"]
+    O --> B["🛡️ Security Review Agent"]
+    O --> C["🎨 Style Check Agent"]
+    O --> E["🧮 Complexity Agent"]
+    A --> AG["🧩 Aggregator Agent"]
+    B --> AG
+    C --> AG
+    E --> AG
+    AG --> RD["📝 Review Draft"] --> CR["🧐 Reflexion: Critic"] --> F(["✅ Final Report"])
+
+    style O fill:#fff3cd,stroke:#f0a500
+    style CR fill:#e2d9f3,stroke:#6f42c1
 ```
 
 ## Patterns Used

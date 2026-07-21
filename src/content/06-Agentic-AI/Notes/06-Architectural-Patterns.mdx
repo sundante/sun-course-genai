@@ -25,10 +25,13 @@ Eight fundamental patterns cover the vast majority of real-world agentic systems
 
 ## Pattern 1 - Single Agent
 
-```
-User → [Agent: LLM + Tools] → Result
-          ↑______________|
-          (ReAct loop: reason → act → observe)
+```mermaid
+flowchart LR
+    U([👤 User]) --> A[["🤖 Agent<br/>LLM + Tools"]]
+    A -->|"reason → act → observe"| A
+    A --> R([✅ Result])
+
+    style A fill:#e8f4fd,stroke:#4a9eca
 ```
 
 **Structure:** One LLM with access to tools, operating in a reasoning loop. The agent reasons about what to do, calls a tool, observes the result, reasons again, and repeats until it can answer.
@@ -52,15 +55,19 @@ User → [Agent: LLM + Tools] → Result
 
 ## Pattern 2 - Orchestrator-Subagent
 
-```
-User → [Orchestrator]
-            ├──→ [Subagent A: Research]  → result_A
-            ├──→ [Subagent B: Writing]   → result_B
-            └──→ [Subagent C: Review]    → result_C
-                     ↓
-              [Orchestrator synthesizes]
-                     ↓
-                  Final Output
+```mermaid
+flowchart TD
+    U([👤 User]) --> O{{"🧭 Orchestrator"}}
+    O --> A["🔎 Subagent A<br/>Research"]
+    O --> B["✍️ Subagent B<br/>Writing"]
+    O --> C["✅ Subagent C<br/>Review"]
+    A --> S["🧩 Orchestrator synthesizes"]
+    B --> S
+    C --> S
+    S --> F([🏁 Final Output])
+
+    style O fill:#fff3cd,stroke:#f0a500
+    style S fill:#fff3cd,stroke:#f0a500
 ```
 
 **Structure:** An orchestrator agent receives the high-level goal, decomposes it into subtasks, and delegates each to a specialized subagent. Subagents return results to the orchestrator, which synthesizes them.
@@ -84,14 +91,19 @@ User → [Orchestrator]
 
 ## Pattern 3 - Hierarchical
 
-```
-User → [Manager Agent]
-            ├──→ [Team Lead A]
-            │         ├──→ [Worker A1]
-            │         └──→ [Worker A2]
-            └──→ [Team Lead B]
-                      ├──→ [Worker B1]
-                      └──→ [Worker B2]
+```mermaid
+flowchart TD
+    U([👤 User]) --> M{{"🧭 Manager Agent"}}
+    M --> TA["👥 Team Lead A"]
+    M --> TB["👥 Team Lead B"]
+    TA --> A1["⚙️ Worker A1"]
+    TA --> A2["⚙️ Worker A2"]
+    TB --> B1["⚙️ Worker B1"]
+    TB --> B2["⚙️ Worker B2"]
+
+    style M fill:#fff3cd,stroke:#f0a500
+    style TA fill:#d4edda,stroke:#28a745
+    style TB fill:#d4edda,stroke:#28a745
 ```
 
 **Structure:** Multi-level orchestration. A top-level manager decomposes the goal at a high level and delegates to team leads. Each team lead further decomposes their portion and delegates to worker agents.
@@ -114,10 +126,12 @@ User → [Manager Agent]
 
 ## Pattern 4 - Peer-to-Peer (Decentralized)
 
-```
-[Agent A] ←→ [Agent B]
-    ↕              ↕
-[Agent C] ←→ [Agent D]
+```mermaid
+flowchart LR
+    A["🤖 Agent A"] <--> B["🤖 Agent B"]
+    A <--> C["🤖 Agent C"]
+    B <--> D["🤖 Agent D"]
+    C <--> D
 ```
 
 **Structure:** No central coordinator. Agents communicate directly with each other, passing messages or sharing a common state. Each agent decides independently what to do based on its local view.
@@ -142,8 +156,13 @@ User → [Manager Agent]
 
 ## Pattern 5 - Pipeline / Sequential
 
-```
-Input → [Agent A: Extract] → [Agent B: Transform] → [Agent C: Validate] → [Agent D: Load] → Output
+```mermaid
+flowchart LR
+    I([📥 Input]) --> A["🔍 Agent A<br/>Extract"]
+    A --> B["🔄 Agent B<br/>Transform"]
+    B --> C["✅ Agent C<br/>Validate"]
+    C --> D["📤 Agent D<br/>Load"]
+    D --> O([📦 Output])
 ```
 
 **Structure:** Agents form a processing chain. Each agent receives the previous agent's output as its input and passes its output to the next agent.
@@ -167,10 +186,19 @@ Input → [Agent A: Extract] → [Agent B: Transform] → [Agent C: Validate] �
 
 ## Pattern 6 - Parallel / Fan-out
 
-```
-                 ┌──→ [Agent A: Source 1] ──┐
-Input → [Orchestrator] ──→ [Agent B: Source 2] ──→ [Merge/Aggregate] → Output
-                 └──→ [Agent C: Source 3] ──┘
+```mermaid
+flowchart LR
+    I([📥 Input]) --> O{{"🧭 Orchestrator"}}
+    O --> A["🌐 Agent A<br/>Source 1"]
+    O --> B["🌐 Agent B<br/>Source 2"]
+    O --> C["🌐 Agent C<br/>Source 3"]
+    A --> M["🧩 Merge / Aggregate"]
+    B --> M
+    C --> M
+    M --> R([📦 Output])
+
+    style O fill:#fff3cd,stroke:#f0a500
+    style M fill:#fff3cd,stroke:#f0a500
 ```
 
 **Structure:** An orchestrator dispatches multiple agents to work concurrently on independent subtasks. Results are collected and aggregated once all agents complete.
@@ -195,14 +223,16 @@ Input → [Orchestrator] ──→ [Agent B: Source 2] ──→ [Merge/Aggregat
 
 ## Pattern 7 - Adversarial / Debate
 
-```
-[Proposer Agent] → Proposal
-                       ↓
-[Critic Agent]   → Critique + Counterarguments
-                       ↓
-[Proposer]       → Revised Proposal (or Defense)
-                       ↓
-[Judge Agent]    → Final Verdict / Synthesis
+```mermaid
+sequenceDiagram
+    participant P as 💡 Proposer
+    participant C as 🧐 Critic
+    participant J as ⚖️ Judge
+
+    P->>C: Proposal
+    C->>P: Critique + Counterarguments
+    P->>J: Revised Proposal (or Defense)
+    J->>J: Final Verdict / Synthesis
 ```
 
 **Structure:** Two or more agents argue opposing positions through multiple rounds, with a judge synthesizing the debate into a final output.
@@ -226,16 +256,17 @@ Input → [Orchestrator] ──→ [Agent B: Source 2] ──→ [Merge/Aggregat
 
 ## Pattern 8 - Reflexion / Self-Critique
 
-```
-[Agent] → Draft Output
-              ↓
-[Evaluator] → Score + Critique
-              ↓
-    ┌── Score above threshold? ──→ Return Output
-    ↓ (below threshold)
-[Agent] → Revised Output (with critique as context)
-              ↓
-    (repeat up to max_iterations)
+```mermaid
+flowchart TD
+    A["🤖 Agent"] --> D(["📝 Draft Output"])
+    D --> E["🧪 Evaluator<br/>Score + Critique"]
+    E --> S{"Score above<br/>threshold?"}
+    S -->|Yes| R(["✅ Return Output"])
+    S -->|"No (repeat up to max_iterations)"| A2["🔁 Agent revises<br/>with critique as context"]
+    A2 --> D
+
+    style S fill:#fff3cd,stroke:#f0a500
+    style E fill:#e2d9f3,stroke:#6f42c1
 ```
 
 **Structure:** The agent (or a separate evaluator agent) evaluates the output quality, identifies specific weaknesses, and feeds the critique back to the agent for improvement. Repeats until quality threshold is met or max iterations is reached.
@@ -266,15 +297,19 @@ A feedback loop is the mechanism by which an agent's outputs or actions are eval
 **Tool observation loop (innermost)**
 The most basic loop: the agent calls a tool, reads the result, and decides what to do next. This is baked into every agent's ReAct cycle.
 
-```
-Agent reasons → calls tool → observes result → reasons again
+```mermaid
+flowchart LR
+    A["🧠 Agent reasons"] --> T["🔧 Calls tool"] --> O["👁️ Observes result"] --> A
 ```
 
 **Critic/evaluator loop**
 A separate LLM call evaluates the agent's output against a rubric and returns a critique. The agent then revises. Used in Reflexion pattern.
 
-```
-Agent produces output → Evaluator scores it → Agent revises with critique
+```mermaid
+flowchart LR
+    A["🤖 Agent produces output"] --> E["🧪 Evaluator scores it"] --> R["✏️ Agent revises<br/>with critique"] --> A
+
+    style E fill:#e2d9f3,stroke:#6f42c1
 ```
 
 **Human feedback loop**
@@ -311,8 +346,13 @@ HITL inserts a human review or approval step at defined points in the agent's ex
 **Approval gate (synchronous)**
 Agent pauses execution, presents a proposed action to a human, and waits for approval/rejection before proceeding.
 
-```
-Agent → "I'm about to send this email: [preview]" → Human: Approve / Reject / Edit
+```mermaid
+sequenceDiagram
+    participant Ag as 🤖 Agent
+    participant H as 🧑 Human
+
+    Ag->>H: "I'm about to send this email: [preview]"
+    H-->>Ag: Approve / Reject / Edit
 ```
 
 **Review queue (asynchronous)**
@@ -321,10 +361,13 @@ Agent produces an output and enqueues it for human review. Execution continues w
 **Confidence-gated HITL**
 Agent estimates its own confidence and routes to human only when below a threshold. High-confidence actions proceed automatically.
 
-```
-Agent produces output + confidence score
-  → confidence > 0.85: proceed automatically
-  → confidence ≤ 0.85: route to human review queue
+```mermaid
+flowchart TD
+    A["🤖 Agent produces output<br/>+ confidence score"] --> C{"Confidence<br/>&gt; 0.85?"}
+    C -->|Yes| P(["✅ Proceed automatically"])
+    C -->|"No (≤ 0.85)"| H(["🧑 Route to human<br/>review queue"])
+
+    style C fill:#fff3cd,stroke:#f0a500
 ```
 
 **Escalation path**

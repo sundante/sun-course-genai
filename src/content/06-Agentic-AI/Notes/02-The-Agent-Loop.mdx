@@ -18,8 +18,9 @@ The loop is not just a useful feature. It is the defining characteristic. Remove
 
 The simplest possible agent has three components:
 
-```
-LLM  ←→  Tool Executor  ←→  Loop Controller
+```mermaid
+flowchart LR
+    LLM["🧠 LLM"] <--> TE["🔧 Tool Executor"] <--> LC["🔁 Loop Controller"]
 ```
 
 - **LLM**: reasons about what to do and produces either a tool call or a final answer
@@ -223,20 +224,12 @@ A typical step adds:
 
 After 10 steps, the context might hold 10,000–50,000 tokens. After 30 steps, it could be 150,000 tokens - approaching or exceeding most models' context limits.
 
-```
-Context size over time:
-
-Tokens
-  |
-50k|                              ████
-40k|                         ██████
-30k|                    ██████
-20k|               ██████
-10k|          ██████
-   |     ██████
-   |█████
-   └─────────────────────────────────── Steps
-      1    5    10   15   20   25   30
+```mermaid
+xychart-beta
+    title "Context size over time"
+    x-axis "Steps" [1, 5, 10, 15, 20, 25, 30]
+    y-axis "Tokens" 0 --> 55000
+    bar [3000, 12000, 22000, 30000, 38000, 45000, 50000]
 ```
 
 When context fills up, agents exhibit **context drift** - they start losing track of the original goal, their reasoning becomes inconsistent, and they may repeat work they already did.
@@ -384,18 +377,21 @@ SYSTEM PROMPT STRUCTURE:
 
 Many LLMs can call multiple tools in a single step. This dramatically reduces latency for tasks that require multiple independent pieces of information.
 
-Sequential (3 API calls, 3× the latency):
-```
-Step 1: search("Tokyo weather")     → result
-Step 2: search("Paris weather")     → result  
-Step 3: search("London weather")    → result
-```
+Sequential (3 API calls, 3× the latency) vs. Parallel (1 API call, all at once):
+```mermaid
+flowchart TD
+    subgraph SEQ["🐢 Sequential - 3 API calls, 3× latency"]
+        S1["1️⃣ search Tokyo weather"] --> S2["2️⃣ search Paris weather"] --> S3["3️⃣ search London weather"]
+    end
+    subgraph PAR["⚡ Parallel - 1 API call, all at once"]
+        P0["Single API call"] --> P1["search Tokyo weather"]
+        P0 --> P2["search Paris weather"]
+        P0 --> P3["search London weather"]
+        P1 & P2 & P3 --> R(["✅ All three results at once"])
+    end
 
-Parallel (1 API call, all at once):
-```
-Step 1: search("Tokyo weather")   ]
-        search("Paris weather")   ] → all three results at once
-        search("London weather")  ]
+    style SEQ fill:#f8d7da,stroke:#dc3545
+    style PAR fill:#d4edda,stroke:#28a745
 ```
 
 APIs support this by returning multiple tool calls in one response:
@@ -454,12 +450,15 @@ All three implement: LLM → check done → execute tools → back to LLM.
 
 ### Infinite Retry Loop
 
-```
-Agent calls search("answer to question")
-Tool returns: "No results found"
-Agent calls search("answer to question")   ← identical call
-Tool returns: "No results found"
-...
+```mermaid
+sequenceDiagram
+    participant A as 🤖 Agent
+    participant T as 🔧 Tool
+
+    loop repeats indefinitely
+        A->>T: search("answer to question")
+        T-->>A: "No results found"
+    end
 ```
 
 **Prevention**: Track the last N tool calls. If the same call appears twice, either reformulate the query or declare failure.

@@ -7,10 +7,11 @@
 Pretraining is the large-scale phase where a model learns general language understanding from massive unlabeled text corpora. It requires enormous compute and data but is done only once - the resulting base model is then fine-tuned for specific tasks.
 
 **The three stages of an LLM's life:**
-```
-1. Pretraining   → Base model (knows language, world knowledge, no instruction following)
-2. Fine-tuning   → Instruction-tuned model (follows instructions, behaves as assistant)
-3. Alignment     → RLHF / DPO (safe, helpful, honest - reduced harmful outputs)
+```mermaid
+flowchart LR
+    A["1️⃣ Pretraining"] --> B["🏗️ Base model<br/>knows language, world knowledge,<br/>no instruction following"]
+    B --> C["2️⃣ Fine-tuning"] --> D["🎯 Instruction-tuned model<br/>follows instructions, behaves as assistant"]
+    D --> E["3️⃣ Alignment (RLHF / DPO)"] --> F["✅ Safe, helpful, honest<br/>reduced harmful outputs"]
 ```
 
 **Scale of pretraining:**
@@ -35,25 +36,15 @@ The quality of pretraining data is at least as important as model architecture. 
 - **Curated datasets:** Refinedweb, RedPajama, SlimPajama, Dolma
 
 **Data processing pipeline:**
-```
-Raw web text
-    ↓
-URL/domain filtering (block adult content, spam, known low-quality domains)
-    ↓
-Language detection (keep target languages)
-    ↓
-Exact deduplication (MinHash, exact hash) - removes copy-pasted content
-    ↓
-Near-deduplication (SimHash, n-gram overlap) - removes near-duplicates
-    ↓
-Quality filtering:
-  - Perplexity filtering (low-perplexity text from a reference model → good quality)
-  - Heuristic rules (min/max token counts, symbol ratio, etc.)
-  - Classifier-based quality scoring
-    ↓
-PII removal (personal email, phone numbers, SSNs)
-    ↓
-Final tokenization + storage
+```mermaid
+flowchart TD
+    A["🌐 Raw web text"] --> B["🚫 URL/domain filtering<br/>block adult content, spam, low-quality domains"]
+    B --> C["🌍 Language detection<br/>keep target languages"]
+    C --> D["🔁 Exact deduplication<br/>MinHash, exact hash"]
+    D --> E["🔁 Near-deduplication<br/>SimHash, n-gram overlap"]
+    E --> F["⭐ Quality filtering<br/>perplexity · heuristic rules · classifier scoring"]
+    F --> G["🔒 PII removal<br/>email, phone numbers, SSNs"]
+    G --> H["✅ Final tokenization + storage"]
 ```
 
 **Why deduplication matters:** Training on duplicate data memorizes specific text rather than learning generalizable patterns. Deduplication also reduces privacy risk (memorized PII).

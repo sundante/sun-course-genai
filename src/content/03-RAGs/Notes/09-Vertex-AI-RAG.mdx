@@ -20,39 +20,44 @@ When building production-grade RAG on Google Cloud, each pipeline stage has a re
 | **Observability** | Cloud Trace + Langfuse (self-hosted on Cloud Run) | Arize Phoenix on GKE, LangSmith | Cloud Trace for infrastructure; Langfuse for LLM-specific span tracing and RAGAS integration |
 
 **Typical Hybrid RAG architecture on GCP:**
-```
-User query
-    ↓
-Cloud Run (query service)
-    ├─ text-embedding-004 → Vertex AI Vector Search (dense k=20)
-    ├─ Elasticsearch on GKE (BM25 k=20)
-    └─ RRF fusion → 20 candidates
-         ↓
-    Vertex AI ReRanker API → top 5 chunks
-         ↓
-    Gemini 1.5 Pro (generator)
-         ↓
-    Response + citations
+```mermaid
+flowchart TD
+    Q["❓ User query"] --> CR["☁️ Cloud Run (query service)"]
+    CR --> D["🧬 text-embedding-004 →<br/>Vertex AI Vector Search (dense k=20)"]
+    CR --> E["🔤 Elasticsearch on GKE<br/>(BM25 k=20)"]
+    D --> F["🔀 RRF fusion → 20 candidates"]
+    E --> F
+    F --> RR["🎯 Vertex AI ReRanker API<br/>→ top 5 chunks"]
+    RR --> G["🤖 Gemini 1.5 Pro (generator)"]
+    G --> R(["✅ Response + citations"])
 ```
 
 ---
 
 ## The Vertex AI RAG Landscape
 
-```
-                   ← more managed / less control        more control / less managed →
-   
-┌────────────────────┐   ┌──────────────────────────┐   ┌────────────────────────────────┐
-│  Vertex AI Search  │   │  Vertex AI RAG Engine     │   │  Custom RAG on GCP             │
-│                    │   │  (Vertex AI RAG API)       │   │                                │
-│ - Managed search   │   │ - Managed retrieval corpus │   │ - AlloyDB/pgvector + Cloud Run │
-│   over your data   │   │ - Gemini integration       │   │ - Vertex AI Vector Search +    │
-│ - Structured +     │   │ - No infra to manage       │   │   your own embedding + LLM     │
-│   unstructured     │   │ - Only works with Gemini   │   │ - Full control of all stages   │
-│ - Not directly     │   │ - Supports file-based      │   │ - Bring any embedding model    │
-│   tied to LLM      │   │   retrieval corpus         │   │ - Most flexible                │
-└────────────────────┘   └──────────────────────────┘   └────────────────────────────────┘
-     "I need search"       "I need RAG with Gemini"        "I need full control"
+```mermaid
+flowchart LR
+    subgraph A["🔍 Vertex AI Search<br/>'I need search'"]
+        A1["Managed search over your data"]
+        A2["Structured + unstructured"]
+        A3["Not directly tied to LLM"]
+    end
+    subgraph B["⚡ Vertex AI RAG Engine<br/>'I need RAG with Gemini'"]
+        B1["Managed retrieval corpus"]
+        B2["Gemini integration, no infra"]
+        B3["Only works with Gemini"]
+    end
+    subgraph C["🛠️ Custom RAG on GCP<br/>'I need full control'"]
+        C1["AlloyDB/pgvector + Cloud Run,<br/>or Vector Search + own LLM"]
+        C2["Full control of all stages"]
+        C3["Bring any embedding model"]
+    end
+    A -.->|"more managed / less control"| B -.->|"more control / less managed"| C
+
+    style A fill:#e8f4fd,stroke:#4a9eca
+    style B fill:#fff3cd,stroke:#f0a500
+    style C fill:#d4edda,stroke:#28a745
 ```
 
 **Quick decision matrix:**
@@ -302,22 +307,24 @@ When you need full control - custom embedding model, custom chunking, hybrid sea
 **Stack options:**
 
 **Option A: Vertex AI Vector Search + Cloud Run**
-```
-GCS bucket (raw docs)
-    ↓ Cloud Run ingest service
-text-embedding-004 (Vertex AI API) → Vertex AI Vector Search index
-                                         ↓ Cloud Run query service
-                               Hybrid: Vector Search + Elasticsearch on GKE
-                                         ↓ Cohere Rerank API
-                                         ↓ Gemini API
+```mermaid
+flowchart TD
+    G["🗄️ GCS bucket (raw docs)"] --> CI["☁️ Cloud Run ingest service"]
+    CI --> E["🧬 text-embedding-004 (Vertex AI API)"]
+    E --> V[("📡 Vertex AI Vector Search index")]
+    V --> CQ["☁️ Cloud Run query service"]
+    CQ --> H["🔀 Hybrid: Vector Search +<br/>Elasticsearch on GKE"]
+    H --> RR["🎯 Cohere Rerank API"]
+    RR --> LLM["🤖 Gemini API"]
 ```
 
 **Option B: AlloyDB pgvector + Cloud Run** (when you want SQL + vector in one place)
-```
-AlloyDB (PostgreSQL + pgvector extension)
-    ├─ store documents + metadata (SQL tables)
-    ├─ store vectors (pgvector column)
-    └─ hybrid queries: SQL WHERE + <=> (cosine distance operator)
+```mermaid
+flowchart TD
+    A[("🐘 AlloyDB<br/>PostgreSQL + pgvector extension")]
+    A --> B["📄 Store documents + metadata<br/>(SQL tables)"]
+    A --> C["🔢 Store vectors<br/>(pgvector column)"]
+    A --> D["🔀 Hybrid queries:<br/>SQL WHERE + &lt;=&gt; (cosine distance)"]
 ```
 
 **Option B is great when:**

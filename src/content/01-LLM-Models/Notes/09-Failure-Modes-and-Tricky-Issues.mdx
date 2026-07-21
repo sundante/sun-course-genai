@@ -86,14 +86,14 @@ Simple but requires access to the original training data - often not available f
 Liu et al. (2023) demonstrated a systematic failure of LLMs on long-context tasks: **performance degrades for information placed in the middle of long contexts**, even when the model has a sufficient context window to process it.
 
 **The effect:**
-```
-Context: [Doc 1] [Doc 2] [Doc 3] ... [Doc 15] [Doc 16] [Doc 17]
-Key info: placed in Doc 9 (middle)
+Context: `[Doc 1] [Doc 2] [Doc 3] ... [Doc 15] [Doc 16] [Doc 17]` - key info placed in Doc 9 (middle):
 
-Model performance:
-  Key info in Doc 1 (start):  ~85% accuracy
-  Key info in Doc 9 (middle): ~55% accuracy  ← significant drop
-  Key info in Doc 17 (end):   ~80% accuracy
+```mermaid
+xychart-beta
+    title "Model accuracy by position of key info in context"
+    x-axis "Position" ["Doc 1 (start)", "Doc 9 (middle)", "Doc 17 (end)"]
+    y-axis "Accuracy %" 0 --> 100
+    bar [85, 55, 80]
 ```
 
 The model shows primacy bias (start) and recency bias (end) - both ends of the context are reliably attended to; the middle is not.

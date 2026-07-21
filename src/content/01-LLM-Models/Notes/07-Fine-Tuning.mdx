@@ -6,12 +6,17 @@
 
 Fine-tuning adapts a pretrained base model for specific tasks or behaviors. The spectrum ranges from minimal (few-shot prompting) to maximal (full parameter updates).
 
+```mermaid
+flowchart LR
+    A["💬 Prompting<br/>(0 params)"] --> B["🎯 Prompt Tuning<br/>(few params)"]
+    B --> C["📎 Prefix Tuning<br/>(more params)"]
+    C --> D["🔧 LoRA<br/>(small %)"]
+    D --> E["🏗️ Full Fine-Tune<br/>(all params)"]
+
+    style A fill:#d4edda,stroke:#28a745
+    style E fill:#f8d7da,stroke:#dc3545
 ```
-Increasing parameter modification:
-←─────────────────────────────────────────────────────────────→
-Prompting   Prompt Tuning   Prefix Tuning   LoRA   Full Fine-Tune
-(0 params)  (few params)    (more params)  (small %)  (all params)
-```
+*Increasing parameter modification, left to right.*
 
 **Key decision: fine-tune vs RAG vs prompt engineering?**
 
@@ -70,18 +75,18 @@ SFT teaches the model to produce outputs matching a dataset, but datasets can't 
 
 **The RLHF pipeline:**
 
-```
-Stage 1: Supervised Fine-Tuning (SFT)
-  Base model → SFT on instruction dataset → SFT model
+```mermaid
+flowchart LR
+    A["🏗️ Base model"] --> B["1️⃣ SFT on instruction dataset"] --> C["🎯 SFT model"]
+    C --> D["2️⃣ Reward Model Training<br/>Human preference: A vs B → prefer A<br/>(prompt, response) → scalar reward"]
+    D --> E["🏆 Reward model"]
+    C --> F["3️⃣ PPO Reinforcement Learning<br/>Maximize reward, KL-constrained to SFT"]
+    E --> F
+    F --> G["✅ Aligned policy model"]
 
-Stage 2: Reward Model Training
-  Human annotators compare pairs of outputs: (response A vs response B) → prefer A
-  Train a reward model: input = (prompt, response) → output = scalar reward score
-
-Stage 3: Reinforcement Learning (PPO)
-  Use PPO to fine-tune the SFT model to maximize reward
-  Constraint: KL divergence from SFT model (prevents reward hacking)
-  result_policy = argmax_θ [ E[reward(response)] - β * KL(π_θ || π_SFT) ]
+    style B fill:#e8f4fd,stroke:#4a9eca
+    style D fill:#fff3cd,stroke:#f0a500
+    style F fill:#d4edda,stroke:#28a745
 ```
 
 **Why RLHF is hard:**
@@ -304,14 +309,13 @@ training_args = TrainingArguments(
 Multi-head fine-tuning uses a **shared encoder backbone** with **multiple task-specific output heads**. This allows a single model to perform several tasks with minimal parameter overhead.
 
 **Architecture:**
-```
-Input text
-    ↓
-Shared BERT/RoBERTa/LLaMA encoder
-    ↓ hidden states
-    ├── [CLS] → Classification head → Intent label
-    ├── Token states → NER head → Entity labels per token  
-    └── [CLS] → QA head → Start/End logit positions
+```mermaid
+flowchart TD
+    A["📝 Input text"] --> B["🧠 Shared BERT/RoBERTa/LLaMA encoder"]
+    B --> C["🔢 Hidden states"]
+    C --> D["🏷️ Classification head<br/>[CLS] → Intent label"]
+    C --> E["🔖 NER head<br/>Token states → Entity labels per token"]
+    C --> F["❓ QA head<br/>[CLS] → Start/End logit positions"]
 ```
 
 **Implementation pattern:**

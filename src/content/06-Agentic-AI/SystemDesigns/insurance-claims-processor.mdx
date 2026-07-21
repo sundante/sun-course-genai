@@ -28,82 +28,7 @@ The problem is intentionally vague. These questions must be answered before comm
 
 ## System Architecture Overview
 
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│                        CLAIMANT INTERFACE                             │
-│         Web Portal / Mobile App / Phone (IVR + Transcription)        │
-│                                                                       │
-│   Submits: photos · videos · police report · written description     │
-└──────────────────────────┬───────────────────────────────────────────┘
-                           │
-                           ▼
-┌──────────────────────────────────────────────────────────────────────┐
-│                    SECURITY & INGESTION LAYER                         │
-│                                                                       │
-│   • PII Redaction: strip names, addresses, policy numbers from       │
-│     evidence before passing to LLMs                                  │
-│   • Prompt Injection Guard: sanitize free-text fields                │
-│   • Fraudulent Imagery Detection: EXIF metadata check,              │
-│     reverse image search for stock/recycled photos                   │
-│   • Evidence stored in secure object store (encrypted at rest)       │
-└──────────────────────────┬───────────────────────────────────────────┘
-                           │  Sanitised claim package
-                           ▼
-┌──────────────────────────────────────────────────────────────────────┐
-│                       ORCHESTRATOR AGENT                              │
-│                                                                       │
-│   Model: Multi-modal Foundation Model (e.g., Gemini / Claude)        │
-│   Pattern: Plan → Dispatch → Reflect → Synthesize                    │
-│                                                                       │
-│   • Creates claim context window (shared state for all sub-agents)   │
-│   • Dispatches to specialist sub-agents in parallel                  │
-│   • Detects conflicts between sub-agent findings                     │
-│   • Applies escalation rules → routes to HITL or auto-decision       │
-│   • Interfaces with legacy CMS and CRM via tool calls                │
-└──────┬─────────────┬──────────────────────┬───────────────────┬──────┘
-       │             │                      │                   │
-       ▼             ▼                      ▼                   ▼
-┌──────────┐  ┌──────────────┐   ┌─────────────────┐  ┌─────────────────┐
-│  DAMAGE  │  │    POLICY    │   │  COST ESTIMATOR │  │  LEGACY SYSTEM  │
-│  ANALYST │  │   AUDITOR    │   │                 │  │   CONNECTOR     │
-│          │  │              │   │ • RAG over      │  │                 │
-│ • Vision │  │ • Coverage   │   │   repair cost   │  │ • CMS + CRM     │
-│   model  │  │   limits +   │   │   benchmarks    │  │   read/write    │
-│ • EXIF   │  │   exclusions │   │ • ACV / RCV     │  │                 │
-│   check  │  │ • Flags gaps │   │   per policy    │  │                 │
-└─────┬────┘  └───────┬──────┘   └────────┬────────┘  └────────┬────────┘
-      │               │                   │                    │
-      └───────────────┴──────────────┬────┘                    │
-                                     ▼                         │
-┌────────────────────────────────────────────────────────────────────────┐
-│                          SYNTHESIZER AGENT                              │
-│                                                                         │
-│   Combines: damage + policy coverage + cost estimate + claimant history│
-│                                                                         │
-│   RECOMMENDATION  │  CONDITIONS                                         │
-│   ✅ Approve      │  Damage confirmed · Covered · Fraud risk: LOW       │
-│   ℹ️ Request Info │  Evidence incomplete · Policy gap unclear           │
-│   🔍 Dispatch     │  High severity · Fraud risk: MED/HIGH · Conflict    │
-│      Human        │                                                     │
-└──────────────────────────────┬──────────────────────────────────────────┘
-                               │
-           ┌───────────────────┼───────────────────┐
-           ▼                   ▼                   ▼
-    ✅ Auto-Approve       ℹ️ Request Info    🔍 Escalate to
-    (HITL light-touch)   Claimant notified   Human Adjuster
-    Adjuster 48hr        via portal          Full package
-    override window                              │
-           └───────────────────┴───────────────────┘
-                               │
-                               ▼
-              ┌────────────────────────────────┐
-              │        NOTIFICATION AGENT       │
-              │  • Updates CMS claim status    │
-              │  • Emails / SMS claimant       │
-              │  • Triggers payment if approved│
-              │  • Refers approved contractors │
-              └────────────────────────────────┘
-```
+See the [End-to-End Agent Orchestration Flow](#end-to-end-agent-orchestration-flow) diagram in the Diagrams section below for the full architecture - claimant interface, security & ingestion layer, orchestrator, the four specialist sub-agents, the synthesizer, and the notification agent.
 
 ---
 
@@ -195,58 +120,30 @@ Outputs one of three structured recommendations with a **fraud risk score (Low /
 
 ## Data Flow
 
-```
-Claimant submits evidence
-        │
-        ▼
-Security Layer: PII redaction · prompt injection guard · image auth check
-        │
-        ▼
-Orchestrator creates claim context window
-        │
-        ├──► [PARALLEL] Damage Analyst ──────► damage type + severity + flags
-        ├──► [PARALLEL] Policy Auditor ──────► coverage summary + exclusions
-        └──► [PARALLEL] Legacy Connector ───► claimant history from CRM
-        │
-        ▼ (all three complete)
-Cost Estimator ──► itemised repair cost + draft settlement offer
-        │
-        ▼
-Synthesizer ──► conflict detection ──► recommendation + fraud risk score
-        │
-   ┌────┴──────────┬──────────────────┐
-   │               │                  │
-Approve        Request Info      Dispatch Assessor
-(HITL light)   (notify claimant) (full package to adjuster)
-   │               │                  │
-   └───────────────┴──────────────────┘
-                   │
-        Notification Agent ──► claimant + CMS update + payment trigger
+```mermaid
+flowchart TD
+    A["📥 Claimant submits evidence"] --> B["🔒 Security Layer<br/>PII redaction · prompt injection guard · image auth"]
+    B --> C["🧭 Orchestrator creates claim context window"]
+    C --> D["🖼️ Damage Analyst (parallel)"]
+    C --> E["📋 Policy Auditor (parallel)"]
+    C --> F["🔌 Legacy Connector (parallel)"]
+    D --> G["💰 Cost Estimator<br/>itemised repair cost + draft settlement"]
+    E --> G
+    F --> G
+    G --> H["🧩 Synthesizer<br/>conflict detection → recommendation + fraud risk score"]
+    H --> I["✅ Approve<br/>(HITL light)"]
+    H --> J["ℹ️ Request Info<br/>(notify claimant)"]
+    H --> K["🔍 Dispatch Assessor<br/>(full package to adjuster)"]
+    I --> L["🔔 Notification Agent<br/>claimant + CMS update + payment trigger"]
+    J --> L
+    K --> L
 ```
 
 ---
 
 ## Claim State Machine
 
-```
-SUBMITTED ──► EVIDENCE_REVIEW ──► PENDING_INFO ──► EVIDENCE_REVIEW
-                    │
-                    ▼
-             SYNTHESIZING
-                    │
-        ┌───────────┼────────────────┐
-        │           │                │
-   AUTO_APPROVED  AWAITING_INFO  AWAITING_ASSESSOR
-        │                            │
-        └────────────┬───────────────┘
-                     │
-               ADJUSTER_REVIEW
-                     │
-              ┌──────┴──────┐
-           APPROVED       DENIED
-              └──────┬────────┘
-                   CLOSED
-```
+See the [Claim State Machine](#claim-state-machine-1) diagram in the Diagrams section below for the full state transition graph (SUBMITTED → EVIDENCE_REVIEW → ... → CLOSED).
 
 ---
 

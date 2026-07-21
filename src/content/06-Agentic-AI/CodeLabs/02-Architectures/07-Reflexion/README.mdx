@@ -2,26 +2,16 @@
 
 ## Pattern: Generate → Evaluate → Conditionally Rewrite
 
-```
-Input
-  │
-  ▼
-┌──────────┐
-│ Generate │  ← produce initial output
-└────┬─────┘
-     │
-     ▼
-┌──────────┐
-│ Evaluate │  ← score / critique the output
-└────┬─────┘
-     │
-  score < threshold?
-  ┌───┴───┐
-  │ YES   │ NO
-  ▼       ▼
-Rewrite  Output
-  │
-  └──► Evaluate (loop, max N times)
+```mermaid
+flowchart TD
+    I["📥 Input"] --> G["✏️ Generate<br/>produce initial output"]
+    G --> E["🧪 Evaluate<br/>score / critique the output"]
+    E --> Q{"score &lt; threshold?"}
+    Q -->|YES| R["🔁 Rewrite"]
+    Q -->|NO| O(["✅ Output"])
+    R -.->|"loop, max N times"| E
+
+    style Q fill:#fff3cd,stroke:#f0a500
 ```
 
 ## Key Insight

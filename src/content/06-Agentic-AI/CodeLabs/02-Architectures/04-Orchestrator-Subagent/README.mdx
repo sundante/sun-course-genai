@@ -2,19 +2,15 @@
 
 ## Pattern: Planner Orchestrates Specialist Workers
 
-```
-User Goal
-    │
-    ▼
-┌──────────────────┐
-│   Orchestrator   │  ← plans, delegates, never executes directly
-│   (Planner LLM)  │
-└────────┬─────────┘
-         │  dynamic task assignment
-    ┌────┼────┬────┐
-    ▼    ▼    ▼    ▼
- Search  Code  Write  Summarize
- Agent  Agent  Agent   Agent
+```mermaid
+flowchart TD
+    G["🎯 User Goal"] --> O["🧭 Orchestrator (Planner LLM)<br/>plans, delegates, never executes directly"]
+    O -->|dynamic task assignment| S["🔎 Search Agent"]
+    O --> C["💻 Code Agent"]
+    O --> W["✍️ Write Agent"]
+    O --> Su["📝 Summarize Agent"]
+
+    style O fill:#fff3cd,stroke:#f0a500
 ```
 
 ## How It Differs from Hierarchical

@@ -28,73 +28,29 @@
 
 ## System Architecture Overview
 
-```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                           INGESTION PIPELINE                                 │
-│                                                                              │
-│  Cloud Storage (raw docs)                                                    │
-│       │                                                                      │
-│       ▼                                                                      │
-│  Cloud Run: Document Parser                                                  │
-│  ┌─────────────────────────────────────────────────────────┐                │
-│  │  PDF → Document AI (OCR + layout)                       │                │
-│  │  Word/HTML → python-docx / BeautifulSoup                │                │
-│  │  Output: cleaned text + metadata JSON                   │                │
-│  └─────────────────────────────────────────────────────────┘                │
-│       │                                                                      │
-│       ▼                                                                      │
-│  Cloud Tasks Queue (back-pressure management)                                │
-│       │                                                                      │
-│       ▼                                                                      │
-│  Cloud Run: Chunker + Embedder                                               │
-│  ┌─────────────────────────────────────────────────────────┐                │
-│  │  Semantic chunking (512 tokens, 10% overlap)            │                │
-│  │  Vertex AI text-embedding-005 → 768-dim vectors         │                │
-│  │  Metadata: doc_id, chunk_id, source_url, date, section  │                │
-│  └─────────────────────────────────────────────────────────┘                │
-│       │                                                                      │
-│       ├─────────────────────┬──────────────────────────────┤                │
-│       ▼                     ▼                              ▼                │
-│  Vertex AI Vector      AlloyDB (BM25         BigQuery (metadata            │
-│  Search (ANN)          sparse index)         + eval logging)               │
-└──────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph INGEST["📥 Ingestion Pipeline"]
+        CS["🗄️ Cloud Storage<br/>(raw docs)"] --> DP["⚙️ Cloud Run: Document Parser<br/>PDF → Document AI (OCR + layout)<br/>Word/HTML → python-docx / BeautifulSoup<br/>Output: cleaned text + metadata JSON"]
+        DP --> CT["📬 Cloud Tasks Queue<br/>(back-pressure management)"]
+        CT --> CE["⚙️ Cloud Run: Chunker + Embedder<br/>Semantic chunking (512 tokens, 10% overlap)<br/>text-embedding-005 → 768-dim vectors"]
+        CE --> VS[("📡 Vertex AI Vector Search<br/>(ANN)")]
+        CE --> AD[("🗄️ AlloyDB<br/>(BM25 sparse index)")]
+        CE --> BQ[("📊 BigQuery<br/>(metadata + eval logging)")]
+    end
 
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                            QUERY PIPELINE                                    │
-│                                                                              │
-│  User Query                                                                  │
-│       │                                                                      │
-│       ▼                                                                      │
-│  API Gateway → Cloud Run: Query Service                                      │
-│  ┌─────────────────────────────────────────────────────────┐                │
-│  │  1. Auth check (IAP or OAuth2)                          │                │
-│  │  2. Query embedding (text-embedding-005)                │                │
-│  │  3. Check Memorystore (Redis) semantic cache            │                │
-│  └─────────────────────────────────────────────────────────┘                │
-│                   │  (cache miss)                                            │
-│                   ▼                                                          │
-│  ┌─────────────────────────────────────────────────────────┐                │
-│  │  HYBRID RETRIEVAL                                        │                │
-│  │                                                          │                │
-│  │  Dense:  Vertex AI Vector Search → top-20 chunks        │                │
-│  │  Sparse: AlloyDB full-text (BM25) → top-20 chunks       │                │
-│  │  Fusion: Reciprocal Rank Fusion → top-5                 │                │
-│  │  Rerank: Vertex AI Reranker (cross-encoder) → top-3     │                │
-│  └─────────────────────────────────────────────────────────┘                │
-│                   │                                                          │
-│                   ▼                                                          │
-│  ┌─────────────────────────────────────────────────────────┐                │
-│  │  GENERATION                                              │                │
-│  │                                                          │                │
-│  │  Prompt assembly: system + context + query              │                │
-│  │  Vertex AI Gemini 1.5 Pro → answer + citations          │                │
-│  │  Grounding check: Vertex AI Grounding API               │                │
-│  │  Citation extraction: source_url per claim              │                │
-│  └─────────────────────────────────────────────────────────┘                │
-│                   │                                                          │
-│                   ▼                                                          │
-│  Response → User + log to BigQuery (for eval/feedback)                      │
-└──────────────────────────────────────────────────────────────────────────────┘
+    subgraph QUERY["🔍 Query Pipeline"]
+        UQ["❓ User Query"] --> GW["🚪 API Gateway → Query Service<br/>1. Auth check (IAP or OAuth2)<br/>2. Query embedding<br/>3. Check Memorystore semantic cache"]
+        GW -->|cache miss| HR["📡 Hybrid Retrieval<br/>Dense: Vector Search → top-20<br/>Sparse: AlloyDB BM25 → top-20<br/>Fusion: RRF → top-5<br/>Rerank: Vertex AI Reranker → top-3"]
+        HR --> GEN["🤖 Generation<br/>Prompt: system + context + query<br/>Gemini 1.5 Pro → answer + citations<br/>Grounding check + citation extraction"]
+        GEN --> ANS(["✅ Response → User<br/>+ log to BigQuery"])
+    end
+
+    VS -.-> HR
+    AD -.-> HR
+
+    style INGEST fill:#e8f4fd,stroke:#4a9eca
+    style QUERY fill:#d4edda,stroke:#28a745
 ```
 
 ---

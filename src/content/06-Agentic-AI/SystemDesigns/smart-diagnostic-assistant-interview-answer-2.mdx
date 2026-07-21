@@ -79,106 +79,63 @@ At 200–300 concurrent queries, with 5s P99 budget, this is perfectly achievabl
 
 ## Full Architecture
 
-```
-Technician Input (voice / QR scan / photo)
-        ↓
-┌──────────────────────────────────────────────────────────────┐
-│  STAGE 1: Data Processing Agent                               │
-│                                                               │
-│  Voice  ──→ Vertex AI Speech-to-Text ──→ problem description  │
-│  Photo  ──→ Gemini Vision API ─────────→ failure symptoms     │
-│  QR Code ─→ Equipment Registry lookup ─→ machine context      │
-│                                                               │
-│  Output: EquipmentContext {                                   │
-│    equipment_id, machine_model, location,                     │
-│    failure_description, symptom_tags[],                       │
-│    technician_id, skill_tier                                  │
-│  }                                                            │
-└──────────────────────────────┬───────────────────────────────┘
-                               ↓
-┌──────────────────────────────────────────────────────────────┐
-│  STAGE 2: Orchestrator                                        │
-│                                                               │
-│  1. Classifies failure mode (Gemini Flash) + confidence score │
-│  2. Authorization check: is tech's skill_tier sufficient?     │
-│     → If no: return escalation immediately, skip all agents   │
-│  3. Checks LOTO requirement for this failure class            │
-│  4. Decides which agents to invoke:                           │
-│     ┌─ SOPs & Safety: ALWAYS                                  │
-│     ├─ RAG Manual Fetch: ALWAYS                               │
-│     └─ Legacy & History: only if machine has repair history   │
-│  5. Dispatches in parallel, holds shared state                │
-│                                                               │
-│  Shared state:                                                │
-│  { equipment_id, failure_class, confidence,                   │
-│    skill_tier, loto_required, agents_invoked[] }              │
-└────────┬──────────────────┬──────────────────┬───────────────┘
-         ↓ parallel         ↓ parallel         ↓ parallel
-┌────────────────┐  ┌────────────────┐  ┌────────────────────┐
-│  STAGE 3A      │  │  STAGE 3B      │  │  STAGE 3C          │
-│  Legacy &      │  │  RAG Manual    │  │  SOPs & Safety     │
-│  History Fetch │  │  Fetch Agent   │  │  Fetch Agent       │
-│                │  │                │  │                    │
-│ Spanner Graph: │  │ Vertex AI      │  │ Firestore:         │
-│  machine →     │  │ Vector Search: │  │  LOTO procedures   │
-│  failure mode  │  │  OEM manuals   │  │  IEC 62443 rules   │
-│  → procedure   │  │  repair guides │  │  NFPA 70E reqs     │
-│                │  │  parts catalog │  │  escalation limits │
-│ BigQuery:      │  │                │  │  skill tier map    │
-│  past repairs  │  │ Returns:       │  │                    │
-│  MTTR history  │  │  top-k chunks  │  │ Returns:           │
-│  tech notes    │  │  + source refs │  │  required safety   │
-│                │  │  + confidence  │  │  steps, LOTO Y/N,  │
-│ Returns:       │  │                │  │  escalation flags  │
-│  similar cases │  │                │  │                    │
-│  + outcomes    │  │                │  │                    │
-└────────┬───────┘  └────────┬───────┘  └─────────┬──────────┘
-         └──────────────┬────┘                     │
-                        └───────────────┬───────────┘
-                                        ↓ aggregate
-┌──────────────────────────────────────────────────────────────┐
-│  STAGE 4: Analyser, Validator & Standards Enforcer            │
-│                                                               │
-│  Conflict resolution (hard precedence order):                 │
-│    SOPs & Safety  >  Historical outcomes  >  OEM Manual       │
-│                                                               │
-│  Validation checks (all blocking):                            │
-│  ✓ LOTO completeness: if loto_required=true, Step 1 must be   │
-│    lockout - non-negotiable, block synthesis if absent        │
-│  ✓ Skill-tier authorization confirmed (second check)          │
-│  ✓ IEC 62443 / NFPA 70E compliance                            │
-│  ✓ Re-failure rate flag: if >20% of similar past repairs      │
-│    failed within 30 days → attach warning, don't suppress     │
-│  ✓ Auto-escalation: voltage >480V or confined space entry     │
-│    → block synthesis, return escalation to supervisor         │
-│                                                               │
-│  Output: ValidatedDiagnosticContext {                         │
-│    procedure_steps[], safety_steps[], parts_list[],           │
-│    estimated_time_minutes, historical_success_rate,           │
-│    sources[], escalation_required, warnings[]                 │
-│  }                                                            │
-└──────────────────────────────┬───────────────────────────────┘
-                               ↓ (only if validation passed)
-┌──────────────────────────────────────────────────────────────┐
-│  STAGE 5: Synthesizer                                         │
-│                                                               │
-│  Generates (Gemini 1.5 Pro):                                  │
-│  - Step-by-step repair procedure (mobile-optimized format)    │
-│  - Safety warnings with regulatory citations                  │
-│  - Parts list + quantities + SAP inventory status             │
-│  - Time estimate from historical MTTR data                    │
-│  - Source references (manual section + past repair IDs)       │
-│  - Bilingual output (English + Spanish)                       │
-│  - Offline-capable package (if technician's device on WiFi)   │
-│                                                               │
-│  Side effects:                                                │
-│  - Creates SAP PM work order                                  │
-│  - Logs event to BigQuery (for weekly feedback loop)          │
-│  - Triggers parts pre-order if inventory < threshold          │
-└──────────────────────────────────────────────────────────────┘
-                               ↓
-              Technician receives diagnostic guide
-              (online: real-time stream / offline: cached)
+```mermaid
+flowchart TD
+    IN["🧑‍🔧 Technician Input<br/>(voice / QR scan / photo)"] --> S1
+
+    subgraph S1["1️⃣ Data Processing Agent"]
+        V["🗣️ Voice → Vertex AI Speech-to-Text → problem description"]
+        P["📷 Photo → Gemini Vision API → failure symptoms"]
+        Q["🔎 QR Code → Equipment Registry lookup → machine context"]
+        OUT1["📦 EquipmentContext {equipment_id, machine_model,<br/>location, failure_description, symptom_tags[],<br/>technician_id, skill_tier}"]
+        V --> OUT1
+        P --> OUT1
+        Q --> OUT1
+    end
+
+    S1 --> S2
+
+    subgraph S2["2️⃣ Orchestrator"]
+        O1["Classify failure mode (Gemini Flash) + confidence"]
+        O2["Authorization check: skill_tier sufficient?<br/>If no → escalate immediately, skip all agents"]
+        O3["Check LOTO requirement for this failure class"]
+        O4["Decide which agents to invoke:<br/>SOPs & Safety: ALWAYS · RAG Manual: ALWAYS<br/>Legacy & History: only if repair history exists"]
+        O1 --> O2 --> O3 --> O4
+    end
+
+    S2 -->|parallel| S3A
+    S2 -->|parallel| S3B
+    S2 -->|parallel| S3C
+
+    S3A["🕸️ 3A: Legacy & History Fetch<br/>Spanner Graph: machine → failure → procedure<br/>BigQuery: past repairs, MTTR, tech notes<br/>Returns: similar cases + outcomes"]
+    S3B["📡 3B: RAG Manual Fetch<br/>Vertex AI Vector Search: OEM manuals,<br/>repair guides, parts catalog<br/>Returns: top-k chunks + source refs + confidence"]
+    S3C["🛡️ 3C: SOPs & Safety Fetch<br/>Firestore: LOTO procedures, IEC 62443,<br/>NFPA 70E, escalation limits, skill tier map<br/>Returns: required safety steps, LOTO Y/N"]
+
+    S3A --> S4
+    S3B --> S4
+    S3C --> S4
+
+    subgraph S4["4️⃣ Analyser, Validator & Standards Enforcer"]
+        VA1["Conflict resolution: SOPs &gt; History &gt; Manual"]
+        VA2["Validation (all blocking):<br/>LOTO completeness · skill-tier confirmed<br/>IEC 62443/NFPA 70E · re-failure rate flag<br/>Auto-escalation: &gt;480V or confined space"]
+        VA3["📦 ValidatedDiagnosticContext {procedure_steps[],<br/>safety_steps[], parts_list[], estimated_time,<br/>historical_success_rate, sources[], warnings[]}"]
+        VA1 --> VA2 --> VA3
+    end
+
+    S4 -->|only if validation passed| S5
+
+    subgraph S5["5️⃣ Synthesizer (Gemini 1.5 Pro)"]
+        G1["Step-by-step procedure (mobile-optimized)<br/>Safety warnings + regulatory citations<br/>Parts list + SAP inventory status<br/>Time estimate · sources · bilingual output"]
+        G2["Side effects: create SAP PM work order ·<br/>log to BigQuery · trigger parts pre-order"]
+        G1 --> G2
+    end
+
+    S5 --> OUT["✅ Technician receives diagnostic guide<br/>(online: real-time stream / offline: cached)"]
+
+    style S1 fill:#e8f4fd,stroke:#4a9eca
+    style S2 fill:#fff3cd,stroke:#f0a500
+    style S4 fill:#e2d9f3,stroke:#6f42c1
+    style S5 fill:#d4edda,stroke:#28a745
 ```
 
 ---

@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Learn GenAI — Project Status</title>
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --bg-card: #ffffff;
+    --text: #1c1c1a;
+    --text-dim: #5a5a54;
+    --border: #e3e2dc;
+    --accent: #b8860b;
+    --accent-bg: #fdf6e3;
+    --done: #1f7a3d;
+    --done-bg: #e6f4ea;
+    --progress: #b8860b;
+    --progress-bg: #fdf1d6;
+    --planned: #6b6b64;
+    --planned-bg: #eeeeea;
+    --issue: #b3261e;
+    --issue-bg: #fbeaea;
+    --code-bg: #f0efe9;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Arial, sans-serif;
+  }
+  /* Light mode is the default regardless of system prefers-color-scheme.
+     Dark mode only activates via the explicit on-page toggle below. */
+  :root[data-theme="dark"] {
+    --bg: #161614; --bg-card: #201f1c; --text: #ece9e2; --text-dim: #a8a49a;
+    --border: #38362f; --accent: #e0b84c; --accent-bg: #2c2510;
+    --done: #6fce8f; --done-bg: #163322; --progress: #e0b84c; --progress-bg: #332a10;
+    --planned: #9c988d; --planned-bg: #29281f; --issue: #f28b82; --issue-bg: #341918;
+    --code-bg: #262420;
+  }
+  :root[data-theme="light"] {
+    --bg: #f7f7f5; --bg-card: #ffffff; --text: #1c1c1a; --text-dim: #5a5a54;
+    --border: #e3e2dc; --accent: #b8860b; --accent-bg: #fdf6e3;
+    --done: #1f7a3d; --done-bg: #e6f4ea; --progress: #b8860b; --progress-bg: #fdf1d6;
+    --planned: #6b6b64; --planned-bg: #eeeeea; --issue: #b3261e; --issue-bg: #fbeaea;
+    --code-bg: #f0efe9;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.55;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 2.5rem 1.25rem 5rem; }
+
+  header.page-head {
+    margin-bottom: 1.75rem;
+  }
+  header.page-head h1 {
+    font-size: 1.7rem;
+    margin: 0 0 .35rem;
+    letter-spacing: -0.01em;
+  }
+  header.page-head .meta {
+    color: var(--text-dim);
+    font-size: .9rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem 1rem;
+  }
+  header.page-head .meta code { font-family: var(--mono); font-size: .85em; }
+
+  .toolbar {
+    display: flex;
+    gap: .6rem;
+    margin: 1.25rem 0 1.5rem;
+    flex-wrap: wrap;
+  }
+  .toolbar button {
+    font: inherit;
+    font-size: .85rem;
+    padding: .45rem .9rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text);
+    cursor: pointer;
+  }
+  .toolbar button:hover { border-color: var(--accent); color: var(--accent); }
+
+  details.section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: .9rem;
+    overflow: hidden;
+  }
+  details.section > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: .95rem 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    font-weight: 600;
+    font-size: 1.02rem;
+    user-select: none;
+  }
+  details.section > summary::-webkit-details-marker { display: none; }
+  details.section > summary .chev {
+    transition: transform .15s ease;
+    color: var(--text-dim);
+    font-size: .8em;
+    flex-shrink: 0;
+  }
+  details.section[open] > summary .chev { transform: rotate(90deg); }
+  details.section > summary .count {
+    margin-left: auto;
+    font-weight: 400;
+    font-size: .8rem;
+    color: var(--text-dim);
+  }
+  .section-body {
+    padding: 0 1.2rem 1.2rem;
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+  }
+
+  h3.sub { font-size: .95rem; margin: 1.1rem 0 .5rem; color: var(--text); }
+  h3.sub:first-child { margin-top: 0; }
+
+  table { width: 100%; border-collapse: collapse; font-size: .88rem; margin: .6rem 0 1rem; }
+  th, td { text-align: left; padding: .45rem .6rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--text-dim); font-weight: 600; font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; }
+
+  ul.tasklist, ul.plain { margin: .4rem 0 .9rem; padding-left: 1.3rem; }
+  ul.tasklist li, ul.plain li { margin: .3rem 0; }
+  ul.tasklist { list-style: none; padding-left: 0; }
+  ul.tasklist li { padding-left: 1.6rem; position: relative; }
+  ul.tasklist li::before {
+    content: "☐";
+    position: absolute;
+    left: 0;
+    color: var(--planned);
+  }
+
+  code, pre {
+    font-family: var(--mono);
+    font-size: .82rem;
+  }
+  code { background: var(--code-bg); padding: .1rem .35rem; border-radius: 5px; }
+  pre {
+    background: var(--code-bg);
+    padding: .9rem 1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+  }
+  pre code { background: none; padding: 0; }
+
+  .pill {
+    display: inline-block;
+    font-size: .72rem;
+    font-weight: 600;
+    padding: .12rem .55rem;
+    border-radius: 999px;
+    letter-spacing: .02em;
+  }
+  .pill.done { color: var(--done); background: var(--done-bg); }
+  .pill.progress { color: var(--progress); background: var(--progress-bg); }
+  .pill.planned { color: var(--planned); background: var(--planned-bg); }
+  .pill.issue { color: var(--issue); background: var(--issue-bg); }
+
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-bg);
+    padding: .7rem 1rem;
+    border-radius: 0 8px 8px 0;
+    font-size: .88rem;
+    margin: .8rem 0;
+  }
+  .callout strong { color: var(--accent); }
+
+  .issue-item {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: .7rem .9rem;
+    margin: .6rem 0;
+    font-size: .88rem;
+  }
+  .issue-item .num { color: var(--issue); font-weight: 700; margin-right: .3rem; }
+
+  footer.page-foot {
+    margin-top: 2.5rem;
+    color: var(--text-dim);
+    font-size: .8rem;
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+  }
+
+  @media (max-width: 600px) {
+    table, thead, tbody, th, td, tr { display: block; }
+    thead { display: none; }
+    td { border-bottom: none; padding: .15rem .2rem; }
+    tr { padding-bottom: .6rem; border-bottom: 1px solid var(--border); margin-bottom: .5rem; }
+    td::before { content: attr(data-label); display: block; font-size: .72rem; color: var(--text-dim); font-weight: 600; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="page-head">
+    <h1>Learn GenAI — Project Status</h1>
+    <div class="meta">
+      <span>🔗 <code>learngenai.sunmintz.com</code></span>
+      <span>🧱 Next.js 16.2.9 · TypeScript · Tailwind 4 · MDX · shadcn/ui</span>
+      <span>📅 Last updated <code>2026-07-21</code></span>
+      <span>📌 Last commit <code>e5f3191</code> (2026-06-29)</span>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <button id="expandAll">Expand all</button>
+    <button id="collapseAll">Collapse all</button>
+    <button id="themeToggle">🌙 Dark mode</button>
+  </div>
+
+  <details class="section" open>
+    <summary><span class="chev">▶</span> 1 · Deployment <span class="count">Hostinger · manual FTP</span></summary>
+    <div class="section-body">
+      <p>Static export (<code>output: "export"</code>) built via <code>next build</code>, uploaded to Hostinger by a manually-triggered GitHub Actions workflow. No Node server at runtime; served at <code>sunmintz.com/learngenai/</code>.</p>
+
+      <h3 class="sub">Why static export works</h3>
+      <ul class="plain">
+        <li><code>output: "export"</code> → pure static HTML/CSS/JS</li>
+        <li><code>trailingSlash: true</code> → every route emits <code>route/index.html</code></li>
+        <li><code>images: { unoptimized: true }</code> → no image-optimization server needed</li>
+      </ul>
+
+      <h3 class="sub">Current workflow — <code>.github/workflows/deploy.yml</code></h3>
+      <pre><code>name: Deploy to Hostinger
+on:
+  workflow_dispatch:        # manual trigger only
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - actions/checkout@v4
+      - actions/setup-node@v4 (node 20, npm cache)
+      - run: npm ci
+      - run: npm run build
+      - uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: 21
+          local-dir: ./out/
+          server-dir: /domains/sunmintz.com/public_html/learngenai/</code></pre>
+
+      <h3 class="sub">Required secrets</h3>
+      <table>
+        <thead><tr><th>Secret</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td data-label="Secret"><code>FTP_SERVER</code></td><td data-label="Purpose">FTP hostname from Hostinger hPanel</td></tr>
+          <tr><td data-label="Secret"><code>FTP_USERNAME</code></td><td data-label="Purpose">FTP account username</td></tr>
+          <tr><td data-label="Secret"><code>FTP_PASSWORD</code></td><td data-label="Purpose">FTP account password</td></tr>
+        </tbody>
+      </table>
+      <div class="callout"><strong>Note:</strong> <code>server-dir</code> is hardcoded in the YAML, not read from a secret — a previous tracker doc claimed <code>FTP_HOST</code> / <code>FTP_SERVER_DIR</code> secrets existed. That was wrong; corrected here.</div>
+
+      <h3 class="sub">Deploy history</h3>
+      <ul class="plain">
+        <li>Workflow was deleted/recreated and switched from auto-trigger to manual-only during June CI fixes (untracked <code>package-lock.json</code>/<code>tsconfig.json</code> had been blocking npm cache and path-alias resolution)</li>
+        <li>Latest change (2026-06-29, <code>e5f3191</code>) removed an unused <code>environment</code> choice input, back to a bare <code>workflow_dispatch</code></li>
+        <li><strong>No CI runs on push/PR</strong> — lint/typecheck/build are not verified automatically before merge</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="section">
+    <summary><span class="chev">▶</span> 2 · What's Built <span class="count">109 .mdx files · 7 modules</span></summary>
+    <div class="section-body">
+
+      <h3 class="sub">Core App</h3>
+      <ul class="plain">
+        <li>Next.js App Router + TypeScript (strict) + Tailwind CSS 4</li>
+        <li>Static export configured (<code>output: "export"</code>)</li>
+        <li>Inter + JetBrains Mono via <code>next/font/google</code></li>
+        <li>Design system — sun-yellow tokens, prose overrides, audience-toggle CSS</li>
+      </ul>
+
+      <h3 class="sub">Navigation & Content Pipeline</h3>
+      <ul class="plain">
+        <li><code>src/content/nav.yml</code> — single source of truth for navigation (MkDocs-style)</li>
+        <li><code>src/lib/content/nav.ts</code> — parses nav.yml, builds flat page list, computes prev/next</li>
+        <li><code>src/lib/content/loader.ts</code> — reads .mdx, extracts TOC via heading regex</li>
+        <li><code>src/lib/content/remarkRewriteMdLinks.ts</code> — build-time cross-link rewriting</li>
+        <li>MDX pipeline: <code>next-mdx-remote/rsc</code> + remark-gfm, rehype-raw/slug/autolink-headings/highlight</li>
+        <li><strong>Automatic WIP detection</strong> — <code>isStubFile()</code> flags pages with &lt; 8 substantive lines as <code>wip: true</code>, not a manual flag</li>
+      </ul>
+
+      <h3 class="sub">Pages</h3>
+      <ul class="plain">
+        <li>Homepage — hero, module grid, stats strip, learning paths, footer <span class="pill done">done</span></li>
+        <li>Course content pages — <code>/learn/[module]/[slug]</code> <span class="pill done">done</span></li>
+        <li>404 page <span class="pill done">done</span></li>
+        <li>Quiz pages — <code>/quiz/all</code>, <code>/quiz/[module]</code> <span class="pill progress">stub only</span></li>
+      </ul>
+
+      <h3 class="sub">UI Components</h3>
+      <ul class="plain">
+        <li>Header, Sidebar (icon-rail collapse, numbered modules/leaves), MobileNav</li>
+        <li>AudienceToggle (All / Technical / Non-Technical, localStorage-persisted)</li>
+        <li>AudienceOnboardingModal, DisclaimerModal, DisclaimerNote</li>
+        <li>TableOfContents (IntersectionObserver active-heading tracking)</li>
+        <li>PageNav (prev/next), UnderDevelopment (WIP placeholder)</li>
+        <li>MermaidDiagram, AgentUseCaseMindmap, MdxComponents</li>
+        <li>shadcn/ui primitives — button, sheet, card, badge, progress, separator</li>
+      </ul>
+
+      <h3 class="sub">Course Content by Module</h3>
+      <table>
+        <thead><tr><th>Module</th><th>Dir</th><th>Contents</th></tr></thead>
+        <tbody>
+          <tr><td data-label="Module">01 · LLM Models</td><td data-label="Dir"><code>01-LLM-Models/</code></td><td data-label="Contents">Overview + 12 notes (Fundamentals → Architecture → Attention → Model Types → KV Cache/Inference → Training → Fine-Tuning → GPU/Hardware → Failure Modes → Production → Prompting Strategies → Q&amp;A Bank)</td></tr>
+          <tr><td data-label="Module">02 · Prompt Engineering</td><td data-label="Dir"><code>02-Prompts/</code></td><td data-label="Contents">Overview + 6 notes (Basics, Core Techniques, Advanced Techniques, Production, Optimization/Automation, Q&amp;A Bank) + Resources</td></tr>
+          <tr><td data-label="Module">03 · RAG</td><td data-label="Dir"><code>03-RAGs/</code></td><td data-label="Contents">Overview + 12 notes + 2 System Designs (Simple RAG Pipeline, Agentic RAG Hybrid) + Resources</td></tr>
+          <tr><td data-label="Module">04 · MCP</td><td data-label="Dir"><code>04-MCP/</code></td><td data-label="Contents">Overview + 9 notes (Problem → Definition → Solution → Components → Capabilities → Why It Matters → Architecture → Getting Started → Q&amp;A Bank) + Implementation</td></tr>
+          <tr><td data-label="Module">05 · AI Agents</td><td data-label="Dir"><code>05-Agents/</code></td><td data-label="Contents">Overview + 6 concept notes + Code Labs (Agent Types + GCP ADK / LangChain / LangGraph / CrewAI, each Fundamentals + Simple + Complex Agent) — <span class="pill progress">most recently active</span></td></tr>
+          <tr><td data-label="Module">06 · Agentic AI</td><td data-label="Dir"><code>06-Agentic-AI/</code></td><td data-label="Contents">Overview + 12 notes + 4 System Designs + Code Labs matrix (7 architecture patterns × 4 frameworks; 4 agentic systems × 4 frameworks)</td></tr>
+          <tr><td data-label="Module">Knowledge Check</td><td data-label="Dir"><code>Interview-Questions/</code></td><td data-label="Contents">Per-module question banks (01–06) + aggregate "All Questions"</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:.85rem;color:var(--text-dim)">Most recently active: Chapter 05 (AI Agents) — Anatomy, Memory, Use Cases, Enterprise vs Personal notes all landed 2026-06-29, same day as the last commit.</p>
+    </div>
+  </details>
+
+  <details class="section">
+    <summary><span class="chev">▶</span> 3 · Backlog <span class="count">near-term · content · future</span></summary>
+    <div class="section-body">
+
+      <h3 class="sub">Near-term</h3>
+      <ul class="tasklist">
+        <li><strong>Quiz feature</strong> — both routes fully stubbed; <code>QuizCard</code> type already scaffolded in <code>src/types/content.ts</code> with no consumer yet</li>
+        <li><strong>Search</strong> — no full-text search across content</li>
+        <li><strong>Progress tracking</strong> — no "mark complete" mechanism (localStorage-first was the plan)</li>
+        <li><strong>CI lint/build gate</strong> — nothing runs <code>npm run lint</code> / <code>next build</code> automatically on push/PR</li>
+      </ul>
+
+      <h3 class="sub">Content</h3>
+      <ul class="tasklist">
+        <li>More system-design case studies (only RAG + Agentic AI have them today)</li>
+        <li>Runnable code labs via CodeSandbox / StackBlitz instead of static blocks</li>
+        <li>Video embeds for architecture/visual concepts</li>
+      </ul>
+
+      <h3 class="sub">Future (post-maturity)</h3>
+      <ul class="tasklist">
+        <li>User auth + accounts (Clerk or Auth.js)</li>
+        <li>Bookmarks — save and resume lessons</li>
+        <li>Persistent progress sync across devices</li>
+        <li>Interactive MDX components — <code>&lt;QuizWidget /&gt;</code>, <code>&lt;CodePlayground /&gt;</code></li>
+        <li>Comment/discussion threads per lesson</li>
+      </ul>
+
+      <h3 class="sub">Test coverage</h3>
+      <div class="callout"><strong>No automated tests exist anywhere</strong> in the repo — no Jest/Vitest/Playwright config or dependencies. <code>test-results/.last-run.json</code> is a stray leftover artifact, not a real suite.</div>
+    </div>
+  </details>
+
+  <details class="section">
+    <summary><span class="chev">▶</span> 4 · Known Issues / Discrepancies <span class="count">5 items</span></summary>
+    <div class="section-body">
+      <div class="issue-item"><span class="num">1</span><strong>Deploy secrets doc drift</strong> (corrected in this doc) — old tracker said <code>FTP_HOST</code>/<code>FTP_SERVER_DIR</code>; actual workflow uses <code>FTP_SERVER</code> with a hardcoded server-dir.</div>
+      <div class="issue-item"><span class="num">2</span><strong>Stale predecessor tracker</strong> — old root <code>STATUS.md</code> undercounted content (107 vs. actual 109 files) and called deployment "to-do" though it already existed. Deleted; replaced by this file + <code>vibes/status.md</code>.</div>
+      <div class="issue-item"><span class="num">3</span><strong><code>test-results/.last-run.json</code></strong> at repo root is a leftover artifact from an ad-hoc run, not a checked-in suite. Safe to delete.</div>
+      <div class="issue-item"><span class="num">4</span><strong><code>README.md</code></strong> is still unedited <code>create-next-app</code> boilerplate — real docs live in <code>CLAUDE.md</code>, <code>AGENTS.md</code>, and <code>vibes/</code>.</div>
+      <div class="issue-item"><span class="num">5</span><strong>No staging environment</strong> — deploys go straight to production via manual trigger; no rollback beyond re-running an older commit's workflow.</div>
+    </div>
+  </details>
+
+  <details class="section">
+    <summary><span class="chev">▶</span> 5 · Handover Notes <span class="count">read first</span></summary>
+    <div class="section-body">
+      <p><strong>Where things left off:</strong> the last 4 commits (all 2026-06-29) focused on Chapter 05 (AI Agents) — Agent Anatomy, Agent Memory, Enterprise vs Personal Agents notes, Agent Use Cases update, and a deploy-YAML simplification. There has been a <strong>~3-week gap</strong> with no commits between 2026-06-29 and 2026-07-21 (today).</p>
+
+      <h3 class="sub">Suggested next steps, in priority order</h3>
+      <ol style="padding-left:1.3rem; font-size:.92rem;">
+        <li>Wire <code>npm run lint</code> (and ideally <code>next build</code>) into a CI check on PRs/push — nothing automated guards <code>main</code> today.</li>
+        <li>Pick a near-term backlog item — Quiz feature is the most visible gap; <code>QuizCard</code> is already scaffolded in <code>src/types/content.ts</code>.</li>
+        <li>If rotating deploy credentials, use <code>FTP_SERVER</code>/<code>FTP_USERNAME</code>/<code>FTP_PASSWORD</code> — not any older doc's names.</li>
+        <li>Keep <code>nav.yml</code> in sync with <code>src/content/</code> before adding content — it's the single source of truth for navigation.</li>
+        <li>Re-verify content counts whenever files change; update this doc's header count.</li>
+      </ol>
+
+      <h3 class="sub">Process going forward</h3>
+      <ul class="plain">
+        <li><code>vibes/status.md</code> — update after every successful build/coding session (refresh sections + append Changelog entry)</li>
+        <li><code>vibes/status.html</code> — regenerate on demand only, reflects <code>status.md</code> at generation time</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="section">
+    <summary><span class="chev">▶</span> 6 · Project Structure</summary>
+    <div class="section-body">
+      <pre><code>src/
+  app/
+    layout.tsx                        root layout
+    page.tsx                          homepage
+    not-found.tsx                     404
+    (course)/
+      layout.tsx                      header + sidebar shell
+      learn/[module]/[slug]/page.tsx  course content pages
+      quiz/all/page.tsx               quiz stub
+      quiz/[module]/page.tsx          quiz stub
+  components/
+    ui/                               shadcn primitives
+    course/                           Header, Sidebar, MobileNav, AudienceToggle,
+                                      TableOfContents, PageNav, UnderDevelopment, ...
+  lib/
+    utils.ts                          cn() helper
+    content/
+      nav.ts                          navigation tree + WIP detection
+      loader.ts                       reads .mdx, extracts TOC
+      remarkRewriteMdLinks.ts         build-time cross-link rewriting
+  types/
+    content.ts                        NavItem, NavModule, PageRef, PageContent, TocItem, QuizCard
+  content/                            109 .mdx source files
+    nav.yml
+    01-LLM-Models/  02-Prompts/  03-RAGs/  04-MCP/
+    05-Agents/      06-Agentic-AI/  Interview-Questions/
+    All_Questions.mdx
+
+vibes/                                design specs & project tracking
+  DESIGN-SYSTEM.md  UI-COMPONENTS.md  PAGE-LAYOUTS.md  BUILD-PROMPT.md
+  status.md          ← raw tracker (source of truth)
+  status.html         ← this file
+
+.github/workflows/deploy.yml          manual FTP deploy to Hostinger</code></pre>
+    </div>
+  </details>
+
+  <footer class="page-foot">
+    Generated on demand from <code>vibes/status.md</code>. Not auto-synced — re-run generation after status.md changes to keep this current.
+  </footer>
+
+</div>
+
+<script>
+  document.getElementById('expandAll').addEventListener('click', function () {
+    document.querySelectorAll('details.section').forEach(function (d) { d.open = true; });
+  });
+  document.getElementById('collapseAll').addEventListener('click', function () {
+    document.querySelectorAll('details.section').forEach(function (d) { d.open = false; });
+  });
+
+  var themeBtn = document.getElementById('themeToggle');
+  function applyTheme(theme) {
+    if (theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      themeBtn.textContent = '☀️ Light mode';
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      themeBtn.textContent = '🌙 Dark mode';
+    }
+  }
+  applyTheme(localStorage.getItem('statusTheme') || 'light');
+  themeBtn.addEventListener('click', function () {
+    var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('statusTheme', next);
+    applyTheme(next);
+  });
+</script>
+</body>
+</html>
