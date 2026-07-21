@@ -27,11 +27,12 @@ Function calling is the mechanism by which an LLM produces a structured tool inv
 
 The flow has four steps:
 
-```
-1. DEFINE    → Describe tools in the API request
-2. DECIDE    → LLM chooses which tool to call
-3. EXECUTE   → Framework runs the function
-4. RETURN    → Result fed back to LLM
+```mermaid
+flowchart LR
+    A["1️⃣ DEFINE<br/>Describe tools in the API request"] --> B["2️⃣ DECIDE<br/>LLM chooses which tool to call"]
+    B --> C["3️⃣ EXECUTE<br/>Framework runs the function"]
+    C --> D["4️⃣ RETURN<br/>Result fed back to LLM"]
+    D -.->|LLM continues reasoning| B
 ```
 
 ### Step 1: Define - Describe Tools in the Request

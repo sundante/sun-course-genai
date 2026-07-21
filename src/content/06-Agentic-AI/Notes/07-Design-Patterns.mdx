@@ -156,8 +156,9 @@ Pass 3: "Revise the analysis based on this critique: [critique]"
 **External evaluator (separate model or role)**
 A separate agent or a stronger model acts as the evaluator. This avoids the self-consistency bias - the same model will often fail to catch its own errors.
 
-```
-Generator Agent → Draft → Evaluator Agent → Critique → Generator Agent → Revision
+```mermaid
+flowchart LR
+    G["🤖 Generator Agent"] --> D["📝 Draft"] --> E["🧪 Evaluator Agent"] --> C["💬 Critique"] --> G2["🤖 Generator Agent"] --> R(["✅ Revision"])
 ```
 
 **Test-driven reflection**
@@ -366,14 +367,15 @@ Not all inputs need the same processing path. Routing sends each input to the ap
 
 The router classifies the input and sends it to the appropriate agent or pipeline.
 
-```
-Incoming request
-    ↓
-[Router Agent: classify intent]
-    ├── "billing question" → [Billing Agent]
-    ├── "technical support" → [Tech Support Agent]
-    ├── "general inquiry" → [General Agent]
-    └── "escalation" → [Human Support Queue]
+```mermaid
+flowchart TD
+    I["📥 Incoming request"] --> R{"🧭 Router Agent<br/>classify intent"}
+    R -->|"billing question"| B["💳 Billing Agent"]
+    R -->|"technical support"| T["🔧 Tech Support Agent"]
+    R -->|"general inquiry"| G["💬 General Agent"]
+    R -->|"escalation"| H["🧑 Human Support Queue"]
+
+    style R fill:#fff3cd,stroke:#f0a500
 ```
 
 **Router design:** The router is often a lightweight LLM call with a classification prompt. It doesn't need to solve the task - just route it correctly.
@@ -398,16 +400,15 @@ else:
 
 A HITL gate is a checkpoint that requires human approval before the agent proceeds with an irreversible or high-risk action.
 
-```
-Agent plans to: "Send invoice to client@company.com for $15,000"
-    ↓
-HITL Gate triggered (irreversible action + dollar amount > $10,000 threshold)
-    ↓
-Present to human: [action preview + justification + approve/reject]
-    ↓
-Human: Approve → Agent sends invoice
-Human: Reject  → Agent aborts and reports reason
-Human: Timeout → Agent escalates to supervisor
+```mermaid
+flowchart TD
+    A["🤖 Agent plans to:<br/>Send invoice to client@company.com for $15,000"] --> G["🚧 HITL Gate triggered<br/>(irreversible action + &gt;$10,000 threshold)"]
+    G --> P["👀 Present to human:<br/>action preview + justification + approve/reject"]
+    P -->|Approve| S(["✅ Agent sends invoice"])
+    P -->|Reject| AB(["❌ Agent aborts and reports reason"])
+    P -->|Timeout| ES(["⏫ Agent escalates to supervisor"])
+
+    style G fill:#fff3cd,stroke:#f0a500
 ```
 
 ---

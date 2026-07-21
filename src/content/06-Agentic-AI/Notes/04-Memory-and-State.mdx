@@ -20,29 +20,19 @@ Memory is what enables agents to operate over extended horizons. But memory is n
 
 ## The Four Memory Types
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│  TIMESCALE: task session                                          │
-│                                                                   │
-│  1. In-Context Memory (short-term)                                │
-│     The LLM's active context window. Everything the model        │
-│     can "see" right now. Limited. Lost when session ends.        │
-│                                                                   │
-│  2. Working Memory (task state)                                   │
-│     Structured state outside the context window. Task ledger,   │
-│     partial results, assignments. Persisted to a database.       │
-│     Survives agent restarts.                                     │
-├──────────────────────────────────────────────────────────────────┤
-│  TIMESCALE: cross-task, persistent                                │
-│                                                                   │
-│  3. Episodic Memory (event log)                                   │
-│     Sequential log of everything that happened. Append-only.    │
-│     Used for debugging, auditing, and training data.             │
-│                                                                   │
-│  4. Semantic Memory (long-term knowledge)                         │
-│     Vector store of accumulated knowledge and preferences.       │
-│     Queried semantically when relevant to the current task.      │
-└──────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph SESSION["⏱️ TIMESCALE: task session"]
+        M1["1️⃣ In-Context Memory (short-term)<br/>The LLM's active context window.<br/>Limited. Lost when session ends."]
+        M2["2️⃣ Working Memory (task state)<br/>Structured state outside the context window.<br/>Task ledger, partial results, assignments.<br/>Persisted to a database. Survives restarts."]
+    end
+    subgraph PERSIST["♾️ TIMESCALE: cross-task, persistent"]
+        M3["3️⃣ Episodic Memory (event log)<br/>Sequential log of everything that happened.<br/>Append-only. Debugging, auditing, training data."]
+        M4["4️⃣ Semantic Memory (long-term knowledge)<br/>Vector store of accumulated knowledge<br/>and preferences. Queried semantically."]
+    end
+
+    style SESSION fill:#e8f4fd,stroke:#4a9eca
+    style PERSIST fill:#d4edda,stroke:#28a745
 ```
 
 Each type is accessed at a different moment, stored differently, and fails in different ways when it goes wrong.
@@ -590,24 +580,32 @@ def correct_memory(old_content: str, new_content: str, reason: str):
 
 A well-designed agent uses all four memory types at the right moments:
 
-```
-TASK START:
-  → Query semantic memory (long-term) for relevant knowledge
-  → Load working memory (task state) if resuming
-  → Initialize in-context memory (system prompt + task ledger)
-  → Start appending to episodic memory (event log)
+```mermaid
+flowchart TD
+    subgraph START["🚀 Task Start"]
+        S1["Query semantic memory for relevant knowledge"]
+        S2["Load working memory if resuming"]
+        S3["Initialize in-context memory<br/>(system prompt + task ledger)"]
+        S4["Start appending to episodic memory"]
+    end
+    subgraph STEP["🔁 Each Step"]
+        T1["Read from in-context memory"]
+        T2["Read/write working memory"]
+        T3["Append to episodic memory"]
+        T4["Optionally query semantic memory"]
+    end
+    subgraph END_["🏁 Task End"]
+        E1["Extract findings → write to semantic memory"]
+        E2["Finalize working memory"]
+        E3["Archive episodic memory trace"]
+        E4["Clear in-context memory"]
+    end
 
-EACH STEP:
-  → Read from in-context memory (LLM sees full context)
-  → Read/write working memory (update task ledger, partial results)
-  → Append to episodic memory (log the step)
-  → Optionally query semantic memory for specific knowledge needs
+    START --> STEP --> END_
 
-TASK END:
-  → Extract valuable findings → write to semantic memory
-  → Finalize working memory (mark task done)
-  → Archive episodic memory trace
-  → Clear in-context memory (session ends)
+    style START fill:#e8f4fd,stroke:#4a9eca
+    style STEP fill:#fff3cd,stroke:#f0a500
+    style END_ fill:#d4edda,stroke:#28a745
 ```
 
 ```python

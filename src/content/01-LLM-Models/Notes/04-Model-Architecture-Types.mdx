@@ -58,10 +58,12 @@ Decoder-only models use **causal (left-to-right) self-attention** - each token c
 5. **Scalability:** Simple objective → easy to scale to trillions of training tokens
 
 **Architecture flow:**
-```
-Input: "The cat sat on the"
-→ Tokenize → Embed → [Transformer Block × N with causal mask] → Final LN → Linear → Softmax
-→ P(next token) → sample → append → repeat
+```mermaid
+flowchart LR
+    A["📝 Input: 'The cat sat on the'"] --> B["✂️ Tokenize"] --> C["🔢 Embed"]
+    C --> D["🔁 Transformer Block × N<br/>with causal mask"] --> E["🧮 Final LN"] --> F["📐 Linear"] --> G["🎯 Softmax"]
+    G --> H["P(next token)"] --> I["🎲 Sample"] --> J["➕ Append"]
+    J -.->|repeat| B
 ```
 
 **Key models:**
@@ -146,14 +148,19 @@ Two reasons: (1) At sufficient scale, decoder-only models learn to produce appro
 
 MoE is an architectural modification to the FFN layer, not a new architecture class. Instead of one dense FFN per layer, the model has N "expert" FFNs and a learned **router** that selects top-K experts per token.
 
-```
-Standard FFN:
-  token → single FFN → output
+```mermaid
+flowchart LR
+    subgraph STD["Standard FFN"]
+        T1["token"] --> F1["single FFN"] --> O1["output"]
+    end
+    subgraph MOE["MoE FFN"]
+        T2["token"] --> R["router<br/>(softmax over N experts)"]
+        R --> K["select top-K experts<br/>by router score"]
+        K --> W["weighted sum of<br/>selected expert outputs"]
+    end
 
-MoE FFN:
-  token → router (softmax over N experts)
-         → select top-K experts by router score
-         → weighted sum of selected expert outputs
+    style STD fill:#e8f4fd,stroke:#4a9eca
+    style MOE fill:#d4edda,stroke:#28a745
 ```
 
 **Key MoE concept: sparse activation**

@@ -53,15 +53,14 @@ MCP standardizes how this live context reaches the model - via Resources (backgr
 
 A Host can connect to 10 MCP servers simultaneously, composing their capabilities:
 
-```
-Claude Desktop connected to:
-  ├── filesystem server    → read/write local files
-  ├── github server        → create issues, review PRs
-  ├── postgres server      → query business data
-  ├── slack server         → read channels, post messages
-  └── calendar server      → check availability, create events
-
-Combined: an assistant with full context and real-world action capability
+```mermaid
+flowchart LR
+    C["🖥️ Claude Desktop"] --> F["📁 filesystem server<br/>read/write local files"]
+    C --> G["🐙 github server<br/>create issues, review PRs"]
+    C --> P["🗄️ postgres server<br/>query business data"]
+    C --> S["💬 slack server<br/>read channels, post messages"]
+    C --> Cal["📅 calendar server<br/>check availability, create events"]
+    F & G & P & S & Cal --> O(["✅ Full context + real-world<br/>action capability"])
 ```
 
 Each server was built independently. They compose without any coordination between server authors.
@@ -98,9 +97,13 @@ MCP's Elicitation primitive surfaces sensitive actions to users before execution
 
 MCP's value scales with adoption in a self-reinforcing loop:
 
-```
-More servers → More value to hosts → More host adoption → 
-More users → More incentive to build servers → More servers
+```mermaid
+flowchart LR
+    A["📦 More servers"] --> B["💎 More value to hosts"]
+    B --> C["🖥️ More host adoption"]
+    C --> D["👥 More users"]
+    D --> E["🎯 More incentive to build servers"]
+    E --> A
 ```
 
 Current ecosystem:

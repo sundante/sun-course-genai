@@ -2,24 +2,19 @@
 
 ## Pattern: Manager → Team Leads → Workers
 
-```
-                    User Goal
-                        │
-                        ▼
-              ┌─────────────────┐
-              │   Manager LLM   │  ← decomposes goal, delegates
-              └────────┬────────┘
-                       │
-          ┌────────────┴────────────┐
-          ▼                         ▼
-  ┌───────────────┐         ┌───────────────┐
-  │  Research Lead│         │  Report Lead  │
-  └───────┬───────┘         └───────┬───────┘
-          │                         │
-    ┌─────┴─────┐             ┌─────┴─────┐
-    ▼           ▼             ▼           ▼
- Worker A   Worker B      Writer A    Writer B
-(Weather)  (Safety)      (Format)   (Summarize)
+```mermaid
+flowchart TD
+    G["🎯 User Goal"] --> M["🧭 Manager LLM<br/>decomposes goal, delegates"]
+    M --> RL["👥 Research Lead"]
+    M --> PL["👥 Report Lead"]
+    RL --> WA["⚙️ Worker A<br/>(Weather)"]
+    RL --> WB["⚙️ Worker B<br/>(Safety)"]
+    PL --> WC["✍️ Writer A<br/>(Format)"]
+    PL --> WD["✍️ Writer B<br/>(Summarize)"]
+
+    style M fill:#fff3cd,stroke:#f0a500
+    style RL fill:#d4edda,stroke:#28a745
+    style PL fill:#d4edda,stroke:#28a745
 ```
 
 ## When to Use Hierarchical

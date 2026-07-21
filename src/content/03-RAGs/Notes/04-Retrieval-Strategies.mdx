@@ -285,35 +285,33 @@ Query transformation modifies the user's query before retrieval to improve recal
 **HyDE (Hypothetical Document Embeddings)**
 Instead of embedding the raw query, ask the LLM to write a hypothetical document that would answer the query, then embed THAT document. The hypothesis is closer to the document distribution in embedding space than the short query.
 
-```
-Query: "What causes transformer attention to fail on long sequences?"
-       ↓ LLM generates hypothesis
-Hypothesis: "Transformer attention fails on long sequences due to the quadratic
-             complexity O(n²) of the self-attention mechanism. As sequence length
-             grows, memory and compute requirements grow quadratically..."
-       ↓ Embed hypothesis (not query)
-       ↓ ANN search using hypothesis vector
-Better recall on technical documents.
+```mermaid
+flowchart TD
+    Q["❓ Query:<br/>What causes transformer attention<br/>to fail on long sequences?"] --> LLM["🤖 LLM generates hypothesis"]
+    LLM --> H["📝 Hypothesis: Transformer attention fails<br/>due to the quadratic complexity O(n²)<br/>of self-attention..."]
+    H --> EMB["🧬 Embed hypothesis<br/>(not query)"]
+    EMB --> ANN["📡 ANN search using<br/>hypothesis vector"]
+    ANN --> R(["✅ Better recall on<br/>technical documents"])
 ```
 
 **When HyDE helps:** Technical/domain-specific queries where the user's phrasing is brief but the relevant documents use detailed terminology. **When HyDE hurts:** If the hypothesis contains plausible-sounding but incorrect information, it retrieves documents about that incorrect hypothesis.
 
 **Multi-Query Expansion**
 Generate N variants of the query (different phrasings, perspectives), retrieve for each, then deduplicate and merge results.
-```
-Original: "authentication performance"
-Variant 1: "login speed and latency"
-Variant 2: "identity verification throughput"
-Variant 3: "OAuth token validation benchmarks"
-→ Retrieve for all 4, deduplicate, rerank merged set
+```mermaid
+flowchart LR
+    O["🎯 Original:<br/>authentication performance"] --> R["📚 Retrieve for all 4,<br/>deduplicate, rerank merged set"]
+    V1["🔀 Variant 1:<br/>login speed and latency"] --> R
+    V2["🔀 Variant 2:<br/>identity verification throughput"] --> R
+    V3["🔀 Variant 3:<br/>OAuth token validation benchmarks"] --> R
 ```
 
 **Step-Back Prompting**
 Generalize the specific query to a broader question first, retrieve for the broader question, then use that broader context to answer the specific question.
-```
-Specific: "What is the melting point of sodium chloride?"
-Step-back: "What are the physical properties of ionic compounds?"
-→ Retrieve broader context first, then narrow answer
+```mermaid
+flowchart LR
+    S["🎯 Specific:<br/>What is the melting point<br/>of sodium chloride?"] --> B["🔭 Step-back:<br/>What are the physical properties<br/>of ionic compounds?"]
+    B --> R(["✅ Retrieve broader context first,<br/>then narrow the answer"])
 ```
 
 **MMR (Maximal Marginal Relevance)**

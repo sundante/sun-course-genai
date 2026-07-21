@@ -4,21 +4,23 @@ A multi-agent system that takes a research question, fans out to parallel search
 
 ## Architecture
 
-```
-User Query
-    ↓
-[Orchestrator]
-    ├──→ [Search Agent A: Technology]  ──┐
-    ├──→ [Search Agent B: Market]      ──→ [Synthesis Agent] → Report Draft
-    └──→ [Search Agent C: Regulatory]  ──┘
-                                              ↓
-                                       [Critic Agent]
-                                              ↓
-                                    ┌── Critique acceptable? ──→ Final Report
-                                    ↓ (if not)
-                                [Synthesis Agent revises]
-                                    ↓
-                               (up to 2 iterations)
+```mermaid
+flowchart TD
+    Q["❓ User Query"] --> O["🧭 Orchestrator"]
+    O --> A["🔎 Search Agent A<br/>Technology"]
+    O --> B["🔎 Search Agent B<br/>Market"]
+    O --> C["🔎 Search Agent C<br/>Regulatory"]
+    A --> S["🧩 Synthesis Agent"]
+    B --> S
+    C --> S
+    S --> D["📝 Report Draft"]
+    D --> CR["🧐 Critic Agent"]
+    CR --> AC{"Critique acceptable?"}
+    AC -->|Yes| F(["✅ Final Report"])
+    AC -->|No, up to 2 iterations| S
+
+    style O fill:#fff3cd,stroke:#f0a500
+    style CR fill:#e2d9f3,stroke:#6f42c1
 ```
 
 ## Patterns Used

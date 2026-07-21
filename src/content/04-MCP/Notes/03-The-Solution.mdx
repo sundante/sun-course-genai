@@ -8,15 +8,23 @@
 
 MCP solves the M×N integration problem by introducing a **shared protocol layer** between AI applications and data sources.
 
-```
-BEFORE MCP                          WITH MCP
-──────────────────────              ──────────────────────────────────
-App A ──custom──→ Source 1          App A ──MCP client──┐
-App A ──custom──→ Source 2                               ├──→ Source 1 (MCP server)
-App B ──custom──→ Source 1          App B ──MCP client──┤
-App B ──custom──→ Source 2                               └──→ Source 2 (MCP server)
+```mermaid
+flowchart LR
+    subgraph BEFORE["❌ BEFORE MCP - M×N = 4 connectors"]
+        A1["App A"] -->|custom| S1["Source 1"]
+        A1 -->|custom| S2["Source 2"]
+        A2["App B"] -->|custom| S1
+        A2 -->|custom| S2
+    end
+    subgraph AFTER["✅ WITH MCP - M+N = 4 implementations, unlimited connections"]
+        B1["App A"] -->|MCP client| MS1["Source 1<br/>(MCP server)"]
+        B2["App B"] -->|MCP client| MS1
+        B1 -->|MCP client| MS2["Source 2<br/>(MCP server)"]
+        B2 -->|MCP client| MS2
+    end
 
-M×N = 4 connectors                 M+N = 4 implementations, unlimited connections
+    style BEFORE fill:#f8d7da,stroke:#dc3545
+    style AFTER fill:#d4edda,stroke:#28a745
 ```
 
 Any client connects to any server. The protocol defines the contract both sides agree to.
@@ -133,11 +141,13 @@ MCP's solution is not just about connectivity - it bakes security into the proto
 
 ### Consent at Every Layer
 
-```
-User consent    → which servers can the Host connect to?
-App consent     → which capabilities does the Host declare?
-Elicitation     → does the user approve this specific server action?
-Tool call       → does the user see and approve this tool invocation?
+```mermaid
+flowchart TD
+    A["🧑 User consent<br/>which servers can the Host connect to?"]
+    B["📦 App consent<br/>which capabilities does the Host declare?"]
+    C["❓ Elicitation<br/>does the user approve this specific server action?"]
+    D["🔧 Tool call<br/>does the user see and approve this tool invocation?"]
+    A --> B --> C --> D
 ```
 
 ### Principle of Least Disclosure
@@ -149,15 +159,16 @@ Tool call       → does the user see and approve this tool invocation?
 
 ### The Trust Hierarchy
 
+```mermaid
+flowchart TD
+    A["🧑 User<br/>highest authority"] --> B["🖥️ Host<br/>mediates all server interactions"]
+    B --> C["🔌 Client<br/>executes protocol mechanics"]
+    C --> D["⚙️ Server<br/>untrusted third-party code"]
+
+    style A fill:#d4edda,stroke:#28a745
+    style D fill:#f8d7da,stroke:#dc3545
 ```
-Most trusted    User (highest authority)
-                ↓
-                Host (mediates all server interactions)
-                ↓
-                Client (executes protocol mechanics)
-                ↓
-Least trusted   Server (untrusted third-party code)
-```
+*Most trusted (top) → least trusted (bottom).*
 
 Servers are treated as untrusted third parties. Every capability they use must be explicitly granted by the Host.
 

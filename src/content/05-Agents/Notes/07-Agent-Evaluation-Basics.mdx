@@ -1,0 +1,138 @@
+# Agent Evaluation Basics
+
+Before you build multi-agent systems, you need a way to answer a simpler question: does *this one agent* actually work? This chapter covers evaluation at the individual-agent level - the checks you write before you ever need trajectory analysis, production metrics dashboards, or a cloud evaluation platform.
+
+For system-level evaluation (multi-agent trajectories, the production metrics catalog, market frameworks like RAGAS/DeepEval, and cloud-native evaluation architecture on AWS/GCP/Azure), see [06 - Agentic AI → Evaluation & Observability](../../06-Agentic-AI/Notes/11-Evaluation-and-Observability.mdx). This chapter is the foundation that makes that later chapter's advanced material make sense.
+
+---
+
+## What "Working" Means for a Single Agent
+
+Before writing any tests, define what correctness looks like for your agent. Four questions cover most of it:
+
+1. **Tool selection** - does it call the right tool for the request, and skip tools it doesn't need?
+2. **Tool arguments** - are the arguments it constructs correct and grounded in the actual conversation, not invented?
+3. **Final output** - is the answer correct, complete, and in the format the caller expects?
+4. **Termination** - does it stop once the task is done, instead of calling tools it doesn't need or looping?
+
+A surprising number of "the agent is broken" bug reports trace back to just one of these four - usually tool arguments or termination - not the LLM's reasoning quality itself.
+
+---
+
+## Building a Minimal Test Set
+
+Start with 10-20 real tasks pulled from actual usage or manual testing, not synthetic ones you invent in five minutes. Real tasks surface real failure modes; synthetic tasks tend to only test the happy path you already had in mind.
+
+Each test case needs three things:
+
+| Field | Example |
+|---|---|
+| **Input** | `"What's the status of order #48213?"` |
+| **Expected tool call(s)** | `check_order_status(order_id="48213")` |
+| **Expected output** | Must mention the order status; must NOT invent a delivery date if the tool didn't return one |
+
+```python
+test_cases = [
+    {
+        "input": "What's the status of order #48213?",
+        "expected_tool": "check_order_status",
+        "expected_tool_args": {"order_id": "48213"},
+        "output_must_contain": ["48213"],
+        "output_must_not_contain": ["will arrive on"],  # no invented delivery dates
+    },
+    {
+        "input": "Cancel my subscription",
+        "expected_tool": "cancel_subscription",
+        "expected_tool_args": None,  # any valid args acceptable
+        "output_must_contain": ["cancel"],
+        "output_must_not_contain": [],
+    },
+]
+```
+
+---
+
+## Three Basic Checks Every Agent Needs
+
+| Check | What It Verifies | How |
+|---|---|---|
+| **Tool-call correctness** | Right tool, right arguments | Unit test: assert the tool name and args match (or are valid) |
+| **Output format validation** | Response matches the expected shape | Schema/regex check on the final output |
+| **Accuracy spot-check** | The content is actually correct | LLM-as-judge or a human reviewer, on a sample |
+
+```python
+def test_agent_response(case: dict):
+    result = agent.run(case["input"])
+
+    # 1. Tool-call correctness
+    assert result.tool_called == case["expected_tool"], \
+        f"Wrong tool: called {result.tool_called}, expected {case['expected_tool']}"
+    if case["expected_tool_args"]:
+        assert result.tool_args == case["expected_tool_args"]
+
+    # 2. Output format / content checks
+    for phrase in case["output_must_contain"]:
+        assert phrase in result.final_answer
+    for phrase in case["output_must_not_contain"]:
+        assert phrase not in result.final_answer
+```
+
+Run this as a pytest suite in CI so a prompt or tool-description change that breaks the agent gets caught before it ships - the same regression-gate idea used at the system level, just scoped to one agent.
+
+---
+
+## Quick LLM-as-Judge for a Single Agent
+
+For quality checks that a string match can't capture (tone, completeness, correctness of a free-form explanation), use a lightweight judge prompt on a sample of outputs:
+
+```python
+judge_prompt = """
+Rate this agent response 1-5 on each dimension. Be strict.
+
+User request: {input}
+Agent's final answer: {output}
+
+1. Correctness: Is the answer factually accurate given the request?
+2. Completeness: Does it address everything the user asked?
+3. Groundedness: Does it only state things actually returned by tools, with no invented details?
+
+Give a score and one sentence of justification for each.
+"""
+```
+
+This is the single-agent, single-turn version of the full trajectory-judge rubric covered in the Agentic AI evaluation chapter - use this one while you're building an individual agent, and graduate to trajectory-level judging once you're coordinating multiple agents or steps.
+
+---
+
+## Common Single-Agent Failure Signs
+
+| Symptom | Likely Cause |
+|---|---|
+| Agent calls the same tool repeatedly with near-identical arguments | No check for "have I already tried this?" - add duplicate-call detection |
+| Final answer ignores what the tool actually returned | Tool result isn't being surfaced clearly enough in the prompt, or the model isn't reading it |
+| Wrong tool chosen when multiple tools look similar | Tool descriptions are ambiguous - clarify when to use each one, and when not to |
+| Output is missing information the user asked for | No completeness check before returning; add a self-review step or a completeness assertion |
+| Agent answers immediately without calling any tool | System prompt doesn't clearly instruct when tool use is required |
+
+---
+
+## When to Graduate to System-Level Evaluation
+
+The checks in this chapter are enough for a single agent doing one job. Move to the full evaluation and observability practice once any of these becomes true:
+
+- You have two or more agents that hand off work to each other (the "path" between agents now matters, not just each agent's individual output)
+- You're running in production and need continuous monitoring, not just a pre-deploy test suite
+- You need to track cost, latency, and safety metrics at scale, not just correctness on a fixed test set
+- You need to compare agent versions (A/B) or defend metric targets to a compliance or regulated-industry stakeholder
+
+At that point, [06 - Agentic AI → Evaluation & Observability](../../06-Agentic-AI/Notes/11-Evaluation-and-Observability.mdx) covers trajectory evaluation, the full production metrics catalog, market evaluation frameworks (RAGAS, DeepEval, Promptfoo, Arize Phoenix, and others), and cloud-native evaluation architectures on AWS Bedrock, GCP Vertex AI, and Azure AI Foundry.
+
+---
+
+## Study Notes
+
+- Most "the agent is broken" reports trace back to tool arguments or termination, not reasoning quality - check those first.
+- Build your test set from real usage, not invented happy-path examples.
+- Wire tool-call and output-format checks into CI as a pytest-style suite - this is the cheapest, fastest regression gate you can build.
+- Reserve LLM-as-judge for what code-based checks can't capture (tone, completeness, groundedness) - don't use it for things a string match would catch faster and cheaper.
+- Single-agent evaluation is the foundation, not a lesser version, of system-level evaluation - the vocabulary and habits here (test sets, judges, regression gates) carry forward directly.

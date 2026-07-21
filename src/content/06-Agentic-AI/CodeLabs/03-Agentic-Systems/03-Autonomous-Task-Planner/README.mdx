@@ -4,20 +4,19 @@ An agentic system that takes a high-level goal, decomposes it into a structured 
 
 ## Architecture
 
-```
-Goal Input
-    ↓
-[Planner Agent] → Task Ledger (list of subtasks)
-    ↓
-[Executor] → Execute next ready subtask
-    ↓
-[Monitor Agent] → Check result quality
-    ↓
-  Result OK?
-  ├── YES → Mark complete → next subtask
-  └── NO  → [Replanner] → Update remaining plan → retry
-    ↓ (all subtasks done)
-[Synthesizer] → Final output
+```mermaid
+flowchart TD
+    G["🎯 Goal Input"] --> P["🧭 Planner Agent"] --> TL["📋 Task Ledger<br/>(list of subtasks)"]
+    TL --> E["⚙️ Executor<br/>Execute next ready subtask"]
+    E --> M["🔍 Monitor Agent<br/>Check result quality"]
+    M --> Q{"Result OK?"}
+    Q -->|YES| N["✅ Mark complete → next subtask"]
+    Q -->|NO| RP["🔁 Replanner<br/>Update remaining plan → retry"]
+    N -.->|more subtasks| E
+    RP -.-> E
+    N -->|all subtasks done| S["🧩 Synthesizer"] --> F(["✅ Final output"])
+
+    style Q fill:#fff3cd,stroke:#f0a500
 ```
 
 ## Patterns Used

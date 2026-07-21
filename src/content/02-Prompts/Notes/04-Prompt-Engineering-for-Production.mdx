@@ -159,9 +159,10 @@ prompt = build_prompt_with_examples(user_query, examples)
 
 A prompt is code. It has inputs, produces outputs, can have bugs, and needs testing. Apply the same engineering discipline:
 
-```
-Prompt lifecycle:
-Draft → Test (eval set) → Review → Deploy → Monitor → Iterate
+```mermaid
+flowchart LR
+    A["✏️ Draft"] --> B["🧪 Test<br/>(eval set)"] --> C["👀 Review"] --> D["🚀 Deploy"] --> E["📊 Monitor"] --> F["🔁 Iterate"]
+    F -.-> A
 ```
 
 ### Git-Based Versioning
@@ -250,6 +251,21 @@ Extracting the system prompt via crafted inputs:
 ```
 
 ### Defense Layers
+
+Defense in depth: no single layer is sufficient, but overlapping layers reduce the attack surface.
+
+```mermaid
+flowchart TD
+    IN["📥 Untrusted input<br/>(user text, retrieved documents)"] --> D1["🧱 Defense 1: Structural delimiters<br/>Wrap untrusted content in XML tags,<br/>instruct model not to execute it"]
+    D1 --> D2["🧹 Defense 2: Input sanitization<br/>Pattern-match and block known<br/>injection phrases before they reach the model"]
+    D2 --> LLM["🤖 LLM call"]
+    LLM --> D3["🔍 Defense 3: Output monitoring<br/>Flag responses that leak system<br/>prompt contents or break character"]
+    D3 --> OUT(["✅ Response to user"])
+
+    style D1 fill:#e8f4fd,stroke:#4a9eca
+    style D2 fill:#fff3cd,stroke:#f0a500
+    style D3 fill:#f8d7da,stroke:#dc3545
+```
 
 ```python
 # Defense 1: Structural delimiters
@@ -366,12 +382,12 @@ def regression_test(old_prompt: str, new_prompt: str, golden_set: list):
 
 Liu et al. (2023) showed transformers attend more strongly to tokens at the **beginning** (primacy) and **end** (recency) of the context window. Content in the middle receives less attention.
 
-```
-Attention distribution in long context:
-HIGH ████████                               ████████ HIGH
-     ↑ beginning                              end ↑
-LOW              ████░░░░░░░░████
-                    ↑ middle (less attended)
+```mermaid
+xychart-beta
+    title "Attention distribution across a long context window"
+    x-axis "Position" ["beginning", "early", "middle", "late", "end"]
+    y-axis "Attention" 0 --> 100
+    bar [90, 45, 25, 45, 90]
 ```
 
 **Implications:**

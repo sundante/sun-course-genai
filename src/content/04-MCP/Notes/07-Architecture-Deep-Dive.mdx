@@ -10,28 +10,24 @@
 
 The MCP architecture has two layers: a **Data Layer** that defines *what* is communicated (JSON-RPC 2.0 messages, primitives, lifecycle) and a **Transport Layer** that defines *how* those messages travel (stdio or HTTP/SSE).
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                       MCP HOST                               │
-│                                                              │
-│  ┌────────────────────┐    ┌────────────────────┐           │
-│  │    MCP Client 1    │    │    MCP Client 2    │    ...    │
-│  │                    │    │                    │           │
-│  │  DATA LAYER        │    │  DATA LAYER        │           │
-│  │  JSON-RPC 2.0      │    │  JSON-RPC 2.0      │           │
-│  │  ┌──────────────┐  │    │  ┌──────────────┐  │           │
-│  │  │ TRANSPORT    │  │    │  │ TRANSPORT    │  │           │
-│  │  │ stdio or HTTP│  │    │  │ stdio or HTTP│  │           │
-│  │  └──────┬───────┘  │    │  └──────┬───────┘  │           │
-│  └─────────┼──────────┘    └─────────┼──────────┘           │
-└────────────┼──────────────────────── ┼────────────────────── ┘
-             │                         │
-             ▼                         ▼
-      ┌──────────────┐          ┌──────────────┐
-      │  MCP Server A│          │  MCP Server B│
-      │  (local,     │          │  (remote,    │
-      │   stdio)     │          │   HTTP/SSE)  │
-      └──────────────┘          └──────────────┘
+```mermaid
+flowchart TD
+    subgraph H["🖥️ MCP HOST"]
+        subgraph C1["🔌 MCP Client 1"]
+            D1["📦 DATA LAYER<br/>JSON-RPC 2.0"]
+            T1["🚚 TRANSPORT<br/>stdio or HTTP"]
+            D1 --> T1
+        end
+        subgraph C2["🔌 MCP Client 2 ..."]
+            D2["📦 DATA LAYER<br/>JSON-RPC 2.0"]
+            T2["🚚 TRANSPORT<br/>stdio or HTTP"]
+            D2 --> T2
+        end
+    end
+    T1 --> SA["🗄️ MCP Server A<br/>(local, stdio)"]
+    T2 --> SB["🗄️ MCP Server B<br/>(remote, HTTP/SSE)"]
+
+    style H fill:#f4f1ec,stroke:#ccc4b8
 ```
 
 ---
@@ -55,12 +51,16 @@ Used for **local MCP servers** running as subprocesses.
 - Server process lifetime is tied to the client - when the client exits, the server process is terminated
 
 **Startup sequence:**
-```
-Host: starts server process (e.g., python github_server.py)
-Host: writes initialize request to server stdin
-Server: writes initialize response to stdout
-Host: writes initialized notification to stdin
-Session: ACTIVE
+```mermaid
+sequenceDiagram
+    participant Host as 🖥️ Host
+    participant Server as 🗄️ Server
+
+    Host->>Server: starts server process (e.g., python github_server.py)
+    Host->>Server: writes initialize request to stdin
+    Server->>Host: writes initialize response to stdout
+    Host->>Server: writes initialized notification to stdin
+    Note over Host,Server: Session: ACTIVE
 ```
 
 **When to use:** Development environments, desktop applications, local tools, when the server should live and die with the client.
@@ -195,30 +195,19 @@ Note: Tool execution failures are **not** JSON-RPC errors - they return normally
 
 ### Full Session Lifecycle
 
-```
-1. TRANSPORT ESTABLISHED
-   └─ Stdio: server subprocess started
-   └─ HTTP: TCP connection established
+```mermaid
+flowchart TD
+    S1["1️⃣ Transport Established<br/>Stdio: subprocess started<br/>HTTP: TCP connection established"]
+    S2["2️⃣ Initialization<br/>initialize → initialize response → initialized notification<br/>Session is now ACTIVE"]
+    S3["3️⃣ Discovery<br/>tools/list, resources/list, prompts/list"]
+    S4["4️⃣ Operation (repeats indefinitely)<br/>tool calls, resource reads, prompt gets<br/>results, notifications, sampling/elicitation"]
+    S5["5️⃣ Shutdown<br/>Either side closes transport<br/>Server cleans up per-session state<br/>In-flight requests abandoned"]
 
-2. INITIALIZATION
-   Client → Server: initialize (protocolVersion, capabilities, clientInfo)
-   Server → Client: initialize response (protocolVersion, capabilities, serverInfo)
-   Client → Server: initialized notification
-   └─ Session is now ACTIVE
+    S1 --> S2 --> S3 --> S4 --> S5
+    S4 -.->|repeats| S4
 
-3. DISCOVERY
-   Client → Server: tools/list, resources/list, prompts/list
-   Server → Client: lists of available capabilities
-
-4. OPERATION (repeats indefinitely)
-   Client → Server: tool calls, resource reads, prompt gets
-   Server → Client: results, notifications
-   Server → Client: sampling/createMessage, elicitation/create (if supported)
-
-5. SHUTDOWN
-   Either side closes the transport
-   Server cleans up per-session state
-   In-flight requests are abandoned
+    style S2 fill:#fff3cd,stroke:#f0a500
+    style S5 fill:#f8d7da,stroke:#dc3545
 ```
 
 ### Why Shutdown Matters

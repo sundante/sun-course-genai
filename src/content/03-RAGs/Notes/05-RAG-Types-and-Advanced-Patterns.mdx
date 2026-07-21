@@ -10,18 +10,17 @@ A complete reference: the RAG evolution ladder from Naive to GraphRAG, deep-dive
 
 Every RAG system sits on this spectrum. Understanding where a system sits is the first question in any architecture discussion.
 
-```
-Naive RAG
-    ↓ add pre/post-retrieval steps
-Advanced RAG
-    ↓ decompose into swappable modules
-Modular RAG
-    ↓ add autonomous retrieval decisions
-Agentic RAG
-    ↓ replace vector index with knowledge graph
-GraphRAG
-    ↓ retrieve across image, text, audio
-Multimodal RAG
+```mermaid
+flowchart LR
+    A["🟢 Naive RAG"] -->|"add pre/post-retrieval steps"| B["🟡 Advanced RAG"]
+    B -->|"decompose into swappable modules"| C["🟠 Modular RAG"]
+    C -->|"add autonomous retrieval decisions"| D["🔴 Agentic RAG"]
+    D -->|"replace vector index with knowledge graph"| E["🟣 GraphRAG"]
+    E -->|"retrieve across image, text, audio"| F["🔵 Multimodal RAG"]
+
+    style A fill:#d4edda,stroke:#28a745
+    style D fill:#f8d7da,stroke:#dc3545
+    style F fill:#e2d9f3,stroke:#6f42c1
 ```
 
 ---
@@ -33,9 +32,18 @@ Multimodal RAG
 Naive RAG is the original formulation: index documents once, embed a query at runtime, retrieve top-k chunks, stuff them into a prompt, generate an answer. No preprocessing of the query, no post-processing of results.
 
 **Pipeline:**
-```
-Documents → chunk → embed → store in vector DB
-Query → embed → similarity search → top-k chunks → prompt → LLM → answer
+```mermaid
+flowchart LR
+    subgraph IDX["📥 Index"]
+        D["📄 Documents"] --> CH["✂️ Chunk"] --> EM["🧬 Embed"] --> VDB[("🗄️ Vector DB")]
+    end
+    subgraph QRY["🔍 Query"]
+        Q["❓ Query"] --> EQ["🧬 Embed"] --> SS["📡 Similarity search"] --> TK["📚 Top-k chunks"] --> PR["📝 Prompt"] --> LLM["🤖 LLM"] --> A(["✅ Answer"])
+    end
+    VDB -.-> SS
+
+    style IDX fill:#e8f4fd,stroke:#4a9eca
+    style QRY fill:#d4edda,stroke:#28a745
 ```
 
 **What works:** Simple, fast, cheap to build. Handles factual recall well when the corpus is clean and the query is specific.
@@ -147,14 +155,15 @@ Modular RAG (Gao et al., 2023) treats each RAG component as a swappable module. 
 
 **Key insight:** Different queries need different retrieval modules. A question about recent news needs web search. A question about internal policy needs a vector DB. A question about product relationships needs a knowledge graph. Modular RAG routes dynamically. This is the architectural parent of Agentic RAG.
 
-```
-Query
-  ↓
-Router (classify intent)
-  ├─ "factual/internal" → Vector DB retriever → context → LLM
-  ├─ "recent events"    → Web search → snippet → LLM
-  ├─ "structured data"  → SQL agent → table → LLM
-  └─ "relationship"     → Graph traversal → paths → LLM
+```mermaid
+flowchart LR
+    Q["❓ Query"] --> R{"🧭 Router<br/>classify intent"}
+    R -->|"factual / internal"| A["🗄️ Vector DB retriever"] --> A2["context"] --> LLM1["🤖 LLM"]
+    R -->|"recent events"| B["🌐 Web search"] --> B2["snippet"] --> LLM2["🤖 LLM"]
+    R -->|"structured data"| C["🗃️ SQL agent"] --> C2["table"] --> LLM3["🤖 LLM"]
+    R -->|"relationship"| D["🕸️ Graph traversal"] --> D2["paths"] --> LLM4["🤖 LLM"]
+
+    style R fill:#fff3cd,stroke:#f0a500
 ```
 
 ### Code
@@ -526,15 +535,15 @@ agent_executor = AgentExecutor(agent=agent, tools=[retriever_tool], max_iteratio
 GraphRAG (Microsoft Research, 2024) replaces or supplements the flat vector index with a knowledge graph. For questions that span many documents or require reasoning about relationships between entities, a graph index captures structure that a vector index cannot.
 
 **Build pipeline:**
-```
-Document corpus
-    ↓ LLM extracts entities and relationships from each chunk
-Entity-Relationship triples: (Entity_A, relation, Entity_B)
-    ↓ Build knowledge graph (nodes=entities, edges=relations)
-    ↓ Run community detection (Leiden algorithm)
-Communities (groups of related entities)
-    ↓ LLM generates summary for each community at multiple levels
-Hierarchical community summaries (C0 = coarse, C4 = fine-grained)
+```mermaid
+flowchart TD
+    A["📚 Document corpus"] --> B["🤖 LLM extracts entities<br/>and relationships from each chunk"]
+    B --> C["🔗 Entity-Relationship triples<br/>(Entity_A, relation, Entity_B)"]
+    C --> D["🕸️ Build knowledge graph<br/>(nodes=entities, edges=relations)"]
+    D --> E["🧩 Run community detection<br/>(Leiden algorithm)"]
+    E --> F["👥 Communities<br/>(groups of related entities)"]
+    F --> G["🤖 LLM generates summary<br/>for each community, multiple levels"]
+    G --> H["📊 Hierarchical community summaries<br/>(C0 = coarse, C4 = fine-grained)"]
 ```
 
 **Two retrieval modes:**

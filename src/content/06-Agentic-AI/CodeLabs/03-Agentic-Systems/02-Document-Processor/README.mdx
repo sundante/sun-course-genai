@@ -4,20 +4,19 @@ An agentic pipeline that ingests a document, classifies its type, extracts struc
 
 ## Architecture
 
-```
-Document Input
-      ↓
-[Classifier Agent]
-      ↓
-  Confidence > 0.85?
-  ├── YES → [Extractor Agent]
-  └── NO  → [HITL Gate] → Human confirms type → [Extractor Agent]
-                                                       ↓
-                                               [Validator Agent]
-                                                       ↓
-                                           Validation passes?
-                                           ├── YES → [Router Agent] → Handler
-                                           └── NO  → [Error Handler]
+```mermaid
+flowchart TD
+    D["📄 Document Input"] --> C["🏷️ Classifier Agent"]
+    C --> Q{"Confidence &gt; 0.85?"}
+    Q -->|YES| EX["📥 Extractor Agent"]
+    Q -->|NO| H["🧑 HITL Gate<br/>Human confirms type"] --> EX
+    EX --> V["✅ Validator Agent"]
+    V --> Q2{"Validation passes?"}
+    Q2 -->|YES| R["🔀 Router Agent"] --> HD(["📤 Handler"])
+    Q2 -->|NO| ERR(["⚠️ Error Handler"])
+
+    style Q fill:#fff3cd,stroke:#f0a500
+    style Q2 fill:#fff3cd,stroke:#f0a500
 ```
 
 ## Patterns Used

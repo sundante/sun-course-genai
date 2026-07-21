@@ -8,16 +8,26 @@
 
 MCP defines six primitive types that cover every kind of AI-data interaction:
 
-```
-Server-side (servers expose TO clients)
-├── Tools      → executable functions (model-controlled)
-├── Resources  → readable data (app-controlled)
-└── Prompts    → reusable templates (user-controlled)
-
-Client-side (clients expose BACK to servers)
-├── Sampling   → LLM text generation
-├── Elicitation → user input / confirmation
-└── Roots      → filesystem access boundaries
+```mermaid
+mindmap
+  root((MCP<br/>Primitives))
+    Server-side
+      Tools
+        executable functions
+        model-controlled
+      Resources
+        readable data
+        app-controlled
+      Prompts
+        reusable templates
+        user-controlled
+    Client-side
+      Sampling
+        LLM text generation
+      Elicitation
+        user input / confirmation
+      Roots
+        filesystem access boundaries
 ```
 
 Each primitive has a discovery mechanism (`list`), an access mechanism (`get`/`call`/`read`), and optional change notifications.

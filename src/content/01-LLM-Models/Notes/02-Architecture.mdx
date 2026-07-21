@@ -20,33 +20,21 @@ Modern LLMs (GPT, LLaMA, Gemma) use **decoder-only** - the encoder is dropped. S
 
 **High-level decoder-only forward pass:**
 
-```
-Input tokens
-    ↓
-Token Embedding  (token_id → dense vector, vocab_size × d_model)
-    ↓
-+ Positional Encoding  (adds position information)
-    ↓
-┌─────────────────────────────────────┐
-│  Transformer Block × N layers       │
-│                                     │
-│  ┌─────────────────────────────┐   │
-│  │  LayerNorm (pre-norm)       │   │
-│  │  Multi-Head Self-Attention  │   │
-│  │  + Residual Connection      │   │
-│  └─────────────────────────────┘   │
-│  ┌─────────────────────────────┐   │
-│  │  LayerNorm (pre-norm)       │   │
-│  │  Feed-Forward Network       │   │
-│  │  + Residual Connection      │   │
-│  └─────────────────────────────┘   │
-└─────────────────────────────────────┘
-    ↓
-Final LayerNorm
-    ↓
-Linear projection (d_model → vocab_size)
-    ↓
-Softmax → probability distribution over next token
+```mermaid
+flowchart TD
+    A["📥 Input tokens"] --> B["🔢 Token Embedding<br/>token_id → dense vector, vocab_size × d_model"]
+    B --> C["📍 + Positional Encoding"]
+    C --> BLOCK
+
+    subgraph BLOCK["🔁 Transformer Block × N layers"]
+        D1["LayerNorm (pre-norm)<br/>Multi-Head Self-Attention<br/>+ Residual Connection"]
+        D2["LayerNorm (pre-norm)<br/>Feed-Forward Network<br/>+ Residual Connection"]
+        D1 --> D2
+    end
+
+    BLOCK --> E["🧮 Final LayerNorm"]
+    E --> F["📐 Linear projection<br/>d_model → vocab_size"]
+    F --> G["🎯 Softmax → probability distribution<br/>over next token"]
 ```
 
 ---

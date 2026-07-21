@@ -39,13 +39,14 @@ And **N = 6** data sources:
 
 Without a standard protocol, each of the **5 × 6 = 30** pairs needs its own custom integration:
 
-```
-Claude Desktop ──→ GitHub connector (custom)
-Claude Desktop ──→ Slack connector (custom)
-Claude Desktop ──→ Postgres connector (custom)
-VS Code AI     ──→ GitHub connector (custom, different)
-VS Code AI     ──→ Slack connector (custom, different)
-...
+```mermaid
+flowchart LR
+    A["🖥️ Claude Desktop"] --> G1["🔌 GitHub connector<br/>(custom)"]
+    A --> S1["🔌 Slack connector<br/>(custom)"]
+    A --> P1["🔌 Postgres connector<br/>(custom)"]
+    B["💻 VS Code AI"] --> G2["🔌 GitHub connector<br/>(custom, different)"]
+    B --> S2["🔌 Slack connector<br/>(custom, different)"]
+    D["..."] -.-> D
 ```
 
 Every integration is built from scratch. Every team reinvents the same auth handling, pagination, error recovery, and data transformation. When GitHub changes their API, **every** GitHub connector breaks separately. When a new data source appears, every application has to build its own connector.

@@ -107,10 +107,25 @@ These three variants trade KV cache size for generation quality.
 - Quality nearly identical to MHA for most tasks
 - Used by: LLaMA-3, Gemma 2, Mistral - the current production standard
 
-```
-MHA (h=32):  K₁V₁  K₂V₂  K₃V₃  ... K₃₂V₃₂   (32 KV pairs per token)
-GQA (G=8):   K₁V₁            K₂V₂ ...  K₈V₈    (8 KV pairs per token, groups of 4)
-MQA:         K V                                  (1 KV pair per token)
+```mermaid
+flowchart TD
+    subgraph MHA["MHA (h=32) - 32 KV pairs per token"]
+        H1["Head 1"] --> KV1["K₁V₁"]
+        H2["Head 2"] --> KV2["K₂V₂"]
+        H3["...Head 32"] --> KV3["K₃₂V₃₂"]
+    end
+    subgraph GQA["GQA (G=8) - 8 KV pairs per token"]
+        G1["Heads 1-4"] --> GKV1["K₁V₁"]
+        G2["Heads 5-8"] --> GKV2["K₂V₂"]
+        G3["...Heads 29-32"] --> GKV3["K₈V₈"]
+    end
+    subgraph MQA["MQA - 1 KV pair per token"]
+        M1["All 32 heads"] --> MKV["K V"]
+    end
+
+    style MHA fill:#f8d7da,stroke:#dc3545
+    style GQA fill:#fff3cd,stroke:#f0a500
+    style MQA fill:#d4edda,stroke:#28a745
 ```
 
 **Memory comparison for LLaMA-3 8B at 32K context:**
@@ -162,12 +177,15 @@ Many production workloads have repeated prompt prefixes:
 
 **Prefix caching:** Compute the KV cache for the shared prefix once, store it, and reuse it across all requests that share that prefix.
 
-```
-Request 1: [SYSTEM_PROMPT][DOCS][User: "Summarize?"]
-           ↑ compute KV cache
-Request 2: [SYSTEM_PROMPT][DOCS][User: "What is the key point?"]
-           ↑ reuse KV cache from request 1 (prefix match)
-           ↑ only compute KV for "What is the key point?"
+```mermaid
+flowchart TD
+    R1["📥 Request 1: [SYSTEM_PROMPT][DOCS]<br/>User: 'Summarize?'"] --> C1["🧮 Compute KV cache"]
+    C1 --> S[("💾 Cached prefix KV")]
+    R2["📥 Request 2: [SYSTEM_PROMPT][DOCS]<br/>User: 'What is the key point?'"] --> M{"Prefix match?"}
+    M -->|Yes| S
+    S --> P["✅ Reuse cached prefix KV +<br/>only compute KV for the new suffix"]
+
+    style S fill:#d4edda,stroke:#28a745
 ```
 
 **ROI:**
@@ -190,19 +208,27 @@ Speculative decoding uses a small "draft" model to propose K tokens at once, the
 - The large target model (e.g., 70B) is high quality but slow
 - Key insight: if the draft model gets the next K tokens right (which it often does for common phrases), the target model can accept all K in one forward pass - K tokens for the cost of ~1 decode step
 
-```
-Standard decode (3 tokens):
-  step 1: target model → token A (full forward pass)
-  step 2: target model → token B (full forward pass)
-  step 3: target model → token C (full forward pass)
-  Total: 3 full forward passes
+```mermaid
+sequenceDiagram
+    participant T as 🎯 Target model (large)
+    participant Dr as ⚡ Draft model (small)
 
-Speculative decode (3 tokens):
-  step 1: draft model → proposes [A, B, C] (3 cheap forward passes)
-  step 2: target model verifies [A, B, C] in ONE batch forward pass
-         - If all 3 correct: accept all, advance 3 positions
-         - If only first 2 correct: accept 2, reject C, sample correction
-  Total: 1 full forward pass (typically)
+    rect rgb(248, 215, 218)
+    Note over T: Standard decode (3 tokens)
+    T->>T: full forward pass → token A
+    T->>T: full forward pass → token B
+    T->>T: full forward pass → token C
+    Note over T: Total: 3 full forward passes
+    end
+
+    rect rgb(212, 237, 218)
+    Note over Dr,T: Speculative decode (3 tokens)
+    Dr->>Dr: 3 cheap passes → proposes [A, B, C]
+    Dr->>T: verify [A, B, C]
+    T->>T: ONE batch forward pass
+    Note over T: All correct → accept all 3<br/>Partial correct → accept N, sample correction
+    Note over T: Total: 1 full forward pass (typically)
+    end
 ```
 
 **Speedup factors:**
@@ -223,23 +249,26 @@ Speculative decode (3 tokens):
 
 **Static batching** (naive approach): wait until a fixed batch of N requests is assembled, run one forward pass for all N, return all results. Problem: different sequences finish at different times - some GPUs sit idle waiting for the longest sequence in the batch to finish.
 
+```mermaid
+xychart-beta
+    title "Static batch of 4 sequences - tokens needed"
+    x-axis "Sequence" ["A", "B", "C", "D"]
+    y-axis "Tokens needed" 0 --> 10
+    bar [4, 2, 10, 3]
 ```
-Static batch of 4 sequences:
-  seq A: ████ (4 tokens needed)
-  seq B: ██   (2 tokens needed)
-  seq C: ██████████ (10 tokens needed)
-  seq D: ███  (3 tokens needed)
-
-GPU waits until seq C (10 tokens) finishes → seqs A, B, D waste 6, 8, 7 slots
-```
+GPU waits until seq C (10 tokens) finishes → seqs A, B, D waste 6, 8, 7 slots.
 
 **Continuous batching (in-flight batching):** After each decode step, check if any sequences have completed. Remove completed sequences and insert new waiting requests into the batch immediately.
 
-```
-Step 1: [A, B, C, D]
-Step 2: [A, B, C, D]  ← B completes
-Step 3: [A, E, C, D]  ← new request E fills B's slot immediately
-...
+```mermaid
+sequenceDiagram
+    participant Batch as GPU Batch Slots
+
+    Batch->>Batch: Step 1 [A, B, C, D]
+    Batch->>Batch: Step 2 [A, B, C, D] - B completes
+    Note over Batch: New request E fills B's slot immediately
+    Batch->>Batch: Step 3 [A, E, C, D]
+    Batch->>Batch: ...continues
 ```
 
 **Why this matters:**
@@ -296,12 +325,12 @@ A consolidated reference of all major LLM inference and training speed-up techni
 | **Early Exit / Token-Level Pruning** | Shallow layers output confident predictions early - skip remaining layers for "easy" tokens or inputs. Works best on classification; harder to implement for generation. | 20–50% compute reduction on easy inputs | - |
 
 **Most impactful combination in production:**
-```
-Quantization (INT8/INT4)          → halve memory
-+ Flash Attention                 → efficient long context
-+ Paged Attention (vLLM)          → max GPU utilization
-+ Continuous batching             → max throughput
-+ Speculative decoding (optional) → latency for interactive use
+```mermaid
+flowchart TD
+    A["🔢 Quantization (INT8/INT4)<br/>→ halve memory"] --> B["⚡ Flash Attention<br/>→ efficient long context"]
+    B --> C["📄 Paged Attention (vLLM)<br/>→ max GPU utilization"]
+    C --> D["📦 Continuous batching<br/>→ max throughput"]
+    D --> E["🚀 Speculative decoding (optional)<br/>→ latency for interactive use"]
 ```
 
 **Pruning vs Distillation - when to use each:**

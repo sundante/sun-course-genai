@@ -88,171 +88,51 @@ The scale numbers are small enough that a simple Cloud Run deployment handles th
 
 ## System Architecture Overview
 
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                        MOBILE APP (Android / iOS)                                │
-│                        Flutter - MDM deployed                                    │
-│                                                                                  │
-│  Input Capture                     Offline Mode                                  │
-│  ┌────────────────────────────┐    ┌──────────────────────────────────────┐      │
-│  │ Voice (primary)            │    │ Firebase local cache                 │      │
-│  │ → on-device STT (Whisper)  │    │ Pre-generated guides: top 50 failure │      │
-│  │   + cloud STT fallback     │    │ modes × 300 machine models           │      │
-│  │                            │    │ Sync on WiFi restore                 │      │
-│  │ Photo capture              │    │ Firestore offline persistence        │      │
-│  │ → machine damage photo     │    └──────────────────────────────────────┘      │
-│  │                            │                                                  │
-│  │ QR / barcode scan          │    Session State                                 │
-│  │ → machine_id resolution    │    ┌──────────────────────────────────────┐      │
-│  │                            │    │ Current machine_id                   │      │
-│  │ Text (fallback)            │    │ Active repair session                │      │
-│  │ → large touch targets,     │    │ Step progress tracker                │      │
-│  │   glove-friendly keyboard  │    │ Escalation state                     │      │
-│  └────────────────────────────┘    └──────────────────────────────────────┘      │
-└───────────────────────────────────────────┬─────────────────────────────────────┘
-                                            │ HTTPS / REST + Firebase Realtime
-                                            ▼
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                        API GATEWAY + BACKEND (Cloud Run)                         │
-│                                                                                  │
-│  ┌───────────────────────────────────────────────────────────────────────────┐  │
-│  │  Auth: Firebase Auth + IAP - technician identity + skill tier             │  │
-│  │  Rate limiting: 300 concurrent sessions max                               │  │
-│  │  Session context: Firestore (machine_id, technician_id, repair_session)   │  │
-│  └───────────────────────────────────────────────────────────────────────────┘  │
-└───────────────────────────────────────────┬─────────────────────────────────────┘
-                                            │
-                                            ▼
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                     INPUT PROCESSING PIPELINE (Cloud Run)                        │
-│                                                                                  │
-│  ┌──────────────────┐  ┌──────────────────────┐  ┌───────────────────────────┐  │
-│  │ Voice → Text     │  │ Image Analysis       │  │ Machine ID Resolution     │  │
-│  │                  │  │                      │  │                           │  │
-│  │ Vertex AI        │  │ Gemini 1.5 Pro Vision│  │ QR scan → machine_id      │  │
-│  │ Speech-to-Text   │  │                      │  │ → Firestore machine       │  │
-│  │ (noise-suppress  │  │ Identify:            │  │   registry lookup         │  │
-│  │  model)          │  │ - damaged component  │  │                           │  │
-│  │                  │  │ - failure type       │  │ Outputs:                  │  │
-│  │ Output: text     │  │ - severity estimate  │  │ - machine_model           │  │
-│  │ transcript       │  │ - part number match  │  │ - machine_location        │  │
-│  └──────────────────┘  └──────────────────────┘  │ - PLC fault codes         │  │
-│                                                   │ - last maintenance date   │  │
-│                                                   └───────────────────────────┘  │
-│                                    │                                             │
-│                                    ▼                                             │
-│              ┌────────────────────────────────────────────┐                     │
-│              │  Unified Problem Description               │                     │
-│              │  {machine_id, model, location,             │                     │
-│              │   fault_codes[], symptom_text,             │                     │
-│              │   damage_image_analysis,                   │                     │
-│              │   technician_id, skill_tier}               │                     │
-│              └────────────────────────────────────────────┘                     │
-└───────────────────────────────────────────┬─────────────────────────────────────┘
-                                            │
-                                            ▼
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                     DIAGNOSTIC AGENT (Cloud Run - ADK / LangGraph)               │
-│                                                                                  │
-│  ┌───────────────────────────────────────────────────────────────────────────┐  │
-│  │  Step 1: Failure Mode Classification                                      │  │
-│  │  Input: fault_codes + symptom_text + image analysis                       │  │
-│  │  → Gemini 1.5 Pro: classify into failure_mode + affected_component        │  │
-│  │  → Confidence score: high (>0.85) → proceed; low → ask clarifying Q      │  │
-│  └───────────────────────────────────────────────────────────────────────────┘  │
-│                                    │                                             │
-│                                    ▼                                             │
-│  ┌───────────────────────────────────────────────────────────────────────────┐  │
-│  │  Step 2: Hybrid Knowledge Retrieval                                       │  │
-│  │                                                                           │  │
-│  │  Tool A: graph_query(machine_model, component, failure_mode)              │  │
-│  │  → Spanner Graph: Machine → Component → FailureMode → RepairProcedure    │  │
-│  │  → Returns: procedure_id, required_parts[], safety_class, skill_level    │  │
-│  │                                                                           │  │
-│  │  Tool B: vector_search(symptom_text + failure_mode)                      │  │
-│  │  → Vertex AI Vector Search: repair manuals + historical repair logs      │  │
-│  │  → Returns: top-5 relevant manual sections + past repair outcomes        │  │
-│  │                                                                           │  │
-│  │  Tool C: get_machine_context(machine_id)                                 │  │
-│  │  → Firestore: last maintenance, known issues, open work orders           │  │
-│  └───────────────────────────────────────────────────────────────────────────┘  │
-│                                    │                                             │
-│                                    ▼                                             │
-│  ┌───────────────────────────────────────────────────────────────────────────┐  │
-│  │  Step 3: Safety Gate (HARD STOP - non-negotiable)                        │  │
-│  │                                                                           │  │
-│  │  Check A: Skill level gate                                               │  │
-│  │  procedure.required_skill_tier > technician.skill_tier → ESCALATE        │  │
-│  │  Never generate instructions beyond technician's certification level      │  │
-│  │                                                                           │  │
-│  │  Check B: LOTO requirement                                               │  │
-│  │  procedure.safety_class IN ["electrical", "hydraulic", "pneumatic"]      │  │
-│  │  → ALWAYS prepend LOTO procedure steps before any repair instructions    │  │
-│  │  → Technician must explicitly confirm LOTO complete before continuing    │  │
-│  │                                                                           │  │
-│  │  Check C: Escalation triggers                                            │  │
-│  │  - Structural damage detected in image (confidence > 0.7)               │  │
-│  │  - Machine value > $500k AND failure_class = "major"                    │  │
-│  │  - Repair requires >4 hours estimated time (L1/L2 cannot authorize)     │  │
-│  │  → ESCALATE: create work order, page senior technician / maintenance eng │  │
-│  └───────────────────────────────────────────────────────────────────────────┘  │
-│                                    │                                             │
-│                                    ▼                                             │
-│  ┌───────────────────────────────────────────────────────────────────────────┐  │
-│  │  Step 4: Instruction Generation                                          │  │
-│  │                                                                           │  │
-│  │  Gemini 1.5 Pro: synthesize repair procedure from:                       │  │
-│  │  - Graph-retrieved procedure template                                    │  │
-│  │  - Manual sections (RAG)                                                 │  │
-│  │  - Machine context (last maintenance, known issues)                      │  │
-│  │  - Historical outcomes for this failure mode on this machine model       │  │
-│  │                                                                           │  │
-│  │  Output: numbered steps, tool requirements, parts list,                  │  │
-│  │          estimated time, safety warnings, images/diagrams (if available) │  │
-│  └───────────────────────────────────────────────────────────────────────────┘  │
-│                                    │                                             │
-│                                    ▼                                             │
-│  ┌───────────────────────────────────────────────────────────────────────────┐  │
-│  │  Step 5: Real-time Integrations (parallel, non-blocking)                 │  │
-│  │                                                                           │  │
-│  │  Tool D: check_parts_inventory(parts_list)                               │  │
-│  │  → SAP PM API: is Part X in stock? Location in warehouse?               │  │
-│  │                                                                           │  │
-│  │  Tool E: create_work_order(machine_id, failure_mode, technician_id)      │  │
-│  │  → SAP PM: log the repair, open work order, timestamp                   │  │
-│  │                                                                           │  │
-│  │  Tool F: check_maintenance_history(machine_id, failure_mode)             │  │
-│  │  → Firestore: has this exact failure occurred before? Outcome?          │  │
-│  └───────────────────────────────────────────────────────────────────────────┘  │
-└───────────────────────────────────────────┬─────────────────────────────────────┘
-                                            │
-                                            ▼
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                     KNOWLEDGE BASE LAYER                                         │
-│                                                                                  │
-│  ┌────────────────────────┐  ┌────────────────────────┐  ┌──────────────────┐  │
-│  │ Spanner Graph          │  │ Vertex AI Vector Search│  │ Firestore        │  │
-│  │                        │  │                        │  │                  │  │
-│  │ Machine                │  │ Repair manuals         │  │ Machine registry │  │
-│  │  └─ Model              │  │ (chunked, embedded)    │  │ Technician       │  │
-│  │      └─ Component      │  │                        │  │   profiles       │  │
-│  │           └─ Failure   │  │ Historical repair logs │  │ Active sessions  │  │
-│  │                Mode    │  │ (outcome-annotated)    │  │ Open work orders │  │
-│  │                └─ Proc │  │                        │  │ Offline sync     │  │
-│  │                   edure│  │ Safety bulletins       │  │   queue          │  │
-│  │                        │  │ Parts catalog          │  │                  │  │
-│  └────────────────────────┘  └────────────────────────┘  └──────────────────┘  │
-└─────────────────────────────────────────────────────────────────────────────────┘
-                                            │
-                                            ▼
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                     FEEDBACK + LEARNING LOOP                                     │
-│                                                                                  │
-│  Post-repair: technician marks outcome → "Resolved" / "Partial" / "Escalated"   │
-│  Outcome + steps_used → Pub/Sub → Cloud Run → BigQuery                          │
-│  Weekly: failed repairs reviewed by maintenance engineers → knowledge update     │
-│  Monthly: RAGAS-style eval on sample of repair sessions                          │
-└─────────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph APP["📱 Mobile App (Android / iOS) - Flutter, MDM deployed"]
+        IC["🎙️ Input Capture<br/>Voice (primary, on-device + cloud STT)<br/>Photo capture · QR/barcode scan<br/>Text (glove-friendly fallback)"]
+        OFF["📴 Offline Mode<br/>Firebase local cache: pre-generated guides<br/>top 50 failures × 300 machine models<br/>Firestore offline persistence"]
+        SESS["📋 Session State<br/>machine_id · active repair session<br/>step progress · escalation state"]
+    end
+
+    APP -->|"HTTPS/REST + Firebase Realtime"| GW["🚪 API Gateway + Backend (Cloud Run)<br/>Firebase Auth + IAP (identity + skill tier)<br/>Rate limit: 300 concurrent sessions<br/>Session context: Firestore"]
+
+    subgraph IPP["⚙️ Input Processing Pipeline (Cloud Run)"]
+        V2T["🗣️ Voice → Text<br/>Vertex AI Speech-to-Text (noise-suppress)"]
+        IMG["🖼️ Image Analysis<br/>Gemini 1.5 Pro Vision:<br/>component, failure type, severity, part match"]
+        MID["🔎 Machine ID Resolution<br/>QR scan → Firestore machine registry<br/>→ model, location, fault codes, maintenance date"]
+        UPD["📦 Unified Problem Description<br/>{machine_id, model, location, fault_codes[],<br/>symptom_text, image_analysis, technician_id, skill_tier}"]
+        V2T --> UPD
+        IMG --> UPD
+        MID --> UPD
+    end
+    GW --> IPP
+
+    subgraph DA["🧠 Diagnostic Agent (Cloud Run - ADK / LangGraph)"]
+        S1["1️⃣ Failure Mode Classification<br/>Gemini 1.5 Pro → failure_mode + component<br/>confidence &gt;0.85 → proceed; low → ask clarifying Q"]
+        S2["2️⃣ Hybrid Knowledge Retrieval<br/>graph_query → Spanner Graph (procedure, parts, skill level)<br/>vector_search → manuals + historical outcomes<br/>get_machine_context → Firestore"]
+        S3["3️⃣ Safety Gate (HARD STOP)<br/>Skill-level gate · LOTO requirement (mandatory prepend)<br/>Escalation triggers (structural damage, value, time)"]
+        S4["4️⃣ Instruction Generation<br/>Gemini 1.5 Pro synthesizes procedure from<br/>graph template + manuals + context + history"]
+        S5["5️⃣ Real-time Integrations (parallel, non-blocking)<br/>check_parts_inventory · create_work_order<br/>check_maintenance_history"]
+        S1 --> S2 --> S3 --> S4 --> S5
+    end
+    IPP --> DA
+
+    subgraph KB["🗄️ Knowledge Base Layer"]
+        SG[("🕸️ Spanner Graph<br/>Machine → Component → Failure → Procedure")]
+        VS[("📡 Vertex AI Vector Search<br/>repair manuals, historical logs,<br/>safety bulletins, parts catalog")]
+        FS[("🔥 Firestore<br/>machine registry, technician profiles,<br/>active sessions, offline sync queue")]
+    end
+    DA --> KB
+
+    KB --> FL["🔁 Feedback + Learning Loop<br/>Technician marks outcome → Pub/Sub → BigQuery<br/>Weekly review by maintenance engineers<br/>Monthly RAGAS-style eval"]
+
+    style APP fill:#e8f4fd,stroke:#4a9eca
+    style IPP fill:#fff3cd,stroke:#f0a500
+    style DA fill:#d4edda,stroke:#28a745
+    style KB fill:#e2d9f3,stroke:#6f42c1
+    style FL fill:#fde8d8,stroke:#fd7e14
 ```
 
 ---
@@ -339,37 +219,17 @@ Factory floors are harsh for UX. Design choices that matter:
 
 ## Knowledge Base Ingestion Pipeline
 
-```
-Repair manuals (PDFs)
-       │
-       ▼
-Cloud Run: Document AI (OCR + layout detection)
-       │  structured: text blocks, tables, figures, diagrams
-       ▼
-Cloud Run: Chunker
-  ├── Semantic chunks: 512 tokens, procedure-boundary aware
-  │   (don't split a numbered step across chunk boundaries)
-  ├── Metadata: machine_model, section_type (safety/procedure/parts),
-  │             procedure_id, step_number
-  └── Image extraction: diagrams → Cloud Storage → linked to chunk
-       │
-       ▼
-Vertex AI text-embedding-005 → Vertex AI Vector Search (RAG index)
+```mermaid
+flowchart TD
+    A["📄 Repair manuals (PDFs)"] --> B["⚙️ Document AI<br/>OCR + layout detection"]
+    B --> C["✂️ Chunker<br/>Semantic chunks: 512 tokens, procedure-boundary aware<br/>Metadata: machine_model, section_type, procedure_id<br/>Image extraction → Cloud Storage, linked to chunk"]
+    C --> D["🧬 text-embedding-005"] --> E[("📡 Vertex AI Vector Search<br/>RAG index")]
 
-Structured CMMS data (SAP PM export)
-       │
-       ▼
-Dataflow: transform → Spanner Graph upsert
-  Nodes: Machine, Model, Component, FailureMode, RepairProcedure, Part
-  Edges: HAS_COMPONENT, EXHIBITS_FAILURE, RESOLVED_BY, REQUIRES_PART
+    F["🗃️ Structured CMMS data<br/>(SAP PM export)"] --> G["⚙️ Dataflow: transform"]
+    G --> H[("🕸️ Spanner Graph upsert<br/>Nodes: Machine, Model, Component,<br/>FailureMode, RepairProcedure, Part<br/>Edges: HAS_COMPONENT, EXHIBITS_FAILURE,<br/>RESOLVED_BY, REQUIRES_PART")]
 
-Historical repair logs (CMMS export)
-       │
-       ▼
-Cloud Run: Outcome annotator
-  ├── Parse: machine_id, failure_description, steps_taken, outcome, duration
-  ├── Link: to procedure_id in knowledge graph
-  └── Embed: failure_description → Vector Search (outcome-annotated index)
+    I["📊 Historical repair logs<br/>(CMMS export)"] --> J["⚙️ Outcome annotator<br/>Parse: machine_id, failure_description,<br/>steps_taken, outcome, duration<br/>Link to procedure_id in knowledge graph"]
+    J --> E
 ```
 
 **Why historical repair logs matter:** When the knowledge graph says "Procedure P-47 resolves this failure" but historical logs show that P-47 failed in 60% of cases on this machine model and P-52 succeeds in 90%, the RAG retrieval should surface that signal. Outcome-annotated history is more valuable than the manual alone.

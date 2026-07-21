@@ -54,21 +54,14 @@ It's worth being explicit about scope boundaries:
 
 MCP is organized into two layers:
 
-```
-┌─────────────────────────────────────────────┐
-│             DATA LAYER                       │
-│  JSON-RPC 2.0 message framing               │
-│  • Lifecycle management (init/shutdown)      │
-│  • Primitives: Tools, Resources, Prompts     │
-│  • Capabilities: Sampling, Elicitation       │
-│  • Utilities: Progress, Cancellation, Logging│
-├─────────────────────────────────────────────┤
-│            TRANSPORT LAYER                   │
-│  How bytes get from A to B                  │
-│  • Stdio (local subprocess)                  │
-│  • Streamable HTTP (remote server)           │
-│  • Custom transports (implementable)         │
-└─────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A["📦 DATA LAYER<br/>JSON-RPC 2.0 message framing<br/>Lifecycle management (init/shutdown)<br/>Primitives: Tools, Resources, Prompts<br/>Capabilities: Sampling, Elicitation<br/>Utilities: Progress, Cancellation, Logging"]
+    B["🚚 TRANSPORT LAYER<br/>How bytes get from A to B<br/>Stdio (local subprocess)<br/>Streamable HTTP (remote server)<br/>Custom transports (implementable)"]
+    A --> B
+
+    style A fill:#e8f4fd,stroke:#4a9eca
+    style B fill:#fff3cd,stroke:#f0a500
 ```
 
 The separation is deliberate: the data layer defines *what* is communicated; the transport layer defines *how* it travels. You can swap transports without changing protocol semantics.
@@ -136,10 +129,14 @@ One-way message with no response expected. No `id` field.
 
 The server runs as a **subprocess** launched by the client. Communication happens over standard input/output.
 
-```
-Client ──stdin──→ Server
-Client ←─stdout── Server
-               ←─stderr── Server logs (optional)
+```mermaid
+sequenceDiagram
+    participant C as 🖥️ Client
+    participant S as ⚙️ Server
+
+    C->>S: stdin
+    S-->>C: stdout
+    S-->>C: stderr (server logs, optional)
 ```
 
 Rules:
@@ -153,10 +150,15 @@ Best for: Development, desktop applications, local tools.
 
 The server is an **independent HTTP service**. The client sends requests; the server can stream responses.
 
-```
-Client ──HTTP POST──→ Server
-Client ←─HTTP resp── Server (single response or SSE stream)
-Client ──HTTP GET──→ Server (open SSE stream for server-initiated messages)
+```mermaid
+sequenceDiagram
+    participant C as 🖥️ Client
+    participant S as ⚙️ Server
+
+    C->>S: HTTP POST
+    S-->>C: HTTP response (single response or SSE stream)
+    C->>S: HTTP GET (open SSE stream)
+    S-->>C: server-initiated messages
 ```
 
 Key requirements:

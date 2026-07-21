@@ -290,24 +290,18 @@ async def plan_review_execute(goal: str) -> str:
 
 Tree of Thoughts models reasoning as a search tree. Instead of committing to a single line of reasoning, the agent explores multiple branches, evaluates each, and selects the most promising path.
 
-```
-Goal: Design a system for real-time fraud detection
+```mermaid
+flowchart TD
+    G["🎯 Goal: Design a system for<br/>real-time fraud detection"]
+    G --> A["Branch A<br/>Rule-based system"]
+    G --> B["Branch B<br/>ML-based system"]
+    A --> A1["A1: Fast, rigid<br/>score 5/10"]
+    A --> A2["A2: Slow, flexible<br/>score 4/10"]
+    B --> B1["B1: Streaming<br/>score 8/10 ✓ best fit"]
+    B --> B2["B2: Batch<br/>score 6/10"]
+    B1 --> S(["✅ Select B1 → continue expanding"])
 
-                    [Goal]
-                   /       \
-          Branch A          Branch B
-    (Rule-based system)  (ML-based system)
-        /    \                /    \
-    Branch A1  A2        Branch B1  B2
-  (Fast, rigid) (Slow, flexible)  (Streaming)  (Batch)
-
-Evaluate each branch:
-  A1: score 5/10 (fast but brittle, can't adapt to new patterns)
-  A2: score 4/10 (too slow for real-time)
-  B1: score 8/10 (best fit: ML model + streaming, adapts over time)
-  B2: score 6/10 (ML is right, but batch doesn't meet real-time req)
-
-Select B1 → continue expanding from there
+    style B1 fill:#d4edda,stroke:#28a745
 ```
 
 ### BFS vs DFS for ToT

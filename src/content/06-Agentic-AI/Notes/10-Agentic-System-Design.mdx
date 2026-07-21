@@ -8,29 +8,22 @@
 
 A production agentic system is not just agents and tools - it is a layered architecture where each layer has a distinct responsibility. Getting the layers right is what separates a reliable system from a fragile demo.
 
-```
-┌─────────────────────────────────────────────────────┐
-│  Interface Layer                                     │
-│  API gateway, UI, webhook handlers, auth             │
-├─────────────────────────────────────────────────────┤
-│  Orchestration Layer                                 │
-│  Workflow engine, task graph, HITL gates, routing    │
-├─────────────────────────────────────────────────────┤
-│  Agent Pool                                          │
-│  Specialized agents, each with their own prompt +   │
-│  tool set + model selection                          │
-├─────────────────────────────────────────────────────┤
-│  Tool Layer                                          │
-│  APIs, search engines, code execution, databases,    │
-│  file systems - each sandboxed and rate-limited      │
-├─────────────────────────────────────────────────────┤
-│  Memory Layer                                        │
-│  Short-term (context), working (state), long-term   │
-│  (vector store), episodic (event log)                │
-├─────────────────────────────────────────────────────┤
-│  Monitoring Layer                                    │
-│  Tracing, logging, alerting, cost tracking           │
-└─────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A["🚪 Interface Layer<br/>API gateway, UI, webhook handlers, auth"]
+    B["🧭 Orchestration Layer<br/>Workflow engine, task graph, HITL gates, routing"]
+    C["🤖 Agent Pool<br/>Specialized agents, each with their own<br/>prompt + tool set + model selection"]
+    D["🔧 Tool Layer<br/>APIs, search engines, code execution, databases,<br/>file systems - each sandboxed and rate-limited"]
+    E["🧠 Memory Layer<br/>Short-term (context), working (state),<br/>long-term (vector store), episodic (event log)"]
+    F["📊 Monitoring Layer<br/>Tracing, logging, alerting, cost tracking"]
+    A --> B --> C --> D --> E --> F
+
+    style A fill:#e8f4fd,stroke:#4a9eca
+    style B fill:#fff3cd,stroke:#f0a500
+    style C fill:#d4edda,stroke:#28a745
+    style D fill:#f8d7da,stroke:#dc3545
+    style E fill:#e2d9f3,stroke:#6f42c1
+    style F fill:#fde8d8,stroke:#fd7e14
 ```
 
 ### Interface Layer
@@ -220,20 +213,14 @@ A sequential log of everything that happened: every LLM call, tool call, agent a
 
 ### Memory Access Patterns
 
-```
-New task arrives
-    ↓
-Query long-term memory: "What do we already know about this topic?"
-    ↓
-Load working memory: "What's the current state of this task?"
-    ↓
-Agent executes (uses short-term memory = context window)
-    ↓
-Write results to working memory (state update)
-    ↓
-Append to episodic memory (event log)
-    ↓
-Periodically: extract important findings → write to long-term memory
+```mermaid
+flowchart TD
+    A["🆕 New task arrives"] --> B["🔍 Query long-term memory:<br/>What do we already know about this topic?"]
+    B --> C["📂 Load working memory:<br/>What's the current state of this task?"]
+    C --> D["⚙️ Agent executes<br/>(uses short-term memory = context window)"]
+    D --> E["💾 Write results to<br/>working memory (state update)"]
+    E --> F["📝 Append to episodic memory<br/>(event log)"]
+    F -.->|periodically| G["📚 Extract important findings →<br/>write to long-term memory"]
 ```
 
 ### Context Window Management
@@ -361,8 +348,10 @@ AGENT_PERMISSIONS = {
 
 For high-volume systems, task processing should be queue-backed rather than synchronous.
 
-```
-Client submits task → Task Queue → Worker picks up task → Agent runs → Result stored → Webhook fired
+```mermaid
+flowchart LR
+    C["🧑 Client submits task"] --> Q["📬 Task Queue"] --> W["⚙️ Worker picks up task"]
+    W --> A["🤖 Agent runs"] --> R[("💾 Result stored")] --> H["🔔 Webhook fired"]
 ```
 
 Benefits: back-pressure handling, retry on worker crash, horizontal scaling by adding workers.
@@ -371,10 +360,12 @@ Benefits: back-pressure handling, retry on worker crash, horizontal scaling by a
 
 Agent workers are stateless (they read/write to shared state in a database) and can be scaled horizontally. Run more workers to handle more concurrent tasks.
 
-```
-Task Queue → [Worker 1]
-          → [Worker 2]  ← scale by adding workers
-          → [Worker 3]
+```mermaid
+flowchart LR
+    Q["📬 Task Queue"] --> W1["⚙️ Worker 1"]
+    Q --> W2["⚙️ Worker 2"]
+    Q --> W3["⚙️ Worker 3"]
+    Q -.->|scale by adding workers| WN["⚙️ Worker N..."]
 ```
 
 ### Async Agent Dispatch

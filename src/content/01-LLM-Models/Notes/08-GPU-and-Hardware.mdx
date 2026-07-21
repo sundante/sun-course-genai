@@ -151,13 +151,21 @@ For models that don't fit on a single GPU (or for faster training), you must dis
 - After the backward pass, gradients are averaged across all GPUs (all-reduce communication)
 - Each GPU updates its local copy with the averaged gradient
 
-```
-GPU 0: Model copy A | Batch 1 → grad_1
-GPU 1: Model copy A | Batch 2 → grad_2
-GPU 2: Model copy A | Batch 3 → grad_3
-                           ↓ All-reduce
-All GPUs: grad = (grad_1 + grad_2 + grad_3) / 3
-Update: W = W - lr × grad
+```mermaid
+flowchart TD
+    subgraph G0["🖥️ GPU 0"]
+        A0["Model copy A<br/>Batch 1 → grad_1"]
+    end
+    subgraph G1["🖥️ GPU 1"]
+        A1["Model copy A<br/>Batch 2 → grad_2"]
+    end
+    subgraph G2["🖥️ GPU 2"]
+        A2["Model copy A<br/>Batch 3 → grad_3"]
+    end
+    A0 --> AR["🔄 All-reduce<br/>grad = (grad_1 + grad_2 + grad_3) / 3"]
+    A1 --> AR
+    A2 --> AR
+    AR --> U["✅ Update: W = W - lr × grad<br/>(on every GPU)"]
 ```
 
 **When to use:** Model fits on a single GPU; want to increase batch size or training speed.
@@ -175,11 +183,12 @@ Update: W = W - lr × grad
 - FFN: split the intermediate dimension across GPUs
   - GPU 0: first half of d_ffn columns; GPU 1: second half
 
-```
-Linear(d_model, d_ffn):
-  GPU 0: first d_ffn/2 columns → output_0
-  GPU 1: last d_ffn/2 columns  → output_1
-  All-reduce: output = concat(output_0, output_1)
+```mermaid
+flowchart LR
+    IN["📥 Linear(d_model, d_ffn)"] --> G0["🖥️ GPU 0<br/>first d_ffn/2 columns → output_0"]
+    IN --> G1["🖥️ GPU 1<br/>last d_ffn/2 columns → output_1"]
+    G0 --> AR["🔄 All-reduce<br/>output = concat(output_0, output_1)"]
+    G1 --> AR
 ```
 
 **Communication cost:** One all-reduce per layer forward AND backward. High communication - requires NVLink for efficiency (PCIe is too slow).
@@ -195,13 +204,20 @@ Linear(d_model, d_ffn):
 - Each GPU processes its layers, passes activations to the next GPU
 - Micro-batching: split the batch into M micro-batches to keep all GPUs busy
 
-```
-Layers 1–16: GPU 0
-Layers 17–32: GPU 1
+```mermaid
+sequenceDiagram
+    participant G0 as 🖥️ GPU 0 (Layers 1-16)
+    participant G1 as 🖥️ GPU 1 (Layers 17-32)
 
-Step 1: GPU 0 processes micro-batch 1, sends activations to GPU 1
-Step 2: GPU 0 processes micro-batch 2 (while GPU 1 processes micro-batch 1)
-...
+    G0->>G0: process micro-batch 1
+    G0->>G1: send activations (micro-batch 1)
+    par
+        G0->>G0: process micro-batch 2
+    and
+        G1->>G1: process micro-batch 1
+    end
+    G0->>G1: send activations (micro-batch 2)
+    Note over G0,G1: ... continues until all micro-batches complete
 ```
 
 **"Bubble" problem:** At the start and end of a batch, some GPUs are idle waiting for data. The bubble size = (num_GPUs - 1) / (num_micro_batches + num_GPUs - 1). More micro-batches = smaller bubble.

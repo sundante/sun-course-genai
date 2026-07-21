@@ -61,12 +61,12 @@ print(f"Similarity: {cosine_sim(query_vec, doc_vec):.4f}")
 
 Semantic search is approximate nearest neighbor (ANN) search in embedding space. The full pipeline:
 
-```
-Query text → embedding model → query vector (768-dim)
-                                        ↓
-                           ANN index (HNSW / IVF)
-                                        ↓
-               top-k most similar vectors → retrieve document chunks
+```mermaid
+flowchart LR
+    Q["❓ Query text"] --> EM["🧬 Embedding model"] --> QV["📍 Query vector<br/>(768-dim)"]
+    QV --> ANN["📡 ANN index<br/>(HNSW / IVF)"]
+    ANN --> TOPK["📚 Top-k most similar vectors"]
+    TOPK --> DOC["📄 Retrieve document chunks"]
 ```
 
 **Why ANN and not exact nearest neighbor?**

@@ -2,23 +2,15 @@
 
 ## Pattern: Fan-out → Independent Agents → Aggregate
 
-```
-                    Input
-                      │
-          ┌───────────┼───────────┐
-          ▼           ▼           ▼
-    ┌──────────┐ ┌──────────┐ ┌──────────┐
-    │ Agent A  │ │ Agent B  │ │ Agent C  │
-    │ (Tokyo)  │ │ (Paris)  │ │(Bangalore│
-    └────┬─────┘ └────┬─────┘ └────┬─────┘
-         │            │            │
-         └────────────┼────────────┘
-                      ▼
-               ┌────────────┐
-               │ Aggregator │
-               └────────────┘
-                      │
-                   Output
+```mermaid
+flowchart TD
+    I["📥 Input"] --> A["🤖 Agent A<br/>(Tokyo)"]
+    I --> B["🤖 Agent B<br/>(Paris)"]
+    I --> C["🤖 Agent C<br/>(Bangalore)"]
+    A --> AGG["🧩 Aggregator"]
+    B --> AGG
+    C --> AGG
+    AGG --> O(["📤 Output"])
 ```
 
 ## When to Use Parallel

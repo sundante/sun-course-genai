@@ -29,14 +29,23 @@ Advanced techniques address these limits systematically.
 
 Tree of Thought (Yao et al., 2023) generalizes CoT from a linear chain to a **tree search**. Instead of one reasoning path, the model generates multiple candidate "thoughts" at each step, evaluates them, and explores the most promising branches - backtracking when a branch leads to a dead end.
 
+**Standard CoT** - one path:
+```mermaid
+flowchart LR
+    P["Problem"] --> S1["Step 1"] --> S2["Step 2"] --> S3["Step 3"] --> A(["Answer"])
 ```
-Standard CoT:
-Problem → Step1 → Step2 → Step3 → Answer  (one path)
 
-Tree of Thought:
-                    ┌── Branch A1 → A2 → [dead end, backtrack]
-Problem → Root ─── ┼── Branch B1 → B2 → B3 → Answer ✓
-                    └── Branch C1 → [evaluated as low quality, pruned]
+**Tree of Thought** - explore, evaluate, backtrack:
+```mermaid
+flowchart LR
+    P["Problem"] --> R["Root"]
+    R --> A1["Branch A1"] --> A2["A2"] --> AX(["❌ dead end, backtrack"])
+    R --> B1["Branch B1"] --> B2["B2"] --> B3["B3"] --> BX(["✅ Answer"])
+    R --> C1["Branch C1"] --> CX(["🗑️ low quality, pruned"])
+
+    style BX fill:#d4edda,stroke:#28a745
+    style AX fill:#f8d7da,stroke:#dc3545
+    style CX fill:#f8d7da,stroke:#dc3545
 ```
 
 ### How It Works
@@ -103,15 +112,14 @@ ToT is overkill when:
 
 Self-Consistency (Wang et al., 2022) is a decoding strategy, not a prompting technique per se. Instead of generating one CoT chain and trusting it, generate **N diverse chains** and take a majority vote on the final answer.
 
-```
-Prompt (same each time, temperature > 0)
-    → Chain 1 → Answer: 42
-    → Chain 2 → Answer: 42
-    → Chain 3 → Answer: 40  ← outlier
-    → Chain 4 → Answer: 42
-    → Chain 5 → Answer: 42
-
-Majority vote → 42 ✓
+```mermaid
+flowchart LR
+    P["📝 Prompt<br/>(same each time, temperature &gt; 0)"] --> C1["Chain 1 → 42"]
+    P --> C2["Chain 2 → 42"]
+    P --> C3["Chain 3 → 40 ⚠️ outlier"]
+    P --> C4["Chain 4 → 42"]
+    P --> C5["Chain 5 → 42"]
+    C1 & C2 & C3 & C4 & C5 --> V["🗳️ Majority vote"] --> R(["✅ 42"])
 ```
 
 ```python
@@ -147,13 +155,11 @@ Self-consistency requires **diverse** chains, not identical ones. High temperatu
 
 Prompt chaining decomposes a complex task into a **pipeline of prompts** where the output of each step becomes the input to the next. Rather than one large monolithic prompt, you write multiple focused prompts.
 
-```
-[Prompt 1: Extract key claims]
-    ↓ (list of claims)
-[Prompt 2: Verify each claim against source]
-    ↓ (claim + verified/unverified)
-[Prompt 3: Write balanced summary using only verified claims]
-    ↓ (final output)
+```mermaid
+flowchart LR
+    A["📝 Prompt 1<br/>Extract key claims"] -->|list of claims| B["✅ Prompt 2<br/>Verify each claim against source"]
+    B -->|claim + verified/unverified| C["📄 Prompt 3<br/>Write balanced summary<br/>using only verified claims"]
+    C --> D(["Final output"])
 ```
 
 ```python
@@ -257,15 +263,13 @@ Improved prompt:""")
 
 Least-to-Most Prompting (Zhou et al., 2022) solves the **decomposition challenge** in complex tasks by explicitly breaking a problem into sub-problems, solving the simplest first, and using each solution as context for harder sub-problems.
 
-```
-Stage 1 - Decompose:
-"To solve [hard problem], I first need to solve: [sub-problem 1], then [sub-problem 2], then..."
-
-Stage 2 - Sequential solving:
-Solve sub-problem 1 → add solution to context
-Solve sub-problem 2 using sub-problem 1's answer as context
-...
-Solve original problem using all sub-problem answers as context
+```mermaid
+flowchart TD
+    A["🧩 Stage 1 - Decompose<br/>'To solve [hard problem], I first need to<br/>solve: [sub-problem 1], then [sub-problem 2]...'"]
+    A --> B["1️⃣ Solve sub-problem 1"] --> C["➕ Add solution to context"]
+    C --> D["2️⃣ Solve sub-problem 2<br/>using sub-problem 1's answer as context"]
+    D --> E["..."]
+    E --> F["✅ Solve original problem<br/>using all sub-problem answers as context"]
 ```
 
 ```python

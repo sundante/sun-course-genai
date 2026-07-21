@@ -47,13 +47,14 @@ Coordination answers: how do agents decide what to do and in what order?
 
 A single orchestrator holds the plan and assigns tasks to agents. Agents are workers - they execute assigned tasks and report results. They have no knowledge of the broader plan.
 
-```
-Orchestrator (has the plan)
-    → assigns task_A to Agent_1
-    → assigns task_B to Agent_2 (in parallel)
-    → waits for both results
-    → assigns task_C to Agent_3 (using results from A and B)
-    → synthesizes final output
+```mermaid
+flowchart TD
+    O["🧭 Orchestrator<br/>(has the plan)"] --> A1["🤖 Agent_1: task_A"]
+    O --> A2["🤖 Agent_2: task_B (parallel)"]
+    A1 --> W["⏳ Waits for both results"]
+    A2 --> W
+    W --> A3["🤖 Agent_3: task_C<br/>(using results from A and B)"]
+    A3 --> S(["✅ Synthesizes final output"])
 ```
 
 **Advantages:**
@@ -72,12 +73,12 @@ Orchestrator (has the plan)
 
 No orchestrator. Agents observe the shared state, determine what needs to be done, and execute. Coordination emerges from agent behavior, not explicit assignment.
 
-```
-Shared State: {todo: [task_A, task_B, task_C], done: [], results: {}}
-
-Agent_1 sees task_A unclaimed → claims it → executes → writes result
-Agent_2 sees task_B unclaimed → claims it → executes → writes result
-Agent_3 waits for A and B → both done → executes task_C → writes result
+```mermaid
+flowchart LR
+    S[("🗂️ Shared State<br/>todo: [A, B, C], done: [], results: {}")]
+    A1["🤖 Agent_1<br/>claims task_A → executes → writes result"] <--> S
+    A2["🤖 Agent_2<br/>claims task_B → executes → writes result"] <--> S
+    A3["🤖 Agent_3<br/>waits for A and B → executes task_C → writes result"] <--> S
 ```
 
 **Advantages:**
@@ -147,10 +148,12 @@ class WorkflowState(TypedDict):
 
 Agents publish events and subscribe to events produced by other agents. No direct coupling between agents.
 
-```
-Research Agent publishes: ResearchCompleted(results=[...])
-Writing Agent subscribes to: ResearchCompleted → triggers when research is done
-Critic Agent subscribes to: DraftCompleted → triggers when writing is done
+```mermaid
+flowchart LR
+    R["🔎 Research Agent"] -->|publishes| E1["📣 ResearchCompleted<br/>results=[...]"]
+    E1 -->|triggers| W["✍️ Writing Agent"]
+    W -->|publishes| E2["📣 DraftCompleted"]
+    E2 -->|triggers| C["🧐 Critic Agent"]
 ```
 
 **Advantages:** Highly decoupled, good for asynchronous long-running systems
@@ -325,14 +328,10 @@ def process_payment() -> str:
     return f"Payment processed for order {order_id}"
 ```
 
-```
-Data flow:
-
-[All tools] → read/write → [CentralState]
-                                  ↑
-                         [Orchestrator Agent]
-                           (single agent,
-                            all tools attached)
+```mermaid
+flowchart LR
+    O["🧭 Orchestrator Agent<br/>(single agent, all tools attached)"] --> T["🔧 All tools"]
+    T <-->|read/write| CS[("🗂️ CentralState")]
 ```
 
 **Pros:** Zero coordination overhead, easy to debug (one state object, one agent), no state conflicts possible.  
@@ -414,12 +413,11 @@ inventory_agent = Agent(name="inventory_agent", tools=[check_inventory_tool])
 payment_agent   = Agent(name="payment_agent",   tools=[process_payment_tool])
 ```
 
-```
-Data flow:
-
-[order_agent]    → tools → ─┐
-[inventory_agent]→ tools → ─┤→ [GlobalOrderState] ← single source of truth
-[payment_agent]  → tools → ─┘
+```mermaid
+flowchart LR
+    A["🤖 order_agent"] --> T1["🔧 tools"] --> GS[("🗂️ GlobalOrderState<br/>single source of truth")]
+    B["🤖 inventory_agent"] --> T2["🔧 tools"] --> GS
+    C["🤖 payment_agent"] --> T3["🔧 tools"] --> GS
 ```
 
 **Pros:** Loose coupling between agents; adding a new agent requires only a new tool that closes over `global_state`, no changes to existing agents; thread-safe; easy to unit test state logic in isolation.  
@@ -515,16 +513,17 @@ bus   = EventBus()
 state = ReactiveOrderState(bus)
 ```
 
-```
-Data flow:
+```mermaid
+sequenceDiagram
+    participant OA as 🤖 order_agent
+    participant RS as 🗂️ ReactiveOrderState
+    participant EB as 📣 EventBus
+    participant H as 🔔 Subscribers
 
-[order_agent]    → state.create_order()   → publishes OrderEvent.CREATED
-                                                    ↓
-                                          EventBus dispatches to subscribers
-                                                    ↓
-                                          ReactiveOrderState._on_order_created()
-                                          → appends to audit log
-                                          → triggers next-stage notification
+    OA->>RS: state.create_order()
+    RS->>EB: publishes OrderEvent.CREATED
+    EB->>H: dispatches to subscribers
+    H->>H: _on_order_created()<br/>appends to audit log,<br/>triggers next-stage notification
 ```
 
 **Pros:** Complete audit trail in `bus.history` for free; side effects are automatic and consistent; agents are completely decoupled - they only know about events, not each other; easy to add new reactions without modifying existing code.  

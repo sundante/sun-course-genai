@@ -15,20 +15,21 @@ The term was formally introduced by Lewis et al. (2020) at Facebook AI Research,
 
 **The fundamental contract:** The LLM is instructed (explicitly in the prompt) to answer using only the provided context. This constraint is what reduces hallucination - the model has less reason to fabricate when relevant facts are present in the context window.
 
-```
-Index phase (offline):
-  Documents → chunk → embed → store in vector DB
+```mermaid
+flowchart TD
+    subgraph IDX["📥 Index Phase (offline)"]
+        D["📄 Documents"] --> CH["✂️ Chunk"] --> EMB["🧬 Embed"] --> VDB[("🗄️ Vector DB")]
+    end
+    subgraph QRY["🔍 Query Phase (online)"]
+        Q["❓ User query"] --> EQ["🧬 Embed query<br/>(same model as indexing)"]
+        EQ --> ANN["📡 ANN search"] --> TOPK["📚 Top-k chunks"]
+        TOPK --> PR["📝 Build prompt<br/>context + query"]
+        PR --> LLM["🤖 LLM generates<br/>grounded answer"]
+    end
+    VDB -.-> ANN
 
-Query phase (online):
-  User query
-      ↓
-  Embed query (same model as indexing)
-      ↓
-  ANN search → top-k chunks
-      ↓
-  Build prompt: "Using the following context: {chunks}\n\nAnswer: {query}"
-      ↓
-  LLM generates answer grounded in context
+    style IDX fill:#e8f4fd,stroke:#4a9eca
+    style QRY fill:#d4edda,stroke:#28a745
 ```
 
 ---
@@ -152,29 +153,24 @@ def choose_knowledge_strategy(use_case: dict) -> str:
 The RAG pipeline has two distinct phases with very different performance characteristics:
 
 **Index Phase (offline, one-time + incremental updates)**
-```
-Raw Documents
-    ↓ Document loader (PDF, HTML, DOCX, etc.)
-Text
-    ↓ Text splitter (chunking strategy)
-Chunks
-    ↓ Embedding model (e.g., text-embedding-004)
-Vectors
-    ↓ Upsert
-Vector Database (Chroma, Pinecone, Vertex AI Vector Search)
+```mermaid
+flowchart LR
+    A["📄 Raw Documents"] --> B["📥 Document loader<br/>(PDF, HTML, DOCX, etc.)"]
+    B --> D["✂️ Text splitter<br/>(chunking strategy)"]
+    D --> F["🧬 Embedding model<br/>(e.g., text-embedding-004)"]
+    F --> H[("🗄️ Vector Database<br/>Chroma, Pinecone, Vertex AI")]
 ```
 
 **Query Phase (online, per-request)**
-```
-User Query
-    ↓ Embedding model (same model used in index phase!)
-Query Vector
-    ↓ ANN search (k=4-8 typical)
-Top-k Chunks + Metadata
-    ↓ Prompt template
-Augmented Prompt
-    ↓ LLM (Gemini, GPT-4, Claude)
-Answer
+```mermaid
+flowchart LR
+    A["❓ User Query"] --> B["🧬 Embedding model<br/>(same model as index phase!)"]
+    B --> D["📡 ANN search<br/>(k=4-8 typical)"]
+    D --> E["📚 Top-k Chunks + Metadata"]
+    E --> F["📝 Prompt template"]
+    F --> G["🧾 Augmented Prompt"]
+    G --> H["🤖 LLM<br/>(Gemini, GPT-4, Claude)"]
+    H --> I(["✅ Answer"])
 ```
 
 **Critical invariant:** The embedding model used at query time MUST be the same model used during indexing. Switching embedding models requires re-indexing the entire corpus.

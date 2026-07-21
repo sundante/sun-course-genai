@@ -8,21 +8,16 @@
 
 Every MCP interaction involves exactly three roles. Understanding the boundary between them is the key to designing correct MCP systems.
 
-```
-┌──────────────────────────────────┐
-│           MCP HOST               │
-│  (e.g., Claude Desktop, VS Code) │
-│                                  │
-│  ┌──────────┐  ┌──────────┐     │
-│  │ Client 1 │  │ Client 2 │ ... │
-│  └────┬─────┘  └────┬─────┘     │
-└───────┼─────────────┼────────────┘
-        │             │
-        ▼             ▼
- ┌──────────┐  ┌──────────┐
- │ Server A │  │ Server B │
- │ (GitHub) │  │(Postgres)│
- └──────────┘  └──────────┘
+```mermaid
+flowchart TD
+    subgraph H["🖥️ MCP Host<br/>(e.g., Claude Desktop, VS Code)"]
+        C1["🔌 Client 1"]
+        C2["🔌 Client 2 ..."]
+    end
+    C1 --> SA["🗄️ Server A<br/>(GitHub)"]
+    C2 --> SB["🗄️ Server B<br/>(Postgres)"]
+
+    style H fill:#f4f1ec,stroke:#ccc4b8
 ```
 
 ---
@@ -202,18 +197,15 @@ If the server rejects the protocol version, it sends a JSON-RPC error in Step 2 
 
 ## Session Lifecycle States
 
-```
-CONNECTING
-    ↓ (initialize request sent)
-INITIALIZING
-    ↓ (initialize response received + initialized notification sent)
-ACTIVE ←──────────────────────────────────────────────────┐
-    │  (tool calls, resource reads, notifications, etc.)   │
-    │                                                       │
-    ↓ (either side closes transport)                        │
-TERMINATED                                                  │
-                                                            │
-    [Reconnect if desired] ─────────────────────────────────┘
+```mermaid
+stateDiagram-v2
+    [*] --> CONNECTING
+    CONNECTING --> INITIALIZING: initialize request sent
+    INITIALIZING --> ACTIVE: initialize response received +\ninitialized notification sent
+    ACTIVE --> ACTIVE: tool calls, resource reads,\nnotifications, etc.
+    ACTIVE --> TERMINATED: either side closes transport
+    TERMINATED --> CONNECTING: reconnect if desired
+    TERMINATED --> [*]
 ```
 
 There is no "pause" state - a dropped connection means full re-initialization on reconnect. In-flight requests at disconnection are lost.

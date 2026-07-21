@@ -75,15 +75,21 @@ Tokens-per-second (TPS)    = 1 / per-token-decode-time
 - Immediately insert the next waiting request
 - GPU always runs at full batch capacity
 
-```
-Static (4 requests, max 10 tokens):
-  Step 1–3:  [A B C D]   A, B finish at step 3
-  Step 4–10: [_ _ C D]   2 empty slots wasted
+```mermaid
+sequenceDiagram
+    participant St as Static Batch Slots
+    participant Ct as Continuous Batch Slots
 
-Continuous:
-  Step 1–3:  [A B C D]   A, B finish at step 3
-  Step 4:    [E F C D]   E, F fill immediately
-  Step 5–8:  [E F C D]   full batch throughout
+    rect rgb(248, 215, 218)
+    St->>St: Steps 1-3 [A B C D] - A, B finish
+    St->>St: Steps 4-10 [_ _ C D] - 2 empty slots wasted
+    end
+
+    rect rgb(212, 237, 218)
+    Ct->>Ct: Steps 1-3 [A B C D] - A, B finish
+    Ct->>Ct: Step 4 [E F C D] - E, F fill immediately
+    Ct->>Ct: Steps 5-8 [E F C D] - full batch throughout
+    end
 ```
 
 **Dynamic batching:** Group incoming requests by similar sequence length to minimize padding waste.
@@ -129,24 +135,25 @@ Multiple layers of caching are possible in LLM serving, each with different trad
 When documents or conversations exceed the context window, several strategies exist beyond simply refusing to process them.
 
 **Strategy 1: Sliding Window with Overlap**
-```
-Document: [chunk_1][chunk_2][chunk_3]...
-
-Process:
-  Pass 1: context = [chunk_1][chunk_2] → partial answer
-  Pass 2: context = [overlap][chunk_2][chunk_3] → partial answer
-  Pass 3: context = [overlap][chunk_3][chunk_4] → partial answer
-Merge partial answers (map-reduce style)
+```mermaid
+flowchart TD
+    D["📄 Document: chunk_1, chunk_2, chunk_3..."]
+    D --> P1["Pass 1: context = chunk_1 + chunk_2"] --> A1["Partial answer 1"]
+    D --> P2["Pass 2: context = overlap + chunk_2 + chunk_3"] --> A2["Partial answer 2"]
+    D --> P3["Pass 3: context = overlap + chunk_3 + chunk_4"] --> A3["Partial answer 3"]
+    A1 --> M["🧩 Merge partial answers<br/>(map-reduce style)"]
+    A2 --> M
+    A3 --> M
 ```
 
 **Strategy 2: Hierarchical Summarization**
-```
-Long document (500 pages):
-  1. Split into 100 sections
-  2. Summarize each section (100 LLM calls)
-  3. Concatenate summaries → still may be long
-  4. Summarize summaries (recursive)
-  5. Final response from concise summary
+```mermaid
+flowchart TD
+    A["📚 Long document (500 pages)"] --> B["1️⃣ Split into 100 sections"]
+    B --> C["2️⃣ Summarize each section<br/>(100 LLM calls)"]
+    C --> D["3️⃣ Concatenate summaries<br/>→ still may be long"]
+    D --> E["4️⃣ Summarize summaries<br/>(recursive)"]
+    E --> F["5️⃣ Final response<br/>from concise summary"]
 ```
 
 Suitable for: document QA, long-form summarization, book analysis.

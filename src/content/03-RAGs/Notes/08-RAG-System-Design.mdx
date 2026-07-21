@@ -41,40 +41,35 @@ When designing a RAG system for a given use case, structure your thinking in 5 m
 
 ## Full Production Architecture
 
-```
-INGEST PIPELINE (offline / async)
-─────────────────────────────────────────────────────────────────────
-Data Sources                Document Processor         Vector Store
-(S3, GCS, SharePoint,  →  [Loader → Extract →  →  [Upsert vectors
- Confluence, database)      Clean → Chunk →             + metadata]
-                            Embed]
-                               ↕
-                         Queue (Pub/Sub, SQS)
-                         for async processing
+```mermaid
+flowchart TD
+    subgraph INGEST["📥 Ingest Pipeline (offline / async)"]
+        DS["🗄️ Data Sources<br/>S3, GCS, SharePoint, Confluence, DB"] --> DP["⚙️ Document Processor<br/>Loader → Extract → Clean → Chunk → Embed"]
+        DP <-.-> Q["📬 Queue (Pub/Sub, SQS)<br/>async processing"]
+        DP --> VS[("🗄️ Vector Store<br/>upsert vectors + metadata")]
+    end
 
-QUERY PIPELINE (online / synchronous, user-facing)
-─────────────────────────────────────────────────────────────────────
-User query
-    ↓
-[Query Preprocessing]         ← query rewrite / expand / classify
-    ↓
-[Cache Layer]                 ← semantic cache (Redis + vector search)
-    ↓ (cache miss)
-[Retriever]                   ← hybrid (dense + BM25) → top-20 candidates
-    ↓
-[Reranker]                    ← cross-encoder → top-4 chunks
-    ↓
-[Context Assembly]            ← format chunks + metadata citations
-    ↓
-[LLM Generation]              ← Gemini / GPT-4 with grounding prompt
-    ↓
-[Post-processing]             ← citation formatting, PII scrubbing
-    ↓
-Answer + Source Citations
+    subgraph QUERY["🔍 Query Pipeline (online / synchronous)"]
+        UQ["❓ User query"] --> QP["✏️ Query Preprocessing<br/>rewrite / expand / classify"]
+        QP --> CACHE["⚡ Cache Layer<br/>semantic cache (Redis + vector search)"]
+        CACHE -->|cache miss| RET["📡 Retriever<br/>hybrid (dense + BM25) → top-20"]
+        RET --> RR["🎯 Reranker<br/>cross-encoder → top-4 chunks"]
+        RR --> CA["🧩 Context Assembly<br/>format chunks + citations"]
+        CA --> LLM["🤖 LLM Generation<br/>Gemini / GPT-4 with grounding prompt"]
+        LLM --> PP["🧹 Post-processing<br/>citation formatting, PII scrubbing"]
+        PP --> ANS(["✅ Answer + Source Citations"])
+    end
 
-FEEDBACK LOOP (async)
-─────────────────────────────────────────────────────────────────────
-[User Feedback] → [Eval Store] → [Quality Metrics] → [Trigger Re-index / Rerank Tuning]
+    subgraph FEEDBACK["🔁 Feedback Loop (async)"]
+        UF["👍 User Feedback"] --> ES["🗂️ Eval Store"] --> QM["📊 Quality Metrics"] --> TR["🔧 Trigger Re-index /<br/>Rerank Tuning"]
+    end
+
+    VS -.-> RET
+    ANS -.-> UF
+
+    style INGEST fill:#e8f4fd,stroke:#4a9eca
+    style QUERY fill:#d4edda,stroke:#28a745
+    style FEEDBACK fill:#fde8d8,stroke:#fd7e14
 ```
 
 ---
@@ -243,24 +238,16 @@ Two strategies:
 **5. Multi-region**
 For global products, replicate the index to multiple regions. Use eventual consistency for index updates - slight staleness (seconds to minutes) is acceptable for most RAG use cases.
 
-```
-Architecture for 100M documents:
-┌─────────────────────────────────────────────────────────────┐
-│  Ingest Service (Cloud Run)                                 │
-│  ├─ Doc processor × 10 workers (async, Pub/Sub queue)       │
-│  └─ Batch embedding (text-embedding-004, batch=512)         │
-│                      ↓                                      │
-│  Vertex AI Vector Search (managed HNSW, auto-scaled)        │
-│  ├─ Index: 120M vectors, 768-dim, cosine                    │
-│  ├─ Read replicas: 3 (auto-scaled based on QPS)             │
-│  └─ Deployed endpoint: http call → top-k                    │
-│                      ↓                                      │
-│  Query Service (Cloud Run, min-instances=3)                 │
-│  ├─ Semantic cache (Cloud Memorystore Redis)                 │
-│  ├─ Hybrid search (Vector Search + BM25 on Elasticsearch)   │
-│  ├─ Reranker (MiniLM deployed on Cloud Run GPU)             │
-│  └─ Gemini API for generation                               │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph ARCH["🏗️ Architecture for 100M documents"]
+        I["☁️ Ingest Service (Cloud Run)<br/>Doc processor × 10 workers (Pub/Sub queue)<br/>Batch embedding (text-embedding-004, batch=512)"]
+        V["📡 Vertex AI Vector Search (managed HNSW)<br/>Index: 120M vectors, 768-dim, cosine<br/>Read replicas: 3 (auto-scaled by QPS)<br/>Deployed endpoint: HTTP call → top-k"]
+        Q["☁️ Query Service (Cloud Run, min-instances=3)<br/>Semantic cache (Cloud Memorystore Redis)<br/>Hybrid search (Vector Search + Elasticsearch BM25)<br/>Reranker (MiniLM on Cloud Run GPU)<br/>Gemini API for generation"]
+        I --> V --> Q
+    end
+
+    style ARCH fill:#f4f1ec,stroke:#ccc4b8
 ```
 
 ---
@@ -352,22 +339,24 @@ streaming_pull_future = subscriber.subscribe(subscription_path, callback=process
 Production RAG systems must handle partial failures gracefully. The user should always get an answer, even if degraded.
 
 **Failure hierarchy:**
-```
-Vector DB unavailable
-    → Fallback to BM25-only (Elasticsearch / in-memory index)
-    → If BM25 also unavailable → fallback to LLM with no context + uncertainty disclaimer
+```mermaid
+flowchart TD
+    A["🗄️ Vector DB unavailable"] --> A1["↪️ Fallback to BM25-only<br/>(Elasticsearch / in-memory index)"]
+    A1 --> A2["↪️ If BM25 also unavailable → LLM with<br/>no context + uncertainty disclaimer"]
 
-Embedding model API unavailable
-    → If query embedding fails → serve stale cache if available
-    → If no cache → fallback to BM25
+    B["🧬 Embedding model API unavailable"] --> B1["↪️ If query embedding fails →<br/>serve stale cache if available"]
+    B1 --> B2["↪️ If no cache → fallback to BM25"]
 
-LLM API rate limited / unavailable
-    → Queue request, return "processing" response
-    → For synchronous requirement → switch to smaller/faster fallback model
+    C["🤖 LLM API rate limited / unavailable"] --> C1["↪️ Queue request,<br/>return 'processing' response"]
+    C1 --> C2["↪️ For sync requirement →<br/>switch to smaller/faster fallback model"]
 
-Reranker unavailable
-    → Skip reranking, use first-stage retrieval order
-    → Monitor precision drop in downstream metrics
+    D["🎯 Reranker unavailable"] --> D1["↪️ Skip reranking,<br/>use first-stage retrieval order"]
+    D1 --> D2["↪️ Monitor precision drop<br/>in downstream metrics"]
+
+    style A fill:#f8d7da,stroke:#dc3545
+    style B fill:#f8d7da,stroke:#dc3545
+    style C fill:#f8d7da,stroke:#dc3545
+    style D fill:#f8d7da,stroke:#dc3545
 ```
 
 **Circuit breaker pattern:**
@@ -401,21 +390,28 @@ def vector_search_with_circuit_breaker(query_vec: list[float], k: int) -> list:
 
 **Architecture:**
 
-```
-Ingest (daily batch, 9 PM):
-  SharePoint / Confluence → Doc processor (Cloud Run) → 
-  Text clean + chunk (500 chars) → Batch embed (text-embedding-004) →
-  Vertex AI Vector Search (upsert, namespace=department)
+```mermaid
+flowchart TD
+    subgraph ING["📥 Ingest (daily batch, 9 PM)"]
+        S["📄 SharePoint / Confluence"] --> DP["⚙️ Doc processor (Cloud Run)"]
+        DP --> TC["✂️ Text clean + chunk (500 chars)"]
+        TC --> BE["🧬 Batch embed (text-embedding-004)"]
+        BE --> VS[("🗄️ Vertex AI Vector Search<br/>upsert, namespace=department")]
+    end
 
-Query (real-time):
-  Employee query
-    → Auth check (IAM → map user to department)
-    → Semantic cache (Redis) - 30-60% hit rate expected
-    → Cache miss: hybrid retrieval (Vector Search + Elasticsearch BM25)
-                  filter={"department": user_dept}  ← tenant isolation
-    → Cohere Rerank API (top-20 → top-5)
-    → Gemini Pro (generation, streaming)
-    → Answer + citations (doc title, department, URL)
+    subgraph QRY["🔍 Query (real-time)"]
+        EQ["🧑 Employee query"] --> AUTH["🔐 Auth check<br/>IAM → map user to department"]
+        AUTH --> SC["⚡ Semantic cache (Redis)<br/>30-60% hit rate expected"]
+        SC -->|cache miss| HR["📡 Hybrid retrieval<br/>Vector Search + Elasticsearch BM25<br/>filter={department: user_dept}"]
+        HR --> RR["🎯 Cohere Rerank API<br/>top-20 → top-5"]
+        RR --> GEN["🤖 Gemini Pro<br/>(generation, streaming)"]
+        GEN --> ANS(["✅ Answer + citations<br/>doc title, department, URL"])
+    end
+
+    VS -.-> HR
+
+    style ING fill:#e8f4fd,stroke:#4a9eca
+    style QRY fill:#d4edda,stroke:#28a745
 ```
 
 **Latency budget:**
