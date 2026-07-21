@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "./ThemeToggle";
 
 function StarIcon() {
   return (
@@ -43,6 +44,8 @@ export function Header() {
         </Link>
 
         <div className="flex-1" />
+
+        <ThemeToggle />
 
         <a
           href="https://github.com/sundante/sun-course-genai"

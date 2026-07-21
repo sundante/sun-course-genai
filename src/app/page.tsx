@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getNavigationTree } from "@/lib/content/nav";
+import { ThemeToggle } from "@/components/course/ThemeToggle";
 
 const MODULE_META: Record<string, { num: string; subtitle: string; description: string; notes: string; qa: string }> = {
   "llm-models":         { num: "01", subtitle: "The Engine",    description: "How large language models work under the hood — transformers, attention, training, fine-tuning, and inference optimization.", notes: "12 notes", qa: "68+ Q&A" },
@@ -34,6 +35,7 @@ export default function HomePage() {
       <header className="bg-white border-b-2 border-sun-yellow px-4 sm:px-6 h-13 flex items-center justify-between gap-3 sticky top-0 z-40">
         <span className="font-bold text-sun-dark tracking-tight text-sm">Learn GenAI</span>
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <a
             href="https://github.com/sundante/sun-course-genai"
             target="_blank" rel="noopener noreferrer"

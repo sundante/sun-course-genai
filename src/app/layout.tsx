@@ -22,9 +22,22 @@ export const metadata: Metadata = {
   description: "A structured, practical curriculum from foundational LLMs to fully autonomous Agentic systems.",
 };
 
+const THEME_INIT_SCRIPT = `
+(function () {
+  try {
+    if (localStorage.getItem("theme") === "dark") {
+      document.documentElement.classList.add("dark");
+    }
+  } catch (e) {}
+})();
+`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body>
         {children}
         <DisclaimerModal />
