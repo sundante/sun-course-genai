@@ -75,12 +75,34 @@ retired) - do not let it linger once it's no longer a live tracker.
   (no `hidden` classes on the button itself) but only checked via curl/build output, not an actual
   browser
 
-## Section 4 — Core Chrome Components
-- [ ] `Header.tsx` glass treatment (light + dark)
-- [ ] `Sidebar.tsx` glass treatment (light + dark)
-- [ ] `MobileNav.tsx` glass treatment (light + dark)
-- [ ] `PageNav.tsx` glass treatment (light + dark)
-- [ ] `TableOfContents.tsx` glass treatment (light + dark)
+## Section 4 — Core Chrome Components ✅ DONE 2026-07-22
+
+- [x] `Header.tsx` glass treatment (light + dark) - `bg-white` → `bg-glass-nav-bg
+      backdrop-blur-glass-md`, `shadow-sm` → `shadow-glass-sm`; kept the `border-b-2
+      border-sun-yellow` brand accent as-is
+- [x] `Sidebar.tsx` glass treatment (light + dark) - desktop `aside` `bg-white` →
+      `bg-glass-nav-bg backdrop-blur-glass-md`; WIP footer note `bg-sun-bg/60` → `bg-glass-panel-bg
+      backdrop-blur-glass-sm`. Mobile variant (rendered inside `sheet.tsx`) intentionally left
+      solid - that's Section 5's job
+- [x] `MobileNav.tsx` glass treatment (light + dark) - trigger bar `bg-white` → `bg-glass-nav-bg
+      backdrop-blur-glass-md`; the `Sheet`/`SheetContent` drawer itself is unchanged (Section 5)
+- [x] `PageNav.tsx` glass treatment (light + dark) - the actual visual chrome is the sticky
+      bottom-bar wrapper in `learn/[module]/[slug]/page.tsx` (`bg-sun-bg` → `bg-glass-nav-bg
+      backdrop-blur-glass-md`); also updated `PageNav.tsx`'s own default `className` fallback
+      (used by any future caller that doesn't pass one) to a glass-panel look for consistency
+- [x] `TableOfContents.tsx` glass treatment (light + dark) - wrapped the sticky container in
+      `bg-glass-panel-bg backdrop-blur-glass-sm border border-glass-panel-border rounded-lg
+      shadow-glass-sm`
+- [x] Verified via Playwright screenshots (desktop 1440×900 + mobile 390×844, light + dark,
+      scrolled state) against the dev server on `/learn/llm-models/notes-01-llm-fundamentals`:
+      no layout shift, no console errors, glass panels legible in both themes. `npm run build`
+      also confirmed all new `bg-glass-nav-bg`/`backdrop-blur-glass-md`/`shadow-glass-sm`/
+      `border-glass-panel-border` utilities emit correctly in built CSS.
+- **Found, not fixed (out of Section 4 scope):** the lesson-page dark title banner (`bg-sun-dark`
+  div in `page.tsx`, hardcoded `text-white`) is illegible in dark mode - `--sun-dark` inverts to a
+  near-white value in `.dark`, so a light bg renders under white text. Pre-existing, not
+  introduced by this section (chrome components were already `bg-white` before). Belongs to
+  Section 8 (Page-Level Layouts) - flag it there.
 
 ## Section 5 — Modals & Overlays
 - [ ] `AudienceOnboardingModal.tsx` glass scrim/panel (light + dark)
@@ -132,3 +154,9 @@ retired) - do not let it linger once it's no longer a live tracker.
 
 - **2026-07-22** - Checklist created alongside `vibes/GLASS-UI-REDESIGN.md`. No sections started
   yet.
+- **2026-07-22** - Section 4 (Core Chrome Components) done: `Header.tsx`, `Sidebar.tsx`,
+  `MobileNav.tsx`, `PageNav.tsx` (+ its sticky wrapper in `learn/[module]/[slug]/page.tsx`), and
+  `TableOfContents.tsx` moved from solid `bg-white` to the Section 1 glass-nav/glass-panel tokens.
+  Verified with Playwright screenshots (light/dark, desktop/mobile) - no regressions. Found but
+  left unfixed (belongs to Section 8): the dark-mode lesson-page title banner is illegible since
+  `--sun-dark` inverts to near-white but the banner text stays hardcoded `text-white`.

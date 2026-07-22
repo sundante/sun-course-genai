@@ -5,11 +5,12 @@ day-to-day execution is tracked in `vibes/glass-ui-redesign-checklist.md`. Once 
 fully complete, fold the outcome into this file's own status line and delete the checklist per
 `CLAUDE.md` > "Project Tracking" convention.
 
-**Status: IN PROGRESS.** Sections 1-3 (Design Token System, Dark Mode Infrastructure, Theme
-Toggle Component) are done - see `vibes/glass-ui-redesign-checklist.md` for details. The toggle
-is live in the header on every page; dark mode currently only visibly affects page
-background/text since chrome components still hardcode `bg-white` (Sections 4/5/8/9). Sections
-4-11 not started.
+**Status: IN PROGRESS.** Sections 1-4 (Design Token System, Dark Mode Infrastructure, Theme
+Toggle Component, Core Chrome Components) are done - see `vibes/glass-ui-redesign-checklist.md`
+for details. The toggle is live in the header on every page; `Header`, `Sidebar`, `MobileNav`,
+`PageNav`, and `TableOfContents` now render with glass panel/nav treatment in both themes. Modals,
+shadcn primitives, MDX content, page-level layouts, and the mindmap component still hardcode
+`bg-white` (Sections 5/6/7/8/9). Sections 5-11 not started.
 
 ---
 

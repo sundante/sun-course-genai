@@ -10,7 +10,12 @@ interface Props {
 
 export function PageNav({ prev, next, className }: Props) {
   return (
-    <nav className={className ?? "flex justify-between mt-12 pt-6 border-t border-sun-yellow-bdr"}>
+    <nav
+      className={
+        className ??
+        "flex justify-between mt-12 pt-6 border-t border-sun-yellow-bdr bg-glass-panel-bg backdrop-blur-glass-sm rounded-lg px-4"
+      }
+    >
       {prev ? (
         <Link
           href={prev.href}
