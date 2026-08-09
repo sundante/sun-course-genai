@@ -214,9 +214,10 @@
     <div class="meta">
       <span>🔗 <code>learngenai.sunmintz.com</code></span>
       <span>🧱 Next.js 16.2.9 · TypeScript · Tailwind 4 · MDX · shadcn/ui</span>
-      <span>📅 Last updated <code>2026-07-21</code></span>
-      <span>📌 Last commit <code>e5f3191</code> (2026-06-29)</span>
+      <span>📅 Last updated <code>2026-08-10</code></span>
+      <span>📌 Last commit <code>69f4c46</code> (2026-08-10) — local <code>dev</code> only, not pushed/merged</span>
     </div>
+    <div class="callout" style="margin-top:.9rem"><strong>Uncommitted work exists:</strong> the full glass UI redesign (19 files) landed after commit <code>69f4c46</code> and is not yet committed. See Handover Notes.</div>
   </header>
 
   <div class="toolbar">
@@ -279,7 +280,7 @@ jobs:
   </details>
 
   <details class="section">
-    <summary><span class="chev">▶</span> 2 · What's Built <span class="count">109 .mdx files · 7 modules</span></summary>
+    <summary><span class="chev">▶</span> 2 · What's Built <span class="count">154 .mdx files · 12 modules</span></summary>
     <div class="section-body">
 
       <h3 class="sub">Core App</h3>
@@ -287,13 +288,22 @@ jobs:
         <li>Next.js App Router + TypeScript (strict) + Tailwind CSS 4</li>
         <li>Static export configured (<code>output: "export"</code>)</li>
         <li>Inter + JetBrains Mono via <code>next/font/google</code></li>
-        <li>Design system — sun-yellow tokens, prose overrides, audience-toggle CSS</li>
+        <li>Design system — full glassmorphism token system (<code>--glass-panel/nav/card/modal-bg/border</code>, shadows, blur radii), light+dark pairs for every <code>--sun-*</code>/<code>--glass-*</code>/<code>--shadcn-*</code> token, theme-reactive <code>.prose</code> overrides</li>
+      </ul>
+
+      <h3 class="sub">Dark Mode & Glass UI Redesign <span class="pill done">complete, browser-verified</span></h3>
+      <ul class="plain">
+        <li>User-facing toggle (<code>ThemeToggle.tsx</code>), hand-rolled <code>.dark</code> class + <code>localStorage</code>, no-flash-of-wrong-theme inline script, defaults to light</li>
+        <li>Glass treatment live across all chrome, both modals/overlays, all 5 shadcn primitives, the MDX prose layer (tables/code/inline code/blockquotes), and every page-level layout</li>
+        <li><code>AgentUseCaseMindmap.tsx</code> structural chrome glass-treated; its 15 data-driven category accent colors are a documented, deliberate scope exclusion</li>
+        <li>Verified with a real Playwright + Chromium browser pass (24+ screenshots, light/dark × desktop/mobile) — caught and fixed 3 real bugs a build-only pass had missed (a CSS-comment parse break, missing Typography dark-mode variables, and several fixed-yellow-bg/reactive-text contrast bugs)</li>
+        <li>Full detail: <code>vibes/GLASS-UI-REDESIGN.md</code> (status: COMPLETE)</li>
       </ul>
 
       <h3 class="sub">Navigation & Content Pipeline</h3>
       <ul class="plain">
         <li><code>src/content/nav.yml</code> — single source of truth for navigation (MkDocs-style)</li>
-        <li><code>src/lib/content/nav.ts</code> — parses nav.yml, builds flat page list, computes prev/next</li>
+        <li><code>src/lib/content/nav.ts</code> — parses nav.yml, builds flat page list, computes prev/next; <code>MODULE_SLUG_MAP</code>/<code>MODULE_DIR_MAP</code> must be updated for any new top-level module or its pages silently fail to render</li>
         <li><code>src/lib/content/loader.ts</code> — reads .mdx, extracts TOC via heading regex</li>
         <li><code>src/lib/content/remarkRewriteMdLinks.ts</code> — build-time cross-link rewriting</li>
         <li>MDX pipeline: <code>next-mdx-remote/rsc</code> + remark-gfm, rehype-raw/slug/autolink-headings/highlight</li>
@@ -310,13 +320,13 @@ jobs:
 
       <h3 class="sub">UI Components</h3>
       <ul class="plain">
-        <li>Header, Sidebar (icon-rail collapse, numbered modules/leaves), MobileNav</li>
+        <li>Header, Sidebar (icon-rail collapse, numbered modules/leaves), MobileNav, ThemeToggle</li>
         <li>AudienceToggle (All / Technical / Non-Technical, localStorage-persisted)</li>
         <li>AudienceOnboardingModal, DisclaimerModal, DisclaimerNote</li>
         <li>TableOfContents (IntersectionObserver active-heading tracking)</li>
         <li>PageNav (prev/next), UnderDevelopment (WIP placeholder)</li>
         <li>MermaidDiagram, AgentUseCaseMindmap, MdxComponents</li>
-        <li>shadcn/ui primitives — button, sheet, card, badge, progress, separator</li>
+        <li>shadcn/ui primitives — button (+ <code>glass</code> variant), badge (+ <code>glass</code> variant), card, progress, separator, sheet — all glass-treated</li>
       </ul>
 
       <h3 class="sub">Course Content by Module</h3>
@@ -327,12 +337,17 @@ jobs:
           <tr><td data-label="Module">02 · Prompt Engineering</td><td data-label="Dir"><code>02-Prompts/</code></td><td data-label="Contents">Overview + 6 notes (Basics, Core Techniques, Advanced Techniques, Production, Optimization/Automation, Q&amp;A Bank) + Resources</td></tr>
           <tr><td data-label="Module">03 · RAG</td><td data-label="Dir"><code>03-RAGs/</code></td><td data-label="Contents">Overview + 12 notes + 2 System Designs (Simple RAG Pipeline, Agentic RAG Hybrid) + Resources</td></tr>
           <tr><td data-label="Module">04 · MCP</td><td data-label="Dir"><code>04-MCP/</code></td><td data-label="Contents">Overview + 9 notes (Problem → Definition → Solution → Components → Capabilities → Why It Matters → Architecture → Getting Started → Q&amp;A Bank) + Implementation</td></tr>
-          <tr><td data-label="Module">05 · AI Agents</td><td data-label="Dir"><code>05-Agents/</code></td><td data-label="Contents">Overview + 6 concept notes + Code Labs (Agent Types + GCP ADK / LangChain / LangGraph / CrewAI, each Fundamentals + Simple + Complex Agent) — <span class="pill progress">most recently active</span></td></tr>
+          <tr><td data-label="Module">05 · AI Agents</td><td data-label="Dir"><code>05-Agents/</code></td><td data-label="Contents">Overview + 6 concept notes + Code Labs (Agent Types + GCP ADK / LangChain / LangGraph / CrewAI, each Fundamentals + Simple + Complex Agent)</td></tr>
           <tr><td data-label="Module">06 · Agentic AI</td><td data-label="Dir"><code>06-Agentic-AI/</code></td><td data-label="Contents">Overview + 12 notes + 4 System Designs + Code Labs matrix (7 architecture patterns × 4 frameworks; 4 agentic systems × 4 frameworks)</td></tr>
-          <tr><td data-label="Module">Knowledge Check</td><td data-label="Dir"><code>Interview-Questions/</code></td><td data-label="Contents">Per-module question banks (01–06) + aggregate "All Questions"</td></tr>
+          <tr><td data-label="Module">07 · Fine-Tuning Lab</td><td data-label="Dir"><code>07-Fine-Tuning-Lab/</code></td><td data-label="Contents">Overview + 4 notes (HuggingFace Ecosystem, LoRA/QLoRA Hands-On, Instruction Data & Training Runs, Benchmarking Base vs Tuned) + Q&amp;A Bank + Code Lab (runnable QLoRA fine-tune + benchmark script)</td></tr>
+          <tr><td data-label="Module">08 · Serving & Inference</td><td data-label="Dir"><code>08-Serving-and-Inference/</code></td><td data-label="Contents">Overview + 4 notes (vLLM & Paged Attention, Quantized Inference, Batching/Concurrency/Latency, Streaming & TTFT) + Q&amp;A Bank + Code Lab (FastAPI + vLLM endpoint + load-test client)</td></tr>
+          <tr><td data-label="Module">09 · Production Engineering</td><td data-label="Dir"><code>09-Production-Engineering/</code></td><td data-label="Contents">Overview + 4 notes (Docker for GPU Inference, Kubernetes & Helm, Model Lifecycle & Rollout, Security & Compliance) + Q&amp;A Bank + Code Lab (Helm chart + release-readiness checklist)</td></tr>
+          <tr><td data-label="Module">10 · Platform Breadth</td><td data-label="Dir"><code>10-Platform-Breadth/</code></td><td data-label="Contents">Overview + 4 notes (AWS Bedrock, Databricks & Spark, Azure AI Foundry, Platform Comparison Table) + Q&amp;A Bank (no Code Lab — table-only content)</td></tr>
+          <tr><td data-label="Module">Prog Langs · PyTorch Fundamentals</td><td data-label="Dir"><code>11-Prog-Langs/PyTorch/</code></td><td data-label="Contents">Overview + 5 notes (Tensors & Autograd, Dataset & DataLoader, Training Loop From Scratch, Checkpointing & Mixed Precision, Debugging & GPU Memory) + Q&amp;A Bank + Code Lab (raw-PyTorch MNIST CNN). Standalone top-level nav grouping, nested one level deeper so future language modules can sit alongside it.</td></tr>
+          <tr><td data-label="Module">Knowledge Check</td><td data-label="Dir"><code>Interview-Questions/</code></td><td data-label="Contents">Per-module question banks (01–11) + aggregate "All Questions" (not yet updated for 07-11)</td></tr>
         </tbody>
       </table>
-      <p style="font-size:.85rem;color:var(--text-dim)">Most recently active: Chapter 05 (AI Agents) — Anatomy, Memory, Use Cases, Enterprise vs Personal notes all landed 2026-06-29, same day as the last commit.</p>
+      <p style="font-size:.85rem;color:var(--text-dim)">Modules 07-11 shipped 2026-08-09/10 as a single content tranche, then the sidebar was reordered into a more logical learning sequence with PyTorch moved into a new "Prog Langs" grouping.</p>
     </div>
   </details>
 
@@ -341,7 +356,8 @@ jobs:
     <div class="section-body">
 
       <h3 class="sub">Near-term</h3>
-      <ul class="tasklist">
+      <ul class="tasklist" style="list-style:none;padding-left:0">
+        <li style="padding-left:1.6rem;position:relative"><span style="position:absolute;left:0;color:var(--done)">☑</span> <strong>Glassmorphism / "Liquid Glass" UI redesign</strong> — <span class="pill done">DONE 2026-08-10</span> all 11 sections complete and browser-verified. See <code>vibes/GLASS-UI-REDESIGN.md</code>. Not yet pushed/committed to <code>main</code>.</li>
         <li><strong>Quiz feature</strong> — both routes fully stubbed; <code>QuizCard</code> type already scaffolded in <code>src/types/content.ts</code> with no consumer yet</li>
         <li><strong>Search</strong> — no full-text search across content</li>
         <li><strong>Progress tracking</strong> — no "mark complete" mechanism (localStorage-first was the plan)</li>
@@ -383,14 +399,15 @@ jobs:
   <details class="section">
     <summary><span class="chev">▶</span> 5 · Handover Notes <span class="count">read first</span></summary>
     <div class="section-body">
-      <p><strong>Where things left off:</strong> the last 4 commits (all 2026-06-29) focused on Chapter 05 (AI Agents) — Agent Anatomy, Agent Memory, Enterprise vs Personal Agents notes, Agent Use Cases update, and a deploy-YAML simplification. There has been a <strong>~3-week gap</strong> with no commits between 2026-06-29 and 2026-07-21 (today).</p>
+      <p><strong>Where things left off:</strong> as of 2026-08-10, two large bodies of work landed in the same extended session. (1) The 07-11 content tranche (5 new modules) + a sidebar reorg (PyTorch moved into a new "Prog Langs" grouping) — <strong>committed</strong> to <code>dev</code> locally as <code>69f4c46</code>, not yet pushed to <code>origin</code> or merged to <code>main</code>. (2) The full 11-section glass UI redesign — <strong>not yet committed</strong> (19 files changed), real-browser-verified via a temporary Playwright + Chromium install (not a project dependency).</p>
 
       <h3 class="sub">Suggested next steps, in priority order</h3>
       <ol style="padding-left:1.3rem; font-size:.92rem;">
+        <li><strong>Commit the uncommitted glass-redesign work</strong>, then decide whether to push <code>dev</code> and/or merge to <code>main</code> for production deploy — nothing has been pushed or deployed yet.</li>
         <li>Wire <code>npm run lint</code> (and ideally <code>next build</code>) into a CI check on PRs/push — nothing automated guards <code>main</code> today.</li>
         <li>Pick a near-term backlog item — Quiz feature is the most visible gap; <code>QuizCard</code> is already scaffolded in <code>src/types/content.ts</code>.</li>
         <li>If rotating deploy credentials, use <code>FTP_SERVER</code>/<code>FTP_USERNAME</code>/<code>FTP_PASSWORD</code> — not any older doc's names.</li>
-        <li>Keep <code>nav.yml</code> in sync with <code>src/content/</code> before adding content — it's the single source of truth for navigation.</li>
+        <li>Keep <code>nav.yml</code> in sync with <code>src/content/</code> before adding content — and remember <code>src/lib/content/nav.ts</code>'s <code>MODULE_SLUG_MAP</code>/<code>MODULE_DIR_MAP</code> must also be updated for any new top-level module, or its pages silently fail to render.</li>
         <li>Re-verify content counts whenever files change; update this doc's header count.</li>
       </ol>
 
@@ -407,36 +424,41 @@ jobs:
     <div class="section-body">
       <pre><code>src/
   app/
-    layout.tsx                        root layout
-    page.tsx                          homepage
-    not-found.tsx                     404
+    layout.tsx                        root layout (fonts, no-flash theme script, modals)
+    page.tsx                          homepage (own inline header, incl. ThemeToggle)
+    not-found.tsx                     404 (renders UnderDevelopment)
+    globals.css                       design tokens (sun-*/glass-*/shadcn-*, light+dark), .prose overrides
     (course)/
       layout.tsx                      header + sidebar shell
       learn/[module]/[slug]/page.tsx  course content pages
       quiz/all/page.tsx               quiz stub
       quiz/[module]/page.tsx          quiz stub
   components/
-    ui/                               shadcn primitives
-    course/                           Header, Sidebar, MobileNav, AudienceToggle,
+    ui/                               shadcn primitives - button/badge (+glass variant), card,
+                                      progress, separator (glass-by-default), sheet (mobile drawer)
+    course/                           Header, Sidebar, MobileNav, ThemeToggle, AudienceToggle,
                                       TableOfContents, PageNav, UnderDevelopment, ...
   lib/
     utils.ts                          cn() helper
     content/
-      nav.ts                          navigation tree + WIP detection
+      nav.ts                          navigation tree, MODULE_SLUG_MAP/MODULE_DIR_MAP, WIP detection
       loader.ts                       reads .mdx, extracts TOC
       remarkRewriteMdLinks.ts         build-time cross-link rewriting
   types/
     content.ts                        NavItem, NavModule, PageRef, PageContent, TocItem, QuizCard
-  content/                            109 .mdx source files
+  content/                            154 .mdx source files across 12 modules
     nav.yml
     01-LLM-Models/  02-Prompts/  03-RAGs/  04-MCP/
-    05-Agents/      06-Agentic-AI/  Interview-Questions/
-    All_Questions.mdx
+    05-Agents/      06-Agentic-AI/  07-Fine-Tuning-Lab/
+    08-Serving-and-Inference/  09-Production-Engineering/
+    10-Platform-Breadth/  11-Prog-Langs/PyTorch/
+    Interview-Questions/  All_Questions.mdx
 
-vibes/                                design specs & project tracking
-  DESIGN-SYSTEM.md  UI-COMPONENTS.md  PAGE-LAYOUTS.md  BUILD-PROMPT.md
+vibes/                                project tracking & active plans
   status.md          ← raw tracker (source of truth)
   status.html         ← this file
+  GLASS-UI-REDESIGN.md  glass/dark-mode redesign plan — COMPLETE
+  design-system-playbook.md  portable layout/UX spec (not a task tracker)
 
 .github/workflows/deploy.yml          manual FTP deploy to Hostinger</code></pre>
     </div>

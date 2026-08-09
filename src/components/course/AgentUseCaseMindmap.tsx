@@ -1,5 +1,16 @@
 "use client";
 
+// Glass redesign note (Section 9, vibes/glass-ui-redesign-checklist.md): the
+// structural chrome below (panel/card backgrounds, borders, primary text) has
+// been converted to the sun-*/glass-* token system and is dark-mode legible.
+// The small per-category accent colors (AGENT_TYPE_META, DOMAINS, COMPLEXITY_GUIDE)
+// remain hardcoded light-mode pastels - they're semantic data (color-coding 8
+// domains + 4 agent types + 3 complexity tiers), not decorative surfaces, and
+// a proper dark-mode palette for 15 distinct hues is a separate follow-up, not
+// part of this pass. They stay readable in dark mode (most have explicit
+// white/dark text pairings already) but will look visually flatter/less
+// vibrant than the rest of the redesigned UI - flagged for Section 10 QA.
+
 import { useState } from "react";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -208,7 +219,7 @@ function AgentTypeBadge({ type }: { type: AgentType }) {
 function ComplexityBadge({ level }: { level: Complexity }) {
   const meta = COMPLEXITY_META[level];
   return (
-    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#555]">
+    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-sun-muted">
       <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: meta.dot }} />
       {meta.label}
     </span>
@@ -232,18 +243,18 @@ function DecisionWizard() {
   }
 
   return (
-    <div className="not-prose rounded-xl border border-[#FFDA47]/50 bg-white p-5 my-6">
-      <h3 className="text-[15px] font-bold text-[#111] mb-1">Should you use an AI Agent?</h3>
-      <p className="text-[13px] text-[#666] mb-4">Answer the five questions below. The more "Yes" answers, the stronger the case for an agent.</p>
+    <div className="not-prose rounded-xl border border-glass-card-border bg-glass-card-bg backdrop-blur-glass-sm shadow-glass-sm p-5 my-6">
+      <h3 className="text-[15px] font-bold text-sun-dark mb-1">Should you use an AI Agent?</h3>
+      <p className="text-[13px] text-sun-muted mb-4">Answer the five questions below. The more "Yes" answers, the stronger the case for an agent.</p>
 
       <div className="space-y-3">
         {QUESTIONS.map((q, i) => (
           <div key={q.id} className="flex items-start gap-3">
-            <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-[#FFDA47] text-[#111] text-[11px] font-bold flex items-center justify-center">
+            <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-sun-yellow text-zinc-900 text-[11px] font-bold flex items-center justify-center">
               {i + 1}
             </span>
             <div className="flex-1">
-              <p className="text-[13px] text-[#222] mb-1.5 leading-snug">{q.text}</p>
+              <p className="text-[13px] text-sun-dark mb-1.5 leading-snug">{q.text}</p>
               <div className="flex gap-2">
                 {[true, false].map((val) => (
                   <button
@@ -254,7 +265,7 @@ function DecisionWizard() {
                         ? val
                           ? "bg-[#4a7c59] border-[#4a7c59] text-white"
                           : "bg-[#c03030] border-[#c03030] text-white"
-                        : "bg-white border-[#ddd] text-[#555] hover:border-[#aaa]"
+                        : "bg-glass-panel-bg border-glass-card-border text-sun-muted hover:border-sun-yellow"
                     }`}
                   >
                     {val ? "Yes" : "No"}
@@ -268,15 +279,15 @@ function DecisionWizard() {
 
       {allDone && rec && (
         <div className={`mt-5 rounded-lg border-2 ${rec.border} ${rec.color} px-4 py-3`}>
-          <p className="text-[13px] font-bold text-[#111] mb-0.5">
+          <p className="text-[13px] font-bold text-zinc-900 mb-0.5">
             {yesCount}/5 Yes — {rec.headline}
           </p>
-          <p className="text-[12px] text-[#444] leading-snug">{rec.body}</p>
+          <p className="text-[12px] text-zinc-800 leading-snug">{rec.body}</p>
         </div>
       )}
 
       {!allDone && answered > 0 && (
-        <p className="mt-3 text-[12px] text-[#888]">{5 - answered} question{5 - answered !== 1 ? "s" : ""} remaining…</p>
+        <p className="mt-3 text-[12px] text-sun-muted">{5 - answered} question{5 - answered !== 1 ? "s" : ""} remaining…</p>
       )}
     </div>
   );
@@ -290,8 +301,8 @@ function DomainExplorer() {
   return (
     <div className="not-prose my-6">
       <div className="mb-3">
-        <h3 className="text-[15px] font-bold text-[#111]">Use Case Explorer - by Domain</h3>
-        <p className="text-[13px] text-[#666] mt-0.5">Click a domain to explore tasks, recommended agent type, and complexity.</p>
+        <h3 className="text-[15px] font-bold text-sun-dark">Use Case Explorer - by Domain</h3>
+        <p className="text-[13px] text-sun-muted mt-0.5">Click a domain to explore tasks, recommended agent type, and complexity.</p>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
@@ -301,12 +312,12 @@ function DomainExplorer() {
             onClick={() => setOpenId(openId === d.id ? null : d.id)}
             className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border-2 text-left transition-all cursor-pointer ${
               openId === d.id
-                ? `${d.color} ${d.borderColor} shadow-sm`
-                : "bg-white border-[#e0e0e0] hover:border-[#bbb]"
+                ? `${d.color} ${d.borderColor} shadow-glass-sm`
+                : "bg-glass-card-bg backdrop-blur-glass-sm border-glass-card-border hover:border-sun-yellow"
             }`}
           >
             <span className="text-lg leading-none">{d.icon}</span>
-            <span className="text-[12px] font-semibold text-[#222] leading-tight">{d.label}</span>
+            <span className="text-[12px] font-semibold text-sun-dark leading-tight">{d.label}</span>
           </button>
         ))}
       </div>
@@ -317,16 +328,16 @@ function DomainExplorer() {
           <div className={`rounded-xl border-2 ${domain.borderColor} ${domain.color} p-4`}>
             <div className="flex items-center gap-2 mb-3">
               <span className="text-xl">{domain.icon}</span>
-              <h4 className="text-[14px] font-bold text-[#111]">{domain.label}</h4>
+              <h4 className="text-[14px] font-bold text-zinc-900">{domain.label}</h4>
             </div>
             <div className="space-y-2.5">
               {domain.useCases.map((uc, i) => (
-                <div key={i} className="bg-white rounded-lg px-3 py-2.5 border border-white/70 shadow-xs">
-                  <p className="text-[13px] font-medium text-[#222] mb-1.5 leading-snug">{uc.task}</p>
+                <div key={i} className="bg-white/70 rounded-lg px-3 py-2.5 border border-white/70 shadow-xs">
+                  <p className="text-[13px] font-medium text-zinc-900 mb-1.5 leading-snug">{uc.task}</p>
                   <div className="flex flex-wrap items-center gap-2">
                     <AgentTypeBadge type={uc.agentType} />
                     <ComplexityBadge level={uc.complexity} />
-                    <span className="text-[11px] text-[#888] leading-none">
+                    <span className="text-[11px] text-zinc-700 leading-none">
                       Tools: {uc.tools.join(", ")}
                     </span>
                   </div>
@@ -339,9 +350,9 @@ function DomainExplorer() {
 
       {/* Legend */}
       <div className="mt-3 flex flex-wrap gap-3">
-        <span className="text-[11px] font-semibold text-[#888] uppercase tracking-wide">Agent Types:</span>
+        <span className="text-[11px] font-semibold text-sun-muted uppercase tracking-wide">Agent Types:</span>
         {(Object.entries(AGENT_TYPE_META) as [AgentType, typeof AGENT_TYPE_META[AgentType]][]).map(([type, meta]) => (
-          <span key={type} className="flex items-center gap-1 text-[11px] text-[#555]">
+          <span key={type} className="flex items-center gap-1 text-[11px] text-sun-muted">
             <span className="inline-block w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: meta.color }} />
             {meta.label}
           </span>
@@ -405,8 +416,8 @@ const COMPLEXITY_GUIDE = [
 function ComplexityGuide() {
   return (
     <div className="not-prose my-6">
-      <h3 className="text-[15px] font-bold text-[#111] mb-1">Choosing Complexity & Agent Type</h3>
-      <p className="text-[13px] text-[#666] mb-4">Match your problem's characteristics to the right tier.</p>
+      <h3 className="text-[15px] font-bold text-sun-dark mb-1">Choosing Complexity & Agent Type</h3>
+      <p className="text-[13px] text-sun-muted mb-4">Match your problem's characteristics to the right tier.</p>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {COMPLEXITY_GUIDE.map((tier) => (
@@ -417,33 +428,33 @@ function ComplexityGuide() {
           >
             <div className="flex items-center gap-2 mb-3">
               <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: tier.dot }} />
-              <span className="text-[13px] font-bold text-[#111]">{tier.tier}</span>
+              <span className="text-[13px] font-bold text-zinc-900">{tier.tier}</span>
               <AgentTypeBadge type={tier.agentType} />
             </div>
 
-            <p className="text-[11px] font-semibold text-[#555] uppercase tracking-wide mb-1.5">Use when...</p>
+            <p className="text-[11px] font-semibold text-zinc-700 uppercase tracking-wide mb-1.5">Use when...</p>
             <ul className="space-y-1 mb-3">
               {tier.criteria.map((c, i) => (
-                <li key={i} className="flex items-start gap-1.5 text-[12px] text-[#333]">
+                <li key={i} className="flex items-start gap-1.5 text-[12px] text-zinc-800">
                   <span className="mt-0.5 text-[10px]">•</span>
                   <span className="leading-snug">{c}</span>
                 </li>
               ))}
             </ul>
 
-            <p className="text-[11px] font-semibold text-[#555] uppercase tracking-wide mb-1">Examples</p>
+            <p className="text-[11px] font-semibold text-zinc-700 uppercase tracking-wide mb-1">Examples</p>
             <div className="flex flex-wrap gap-1 mb-3">
               {tier.examples.map((ex) => (
-                <span key={ex} className="px-1.5 py-0.5 rounded text-[11px] bg-white/70 text-[#444] border border-white">
+                <span key={ex} className="px-1.5 py-0.5 rounded text-[11px] bg-white/70 text-zinc-800 border border-white">
                   {ex}
                 </span>
               ))}
             </div>
 
-            <p className="text-[11px] font-semibold text-[#555] uppercase tracking-wide mb-1">Frameworks</p>
+            <p className="text-[11px] font-semibold text-zinc-700 uppercase tracking-wide mb-1">Frameworks</p>
             <div className="flex flex-wrap gap-1">
               {tier.frameworks.map((fw) => (
-                <span key={fw} className="px-1.5 py-0.5 rounded text-[11px] font-mono bg-white/60 text-[#555] border border-white/80">
+                <span key={fw} className="px-1.5 py-0.5 rounded text-[11px] font-mono bg-white/60 text-zinc-700 border border-white/80">
                   {fw}
                 </span>
               ))}
@@ -460,28 +471,28 @@ function ComplexityGuide() {
 function AgentTypeReference() {
   return (
     <div className="not-prose my-6">
-      <h3 className="text-[15px] font-bold text-[#111] mb-1">Agent Type Reference</h3>
-      <p className="text-[13px] text-[#666] mb-4">
+      <h3 className="text-[15px] font-bold text-sun-dark mb-1">Agent Type Reference</h3>
+      <p className="text-[13px] text-sun-muted mb-4">
         A quick comparison of the four main architectural patterns.
       </p>
-      <div className="overflow-x-auto rounded-xl border border-[#e0e0e0] bg-white">
+      <div className="overflow-x-auto rounded-xl border border-glass-card-border bg-glass-card-bg backdrop-blur-glass-sm shadow-glass-sm">
         <table className="w-full text-[12px]">
           <thead>
-            <tr className="border-b border-[#eee] bg-[#fafaf9]">
-              <th className="text-left px-3 py-2.5 font-semibold text-[#111] w-28">Type</th>
-              <th className="text-left px-3 py-2.5 font-semibold text-[#111]">What it is</th>
-              <th className="text-left px-3 py-2.5 font-semibold text-[#111]">Best for</th>
-              <th className="text-left px-3 py-2.5 font-semibold text-[#111] w-24">Complexity</th>
+            <tr className="border-b border-glass-card-border bg-glass-panel-bg">
+              <th className="text-left px-3 py-2.5 font-semibold text-sun-dark w-28">Type</th>
+              <th className="text-left px-3 py-2.5 font-semibold text-sun-dark">What it is</th>
+              <th className="text-left px-3 py-2.5 font-semibold text-sun-dark">Best for</th>
+              <th className="text-left px-3 py-2.5 font-semibold text-sun-dark w-24">Complexity</th>
             </tr>
           </thead>
           <tbody>
             {(Object.entries(AGENT_TYPE_META) as [AgentType, typeof AGENT_TYPE_META[AgentType]][]).map(([type, meta], i) => (
-              <tr key={type} className={`border-b border-[#f0f0f0] ${i % 2 === 1 ? "bg-[#fafaf9]" : ""}`}>
+              <tr key={type} className={`border-b border-glass-card-border ${i % 2 === 1 ? "bg-glass-panel-bg" : ""}`}>
                 <td className="px-3 py-2.5">
                   <AgentTypeBadge type={type} />
                 </td>
-                <td className="px-3 py-2.5 text-[#333] leading-snug">{meta.desc}</td>
-                <td className="px-3 py-2.5 text-[#555] leading-snug">
+                <td className="px-3 py-2.5 text-sun-dark leading-snug">{meta.desc}</td>
+                <td className="px-3 py-2.5 text-sun-muted leading-snug">
                   {type === "single" && "Narrow, well-scoped tasks. 1-3 tool calls per run."}
                   {type === "multi-tool" && "Tasks with branching conditional logic across many tools."}
                   {type === "multi-agent" && "Work that can be divided into parallel specialist roles."}
@@ -516,22 +527,22 @@ export function AgentUseCaseMindmap() {
   ];
 
   return (
-    <div className="not-prose my-8 rounded-2xl border-2 border-[#FFDA47]/60 bg-[#fafaf9] p-5 shadow-sm">
+    <div className="not-prose my-8 rounded-2xl border-2 border-sun-yellow-bdr bg-glass-panel-bg backdrop-blur-glass-md p-5 shadow-glass-sm">
       <div className="flex items-center gap-2 mb-4">
         <span className="text-xl">🗺️</span>
-        <h2 className="text-[16px] font-bold text-[#111]">AI Agent Use Case Navigator</h2>
+        <h2 className="text-[16px] font-bold text-sun-dark">AI Agent Use Case Navigator</h2>
       </div>
 
       {/* Tab bar */}
-      <div className="flex gap-1 mb-5 bg-[#f0ece6] rounded-lg p-1">
+      <div className="flex gap-1 mb-5 bg-glass-card-bg backdrop-blur-glass-sm rounded-lg p-1">
         {tabs.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
             className={`flex-1 text-[12px] font-semibold px-2 py-1.5 rounded-md transition-colors cursor-pointer ${
               tab === t.id
-                ? "bg-[#FFDA47] text-[#111] shadow-sm"
-                : "text-[#666] hover:text-[#333]"
+                ? "bg-sun-yellow text-zinc-900 shadow-glass-sm"
+                : "text-sun-muted hover:text-sun-dark"
             }`}
           >
             {t.label}

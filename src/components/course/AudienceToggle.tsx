@@ -56,7 +56,7 @@ export function AudienceToggle() {
             onClick={() => handleSelect(value)}
             className={`text-xs px-2.5 py-1 rounded-full transition-colors ${
               mode === value
-                ? "bg-sun-yellow text-sun-dark font-semibold"
+                ? "bg-sun-yellow text-zinc-900 font-semibold"
                 : "text-sun-muted hover:text-sun-dark hover:bg-sun-yellow-dim"
             }`}
           >

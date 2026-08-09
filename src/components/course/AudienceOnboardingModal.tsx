@@ -59,8 +59,8 @@ export function AudienceOnboardingModal() {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-      <div className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-sun-yellow-bdr overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-glass-scrim backdrop-blur-glass-sm">
+      <div className="relative w-full max-w-xl bg-glass-modal-bg backdrop-blur-glass-md rounded-2xl shadow-glass-lg border border-glass-modal-border overflow-hidden">
         <div className="h-1 w-full bg-sun-yellow" />
 
         <div className="px-8 pt-7 pb-8">

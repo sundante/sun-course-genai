@@ -151,7 +151,7 @@ function CollapsedRail({ nav, onExpand }: { nav: NavigationTree; onExpand: () =>
             title={mod.title}
             className={`w-9 h-9 rounded-md text-[10px] font-bold transition-colors ${
               active
-                ? "bg-sun-yellow text-sun-dark"
+                ? "bg-sun-yellow text-zinc-900"
                 : "text-sun-muted hover:text-sun-dark hover:bg-sun-yellow-dim"
             }`}
           >

@@ -40,7 +40,7 @@ export function UnderDevelopment({
 
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold bg-sun-yellow text-sun-dark hover:bg-sun-yellow-dk rounded-md px-4 py-2 transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold bg-sun-yellow text-zinc-900 hover:bg-sun-yellow-dk rounded-md px-4 py-2 transition-colors"
           >
             <Home className="h-4 w-4" />
             Go Home
