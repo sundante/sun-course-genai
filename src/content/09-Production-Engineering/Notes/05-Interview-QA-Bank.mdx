@@ -1,0 +1,60 @@
+# Concept Review - Production Engineering
+
+## Docker & GPU Inference
+
+**Q: Why does a plain `python:slim` base image fail to run GPU inference even if `torch` with CUDA support is pip-installed?**
+`pip install torch` with a CUDA-linked wheel installs CUDA userspace libraries, but the container still needs a CUDA runtime bridge to the host's GPU driver, which the base image doesn't provide. `torch.cuda.is_available()` returns `False` until the image is built from a CUDA-compatible base (`nvidia/cuda` or a vendor PyTorch image) and the container runtime is invoked with GPU access.
+
+**Q: What's the difference between a CUDA `-devel` and `-runtime` tag, and which belongs in production?**
+`-devel` includes the full toolkit (compiler, headers, static libs) needed to compile CUDA code; `-runtime` includes only the shared libraries needed to execute already-compiled CUDA binaries. Production images should ship on `-runtime` - smaller, with a reduced attack surface, since nothing needs to compile at deploy time.
+
+**Q: Why mount model weights at container start instead of `COPY`-ing them into the image?**
+Coupling weights to the image forces a full multi-GB rebuild and repush on every model update, and bloats registry storage. Mounting from a volume or object store decouples model version from code version - either can roll independently.
+
+---
+
+## Kubernetes & Helm
+
+**Q: Why must GPU resource requests equal GPU resource limits in a pod spec?**
+Unlike CPU/memory, GPUs aren't a divisible or overcommittable resource by default in Kubernetes - a pod gets a whole GPU or none. Setting a limit above the request implies overcommit, which the GPU device plugin doesn't support (MIG partitioning aside).
+
+**Q: What do taints and tolerations accomplish on a GPU node pool?**
+A taint on the GPU nodes repels any pod without a matching toleration, keeping ordinary CPU workloads off expensive GPU machines. Only pods that explicitly declare the toleration - typically GPU-serving pods - get scheduled there.
+
+**Q: Does the default HPA autoscale on GPU utilization out of the box?**
+No - the default HPA only watches CPU and memory metrics. GPU-aware autoscaling requires a custom metrics pipeline (e.g. DCGM exporter feeding Prometheus, surfaced to the HPA via the Prometheus Adapter).
+
+**Q: What's the difference between `helm template` and `helm install --dry-run`?**
+`helm template` renders the chart locally with zero cluster contact. `helm install --dry-run` renders and also validates the output against the live cluster's API, catching schema/admission errors that pure local templating would miss.
+
+---
+
+## Model Lifecycle & Rollout
+
+**Q: Contrast blue/green, canary, and champion-challenger rollout strategies.**
+Blue/green runs two full environments and cuts traffic over atomically - fast rollback, but no gradual signal. Canary ramps a new version's traffic share gradually (e.g. 5% → 25% → 100%), pausing or reverting on regression. Champion-challenger is an ongoing comparison pattern (not just a one-time rollout event) where a challenger must win on live-traffic metrics before being promoted.
+
+**Q: What does a model registry like MLflow actually provide, and what does it not provide?**
+It provides lineage and metadata tracking - training run, metrics, artifacts, promotion stage (Staging/Production/Archived). It does not move traffic or serve the model itself; deployment tooling reads from the registry to decide what to deploy.
+
+**Q: Why should rollback criteria be defined before launch rather than during an incident?**
+Under incident pressure, teams either under-react (hoping a regression self-resolves) or over-react (rolling back noise). Pre-agreed, quantitative thresholds - error rate, p95 latency, eval score - turn the in-incident decision into a lookup instead of a judgment call made under stress.
+
+---
+
+## Security & Compliance
+
+**Q: Give a concrete example of least-privilege IAM applied to an AI system.**
+The inference service's identity gets read-only access to the model weights bucket, not write access to the training data bucket; the eval pipeline's identity gets read access to eval datasets, not production database credentials. Each component's blast radius, if compromised, is limited to what it actually needs.
+
+**Q: Why are LLM-system tracing tools a distinct compliance risk compared to typical application logging?**
+Tracing tools (Langfuse, LangSmith) are built to capture full prompt/response content by default for debugging - and in an LLM system, that content routinely contains whatever sensitive data the user typed in. A normal app's logs rarely capture full request bodies by default; an LLM trace does, unless redaction is explicitly added.
+
+**Q: Name HIPAA's four technical safeguards.**
+Access control (unique user ID, auto-logoff, encryption at rest), audit controls (recording/examining activity on systems with PHI), integrity controls (confirming PHI hasn't been improperly altered), and transmission security (encryption in transit).
+
+**Q: What should an audit log for PHI access be able to answer?**
+Who accessed the PHI, when, and for what reason - sufficient for a regulator's after-the-fact review, which is a stricter bar than what's typically logged for engineering debugging alone.
+
+**Q: What's the difference between SAST and dependency scanning in a CI pipeline?**
+SAST analyzes your own codebase for vulnerability patterns without executing it; dependency scanning checks third-party packages (including ML libraries like `transformers`/`torch`) against known-CVE databases. Both should block merge on high-severity findings.

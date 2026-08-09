@@ -1,0 +1,29 @@
+# Concept Review - Platform Breadth (Cross-Topic)
+
+## Translating GCP Experience
+
+**Q: You've only ever built on Vertex AI, and the JD asks about AWS Bedrock experience. How would you credibly bridge that gap in an interview?**
+Frame it as capability-level, not tool-level knowledge: "I've built managed RAG on Vertex AI's RAG Engine - chunking, embedding, and retrieval handled for me. Bedrock's Knowledge Bases solves the identical problem; the API surface and default vector store differ, but the architecture I'd design is the same." This shows the interviewer you understand the *problem* the tool solves, which transfers, rather than claiming hands-on Bedrock experience you don't have.
+
+**Q: What's a real architectural difference (not just a naming difference) between Vertex AI RAG Engine and Bedrock Knowledge Bases worth mentioning in an interview?**
+Their default backing vector stores differ (Bedrock defaults to a managed OpenSearch Serverless collection unless you bring your own; Vertex AI RAG Engine has its own default indexing backend) - both are swappable, but naming the actual default rather than treating the two as interchangeable black boxes signals real understanding.
+
+---
+
+## Databricks Scenarios
+
+**Q: A stakeholder asks why their Databricks bill is higher than expected for a workload that runs the same job every night. What would you check first?**
+Whether the job is running on an all-purpose interactive cluster instead of an automated job cluster - all-purpose clusters bill at a higher DBU rate and are meant for ad hoc interactive use, not scheduled production jobs. Switching a nightly scheduled job to a job cluster is usually the single biggest lever.
+
+**Q: How would you explain Unity Catalog's value to someone who already trusts Delta Lake's reliability guarantees?**
+Delta Lake makes each table reliable (ACID, schema enforcement, time travel), but says nothing about who can access which tables across an organization with many workspaces. Unity Catalog is the governance layer on top - centralized access control and lineage - answering "who can see this" rather than "is this table's data trustworthy."
+
+---
+
+## Azure Scenarios
+
+**Q: A team wants a vector store for RAG and is already standardized on Cosmos DB for their operational data. What's the tradeoff of using Cosmos DB's native vector search instead of standing up a dedicated vector database?**
+Lower operational overhead (no new managed service, existing IAM/networking/monitoring already covers it) versus potentially less specialized retrieval performance/feature depth than a purpose-built vector database at very large scale or with advanced hybrid-search needs. For moderate-scale RAG, reusing an already-trusted data store is often the pragmatic choice.
+
+**Q: What's the practical difference between Microsoft Fabric and a traditional data warehouse like Redshift or a standalone BigQuery deployment?**
+Fabric's OneLake gives every workload type (warehouse, lakehouse, Power BI) one shared logical storage layer, so data doesn't need to be copied or synced between a warehouse and a separate BI/analytics layer the way it often does with more siloed architectures.

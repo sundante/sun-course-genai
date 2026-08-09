@@ -1,0 +1,77 @@
+# AWS Bedrock
+
+<div class="audience-biz" markdown="1">
+
+Bedrock is AWS's managed door into foundation models - Anthropic, Meta, Amazon's own models, and others - without you having to run any GPU infrastructure yourself. If your GCP experience is with Vertex AI, Bedrock covers the same ground with AWS's naming and API shapes.
+
+</div>
+
+<div class="audience-tech" markdown="1">
+
+Bedrock is AWS's foundation-model access and orchestration layer: model hosting/invocation (Converse API), managed RAG (Knowledge Bases), safety filtering (Guardrails), and agent orchestration (AgentCore). It's the AWS-native equivalent of Vertex AI's model access + RAG Engine + Vertex AI Guardrails, with different provisioning and IAM conventions.
+
+</div>
+
+---
+
+## Converse API and Model Access
+
+<div class="audience-biz" markdown="1">
+
+The Converse API is one consistent way to talk to any model Bedrock hosts - Anthropic's Claude, Meta's Llama, Amazon's Titan/Nova - so switching providers doesn't mean rewriting your integration code.
+
+</div>
+
+<div class="audience-tech" markdown="1">
+
+`Converse`/`ConverseStream` is a unified request/response shape across all Bedrock model providers - system prompts, multi-turn messages, tool use, and streaming all follow one schema regardless of which underlying model you call. Model access is opt-in per account/region (you request access to each model family before you can invoke it), and invocation is billed per-token like any hosted LLM API.
+
+</div>
+
+---
+
+## Knowledge Bases (Managed RAG)
+
+<div class="audience-biz" markdown="1">
+
+Knowledge Bases is Bedrock's built-in RAG - point it at your documents in S3, and it handles chunking, embedding, and retrieval for you, without you standing up your own vector database.
+
+</div>
+
+<div class="audience-tech" markdown="1">
+
+Knowledge Bases handles ingestion (chunking strategy, embedding model choice), vector storage (a managed OpenSearch Serverless collection, or bring-your-own Pinecone/Redis/Aurora), and retrieval, exposed either as a direct `Retrieve`/`RetrieveAndGenerate` API call or as a tool an agent can call. This maps to Vertex AI's RAG Engine - same problem (managed retrieval pipeline instead of hand-rolled chunking/embedding/indexing), different vendor plumbing. See [RAG Fundamentals](../../03-RAGs/Notes/01-RAG-Fundamentals.mdx) for the underlying concepts this wraps.
+
+</div>
+
+---
+
+## Guardrails and AgentCore
+
+<div class="audience-biz" markdown="1">
+
+Guardrails filter what goes in and out of a model call - blocking denied topics, redacting sensitive data - independent of whatever model you're using. AgentCore is Bedrock's newer layer for running full agents (not just single model calls) with session/memory management built in.
+
+</div>
+
+<div class="audience-tech" markdown="1">
+
+**Guardrails** apply configurable policies (denied topics, content filters, PII redaction, word filters) to both the input prompt and the model output, model-agnostically - the same guardrail config applies whether the underlying call goes to Claude or Llama. **AgentCore** provides managed agent runtime primitives: session state, memory, and tool orchestration for longer-running agentic workloads, roughly analogous to what a self-hosted LangGraph deployment provides but managed by AWS. See [Context Engineering and Guardrails](../../06-Agentic-AI/Notes/11-Evaluation-and-Observability.mdx) for the underlying guardrail patterns this implements.
+
+</div>
+
+---
+
+## Study Notes
+
+**Must-know for interviews:**
+- Converse API is model-agnostic within Bedrock - one schema for Claude, Llama, Titan, Nova
+- Knowledge Bases = Bedrock's managed RAG, roughly equivalent to Vertex AI's RAG Engine
+- Guardrails apply independent of which model is behind the call - not baked into any one model
+- AgentCore is Bedrock's managed agent runtime layer, newer than Converse/Knowledge Bases
+- Model access must be explicitly requested per account/region before invocation works
+
+**Quick recall Q&A:**
+- *Why would a team choose Bedrock's Converse API over calling each model provider's native SDK directly?* One consistent request/response schema across providers means switching or A/B-testing models doesn't require rewriting the integration - only the model ID changes.
+- *What's the AWS-side equivalent of Vertex AI's RAG Engine?* Bedrock Knowledge Bases - managed ingestion, chunking, embedding, and retrieval, avoiding a hand-rolled vector database pipeline.
+- *Do Bedrock Guardrails apply per-model or account-wide?* Guardrails are configured as policies applied to a call regardless of the underlying model - the same guardrail config works whether you're calling Claude or Llama through Bedrock.

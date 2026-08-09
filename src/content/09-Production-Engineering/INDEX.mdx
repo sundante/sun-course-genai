@@ -1,0 +1,55 @@
+# 10 - Production Engineering
+
+## What You Will Learn
+
+- Dockerfiles for GPU inference: CUDA-compatible base images, `-devel` vs `-runtime`, multi-stage builds, why weights shouldn't be baked into the image
+- Core Kubernetes objects for model serving: Deployment, Service, Ingress, HorizontalPodAutoscaler
+- GPU scheduling: node pools, taints/tolerations, why GPU requests must equal limits
+- Helm charts: templating deployments across environments, `helm template` vs `--dry-run`
+- Model lifecycle: registries (MLflow), blue/green vs canary vs champion-challenger rollout, rollback criteria decided before launch
+- Security and compliance for AI systems: IAM least privilege, secrets management, PHI/PII in traces and eval datasets, SAST/dependency scanning, HIPAA's four technical safeguards
+- Building a release-readiness checklist you'd introduce in a first 90 days
+
+## Chapter Map
+
+| # | File | Topic | Difficulty |
+|---|------|-------|-----------|
+| 1 | [Docker for GPU Inference](Notes/01-Docker-for-GPU-Inference.mdx) | CUDA base images, multi-stage builds, weight mounting | Intermediate |
+| 2 | [Kubernetes & Helm](Notes/02-Kubernetes-and-Helm.mdx) | Deployment/Service/Ingress/HPA, GPU scheduling, Helm charts | Advanced |
+| 3 | [Model Lifecycle & Rollout](Notes/03-Model-Lifecycle-and-Rollout.mdx) | Registries, blue/green, canary, champion-challenger, rollback criteria | Advanced |
+| 4 | [Security & Compliance](Notes/04-Security-and-Compliance.mdx) | IAM, secrets, PHI/PII handling, SAST, HIPAA safeguards | Advanced |
+| 5 | [Q&A Review Bank](Notes/05-Interview-QA-Bank.mdx) | 18+ Q&A pairs across all topics | All levels |
+
+## Recommended Learning Paths
+
+### Path A: Deployment Fundamentals
+1. [Docker for GPU Inference](Notes/01-Docker-for-GPU-Inference.mdx) - package the service
+2. [Kubernetes & Helm](Notes/02-Kubernetes-and-Helm.mdx) - run it in production
+3. [Helm Chart & Release Checklist](CodeLabs/01-Helm-Chart-and-Release-Checklist.mdx) - build the real artifact
+
+### Path B: Interview Preparation (Accelerated)
+1. [Kubernetes & Helm](Notes/02-Kubernetes-and-Helm.mdx) - GPU scheduling questions are common at Director/Principal level
+2. [Model Lifecycle & Rollout](Notes/03-Model-Lifecycle-and-Rollout.mdx) - canary vs champion-challenger is a frequent distinction to defend
+3. [Security & Compliance](Notes/04-Security-and-Compliance.mdx) - HIPAA safeguards named precisely
+4. [Q&A Review Bank](Notes/05-Interview-QA-Bank.mdx) - drill all questions
+
+### Path C: Regulated/Healthcare Roles
+1. [Security & Compliance](Notes/04-Security-and-Compliance.mdx)
+2. [Model Lifecycle & Rollout](Notes/03-Model-Lifecycle-and-Rollout.mdx) - rollback discipline matters more under regulatory review
+3. Cross-reference [Prior Authorization](../06-Agentic-AI/SystemDesigns/prior-authorization.mdx) for a worked PHI-handling example
+
+## Resources
+
+- [Q&A Review Bank](Notes/05-Interview-QA-Bank.mdx) - 18+ Q&A pairs in this module
+- [Cross-topic Interview Questions](../Interview-Questions/09-Production-Engineering.mdx)
+
+## Key Cross-References
+
+- Serving the model that gets deployed here → [Serving & Inference](../08-Serving-and-Inference/INDEX.mdx)
+- Registry promotion evidence → [Fine-Tuning Lab: Benchmarking Base vs Tuned](../07-Fine-Tuning-Lab/Notes/04-Benchmarking-Base-vs-Tuned.mdx)
+- Tracing and eval-gate infrastructure → [Agentic AI: Evaluation & Observability](../06-Agentic-AI/Notes/11-Evaluation-and-Observability.mdx)
+- PHI-handling worked examples → [Prior Authorization](../06-Agentic-AI/SystemDesigns/prior-authorization.mdx), [Smart Diagnostic Assistant](../06-Agentic-AI/SystemDesigns/smart-diagnostic-assistant-interview-answer-1.mdx)
+
+## Next Topic
+
+11 - Platform Breadth (coming soon)

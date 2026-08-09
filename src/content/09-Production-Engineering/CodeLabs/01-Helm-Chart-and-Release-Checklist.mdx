@@ -1,0 +1,49 @@
+# Code Lab - 01: Helm Chart & Release Checklist
+
+← **Back to Overview:** [10 - Production Engineering](../INDEX.mdx)
+
+This lab packages the [Serving & Inference](../../08-Serving-and-Inference/INDEX.mdx) FastAPI + vLLM endpoint as a real deployable artifact - a Dockerfile, a Helm chart with autoscaling, and a one-page release-readiness checklist you could hand to a team on day one of an on-call rotation.
+
+## Lab Overview
+
+| Property | Detail |
+|---|---|
+| **Patterns** | GPU Dockerfile, Helm templating, HPA autoscaling |
+| **Deploys** | The Module 09 FastAPI + vLLM serving endpoint |
+| **Complexity** | Intermediate |
+| **Files** | `Dockerfile`, `helm-chart/`, `release-readiness-checklist.md` |
+
+## What's Inside
+
+```
+01-Helm-Chart-and-Release-Checklist/
+  README.mdx                        - architecture, what this demonstrates, how to run it
+  Dockerfile                        - multi-stage GPU inference image
+  helm-chart/
+    Chart.yaml
+    values.yaml                     - image, replica count, GPU resources, autoscaling bounds
+    templates/
+      deployment.yaml
+      service.yaml
+      hpa.yaml
+  release-readiness-checklist.md    - the standalone "first 90 days" artifact
+```
+
+## Prerequisites
+
+- Docker with `nvidia-container-toolkit` for local GPU testing (optional - `helm lint`/`--dry-run` don't need a GPU)
+- `helm` v3 and `kubectl` pointed at any cluster (a local `kind`/`minikube` cluster is enough to validate)
+
+## Getting Started
+
+```bash
+cd 01-Helm-Chart-and-Release-Checklist
+helm lint helm-chart/
+helm install --dry-run vllm-serving helm-chart/ -f helm-chart/values.yaml
+```
+
+## What to Read Alongside
+
+- [Docker for GPU Inference](../../Notes/01-Docker-for-GPU-Inference.mdx)
+- [Kubernetes & Helm](../../Notes/02-Kubernetes-and-Helm.mdx)
+- [Model Lifecycle & Rollout](../../Notes/03-Model-Lifecycle-and-Rollout.mdx) - the checklist operationalizes this note

@@ -1,0 +1,76 @@
+# Azure AI Foundry
+
+<div class="audience-biz" markdown="1">
+
+Azure AI Foundry is Microsoft's hub for building with foundation models - browse and deploy models, run evaluations, and wire in the rest of the Microsoft data stack. If your background is Vertex AI or Bedrock, the concepts map over almost directly; only the names and portal change.
+
+</div>
+
+<div class="audience-tech" markdown="1">
+
+Azure AI Foundry (formerly Azure AI Studio) is Microsoft's model catalog, deployment, and evaluation layer - the Azure-native equivalent of Vertex AI Model Garden + Vertex AI Evaluation, or Bedrock's model access + evaluation tooling. It sits alongside Microsoft Fabric (data platform) and Azure's core data services in a typical enterprise Microsoft-stack deployment.
+
+</div>
+
+---
+
+## Model Catalog, Deployments, Evaluations
+
+<div class="audience-biz" markdown="1">
+
+Foundry's model catalog lists everything from OpenAI's models to open-weight models like Llama and Mistral, all deployable from one place with one billing relationship. Built-in evaluation tools score deployed models on quality and safety before they go live.
+
+</div>
+
+<div class="audience-tech" markdown="1">
+
+The **model catalog** includes first-party (Azure OpenAI Service models), Microsoft-curated open models, and partner models, each deployable as a managed online endpoint. **Evaluations** run built-in or custom metrics (groundedness, relevance, safety) against a deployed model or a full workflow - functionally similar to Vertex AI Evaluation or a custom [LLM-as-judge](../../06-Agentic-AI/Notes/11-Evaluation-and-Observability.mdx) harness, but as a first-party managed feature rather than something you assemble yourself.
+
+</div>
+
+---
+
+## Microsoft Fabric vs BigQuery
+
+<div class="audience-biz" markdown="1">
+
+Fabric is Microsoft's unified data platform - warehousing, pipelines, and BI in one product, the rough equivalent of Google's BigQuery ecosystem for teams standardized on Microsoft.
+
+</div>
+
+<div class="audience-tech" markdown="1">
+
+Fabric unifies what BigQuery + Dataflow + Looker cover separately on GCP: a lakehouse (OneLake, a single logical data store underneath every Fabric workload), warehousing (Fabric Warehouse), pipelines (Data Factory, now inside Fabric), and BI (Power BI, natively integrated). The single-storage-layer design (OneLake) is Fabric's core differentiator versus BigQuery's more storage-agnostic model.
+
+</div>
+
+---
+
+## Azure Data Services
+
+<div class="audience-biz" markdown="1">
+
+Two data stores come up constantly in Azure-stack roles: Azure SQL (a managed relational database) and Cosmos DB (a globally distributed NoSQL database) - the Azure equivalents of Cloud SQL and Firestore/Spanner on GCP.
+
+</div>
+
+<div class="audience-tech" markdown="1">
+
+**Azure SQL Database** is a managed, auto-scaling relational database (SQL Server-compatible) - roughly Cloud SQL's positioning. **Cosmos DB** is a multi-model (document/key-value/graph/column-family), globally distributed NoSQL database with tunable consistency levels - closer to a hybrid of Firestore and Spanner in capability, commonly used as a vector store for RAG on Azure via its native vector search support.
+
+</div>
+
+---
+
+## Study Notes
+
+**Must-know for interviews:**
+- Azure AI Foundry (formerly AI Studio) = model catalog + deployment + evaluation, the Azure equivalent of Vertex AI Model Garden/Evaluation
+- Microsoft Fabric's core differentiator vs BigQuery is OneLake - one logical storage layer underneath every workload type
+- Azure SQL ≈ Cloud SQL (managed relational); Cosmos DB ≈ Firestore/Spanner hybrid (globally distributed, multi-model)
+- Cosmos DB has native vector search, making it a viable RAG vector store on Azure without a separate vector database
+
+**Quick recall Q&A:**
+- *What was Azure AI Foundry previously called, and does the rename change its function?* Azure AI Studio - the rename didn't change the core function (model catalog, deployment, evaluation), just the branding as Microsoft consolidated its AI tooling under one name.
+- *What's the single biggest architectural difference between Microsoft Fabric and BigQuery?* Fabric is built around OneLake, one logical storage layer shared by every workload (warehouse, lakehouse, BI); BigQuery's ecosystem is more storage-agnostic across its component services.
+- *Why might a team pick Cosmos DB as a vector store instead of a dedicated vector database?* It's already part of the Azure data stack, supports native vector search alongside its existing document/key-value capabilities, and avoids introducing a new managed service just for retrieval.

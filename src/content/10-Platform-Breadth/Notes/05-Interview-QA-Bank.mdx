@@ -1,0 +1,54 @@
+# Concept Review - Platform Breadth
+
+## AWS Bedrock
+
+**Q: What is the Converse API and why does it matter?**
+A unified request/response schema for invoking any model Bedrock hosts (Claude, Llama, Titan, Nova), so switching models or providers doesn't require rewriting integration code - only the model ID changes.
+
+**Q: What does Bedrock Knowledge Bases handle for you?**
+Ingestion (chunking), embedding, vector storage (managed OpenSearch Serverless by default, or bring-your-own), and retrieval - exposed as a direct API call or as a tool an agent can invoke. It's Bedrock's managed RAG layer.
+
+**Q: How do Bedrock Guardrails relate to the underlying model being called?**
+They're model-agnostic - the same guardrail policy (denied topics, content filters, PII redaction) applies consistently whether the call goes to Claude, Llama, or any other Bedrock-hosted model.
+
+**Q: What is AgentCore?**
+Bedrock's managed agent runtime layer - session state, memory, and tool orchestration for longer-running agentic workloads, roughly analogous to a self-hosted LangGraph deployment but managed by AWS.
+
+---
+
+## Databricks and Spark
+
+**Q: Explain the medallion architecture in your own words.**
+Three data quality tiers, each a real queryable table: Bronze (raw, as-ingested, schema-on-read), Silver (cleaned, deduplicated, schema-enforced), Gold (aggregated, business-ready, often feeding BI or ML features). Data always has a traceable path back to its raw source.
+
+**Q: What does Delta Lake add on top of plain Parquet files?**
+ACID transactions, schema enforcement/evolution, and time travel (querying a table as of a prior version or timestamp) - reliability guarantees a raw file-on-object-storage layer doesn't have.
+
+**Q: What problem does Unity Catalog solve?**
+Centralized governance - a three-level namespace (`catalog.schema.table`), access control, and lineage tracking across all workspaces in an account, rather than per-workspace permissions.
+
+**Q: Why would job clusters be cheaper than all-purpose clusters for the same workload?**
+Job clusters are automated, spinning up per run and terminating after, and bill at a lower DBU rate than all-purpose interactive clusters, which stay running for ad hoc use - the cost gap compounds at scale, making job clusters the default for production/scheduled workloads.
+
+---
+
+## Azure AI Foundry
+
+**Q: What was Azure AI Foundry previously called?**
+Azure AI Studio - a rebrand, not a functional change; it remains Microsoft's model catalog, deployment, and evaluation layer.
+
+**Q: What's architecturally distinct about Microsoft Fabric compared to BigQuery?**
+Fabric is built around OneLake, a single logical storage layer shared by every workload type (warehouse, lakehouse, BI) - BigQuery's ecosystem is more storage-agnostic across separate component services.
+
+**Q: When might Cosmos DB be chosen as a RAG vector store on Azure?**
+When a team is already using Cosmos DB for document/key-value data and wants to avoid introducing a separate dedicated vector database - Cosmos DB has native vector search support, making it a viable (if not always optimal) retrieval backend.
+
+---
+
+## Cross-Platform Comparison
+
+**Q: Name the managed-RAG equivalent across all three major clouds.**
+GCP: RAG Engine (Vertex AI). AWS: Knowledge Bases (Bedrock). Azure: Azure AI Search integration (AI Foundry). All three solve the same problem - managed chunking, embedding, and retrieval - with different default backing stores.
+
+**Q: In a platform-breadth interview answer, what makes a response stronger than just naming the equivalent products across clouds?**
+Naming one concrete architectural difference that actually matters (e.g. differing default vector store backends, or Fabric's single-storage-layer design vs BigQuery's more siloed model) - it demonstrates transferable understanding of the underlying capability, not just memorized vocabulary mapping.

@@ -1,0 +1,60 @@
+# Concept Review - PyTorch Fundamentals
+
+## Foundational Concepts
+
+**Q: What is the difference between a PyTorch `Tensor` and a NumPy array?**
+A tensor is a NumPy-like multi-dimensional array with two additional capabilities: it can live on a GPU (`.to("cuda")`), and it can be tracked by autograd (`requires_grad=True`) to automatically compute gradients. `torch.from_numpy()` and `.numpy()` convert between them on CPU, sharing the same underlying memory.
+
+**Q: Why does PyTorch use dynamic (define-by-run) computation graphs instead of static graphs?**
+Dynamic graphs are built fresh on every forward pass using standard Python control flow (if/for/while), which makes debugging natural (you can put a breakpoint anywhere and inspect real tensors) and makes variable-length or conditional architectures (e.g. RNNs with variable sequence length, early-exit models) straightforward to express. The tradeoff historically was less opportunity for graph-level compiler optimization - which `torch.compile()` (added in PyTorch 2.0) now addresses by tracing and optimizing the graph just-in-time.
+
+**Q: What's the difference between `nn.Module` and a plain Python class?**
+`nn.Module` is PyTorch's base class for anything with learnable parameters. Subclassing it and registering layers as attributes (e.g. `self.fc = nn.Linear(...)`) automatically registers those layers' parameters with the module, so `model.parameters()` returns all of them for the optimizer, `model.to(device)` moves all of them, and `model.state_dict()` captures all of them for checkpointing.
+
+---
+
+## Practical Scenario Questions
+
+**Q: Your training loss is decreasing but validation loss starts increasing after a few epochs. What's happening and what would you check first?**
+Classic overfitting - the model is fitting noise/specifics of the training set rather than generalizable patterns. First checks: is `model.eval()` actually being called for validation (a missed `eval()` call can itself distort the val loss curve)? Then: add regularization (dropout, weight decay), reduce model capacity, add data augmentation, or use early stopping based on the validation metric.
+
+**Q: A colleague's training script computes accuracy as `correct / len(dataloader)` instead of `correct / len(dataset)`. What's the bug?**
+`len(dataloader)` returns the number of *batches*, not the number of samples. Dividing total correct predictions by the number of batches instead of the number of samples inflates the "accuracy" by roughly the batch size. It should be `correct / len(dataloader.dataset)`.
+
+**Q: You need to freeze the first few layers of a pretrained model and only fine-tune the last few. How do you do this in raw PyTorch?**
+Set `requires_grad = False` on the parameters of the layers to freeze, and only pass the remaining trainable parameters to the optimizer:
+```python
+for param in model.backbone.parameters():
+    param.requires_grad = False
+
+optimizer = torch.optim.Adam(
+    filter(lambda p: p.requires_grad, model.parameters()), lr=1e-4
+)
+```
+Frozen layers still participate in the forward pass, but no gradient is computed or applied for them, and `model.eval()`-sensitive frozen BatchNorm layers should also typically stay in eval mode even during training to avoid corrupting their running statistics.
+
+**Q: Your training script works with `batch_size=32` but crashes with `CUDA out of memory` at `batch_size=128`. You need the larger effective batch size for stability. What's your fix?**
+Use gradient accumulation: run several `batch_size=32` forward/backward passes without calling `optimizer.step()`/`zero_grad()` between them, then call `optimizer.step()` once every 4 iterations to simulate an effective batch size of 128 - keeping the same peak memory footprint as `batch_size=32`.
+
+**Q: You load a checkpoint saved from a multi-GPU `DataParallel`-wrapped model into a single-GPU script and get a `state_dict` key mismatch error (`module.` prefix). How do you fix it?**
+`DataParallel` wraps the model and prefixes every parameter key with `module.` in the state dict. Strip the prefix before loading into a non-wrapped model:
+```python
+state_dict = {k.replace("module.", "", 1): v for k, v in checkpoint["model_state_dict"].items()}
+model.load_state_dict(state_dict)
+```
+
+---
+
+## Debugging and Production Questions
+
+**Q: What's the difference between `loss.item()` and just using `loss` directly when accumulating a running total across a training loop?**
+`loss` is still a tensor attached to the computation graph. Accumulating it directly into a running-total Python variable keeps every batch's graph alive for the lifetime of the loop (since the running total references all of them), causing a steadily growing memory leak. `.item()` extracts a plain Python float, detaching it from the graph entirely.
+
+**Q: Why might two runs of the same training script with the same code and hyperparameters produce different final accuracy?**
+Non-determinism from: unseeded RNGs (`torch.manual_seed`, `random.seed`, `numpy.random.seed`, and the `DataLoader`'s `worker_init_fn` for multi-worker shuffling), non-deterministic GPU kernels (some cuDNN algorithms are non-deterministic by default for performance - `torch.backends.cudnn.deterministic = True` trades some speed for reproducibility), and data loading order when `num_workers > 1` without careful seeding.
+
+**Q: What's the practical difference between `torch.save(model.state_dict(), path)` and `torch.jit.save()`/`torch.export`?**
+`state_dict()` saves only tensor weights - you still need the original Python model class definition available to reconstruct and load into. `torch.jit.script`/`trace` (TorchScript) or `torch.export` serialize the model's *computation graph itself*, producing an artifact that can be loaded and run without the original Python source - the standard path for production deployment (C++ runtimes, mobile, edge) where the training codebase isn't available at inference time.
+
+**Q: When would you choose `bfloat16` over `float16` for mixed precision training?**
+`bfloat16` has the same exponent range as `float32` (just less mantissa precision), so it's far less prone to the gradient underflow/overflow issues `float16` has - often removing the need for a `GradScaler` entirely. It's preferred when available (newer NVIDIA GPUs, TPUs) especially for large models where training stability at scale matters more than the extra precision `float16`'s larger mantissa offers.

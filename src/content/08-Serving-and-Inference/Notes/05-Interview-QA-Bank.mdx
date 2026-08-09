@@ -1,0 +1,64 @@
+# Q&A Review Bank - Serving & Inference
+
+15 Q&A pairs spanning vLLM/Paged Attention, quantized inference, batching/concurrency/latency, and streaming/TTFT. Use this as a final drill after working through the [Notes](01-vLLM-and-Paged-Attention.mdx) - each question links back to the file with the full explanation.
+
+---
+
+## vLLM & Paged Attention
+
+**Q: What are the two core problems vLLM's Paged Attention and continuous batching each solve?**
+A: Paged Attention solves KV-cache memory fragmentation - naive contiguous allocation wastes 60-80% of KV-cache memory by reserving space for the maximum possible sequence length upfront. Continuous batching solves GPU idling - static batching leaves GPU slots empty once any sequence in the batch finishes early, while continuous batching evicts and refills slots after every decode step. See [vLLM & Paged Attention](01-vLLM-and-Paged-Attention.mdx).
+
+**Q: How does Paged Attention's block table resemble OS virtual memory?**
+A: GPU memory is divided into fixed-size blocks (default 16 tokens), and each sequence's logical KV cache is mapped to physical blocks via a per-sequence block table - non-contiguous physical allocation, exactly like a page table maps virtual addresses to physical memory pages in an operating system. See [vLLM & Paged Attention](01-vLLM-and-Paged-Attention.mdx#paged-attention-in-practice).
+
+**Q: Why is vLLM's automatic prefix caching cheap to implement given Paged Attention's block design?**
+A: Because blocks are content-addressed, identical prefixes across different requests (e.g. a shared system prompt) can point at the exact same physical blocks with copy-on-write semantics if they later diverge - no separate cache data structure is needed beyond the existing block table mechanism. See [vLLM & Paged Attention](01-vLLM-and-Paged-Attention.mdx#paged-attention-in-practice).
+
+**Q: What's the difference between `max_num_seqs` and `max_num_batched_tokens` in vLLM's scheduler?**
+A: `max_num_seqs` caps how many sequences can be batched together in a single scheduling step. `max_num_batched_tokens` caps the total token budget per step, which prevents a long prompt's prefill from monopolizing a step and starving other in-flight sequences' decode steps (chunked prefill). See [vLLM & Paged Attention](01-vLLM-and-Paged-Attention.mdx#continuous-batching-in-practice).
+
+---
+
+## Quantized Inference
+
+**Q: Why isn't the NF4 config used for QLoRA training typically reused directly for production serving?**
+A: NF4/`bitsandbytes` quantization is optimized for on-the-fly, training-time memory reduction using dequant-on-the-fly kernels - it doesn't benefit from the specialized fast INT4 serving kernels (`exllama`, `marlin`) that GPTQ/AWQ formats are built around. The standard production path is to merge the adapter into a full-precision model, then separately run offline GPTQ/AWQ calibration for serving. See [Quantized Inference](02-Quantized-Inference.mdx#gptq-and-awq-vs-nf4bitsandbytes).
+
+**Q: What does AWQ preserve that a naive uniform INT4 quantization scheme would lose?**
+A: AWQ identifies a small fraction of weight channels that are disproportionately important based on activation magnitude (not weight magnitude), and preserves their effective precision via per-channel scaling before quantizing everything else to INT4 - this is why AWQ often retains more accuracy than GPTQ at the same bit-width. See [Quantized Inference](02-Quantized-Inference.mdx#gptq-and-awq-vs-nf4bitsandbytes).
+
+**Q: When would you choose INT8 over INT4 quantization for a production deployment?**
+A: When the task is precision-sensitive - code generation, numeric reasoning, structured extraction - where INT4's larger quality delta is unacceptable, but some memory/throughput improvement over full precision is still desired. See [Quantized Inference](02-Quantized-Inference.mdx#when-to-quantize-for-serving---and-when-not-to).
+
+**Q: What's a typical production pipeline for combining fine-tuning and serving-time quantization?**
+A: Fine-tune with QLoRA (NF4 training-time quantization), merge the LoRA adapter into a full-precision dense model, then separately run GPTQ or AWQ calibration on that merged model to produce a serving-optimized quantized artifact - the two quantization decisions happen at different pipeline stages for different reasons. See [Quantized Inference](02-Quantized-Inference.mdx#when-to-quantize-for-serving---and-when-not-to).
+
+---
+
+## Batching, Concurrency & Latency
+
+**Q: How can server concurrency exceed the configured `max_num_seqs` batch size?**
+A: Under continuous batching, requests rotate through batch slots as earlier sequences finish - concurrency counts every in-flight request (queued, prefilling, decoding), while `max_num_seqs` only bounds the instantaneous batch occupancy at any single scheduling step. See [Batching, Concurrency & Latency](03-Batching-Concurrency-and-Latency.mdx#batch-size-vs-concurrency).
+
+**Q: Why does aggregate throughput keep increasing past the point where per-request throughput has already degraded noticeably?**
+A: At small batch sizes the GPU has spare compute/memory-bandwidth, so aggregate throughput scales close to linearly with batch size while per-request latency barely moves. Past a hardware-dependent saturation point, per-step decode latency starts increasing with batch size - per-request throughput drops measurably, but aggregate throughput keeps climbing (just more slowly) because more sequences are still sharing each step. See [Batching, Concurrency & Latency](03-Batching-Concurrency-and-Latency.mdx#tokens-sec-vs-latency-per-request).
+
+**Q: What's the correct basis for deciding how many concurrent users one GPU can serve?**
+A: Define an SLO (e.g. p95 per-request throughput or p95 latency), load test at increasing concurrency, and find the concurrency level where that SLO is last satisfied - with a safety margin. Sizing capacity off aggregate throughput alone hides individual users experiencing degraded latency. See [Batching, Concurrency & Latency](03-Batching-Concurrency-and-Latency.mdx#capacity-planning-basics).
+
+**Q: Why might a GPU's real capacity be bound by compute/bandwidth rather than KV-cache memory, or vice versa?**
+A: A GPU might have enough KV-cache memory to hold state for far more concurrent sequences than its compute/bandwidth budget can decode at an acceptable per-request latency - or the reverse, where memory runs out before compute becomes the bottleneck. Whichever constraint is hit first at your SLO sets real capacity; both need to be checked, not just one. See [Batching, Concurrency & Latency](03-Batching-Concurrency-and-Latency.mdx#capacity-planning-basics).
+
+---
+
+## Streaming & TTFT
+
+**Q: Does streaming reduce a request's total generation time?**
+A: No - total wall-clock time to the last token is essentially unchanged (or marginally higher from streaming overhead). Streaming reduces *perceived* latency by delivering tokens incrementally as they're generated instead of making the user wait for the complete response. See [Streaming & TTFT](04-Streaming-and-TTFT.mdx#ttft-vs-total-generation-time).
+
+**Q: Why does a long RAG-retrieved context inflate TTFT even when the final answer is short?**
+A: TTFT = queue wait + prefill time, and prefill time scales with input prompt length - the entire retrieved context must be processed before the first output token can be generated, regardless of how short the eventual answer turns out to be. This is exactly why prefix caching has outsized ROI for TTFT on RAG and chatbot workloads with repeated context. See [Streaming & TTFT](04-Streaming-and-TTFT.mdx#ttft-vs-total-generation-time).
+
+**Q: Why should TTFT be measured under concurrent load rather than assumed from a single-request benchmark?**
+A: Chunked prefill scheduling means a new request's prefill can be spread across multiple scheduling steps when the server is busy handling other in-flight decodes, increasing that request's TTFT under load - a single-request TTFT measurement with no contention understates what real users experience. See [Streaming & TTFT](04-Streaming-and-TTFT.mdx#how-streaming-interacts-with-batching).

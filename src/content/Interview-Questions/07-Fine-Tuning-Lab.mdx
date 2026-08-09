@@ -1,0 +1,57 @@
+# Concept Review - Fine-Tuning Lab
+
+## Tooling and Setup Questions
+
+**Q: You're about to fine-tune an open model you've never used before. What are the first three things you check on its model card before writing any code?**
+A: License (can you fine-tune and redistribute/commercially use the result), whether it's gated (requires accepting terms before `from_pretrained` will succeed), and its chat template/tokenizer compatibility with the training pipeline you're about to build. Skipping these is a common source of wasted setup time - discovering a license restriction or a gated-access block after writing a training script is avoidable.
+
+**Q: Why does `AutoModelForCausalLM.from_pretrained("some-model")` work identically across totally different model architectures?**
+A: The `Auto*` classes read `config.json` in the model's repo to resolve the correct concrete architecture class (e.g. `Qwen2ForCausalLM`, `LlamaForCausalLM`) automatically. This is what lets a fine-tuning script stay architecture-agnostic - swapping the base model is usually a one-line change as long as the code only calls the `Auto*` interface.
+
+**Q: What's the risk of skipping `apply_chat_template` and manually concatenating instruction/response strings yourself?**
+A: Your hand-rolled format may not match the special tokens and turn markers the model was actually instruction-tuned with. Training on a mismatched format teaches the model a distribution it will never actually see at inference time (where a compliant chat template will be used), which shows up as inconsistent instruction-following after deployment.
+
+---
+
+## LoRA/QLoRA Configuration Questions
+
+**Q: A teammate proposes `target_modules=["q_proj"]` only, to save training time. What's the tradeoff?**
+A: Fewer target modules means fewer trainable parameters and faster/cheaper training, but also less capacity to adapt behavior - the standard minimum is `q_proj` and `v_proj` together (Q and V projections are the most impactful for adaptation quality), and many recipes add `k_proj`/`o_proj` or FFN modules when the task needs more behavior change than attention-projection adapters alone can capture.
+
+**Q: Why does `lora_alpha` matter even though it doesn't change the number of trainable parameters?**
+A: `lora_alpha` scales the adapter's contribution to the output (`output = base + (alpha/r) * B*A`), effectively controlling how strongly the LoRA update influences generation relative to the frozen base weights - it's closer to a learning-rate-like knob on the adapter's influence than a capacity knob.
+
+**Q: What's the single most common QLoRA setup mistake that causes a training run to complete without errors but fail to actually learn anything?**
+A: Forgetting `prepare_model_for_kbit_training()` before attaching the LoRA adapter. Without it, gradients don't reliably flow through the frozen quantized base's normalization layers and embedding, so the adapter can end up training on a broken or unstable gradient signal despite the script running to completion with no exceptions.
+
+**Q: Why is a merged QLoRA model (via `merge_and_unload()`) usually preferred for single-purpose production deployment over serving the adapter separately?**
+A: A merged model is an ordinary dense model with zero PEFT-specific inference overhead and no `peft` runtime dependency at serve time - simplest to deploy behind a standard inference stack. Adapter-only serving is worth the small extra complexity only when you need to serve multiple fine-tuned variants from one base model.
+
+---
+
+## Training Data and Loss Questions
+
+**Q: Why is loss masking (`labels = -100` on prompt tokens) necessary for instruction fine-tuning specifically, more so than for other supervised tasks?**
+A: Instructions vary widely in phrasing across examples with no single "correct" pattern to learn - training on them would waste gradient signal pushing the model toward memorizing instruction phrasing rather than optimizing output quality. Masking ensures every gradient update is driven purely by how well the model completes the task, not by how well it predicts the next word of an arbitrary instruction.
+
+**Q: Your fine-tuning run's loss drops to near-zero by the end of epoch one. Is this cause for concern, and why?**
+A: Yes - a loss that collapses that quickly on a typical instruction-tuning dataset usually indicates the learning rate is too high or the dataset is too small/repetitive, and the model is memorizing rather than generalizing. It's not proof of a problem on its own, but it should trigger checking held-out validation loss before trusting the run.
+
+**Q: What's the mechanical difference between how a full fine-tuning training loop and a LoRA training loop construct their optimizer?**
+A: Structurally the loop is identical (forward → loss → `zero_grad()` → `backward()` → `step()`). The difference is that the LoRA optimizer is constructed only over parameters with `requires_grad=True` - the small adapter matrices - while the base model's parameters remain frozen and are excluded from the optimizer entirely, which is also what makes optimizer state memory so much smaller than full fine-tuning.
+
+---
+
+## Benchmarking and Decision Questions
+
+**Q: A fine-tune shows a large quality improvement on its own training-adjacent eval set, but a smaller improvement on a broader, independently sourced set of test prompts. Which number do you trust for a shipping decision?**
+A: The broader, independently sourced set - an eval set too similar to the training distribution will systematically overstate the model's real-world quality gain. This is exactly why the held-out eval set needs to represent production traffic diversity, not just be technically "unseen during training."
+
+**Q: Why do latency numbers reported without mentioning a warm-up pass deserve scrutiny?**
+A: The very first `generate()` call after loading a model pays a one-time CUDA kernel compilation and allocator warm-up cost not present in steady-state inference. A benchmark that includes this cold-start call in its average will understate real throughput - a sign whoever ran it may not have controlled for measurement methodology carefully.
+
+**Q: Given a benchmark showing the fine-tuned model matches base-model latency and VRAM but with a modest quality bump, and low request volume in production - what's the actual deployment recommendation, and why?**
+A: At low volume, the operational overhead of maintaining a fine-tuned model (re-training on data drift, versioning, redeployment) often outweighs a modest quality gain that a well-crafted prompt might capture just as well. The recommendation depends on whether few-shot prompting alone can close most of that quality gap - if so, skip the fine-tune; if the delta over prompting is large and consistent, the fine-tune is justified even at lower volume.
+
+**Q: If a fine-tuned support-bot model gives more confident-sounding but occasionally factually wrong answers about current company policy, what does the benchmark methodology need to catch this, and what's the fix?**
+A: The LLM-as-judge and task-metric scores alone won't reliably catch factual drift unless the eval set specifically includes policy-sensitive questions with verifiable reference answers. The underlying fix isn't more fine-tuning data - it's pairing the model with RAG so current policy documents are retrieved and grounded at inference time, since fine-tuning does not durably encode facts that change over time.

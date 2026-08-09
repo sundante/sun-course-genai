@@ -1,0 +1,35 @@
+# Concept Review - Production Engineering (Cross-Topic)
+
+## Deployment Scenarios
+
+**Q: You're asked to reduce a 6GB production inference image to speed up rollouts. What's your first move?**
+Check whether it's built from a `-devel` CUDA base image when `-runtime` would suffice, and whether the build uses multi-stage builds at all - a single-stage build carries the full compiler toolchain into production for no reason. Also check whether model weights are `COPY`'d into the image rather than mounted at runtime; that alone can account for multiple gigabytes and forces a full rebuild on every model update.
+
+**Q: A new model version passes offline eval but you're nervous about production behavior. What rollout strategy fits, and why not just deploy it directly?**
+Canary - route a small percentage of live traffic (e.g. 5%) to the new version while most stays on the old one, and ramp only if production metrics hold. Offline eval can't catch every real-world distribution shift; canary limits the blast radius of whatever offline eval missed, at the cost of a slower rollout.
+
+**Q: Your HPA isn't scaling up even though the GPUs are clearly saturated. What's the most likely cause?**
+The default HPA only reads CPU/memory metrics - GPU utilization requires a custom metrics pipeline (DCGM exporter feeding Prometheus, exposed to the HPA via the Prometheus Adapter). Without that pipeline wired up, GPU saturation is invisible to the autoscaler regardless of how busy the GPUs actually are.
+
+---
+
+## Security & Compliance Scenarios
+
+**Q: A teammate wants to add full request/response logging to help debug a flaky agent in a healthcare product. What's the compliance concern, and how would you address it?**
+Full prompt/response logging in a healthcare context will almost certainly capture PHI, since users describe symptoms and conditions directly in prompts. Add redaction/tokenization before the log or trace reaches storage (or a tracing backend like Langfuse), rather than logging raw content and hoping it's never reviewed - this needs to be a designed step, not an assumption.
+
+**Q: How would you explain to a non-technical stakeholder what "least privilege" means for an AI system's IAM setup, using a concrete example?**
+The service that runs model inference only gets permission to read the model weights it needs - it has no ability to write to the training data, delete logs, or access unrelated systems. If that service is ever compromised, the attacker inherits exactly that narrow set of permissions, not the whole environment.
+
+**Q: What's the practical difference between claiming "we're HIPAA compliant" and naming the specific safeguards you implemented?**
+"HIPAA compliant" is a vague self-assessment that invites follow-up questions in an interview or audit. Naming the actual technical safeguards - access control, audit controls, integrity controls, transmission security (45 CFR §164.312) - and pointing to how each is implemented (e.g. "audit controls: every PHI access logged with user ID and timestamp, retained 6 years") is verifiable and reads as far more credible.
+
+---
+
+## Lifecycle Scenarios
+
+**Q: Two weeks after a model promotion, an eval metric quietly regresses but nobody notices until a customer complaint. What process gap does this reveal?**
+The rollback criteria (or ongoing monitoring against them) weren't wired to alert automatically - the team likely defined thresholds but didn't operationalize continuous checking against them post-launch. A release-readiness process should include an observation window with active alerting, not just a go/no-go decision at launch time.
+
+**Q: When would champion-challenger be a better fit than a one-time canary rollout?**
+When you want an ongoing, continuous comparison rather than a single rollout event - for example, comparing two production model variants indefinitely to decide which one earns the traffic majority, or when the "right" model may shift over time as data drifts and you want the comparison infrastructure to persist rather than being torn down after one rollout.
