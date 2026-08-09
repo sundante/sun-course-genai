@@ -199,43 +199,69 @@ body {
   color: var(--sun-dark);
 }
 
-/* Prose / course content overrides */
+/* Prose / course content overrides - all values reference the runtime       */
+/* sun-* / glass-* tokens (see :root/.dark above) so prose stays theme-       */
+/* reactive instead of baking a static light-mode hex value at build time.   */
 .prose {
-  --tw-prose-headings:          #111111;
-  --tw-prose-body:              #1c1c1c;
-  --tw-prose-links:             #7a6000;
-  --tw-prose-code:              #5a4800;
-  --tw-prose-pre-bg:            #1a1a1a;
-  --tw-prose-blockquote-border: #FFDA47;
-  --tw-prose-hr:                rgba(255, 218, 71, 0.35);
-  --tw-prose-th-borders:        rgba(255, 218, 71, 0.3);
-  --tw-prose-td-borders:        rgba(0, 0, 0, 0.05);
+  --tw-prose-headings:      var(--sun-dark);
+  --tw-prose-body:          var(--sun-dark);
+  --tw-prose-lead:          var(--sun-muted);
+  --tw-prose-links:         var(--sun-amber);
+  --tw-prose-bold:          var(--sun-dark);
+  --tw-prose-counters:      var(--sun-muted);
+  --tw-prose-bullets:       var(--sun-yellow-bdr);
+  --tw-prose-hr:            var(--sun-yellow-bdr);
+  --tw-prose-quotes:        var(--sun-dark);
+  --tw-prose-quote-borders: var(--sun-yellow);
+  --tw-prose-captions:      var(--sun-muted);
+  --tw-prose-kbd:           var(--sun-dark);
+  --tw-prose-kbd-shadows:   var(--glass-card-border);
+  --tw-prose-code:          var(--sun-amber);
+  --tw-prose-pre-bg:        var(--sun-surface);
+  --tw-prose-pre-code:      var(--sun-dark);
+  --tw-prose-th-borders:    var(--sun-yellow-bdr);
+  --tw-prose-td-borders:    var(--glass-card-border);
 }
 
 .prose h2 {
-  border-bottom: 1px solid rgba(255, 218, 71, 0.35);
+  border-bottom: 1px solid var(--sun-yellow-bdr);
   padding-bottom: 0.28rem;
 }
 
 .prose h3 {
-  color: #5a4800;
+  color: var(--sun-amber);
 }
 
 .prose code:not(pre code) {
-  background: rgba(255, 218, 71, 0.14);
-  color: #5a4800;
+  background: var(--sun-yellow-dim);
+  color: var(--sun-amber);
   border-radius: 4px;
   padding: 0.1em 0.35em;
   font-size: 0.82em;
 }
 
 .prose pre {
-  border-left: 2px solid #FFDA47;
+  /* background comes from --tw-prose-pre-bg above (solid, theme-matched -   */
+  /* code text needs a reliable backdrop, so it stays solid rather than      */
+  /* translucent, per the contrast risk called out in GLASS-UI-REDESIGN.md   */
+  border: 1px solid var(--glass-card-border);
+  border-left: 2px solid var(--sun-yellow);
   border-radius: 0 6px 6px 0;
+  box-shadow: var(--glass-shadow-sm);
 }
 
-.prose blockquote {
-  border-left-color: #FFDA47;
+.prose table {
+  background: var(--glass-card-bg);
+  backdrop-filter: blur(var(--blur-glass-sm));
+  -webkit-backdrop-filter: blur(var(--blur-glass-sm));
+  border: 1px solid var(--glass-card-border);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--glass-shadow-sm);
+}
+
+.prose thead {
+  background: var(--glass-panel-bg);
 }
 
 /* Audience toggle visibility */

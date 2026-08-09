@@ -62,8 +62,11 @@ export default async function CoursePage({ params }: Props) {
 
   return (
     <div className="flex flex-col min-h-full">
-      {/* Dark title banner */}
-      <div className="bg-sun-dark border-b-2 border-sun-yellow px-6 lg:px-8 py-3">
+      {/* Dark title banner - intentionally theme-invariant (bg-zinc-900, not the
+          reactive --sun-dark token, which inverts to near-white in dark mode and
+          made the hardcoded text-white illegible - see Section 4 finding in
+          vibes/glass-ui-redesign-checklist.md) */}
+      <div className="bg-zinc-900 border-b-2 border-sun-yellow px-6 lg:px-8 py-3 shadow-glass-sm">
         <p className="text-xs font-bold uppercase tracking-widest text-sun-yellow mb-0.5">
           {moduleLabel}
         </p>

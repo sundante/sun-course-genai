@@ -1,21 +1,13 @@
 import Link from "next/link";
 import { getNavigationTree } from "@/lib/content/nav";
 import { ThemeToggle } from "@/components/course/ThemeToggle";
-
-const MODULE_META: Record<string, { num: string; subtitle: string; description: string; notes: string; qa: string }> = {
-  "llm-models":         { num: "01", subtitle: "The Engine",    description: "How large language models work under the hood — transformers, attention, training, fine-tuning, and inference optimization.", notes: "12 notes", qa: "68+ Q&A" },
-  "prompt-engineering": { num: "02", subtitle: "The Interface", description: "The art and science of talking to models — from basics to advanced techniques and production prompt systems.", notes: "6 notes",  qa: "65+ Q&A" },
-  "rag":                { num: "03", subtitle: "The Memory",    description: "Retrieval-Augmented Generation — how to give LLMs access to your own knowledge and keep answers grounded.", notes: "12 notes", qa: "80+ Q&A" },
-  "mcp":                { num: "04", subtitle: "The Protocol",  description: "Model Context Protocol — the emerging standard that lets AI models securely interact with tools, APIs, and data sources.", notes: "9 notes",  qa: "40+ Q&A" },
-  "agents":             { num: "05", subtitle: "The Actors",    description: "AI agents and frameworks — LangChain, LangGraph, CrewAI, and GCP ADK from simple to complex agent architectures.", notes: "8 notes",  qa: "50+ Q&A" },
-  "agentic-ai":         { num: "06", subtitle: "The Systems",   description: "Full agentic AI systems — architectural patterns, multi-agent coordination, evaluation, and production deployment.", notes: "12 notes", qa: "60+ Q&A" },
-};
+import { CurriculumTiles } from "@/components/course/CurriculumTiles";
 
 const LEARNING_PATHS = [
   { label: "A", title: "Conceptual",     desc: "New to GenAI — start here for a guided conceptual overview of the full stack." },
   { label: "B", title: "Interview Prep", desc: "Accelerated deep-dive through Q&A banks to ace GenAI engineering interviews." },
   { label: "C", title: "Hands-On",       desc: "Code labs across 4 agent frameworks: LangChain, LangGraph, CrewAI, GCP ADK." },
-  { label: "D", title: "Full Sequence",  desc: "Complete curriculum from LLMs to Agentic AI — the recommended path." },
+  { label: "D", title: "Full Sequence",  desc: "Complete curriculum from LLMs to Platform Breadth and PyTorch fundamentals — the recommended path." },
 ];
 
 function StarSvg() {
@@ -32,29 +24,32 @@ export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col bg-sun-bg">
       {/* Header */}
-      <header className="bg-white border-b-2 border-sun-yellow px-4 sm:px-6 h-13 flex items-center justify-between gap-3 sticky top-0 z-40">
+      <header className="bg-glass-nav-bg backdrop-blur-glass-md border-b-2 border-sun-yellow px-4 sm:px-6 h-13 flex items-center justify-between gap-3 sticky top-0 z-40 shadow-glass-sm">
         <span className="font-bold text-sun-dark tracking-tight text-sm">Learn GenAI</span>
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <a
             href="https://github.com/sundante/sun-course-genai"
             target="_blank" rel="noopener noreferrer"
-            className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold bg-sun-yellow text-sun-dark hover:bg-sun-yellow-dk rounded-md px-2.5 py-1 transition-colors"
+            className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold bg-sun-yellow text-zinc-900 hover:bg-sun-yellow-dk rounded-md px-2.5 py-1 transition-colors"
           >
             <StarSvg /> Github
           </a>
           <a
             href="https://sunmintz.com/"
             target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center text-xs font-semibold bg-sun-yellow text-sun-dark hover:bg-sun-yellow-dk rounded-md px-3 py-1.5 transition-colors"
+            className="inline-flex items-center text-xs font-semibold bg-sun-yellow text-zinc-900 hover:bg-sun-yellow-dk rounded-md px-3 py-1.5 transition-colors"
           >
             sunmintz.com
           </a>
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="bg-sun-dark text-white px-4 sm:px-6 py-10 border-b-2 border-sun-yellow">
+      {/* Hero - intentionally theme-invariant (bg-zinc-900, not the reactive
+          --sun-dark token, which inverts to near-white in dark mode and would
+          make the hardcoded text-white illegible - same fix as the lesson-page
+          title banner, see Section 4/8 in vibes/glass-ui-redesign-checklist.md) */}
+      <section className="bg-zinc-900 text-white px-4 sm:px-6 py-10 border-b-2 border-sun-yellow">
         <div className="max-w-3xl mx-auto text-center">
           <p className="text-xs font-bold uppercase tracking-widest text-sun-yellow mb-3">
             Learn AI: Generative AI to Agentic AI
@@ -79,7 +74,7 @@ export default function HomePage() {
           <div className="flex gap-3 justify-center flex-wrap">
             <Link
               href="/learn/llm-models/index"
-              className="inline-flex items-center text-sm font-semibold bg-sun-yellow text-sun-dark hover:bg-sun-yellow-dk rounded-lg px-5 py-2 transition-colors"
+              className="inline-flex items-center text-sm font-semibold bg-sun-yellow text-zinc-900 hover:bg-sun-yellow-dk rounded-lg px-5 py-2 transition-colors"
             >
               Start Learning
             </Link>
@@ -93,50 +88,25 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Module grid */}
+      {/* Module grid - expandable/collapsible tiles, each a single toggle button
+          revealing that module's Concepts as clickable links */}
       <section className="px-4 sm:px-6 py-8 bg-sun-bg">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-xs font-bold uppercase tracking-widest text-sun-muted mb-5">Curriculum</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {modules.map((mod) => {
-              const meta = MODULE_META[mod.slug];
-              if (!meta) return null;
-              const firstPage = mod.items[0];
-              const href = firstPage?.href ?? `/learn/${mod.slug}/index`;
-              return (
-                <Link
-                  key={mod.slug}
-                  href={href}
-                  className="group block p-4 rounded-xl border border-sun-yellow-bdr bg-white hover:border-sun-yellow hover:shadow-md hover:-translate-y-0.5 transition-all duration-150"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <span className="text-xs font-mono text-sun-muted">{meta.num}</span>
-                    <span className="text-xs font-semibold text-sun-amber bg-sun-yellow-dim px-2 py-0.5 rounded-full">
-                      {meta.subtitle}
-                    </span>
-                  </div>
-                  <h3 className="font-semibold text-sun-dark mb-1.5 group-hover:text-sun-amber transition-colors">
-                    {mod.title}
-                  </h3>
-                  <p className="text-xs text-sun-muted leading-relaxed mb-3">{meta.description}</p>
-                  <div className="flex gap-2">
-                    <span className="text-xs bg-gray-100 text-sun-muted rounded px-2 py-0.5">{meta.notes}</span>
-                    <span className="text-xs bg-gray-100 text-sun-muted rounded px-2 py-0.5">{meta.qa}</span>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+          <CurriculumTiles modules={modules} />
         </div>
       </section>
 
-      {/* Stats strip */}
+      {/* Stats strip - bg-sun-yellow is theme-invariant, so the text inside
+          uses fixed zinc-900 rather than the reactive text-sun-dark token,
+          which would invert to near-white and be unreadable on yellow in dark
+          mode (same class of bug as the hero/banner fixes above) */}
       <section className="bg-sun-yellow px-4 sm:px-6 py-5">
         <div className="max-w-5xl mx-auto flex flex-wrap justify-center sm:justify-between gap-4">
-          {[["150+", "Deep-dive notes"], ["4", "Agent frameworks"], ["298+", "Interview Q&A"], ["Free", "Always"]].map(([stat, label]) => (
+          {[["180+", "Deep-dive notes"], ["12", "Modules"], ["370+", "Interview Q&A"], ["Free", "Always"]].map(([stat, label]) => (
             <div key={label} className="text-center">
-              <div className="text-xl font-bold text-sun-dark">{stat}</div>
-              <div className="text-xs font-medium text-sun-dark/70">{label}</div>
+              <div className="text-xl font-bold text-zinc-900">{stat}</div>
+              <div className="text-xs font-medium text-zinc-900/70">{label}</div>
             </div>
           ))}
         </div>
@@ -148,8 +118,8 @@ export default function HomePage() {
           <h2 className="text-xs font-bold uppercase tracking-widest text-sun-muted mb-4">Learning Paths</h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {LEARNING_PATHS.map((path) => (
-              <div key={path.label} className="p-4 rounded-xl border border-sun-yellow-bdr bg-white">
-                <div className="w-7 h-7 rounded-full bg-sun-yellow text-sun-dark text-xs font-bold flex items-center justify-center mb-2">
+              <div key={path.label} className="p-4 rounded-xl border border-glass-card-border bg-glass-card-bg backdrop-blur-glass-sm shadow-glass-sm">
+                <div className="w-7 h-7 rounded-full bg-sun-yellow text-zinc-900 text-xs font-bold flex items-center justify-center mb-2">
                   {path.label}
                 </div>
                 <div className="font-semibold text-sun-dark text-sm mb-1">{path.title}</div>
@@ -160,8 +130,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-sun-dark text-white/60 px-4 sm:px-6 py-6 mt-auto border-t-2 border-sun-yellow">
+      {/* Footer - theme-invariant dark bg, same fix as hero/banner above */}
+      <footer className="bg-zinc-900 text-white/60 px-4 sm:px-6 py-6 mt-auto border-t-2 border-sun-yellow">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
           <span>
             © 2026{" "}

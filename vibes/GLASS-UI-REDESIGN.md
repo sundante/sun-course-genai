@@ -5,12 +5,19 @@ day-to-day execution is tracked in `vibes/glass-ui-redesign-checklist.md`. Once 
 fully complete, fold the outcome into this file's own status line and delete the checklist per
 `CLAUDE.md` > "Project Tracking" convention.
 
-**Status: IN PROGRESS.** Sections 1-4 (Design Token System, Dark Mode Infrastructure, Theme
-Toggle Component, Core Chrome Components) are done - see `vibes/glass-ui-redesign-checklist.md`
-for details. The toggle is live in the header on every page; `Header`, `Sidebar`, `MobileNav`,
-`PageNav`, and `TableOfContents` now render with glass panel/nav treatment in both themes. Modals,
-shadcn primitives, MDX content, page-level layouts, and the mindmap component still hardcode
-`bg-white` (Sections 5/6/7/8/9). Sections 5-11 not started.
+**Status: COMPLETE.** All 11 sections done and verified as of 2026-08-10 - see
+`vibes/status.md`'s Changelog for full detail (the section-by-section checklist that tracked this
+has been deleted per this file's own retirement instruction, now that nothing remains pending).
+The theme toggle is live site-wide; every chrome component, modal/overlay, shadcn primitive, the
+MDX prose layer, every page-level layout, and `AgentUseCaseMindmap.tsx`'s structural chrome all
+render with glass treatment in both themes (its ~15 data-driven category accent colors are a
+deliberate scope exclusion, not a gap - see Section 9's note in the Changelog). A real Playwright +
+Chromium browser pass (installed mid-session specifically to close out Section 10 properly) caught
+3 categories of real bugs a build-only or static-grep pass had missed: a malformed CSS comment that
+broke dev-mode CSS parsing entirely, several missing Tailwind Typography dark-mode variables that
+left bold table text invisible, and a handful more instances of a fixed-yellow-background paired
+with a reactive text token (inverting to unreadable in dark mode). All fixed and re-verified with a
+second full screenshot pass across light/dark x desktop/mobile.
 
 ---
 

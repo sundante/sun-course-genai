@@ -28,10 +28,10 @@ export function DisclaimerModal() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-glass-scrim backdrop-blur-glass-sm"
       onClick={(e) => { if (e.target === e.currentTarget) dismiss(); }}
     >
-      <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-sun-yellow-bdr overflow-hidden">
+      <div className="relative w-full max-w-lg bg-glass-modal-bg backdrop-blur-glass-md rounded-2xl shadow-glass-lg border border-glass-modal-border overflow-hidden">
         <div className="h-1 w-full bg-sun-yellow" />
 
         <div className="px-8 pt-7 pb-8">
@@ -76,7 +76,7 @@ export function DisclaimerModal() {
 
           <button
             onClick={dismiss}
-            className="w-full bg-sun-yellow hover:bg-sun-yellow/80 text-sun-dark font-semibold py-3 px-6 rounded-xl transition-colors text-sm"
+            className="w-full bg-sun-yellow hover:bg-sun-yellow/80 text-zinc-900 font-semibold py-3 px-6 rounded-xl transition-colors text-sm"
           >
             I&apos;m curious - let&apos;s explore
           </button>
