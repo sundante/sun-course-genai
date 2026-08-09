@@ -1,0 +1,59 @@
+# 08 - Fine-Tuning & PEFT Lab
+
+## What You Will Learn
+
+- The Hugging Face ecosystem: `AutoModelForCausalLM`/`AutoTokenizer`, config objects, chat templates, and the `datasets` library
+- How to load, format, and mask instruction datasets for supervised fine-tuning
+- Hands-on LoRA and QLoRA configuration - rank, alpha, dropout, target modules, 4-bit `bitsandbytes` quantization
+- Merging LoRA adapters into a base model vs serving them separately at inference time
+- Reading a real loss curve to catch overfitting, too-high learning rate, or too-small datasets
+- Building a held-out eval set and benchmarking a fine-tuned model against its base - quality, latency, VRAM, and cost per 1k requests
+- When fine-tuning is the wrong tool and prompting or RAG should win instead
+- Interview-ready answers on the full hands-on fine-tuning workflow
+
+## Chapter Map
+
+| # | File | Topic | Difficulty |
+|---|------|-------|-----------|
+| 1 | [HuggingFace Ecosystem](Notes/01-HuggingFace-Ecosystem.mdx) | `AutoModelForCausalLM`/`AutoTokenizer`, tokenization, chat templates, `datasets`, the Hub | Beginner |
+| 2 | [LoRA & QLoRA Hands-On](Notes/02-LoRA-and-QLoRA-Hands-On.mdx) | LoRA config (rank/alpha/dropout/target modules), QLoRA (NF4, double quant), merging vs serving adapters | Intermediate |
+| 3 | [Instruction Data & Training Runs](Notes/03-Instruction-Data-and-Training-Runs.mdx) | Formatting instruction data, prompt/completion masking, reading loss curves, a hand-written PEFT training loop | Intermediate |
+| 4 | [Benchmarking Base vs Tuned](Notes/04-Benchmarking-Base-vs-Tuned.mdx) | Held-out eval sets, quality delta, measured latency/tokens-per-sec, VRAM and cost-per-1k-requests | Advanced |
+| 5 | [Q&A Review Bank](Notes/05-Interview-QA-Bank.mdx) | 15 Q&A pairs across all topics in this module | All levels |
+
+## Recommended Learning Paths
+
+### Path A: First Fine-Tune, Start to Finish
+1. [HuggingFace Ecosystem](Notes/01-HuggingFace-Ecosystem.mdx) - learn the tools you'll be using
+2. [LoRA & QLoRA Hands-On](Notes/02-LoRA-and-QLoRA-Hands-On.mdx) - understand what you're configuring and why
+3. [Instruction Data & Training Runs](Notes/03-Instruction-Data-and-Training-Runs.mdx) - format your data and run the training loop
+4. [QLoRA Fine-Tune Code Lab](CodeLabs/01-QLoRA-Fine-Tune.mdx) - do it end-to-end on a real small model
+5. [Benchmarking Base vs Tuned](Notes/04-Benchmarking-Base-vs-Tuned.mdx) - prove the fine-tune actually helped
+
+### Path B: Interview Preparation (Accelerated)
+1. [LoRA & QLoRA Hands-On](Notes/02-LoRA-and-QLoRA-Hands-On.mdx) - config parameters and merge-vs-serve questions are very common
+2. [Instruction Data & Training Runs](Notes/03-Instruction-Data-and-Training-Runs.mdx) - loss masking and loss-curve reading come up constantly
+3. [Benchmarking Base vs Tuned](Notes/04-Benchmarking-Base-vs-Tuned.mdx) - "how do you know it worked" is a favorite follow-up question
+4. [Q&A Review Bank](Notes/05-Interview-QA-Bank.mdx) - drill all 15 questions
+
+### Path C: Production Engineering (Advanced)
+1. [LoRA & QLoRA Hands-On](Notes/02-LoRA-and-QLoRA-Hands-On.mdx) - merging adapters vs adapter-swapping at serve time
+2. [Benchmarking Base vs Tuned](Notes/04-Benchmarking-Base-vs-Tuned.mdx) - cost-per-1k-requests and when fine-tuning is the wrong call
+3. [QLoRA Fine-Tune Code Lab](CodeLabs/01-QLoRA-Fine-Tune.mdx) - `train_qlora.py` + `benchmark.py` as a reusable template
+
+## Resources
+
+- [Q&A Review Bank](Notes/05-Interview-QA-Bank.mdx) - 15 Q&A pairs in this module
+- [Cross-topic Interview Questions](../Interview-Questions/07-Fine-Tuning-Lab.mdx)
+- [QLoRA Fine-Tune Code Lab](CodeLabs/01-QLoRA-Fine-Tune.mdx) - hands-on PEFT + QLoRA fine-tune with a base-vs-tuned benchmark
+
+## Key Cross-References
+
+- LoRA math (ΔW = BA, rank/alpha derivation) and the DPO/RLHF taxonomy → [01-LLM-Models: Fine-Tuning](../01-LLM-Models/Notes/07-Fine-Tuning.mdx) - this module builds hands-on tooling on top of those foundations, it does not re-derive the math
+- VRAM estimation and quantization formats (NF4, INT8, AWQ) → [01-LLM-Models: GPU & Hardware](../01-LLM-Models/Notes/08-GPU-and-Hardware.mdx)
+- The raw-PyTorch training loop this module's hand-written PEFT loop extends → [PyTorch Fundamentals: Training Loop From Scratch](../11-Prog-Langs/PyTorch/Notes/03-Training-Loop-From-Scratch.mdx)
+- Checkpointing and mixed precision used during training runs → [PyTorch Fundamentals: Checkpointing & Mixed Precision](../11-Prog-Langs/PyTorch/Notes/04-Checkpointing-and-Mixed-Precision.mdx)
+
+## Next Topic
+
+09 - Serving & Inference (coming soon)

@@ -5,21 +5,184 @@
 
 @plugin "@tailwindcss/typography";
 
+/* ------------------------------------------------------------------------ */
+/* Runtime color/glass tokens.                                              */
+/* These are plain CSS custom properties (not inside @theme) so that the    */
+/* `.dark` class can swap their values at runtime. The @theme inline block  */
+/* below aliases each Tailwind design token to one of these via var(), the  */
+/* same indirection already used for --font-sans/--font-mono - this keeps   */
+/* generated utilities (bg-sun-yellow, shadow-glass-md, ...) reactive to    */
+/* theme changes instead of baking a static light-mode value at build time. */
+/* ------------------------------------------------------------------------ */
+:root {
+  --sun-yellow:      #FFDA47;
+  --sun-yellow-dk:   #E8C200;
+  --sun-yellow-dim:  rgba(255, 218, 71, 0.14);
+  --sun-yellow-bdr:  rgba(255, 218, 71, 0.38);
+  --sun-dark:        #111111;
+  --sun-muted:       #666666;
+  --sun-amber:       #7a6000;
+  --sun-bg:          #fafaf9;
+  --sun-surface:     #ffffff;
+  --sun-coral:       #D97757;
+  --sun-coral-dim:   rgba(217, 119, 87, 0.10);
+  --sun-coral-bdr:   rgba(217, 119, 87, 0.28);
+  --sun-coral-text:  #a84f2f;
+  --sun-wip:         #9ca3af;
+
+  /* Glass surfaces - light mode: translucent white over content, blurred */
+  --glass-panel-bg:     rgba(255, 255, 255, 0.55);
+  --glass-panel-border: rgba(255, 255, 255, 0.35);
+  --glass-nav-bg:       rgba(255, 255, 255, 0.65);
+  --glass-nav-border:   rgba(17, 17, 17, 0.06);
+  --glass-card-bg:      rgba(255, 255, 255, 0.50);
+  --glass-card-border:  rgba(17, 17, 17, 0.08);
+  --glass-modal-bg:     rgba(255, 255, 255, 0.75);
+  --glass-modal-border: rgba(255, 255, 255, 0.45);
+  --glass-scrim:        rgba(17, 17, 17, 0.35);
+
+  --glass-shadow-sm: 0 1px 2px rgba(17, 17, 17, 0.04), 0 1px 1px rgba(17, 17, 17, 0.03);
+  --glass-shadow-md: 0 8px 24px rgba(17, 17, 17, 0.08), 0 2px 6px rgba(17, 17, 17, 0.04);
+  --glass-shadow-lg: 0 16px 48px rgba(17, 17, 17, 0.12), 0 4px 12px rgba(17, 17, 17, 0.06);
+  --glass-glow-yellow: 0 0 0 1px var(--sun-yellow-bdr), 0 0 24px rgba(255, 218, 71, 0.25);
+
+  --shadcn-background: 0 0% 100%;
+  --shadcn-foreground: 0 0% 7%;
+  --shadcn-card: 0 0% 100%;
+  --shadcn-card-foreground: 0 0% 7%;
+  --shadcn-popover: 0 0% 100%;
+  --shadcn-popover-foreground: 0 0% 7%;
+  --shadcn-primary: 47 100% 64%;
+  --shadcn-primary-foreground: 0 0% 7%;
+  --shadcn-secondary: 0 0% 96%;
+  --shadcn-secondary-foreground: 0 0% 7%;
+  --shadcn-muted: 0 0% 96%;
+  --shadcn-muted-foreground: 0 0% 40%;
+  --shadcn-accent: 0 0% 96%;
+  --shadcn-accent-foreground: 0 0% 7%;
+  --shadcn-destructive: 0 84% 60%;
+  --shadcn-destructive-foreground: 0 0% 98%;
+  --shadcn-border: 0 0% 90%;
+  --shadcn-input: 0 0% 90%;
+  --shadcn-ring: 47 100% 64%;
+}
+
+.dark {
+  --sun-yellow:      #FFDA47;
+  --sun-yellow-dk:   #F5CC33;
+  --sun-yellow-dim:  rgba(255, 218, 71, 0.10);
+  --sun-yellow-bdr:  rgba(255, 218, 71, 0.30);
+  --sun-dark:        #f2f2f0;
+  --sun-muted:       #a3a3a3;
+  --sun-amber:       #ffd666;
+  --sun-bg:          #0e0e10;
+  --sun-surface:     #18181b;
+  --sun-coral:       #e08b6c;
+  --sun-coral-dim:   rgba(224, 139, 108, 0.14);
+  --sun-coral-bdr:   rgba(224, 139, 108, 0.32);
+  --sun-coral-text:  #eda98a;
+  --sun-wip:         #8b8f99;
+
+  /* Glass surfaces - dark mode: translucent dark over content, blurred */
+  --glass-panel-bg:     rgba(24, 24, 27, 0.55);
+  --glass-panel-border: rgba(255, 255, 255, 0.08);
+  --glass-nav-bg:       rgba(24, 24, 27, 0.70);
+  --glass-nav-border:   rgba(255, 255, 255, 0.08);
+  --glass-card-bg:      rgba(24, 24, 27, 0.50);
+  --glass-card-border:  rgba(255, 255, 255, 0.10);
+  --glass-modal-bg:     rgba(24, 24, 27, 0.80);
+  --glass-modal-border: rgba(255, 255, 255, 0.12);
+  --glass-scrim:        rgba(0, 0, 0, 0.55);
+
+  --glass-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.30), 0 1px 1px rgba(0, 0, 0, 0.20);
+  --glass-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.40), 0 2px 6px rgba(0, 0, 0, 0.25);
+  --glass-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.50), 0 4px 12px rgba(0, 0, 0, 0.30);
+  --glass-glow-yellow: 0 0 0 1px var(--sun-yellow-bdr), 0 0 28px rgba(255, 218, 71, 0.18);
+
+  --shadcn-background: 0 0% 7%;
+  --shadcn-foreground: 0 0% 96%;
+  --shadcn-card: 0 0% 10%;
+  --shadcn-card-foreground: 0 0% 96%;
+  --shadcn-popover: 0 0% 10%;
+  --shadcn-popover-foreground: 0 0% 96%;
+  --shadcn-primary: 47 100% 64%;
+  --shadcn-primary-foreground: 0 0% 7%;
+  --shadcn-secondary: 0 0% 16%;
+  --shadcn-secondary-foreground: 0 0% 96%;
+  --shadcn-muted: 0 0% 16%;
+  --shadcn-muted-foreground: 0 0% 65%;
+  --shadcn-accent: 0 0% 16%;
+  --shadcn-accent-foreground: 0 0% 96%;
+  --shadcn-destructive: 0 70% 55%;
+  --shadcn-destructive-foreground: 0 0% 98%;
+  --shadcn-border: 0 0% 20%;
+  --shadcn-input: 0 0% 20%;
+  --shadcn-ring: 47 100% 64%;
+}
+
 @theme inline {
-  --color-sun-yellow:     #FFDA47;
-  --color-sun-yellow-dk:  #E8C200;
-  --color-sun-yellow-dim: rgba(255, 218, 71, 0.14);
-  --color-sun-yellow-bdr: rgba(255, 218, 71, 0.38);
-  --color-sun-dark:       #111111;
-  --color-sun-muted:      #666666;
-  --color-sun-amber:      #7a6000;
-  --color-sun-bg:         #fafaf9;
-  --color-sun-surface:    #ffffff;
-  --color-sun-coral:      #D97757;
-  --color-sun-coral-dim:  rgba(217, 119, 87, 0.10);
-  --color-sun-coral-bdr:  rgba(217, 119, 87, 0.28);
-  --color-sun-coral-text: #a84f2f;
-  --color-sun-wip:        #9ca3af;
+  --color-sun-yellow:      var(--sun-yellow);
+  --color-sun-yellow-dk:   var(--sun-yellow-dk);
+  --color-sun-yellow-dim:  var(--sun-yellow-dim);
+  --color-sun-yellow-bdr:  var(--sun-yellow-bdr);
+  --color-sun-dark:        var(--sun-dark);
+  --color-sun-muted:       var(--sun-muted);
+  --color-sun-amber:       var(--sun-amber);
+  --color-sun-bg:          var(--sun-bg);
+  --color-sun-surface:     var(--sun-surface);
+  --color-sun-coral:       var(--sun-coral);
+  --color-sun-coral-dim:   var(--sun-coral-dim);
+  --color-sun-coral-bdr:   var(--sun-coral-bdr);
+  --color-sun-coral-text:  var(--sun-coral-text);
+  --color-sun-wip:         var(--sun-wip);
+
+  /* Glass surface tokens - per elevation: nav (header/sidebar), panel      */
+  /* (generic translucent block), card (content cards), modal (overlays)   */
+  --color-glass-panel-bg:     var(--glass-panel-bg);
+  --color-glass-panel-border: var(--glass-panel-border);
+  --color-glass-nav-bg:       var(--glass-nav-bg);
+  --color-glass-nav-border:   var(--glass-nav-border);
+  --color-glass-card-bg:      var(--glass-card-bg);
+  --color-glass-card-border:  var(--glass-card-border);
+  --color-glass-modal-bg:     var(--glass-modal-bg);
+  --color-glass-modal-border: var(--glass-modal-border);
+  --color-glass-scrim:        var(--glass-scrim);
+
+  /* shadow-glass-sm/md/lg + shadow-glass-glow utilities */
+  --shadow-glass-sm:   var(--glass-shadow-sm);
+  --shadow-glass-md:   var(--glass-shadow-md);
+  --shadow-glass-lg:   var(--glass-shadow-lg);
+  --shadow-glass-glow: var(--glass-glow-yellow);
+
+  /* blur-glass-sm/md/lg + backdrop-blur-glass-sm/md/lg utilities */
+  --blur-glass-sm: 8px;
+  --blur-glass-md: 16px;
+  --blur-glass-lg: 28px;
+
+  /* shadcn/ui tokens (bg-background, border-input, ring-ring, ...).        */
+  /* These were previously only declared as raw HSL custom properties with  */
+  /* no @theme mapping, so Tailwind v4 silently dropped every bg-background */
+  /* /border-input/ring-ring utility used in src/components/ui/*.tsx - they */
+  /* now resolve correctly, and pick up dark-mode pairs via --shadcn-*.     */
+  --color-background:             hsl(var(--shadcn-background));
+  --color-foreground:             hsl(var(--shadcn-foreground));
+  --color-card:                   hsl(var(--shadcn-card));
+  --color-card-foreground:        hsl(var(--shadcn-card-foreground));
+  --color-popover:                hsl(var(--shadcn-popover));
+  --color-popover-foreground:     hsl(var(--shadcn-popover-foreground));
+  --color-primary:                hsl(var(--shadcn-primary));
+  --color-primary-foreground:     hsl(var(--shadcn-primary-foreground));
+  --color-secondary:              hsl(var(--shadcn-secondary));
+  --color-secondary-foreground:   hsl(var(--shadcn-secondary-foreground));
+  --color-muted:                  hsl(var(--shadcn-muted));
+  --color-muted-foreground:       hsl(var(--shadcn-muted-foreground));
+  --color-accent:                 hsl(var(--shadcn-accent));
+  --color-accent-foreground:      hsl(var(--shadcn-accent-foreground));
+  --color-destructive:            hsl(var(--shadcn-destructive));
+  --color-destructive-foreground: hsl(var(--shadcn-destructive-foreground));
+  --color-border:                 hsl(var(--shadcn-border));
+  --color-input:                  hsl(var(--shadcn-input));
+  --color-ring:                   hsl(var(--shadcn-ring));
 
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
@@ -32,8 +195,8 @@
 
 body {
   font-family: var(--font-sans), system-ui, sans-serif;
-  background: #fafaf9;
-  color: #1c1c1c;
+  background: var(--sun-bg);
+  color: var(--sun-dark);
 }
 
 /* Prose / course content overrides */
@@ -93,26 +256,9 @@ body[data-audience="biz"]  .audience-tech { display: none; }
   margin-bottom: 1rem;
 }
 
-/* shadcn/ui CSS variables */
+/* shadcn/ui radius - plain runtime var; the default rounded-* scale (used  */
+/* throughout src/components/ui/*.tsx) is Tailwind's built-in scale, not    */
+/* derived from this value. Kept for components that reference it directly.*/
 :root {
   --radius: 0.5rem;
-  --background: 0 0% 100%;
-  --foreground: 0 0% 7%;
-  --card: 0 0% 100%;
-  --card-foreground: 0 0% 7%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 7%;
-  --primary: 47 100% 64%;
-  --primary-foreground: 0 0% 7%;
-  --secondary: 0 0% 96%;
-  --secondary-foreground: 0 0% 7%;
-  --muted: 0 0% 96%;
-  --muted-foreground: 0 0% 40%;
-  --accent: 0 0% 96%;
-  --accent-foreground: 0 0% 7%;
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 0 0% 90%;
-  --input: 0 0% 90%;
-  --ring: 47 100% 64%;
 }

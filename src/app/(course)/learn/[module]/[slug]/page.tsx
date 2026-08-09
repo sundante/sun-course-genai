@@ -90,7 +90,7 @@ export default async function CoursePage({ params }: Props) {
       </div>
 
       {/* Sticky prev/next + disclaimer footer */}
-      <div className="sticky bottom-0 z-10 bg-sun-bg border-t-2 border-sun-yellow">
+      <div className="sticky bottom-0 z-10 bg-glass-nav-bg backdrop-blur-glass-md border-t-2 border-sun-yellow">
         <div className="px-6 lg:px-8 py-3">
           <PageNav prev={prev} next={next} className="flex justify-between" />
         </div>

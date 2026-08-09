@@ -1,0 +1,88 @@
+# Raw PyTorch Classifier
+
+A small CNN trained end-to-end on MNIST digit classification, written entirely in raw PyTorch mechanics - no `Trainer` abstraction. This is the hands-on counterpart to the [Notes](../../Notes) files: every concept (custom Dataset/DataLoader usage, the hand-written training loop, checkpointing, mixed precision) appears here as real, runnable code.
+
+## Architecture
+
+```mermaid
+flowchart TD
+    subgraph Data["Data Pipeline"]
+        direction LR
+        Raw["MNIST raw files"] --> TDS["torchvision.datasets.MNIST\n(train=True/False)"]
+        TDS --> Tr["transforms:\nToTensor + Normalize"]
+        Tr --> DLd["DataLoader\nbatch_size=64, shuffle"]
+    end
+    subgraph Model["SimpleCNN"]
+        direction LR
+        C1["Conv2d(1,16,3) + ReLU"] --> P1["MaxPool2d(2)"]
+        P1 --> C2["Conv2d(16,32,3) + ReLU"]
+        C2 --> P2["MaxPool2d(2)"]
+        P2 --> Fl["Flatten"]
+        Fl --> FC["Linear → 10 classes"]
+    end
+    subgraph Loop["Training Loop"]
+        direction LR
+        Fwd["forward + autocast"] --> Loss["CrossEntropyLoss"]
+        Loss --> Bwd["GradScaler.scale(loss).backward()"]
+        Bwd --> Step["scaler.step(optimizer)\nscaler.update()"]
+    end
+
+    DLd --> Model
+    Model --> Loop
+    Loop -->|every N epochs| CK["Checkpoint saved\n(model + optimizer state_dict)"]
+    Loop -->|after last epoch| Ev["Evaluate on val set\nprint final accuracy"]
+
+    style Raw fill:#d8dfe8,stroke:#b0bac8
+    style TDS fill:#d8dfe8,stroke:#b0bac8
+    style Tr fill:#d8dfe8,stroke:#b0bac8
+    style DLd fill:#e8e0d4,stroke:#c8b89a
+    style C1 fill:#dde4dc,stroke:#b0c4b0
+    style C2 fill:#dde4dc,stroke:#b0c4b0
+    style FC fill:#dde4dc,stroke:#b0c4b0
+    style Fwd fill:#ddd8e4,stroke:#b8b0c8
+    style Loss fill:#ddd8e4,stroke:#b8b0c8
+    style Bwd fill:#ddd8e4,stroke:#b8b0c8
+    style Step fill:#ddd8e4,stroke:#b8b0c8
+    style CK fill:#e8e0d4,stroke:#c8b89a
+    style Ev fill:#e8e0d4,stroke:#c8b89a
+```
+
+## What This Demonstrates
+
+1. **Custom Dataset/DataLoader usage** - `torchvision.datasets.MNIST` wrapped by a standard `DataLoader` with `batch_size`, `shuffle`, and `num_workers` configured explicitly (see [Dataset & DataLoader](../../Notes/02-Dataset-and-DataLoader.mdx))
+2. **A hand-written training loop** - explicit `model.train()`/`model.eval()` switching, `optimizer.zero_grad()` → forward → loss → `backward()` → `optimizer.step()`, with a separate validation pass every epoch (see [Training Loop From Scratch](../../Notes/03-Training-Loop-From-Scratch.mdx))
+3. **Checkpointing** - `model.state_dict()` + `optimizer.state_dict()` saved every N epochs, resumable via `--resume` (see [Checkpointing & Mixed Precision](../../Notes/04-Checkpointing-and-Mixed-Precision.mdx))
+4. **Mixed precision** - `torch.cuda.amp.autocast()` + `GradScaler`, automatically disabled on CPU-only machines so the script still runs correctly without a GPU
+5. **Device-agnostic code** - runs on CPU or GPU without modification (`.to(device)` used consistently)
+
+## Files
+
+| File | Purpose |
+|---|---|
+| `model.py` | `SimpleCNN` - a small 2-conv-layer CNN for 28x28 grayscale digit classification |
+| `train.py` | Full training script: data loading, training loop, checkpointing, mixed precision, final accuracy report |
+| `requirements.txt` | `torch`, `torchvision` |
+
+## Running
+
+```bash
+pip install -r requirements.txt
+python train.py
+```
+
+Optional flags:
+
+```bash
+python train.py --epochs 5 --batch-size 64 --lr 1e-3 --checkpoint-every 2
+python train.py --resume checkpoints/model_epoch2.pt   # resume from a saved checkpoint
+```
+
+On first run, `torchvision` downloads MNIST automatically into `./data`. The script auto-detects a CUDA GPU if available and falls back to CPU otherwise; mixed precision is only enabled when a CUDA GPU is present, since `autocast`/`GradScaler` are only beneficial (and only fully supported) on GPU.
+
+Expected output at the end of a run:
+
+```
+Epoch 5/5 | train_loss=0.0421 val_loss=0.0512 val_acc=0.9843
+Final: train_acc=0.9887 val_acc=0.9843
+Checkpoint saved to checkpoints/model_epoch5.pt
+```

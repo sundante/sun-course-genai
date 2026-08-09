@@ -15,7 +15,7 @@ export function MobileNav({ nav }: Props) {
 
   return (
     <>
-      <div className="lg:hidden flex items-center justify-between px-5 py-3 border-b border-sun-yellow-bdr bg-white">
+      <div className="lg:hidden flex items-center justify-between px-5 py-3 border-b border-sun-yellow-bdr bg-glass-nav-bg backdrop-blur-glass-md">
         <span className="text-sm font-medium text-sun-muted">Contents</span>
         <button
           onClick={() => setOpen(true)}

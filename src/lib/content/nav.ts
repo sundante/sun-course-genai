@@ -12,6 +12,11 @@ const MODULE_SLUG_MAP: Record<string, string> = {
   "MCP": "mcp",
   "AI Agents": "agents",
   "Agentic AI": "agentic-ai",
+  "Fine-Tuning Lab": "fine-tuning-lab",
+  "Serving & Inference": "serving-and-inference",
+  "Production Engineering": "production-engineering",
+  "Platform Breadth": "platform-breadth",
+  "Prog Langs": "prog-langs",
   "Knowledge Check": "knowledge-check",
 };
 
@@ -23,6 +28,11 @@ export const MODULE_DIR_MAP: Record<string, string> = {
   "mcp": "04-MCP",
   "agents": "05-Agents",
   "agentic-ai": "06-Agentic-AI",
+  "fine-tuning-lab": "07-Fine-Tuning-Lab",
+  "serving-and-inference": "08-Serving-and-Inference",
+  "production-engineering": "09-Production-Engineering",
+  "platform-breadth": "10-Platform-Breadth",
+  "prog-langs": "11-Prog-Langs",
   "knowledge-check": "",
 };
 

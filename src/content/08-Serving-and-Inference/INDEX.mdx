@@ -1,0 +1,59 @@
+# 09 - Serving & Inference
+
+## What You Will Learn
+
+- Why vLLM exists and how Paged Attention manages KV-cache memory like an OS manages virtual memory
+- Continuous batching vs static batching, and why it drives the 5-10x throughput jump production serving stacks rely on
+- Inference-time quantization with GPTQ and AWQ - how it differs from training-time NF4/`bitsandbytes` quantization and when to use each
+- The batch size vs concurrency trade-off, tokens/sec vs latency-per-request, and back-of-envelope GPU capacity planning
+- Streaming responses (SSE/chunked), time-to-first-token (TTFT) vs total generation time, and why TTFT dominates perceived latency
+- Serving a real model behind a FastAPI + vLLM endpoint, with streaming and non-streaming responses
+- Load-testing an inference endpoint for tokens/sec, p50/p95 latency, and TTFT under concurrent load
+- Interview-ready answers on the full serving and inference stack
+
+## Chapter Map
+
+| # | File | Topic | Difficulty |
+|---|------|-------|-----------|
+| 1 | [vLLM & Paged Attention](Notes/01-vLLM-and-Paged-Attention.mdx) | Why vLLM exists, PagedAttention KV-cache memory management, continuous vs static batching | Intermediate |
+| 2 | [Quantized Inference](Notes/02-Quantized-Inference.mdx) | GPTQ/AWQ for serving vs NF4/bitsandbytes for training, accuracy/speed tradeoffs, when to quantize | Intermediate |
+| 3 | [Batching, Concurrency & Latency](Notes/03-Batching-Concurrency-and-Latency.mdx) | Batch size vs concurrency, tokens/sec vs per-request latency, capacity planning basics | Intermediate |
+| 4 | [Streaming & TTFT](Notes/04-Streaming-and-TTFT.mdx) | SSE/chunked streaming, TTFT vs total generation time, streaming's interaction with batching | Intermediate |
+| 5 | [Q&A Review Bank](Notes/05-Interview-QA-Bank.mdx) | 15 Q&A pairs across all topics in this module | All levels |
+
+## Recommended Learning Paths
+
+### Path A: First Production Deployment, Start to Finish
+1. [vLLM & Paged Attention](Notes/01-vLLM-and-Paged-Attention.mdx) - understand the serving engine before you configure it
+2. [Batching, Concurrency & Latency](Notes/03-Batching-Concurrency-and-Latency.mdx) - understand the throughput/latency trade-off you're tuning for
+3. [Streaming & TTFT](Notes/04-Streaming-and-TTFT.mdx) - decide whether your endpoint needs to stream
+4. [FastAPI + vLLM Endpoint Code Lab](CodeLabs/01-FastAPI-vLLM-Endpoint.mdx) - serve a real model end-to-end
+5. [Quantized Inference](Notes/02-Quantized-Inference.mdx) - shrink the deployment footprint once it works
+
+### Path B: Interview Preparation (Accelerated)
+1. [vLLM & Paged Attention](Notes/01-vLLM-and-Paged-Attention.mdx) - PagedAttention and continuous batching are asked constantly
+2. [Batching, Concurrency & Latency](Notes/03-Batching-Concurrency-and-Latency.mdx) - capacity planning math comes up in system design rounds
+3. [Streaming & TTFT](Notes/04-Streaming-and-TTFT.mdx) - TTFT vs throughput is a favorite follow-up
+4. [Q&A Review Bank](Notes/05-Interview-QA-Bank.mdx) - drill all 15 questions
+
+### Path C: Cost & Capacity Engineering (Advanced)
+1. [Quantized Inference](Notes/02-Quantized-Inference.mdx) - GPTQ/AWQ tradeoffs for shrinking GPU footprint
+2. [Batching, Concurrency & Latency](Notes/03-Batching-Concurrency-and-Latency.mdx) - how many concurrent users a given GPU can serve
+3. [FastAPI + vLLM Endpoint Code Lab](CodeLabs/01-FastAPI-vLLM-Endpoint.mdx) - `load_test.py` as a reusable capacity-planning template
+
+## Resources
+
+- [Q&A Review Bank](Notes/05-Interview-QA-Bank.mdx) - 15 Q&A pairs in this module
+- [Cross-topic Interview Questions](../Interview-Questions/08-Serving-and-Inference.mdx)
+- [FastAPI + vLLM Endpoint Code Lab](CodeLabs/01-FastAPI-vLLM-Endpoint.mdx) - hands-on streaming/non-streaming vLLM endpoint with a concurrent load test
+
+## Key Cross-References
+
+- KV-cache fundamentals, GQA/MQA, and the theory behind Paged Attention → [01-LLM-Models: KV Cache & Inference](../01-LLM-Models/Notes/05-KV-Cache-and-Inference-Optimization.mdx) - this module builds a hands-on serving stack on top of those foundations, it does not re-derive the memory math
+- Conceptual overview of serving frameworks, latency budgets, and caching hierarchy → [01-LLM-Models: Production Deployment](../01-LLM-Models/Notes/10-Production-Deployment.mdx) - this module goes deeper hands-on on the vLLM/FastAPI path specifically
+- NF4/`bitsandbytes` training-time quantization and merge-vs-serve adapter decisions → [07-Fine-Tuning-Lab: LoRA & QLoRA Hands-On](../07-Fine-Tuning-Lab/Notes/02-LoRA-and-QLoRA-Hands-On.mdx) - contrast against this module's inference-time GPTQ/AWQ quantization
+- VRAM estimation and quantization formats (NF4, INT8, AWQ) → [01-LLM-Models: GPU & Hardware](../01-LLM-Models/Notes/08-GPU-and-Hardware.mdx)
+
+## Next Topic
+
+10 - Production Engineering (coming soon)

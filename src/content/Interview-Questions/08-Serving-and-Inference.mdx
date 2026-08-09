@@ -1,0 +1,51 @@
+# Concept Review - Serving & Inference
+
+## Serving Engine Questions
+
+**Q: Your team is currently serving a fine-tuned 7B model with a plain `transformers.generate()` loop behind a Flask endpoint, and latency under load is unacceptable. What's the first architectural change you'd recommend, and why?**
+A: Move to a dedicated serving engine like vLLM before touching anything else. A hand-rolled `generate()` loop reserves KV-cache memory contiguously per request (60-80% wasted to fragmentation) and processes static batches that leave the GPU idle whenever any request finishes early - both of these are structural, not tunable-away, problems that a purpose-built engine with Paged Attention and continuous batching solves directly, typically a 2-4x throughput jump before any other optimization.
+
+**Q: A vLLM server's `gpu_memory_utilization` is set very conservatively at 0.5. What's the practical downside, and would you expect an OOM error to catch this misconfiguration?**
+A: No OOM error - the server will run fine, just with a much smaller KV-cache block pool than the GPU could actually support, meaning fewer concurrent sequences can be served before requests start queuing. This is a silent capacity ceiling, not a crash, which is exactly why it's worth explicitly checking rather than assuming a default is well-tuned for your hardware.
+
+**Q: How does vLLM's automatic prefix caching change the cost of a chatbot with a long, mostly-static system prompt?**
+A: Without prefix caching, every request re-runs the full prefill compute for the system prompt from scratch. With prefix caching, the KV-cache blocks for that shared prefix are computed once and reused (via content-addressed blocks with copy-on-write) across every request sharing it - for a 1000-token system prompt at high request volume, this can eliminate the large majority of that prefill cost and correspondingly reduce TTFT.
+
+---
+
+## Quantization Strategy Questions
+
+**Q: A model was fine-tuned with QLoRA (NF4 quantization). A teammate wants to deploy the exact same quantized checkpoint directly to production for cost reasons. What do you push back on?**
+A: The NF4/`bitsandbytes` format is built for training-time memory reduction with dequant-on-the-fly kernels, not for serving throughput - it won't get the benefit of specialized fast INT4 inference kernels that GPTQ/AWQ formats use. The better path is merging the LoRA adapter into a full-precision model first, then running a separate GPTQ or AWQ calibration pass targeting the serving stack specifically.
+
+**Q: Your team is deciding between GPTQ and AWQ for quantizing a model for serving, and accuracy retention at INT4 is the top priority. Which would you lean toward, and why?**
+A: AWQ, generally - it identifies and preserves the small subset of weight channels that matter most based on activation magnitude via per-channel scaling, rather than uniformly minimizing per-layer reconstruction error the way GPTQ does. In practice this tends to retain accuracy better at equal bit-width, though the right answer is always to validate both against your own held-out eval set for your specific task rather than trusting general benchmarks.
+
+**Q: A product feature does structured JSON extraction from documents, and someone proposes INT4 quantization to cut GPU costs. What risk should be flagged before approving it?**
+A: Structured/precision-sensitive tasks are more likely to be affected by the accuracy delta INT4 quantization introduces than open-ended generation tasks are - a small per-token error rate can break strict JSON parsing or extraction correctness in ways that are more consequential than a slightly awkward sentence would be in a chat response. The recommendation is to benchmark INT4 specifically against this task's own eval set (not a generic benchmark) before approving, and consider INT8 as a middle ground if INT4 shows meaningful degradation.
+
+---
+
+## Capacity and Latency Questions
+
+**Q: A load test shows aggregate throughput still rising at concurrency=150, but you're told to recommend a safe concurrency limit for a customer-facing chat feature with a strict latency SLO. What do you report, and why not the concurrency=150 figure?**
+A: Report the concurrency level where per-request latency (or per-request tokens/sec) last satisfied the SLO, with a safety margin - not the point where aggregate throughput is still climbing. Aggregate throughput continuing to rise doesn't mean individual users are having a good experience; it can rise even as each user's response gets noticeably slower, which is exactly what an SLO is meant to catch.
+
+**Q: Given a fixed GPU budget, would you generally prefer scaling one server's batch size further or adding a second GPU replica, once you're past the point where a bigger batch starts degrading per-request latency?**
+A: Add a replica. Past a batch's saturation point, further increasing batch size on one GPU adds queuing/decode latency without proportional throughput gain - horizontal scaling (more replicas behind a load balancer) grows total capacity while keeping each replica's per-request latency within the SLO that made you stop increasing batch size in the first place.
+
+**Q: A teammate benchmarks TTFT with a single sequential request repeated 100 times and reports a low average. Why might this number be misleading for capacity planning?**
+A: A single-request, no-contention benchmark misses how chunked prefill scheduling behaves under real concurrent load - when the server is busy with other in-flight decodes, a new request's prefill can be split across multiple scheduling steps, increasing its TTFT. The benchmark should be run at realistic concurrency levels, not sequentially one request at a time, to reflect what production traffic will actually experience.
+
+---
+
+## Streaming Questions
+
+**Q: Product wants "the response to feel instant" for a user-facing assistant. Does switching to streaming responses reduce the total time the model takes to generate the full answer?**
+A: No - total generation time is essentially unchanged. What streaming changes is perceived latency: the user sees the first token (TTFT) almost immediately and text continues appearing incrementally, rather than waiting for the entire response to complete before anything is shown. For "feels instant," TTFT is the number to optimize, not total generation time.
+
+**Q: A monitoring dashboard tracks only average total response time, and it's well within SLO, yet users complain the app feels slow. What's most likely missing from the dashboard?**
+A: TTFT as its own tracked metric, and probably its p95/p99 tail rather than just an average. A request can have perfectly fine total generation time but a long delay before the first token appears, which is what drives the "feels slow" perception - and a small number of high-TTFT requests can be invisible in an average while still shaping user sentiment.
+
+**Q: How does a long, shared system prompt affect TTFT differently than it affects total generation time, and what's the standard mitigation?**
+A: It inflates TTFT directly, since TTFT includes prefill time and prefill time scales with prompt length - but it has no direct effect on total generation time beyond that same fixed prefill cost being paid once. The standard mitigation is prefix caching, which computes the shared prefix's KV cache once and reuses it across requests, removing that prefill cost from TTFT for every subsequent request sharing the prefix.

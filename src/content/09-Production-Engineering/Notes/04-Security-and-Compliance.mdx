@@ -1,0 +1,102 @@
+# Security and Compliance
+
+<div class="audience-biz" markdown="1">
+
+Deploying a GenAI system that touches sensitive data isn't just an engineering problem - it's an audit problem waiting to happen. Every credential, log line, and stored prompt is a potential exposure. The controls in this note are what a regulated review (HIPAA, SOC 2, an internal security team) actually checks for.
+
+</div>
+
+<div class="audience-tech" markdown="1">
+
+Security and compliance for AI systems layers standard application-security controls (IAM, secrets management, scanning) with AI-specific exposure points that don't exist in a normal CRUD app: prompts and completions routinely contain sensitive data and get logged, traced, and stored in eval datasets without anyone treating that pipeline as a compliance boundary.
+
+</div>
+
+---
+
+## IAM and Least Privilege
+
+<div class="audience-biz" markdown="1">
+
+Every piece of the system - the model service, the data pipeline, the eval job - should only be able to touch exactly what it needs, nothing more. If a component is compromised, least privilege limits the blast radius.
+
+</div>
+
+<div class="audience-tech" markdown="1">
+
+Scope service accounts/IAM roles per component: the inference service needs read access to model weights, not write access to the training data bucket; the eval pipeline needs read access to the eval dataset, not access to production credentials. Avoid one shared "AI service account" with broad permissions - it turns any single compromised component into full-system access.
+
+</div>
+
+---
+
+## Secrets Management
+
+<div class="audience-biz" markdown="1">
+
+API keys and credentials should never appear in a prompt, a log file, or a config file checked into source control. This sounds obvious, but it's one of the most common real-world leaks in GenAI systems specifically, because prompts and logs get captured so liberally for debugging and tracing.
+
+</div>
+
+<div class="audience-tech" markdown="1">
+
+Use a secrets manager (Vault, AWS Secrets Manager, GCP Secret Manager) injected as environment variables or mounted volumes at runtime - never baked into a container image or committed to a repo. Specific to LLM systems: never let a secret end up inside a prompt template (a tool-calling agent that's told an API key so it can "use" it is a leak waiting to be logged), and scrub logging/tracing middleware so it can't accidentally capture secrets that flow through request headers.
+
+</div>
+
+---
+
+## PHI/PII in Traces and Eval Datasets
+
+<div class="audience-biz" markdown="1">
+
+Tracing and evaluation tools are built to capture everything - every prompt, every response - because that's useful for debugging. In a healthcare or otherwise regulated context, that "everything" often includes protected health information or personal data, which turns your debugging tool into a compliance liability if it isn't handled deliberately.
+
+</div>
+
+<div class="audience-tech" markdown="1">
+
+Redact or tokenize PHI/PII before it reaches a tracing backend (Langfuse/LangSmith - see [Evaluation & Observability](../../06-Agentic-AI/Notes/11-Evaluation-and-Observability.mdx)) or an eval dataset. This is exactly the exposure surfaced in this course's own [Prior Authorization](../../06-Agentic-AI/SystemDesigns/prior-authorization.mdx) and [Smart Diagnostic Assistant](../../06-Agentic-AI/SystemDesigns/smart-diagnostic-assistant-interview-answer-1.mdx) system designs - any component that logs model input/output by default needs an explicit redaction step in front of it before it touches PHI, not an assumption that "it's just for debugging so it's fine."
+
+</div>
+
+---
+
+## Pipeline Scanning and HIPAA Safeguards
+
+<div class="audience-biz" markdown="1">
+
+Two more checks round this out: automated scanning that catches known vulnerabilities before they ship, and - for healthcare specifically - naming the exact regulatory safeguards you've implemented, not just gesturing at "HIPAA compliance" in the abstract.
+
+</div>
+
+<div class="audience-tech" markdown="1">
+
+**Pipeline scanning:** SAST (static analysis on the codebase) and dependency scanning (known-CVE checks on third-party packages, including ML-specific ones like `transformers`/`torch`) run in CI, blocking merge on high-severity findings.
+
+**HIPAA technical safeguards, named precisely** (45 CFR §164.312):
+- **Access control** - unique user identification, automatic logoff, encryption/decryption of PHI at rest
+- **Audit controls** - hardware/software mechanisms that record and examine activity in systems containing PHI
+- **Integrity controls** - mechanisms to confirm PHI hasn't been improperly altered or destroyed
+- **Transmission security** - encryption in transit (TLS) for PHI moving across a network
+
+Audit logging in particular needs to answer, for any PHI access: who accessed it, when, and why - sufficient to satisfy a regulator's after-the-fact review, not just an engineer's after-the-fact debugging session.
+
+</div>
+
+---
+
+## Study Notes
+
+**Must-know for interviews:**
+- Least privilege means scoping IAM per component, not one shared broad-access service account
+- Secrets never belong in a prompt, log, or committed config - and prompt templates are an easy-to-miss leak vector
+- Tracing/eval tooling captures everything by default - PHI/PII redaction has to be an explicit step, not an afterthought
+- HIPAA's technical safeguards are four named things: access control, audit controls, integrity controls, transmission security - naming them precisely reads as far more credible than "we're HIPAA compliant"
+- SAST + dependency scanning belong in CI, blocking merge on high-severity findings
+
+**Quick recall Q&A:**
+- *Why is a shared "AI service account" with broad permissions risky?* It turns a compromise of any single component into full-system access, defeating the point of scoping permissions at all.
+- *Why do tracing tools pose a specific compliance risk for LLM systems that they don't for typical apps?* They're designed to capture full request/response content by default for debugging, and in an LLM system that content routinely includes the sensitive data users typed into the prompt.
+- *What are HIPAA's four technical safeguards?* Access control, audit controls, integrity controls, and transmission security (45 CFR §164.312).
+- *What should trigger a CI pipeline to block a merge, from a security standpoint?* A high-severity finding from SAST (code-level vulnerability) or dependency scanning (known-CVE in a third-party package).

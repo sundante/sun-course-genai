@@ -1,0 +1,74 @@
+# Platform Comparison Table
+
+<div class="audience-biz" markdown="1">
+
+If you know one cloud's AI stack well, you already know most of the others - the concepts repeat, only the names change. This page is the cheat sheet: the same capability, named across Vertex AI (GCP), Bedrock (AWS), and Azure AI Foundry.
+
+</div>
+
+<div class="audience-tech" markdown="1">
+
+Useful in two situations: converting existing GCP-stack experience into credible AWS/Azure vocabulary for an interview, and reasoning about a multi-cloud or migration architecture where the underlying capability is the same but the API/product name isn't.
+
+</div>
+
+---
+
+## Model Access, RAG, and Guardrails
+
+| Capability | GCP (Vertex AI) | AWS (Bedrock) | Azure (AI Foundry) |
+|---|---|---|---|
+| Unified model invocation | Vertex AI model endpoints | Converse / ConverseStream API | Azure AI Foundry model deployments |
+| Managed RAG | RAG Engine | Knowledge Bases | Azure AI Search integration |
+| Safety/content filtering | Vertex AI Guardrails / Safety filters | Guardrails for Bedrock | Azure AI Content Safety |
+| Managed agent runtime | Agent Builder / Vertex AI Agents | AgentCore | Azure AI Foundry Agent Service |
+| Model evaluation | Vertex AI Evaluation | Bedrock Model Evaluation | Azure AI Foundry Evaluations |
+
+## Data Platform
+
+| Capability | GCP | AWS | Azure |
+|---|---|---|---|
+| Data warehouse | BigQuery | Redshift | Fabric Warehouse / Synapse |
+| Unified lakehouse layer | BigLake | Lake Formation | OneLake (Fabric) |
+| Managed relational DB | Cloud SQL | RDS | Azure SQL Database |
+| Globally distributed NoSQL | Spanner / Firestore | DynamoDB | Cosmos DB |
+| Managed Spark platform | Dataproc | EMR | Azure Databricks / Synapse Spark |
+
+## MLOps
+
+| Capability | GCP | AWS | Azure |
+|---|---|---|---|
+| Model registry | Vertex AI Model Registry | SageMaker Model Registry (or MLflow on Databricks) | Azure ML Model Registry |
+| Experiment tracking | Vertex AI Experiments | SageMaker Experiments (or MLflow) | Azure ML / MLflow-native in Fabric |
+| Pipeline orchestration | Vertex AI Pipelines | SageMaker Pipelines | Azure ML Pipelines |
+
+---
+
+## How to Use This Table in an Interview
+
+<div class="audience-biz" markdown="1">
+
+Don't just recite the table - use it to show you understand *why* the concepts map, not just that they do. "Bedrock's Knowledge Bases and Vertex AI's RAG Engine solve the same retrieval problem - managed chunking, embedding, and indexing" is a stronger answer than naming both products with no connective explanation.
+
+</div>
+
+<div class="audience-tech" markdown="1">
+
+The strongest framing in a platform-breadth interview question is architectural, not lexical: name the capability first (e.g. "managed RAG"), then the products across clouds, then one concrete difference that actually matters (e.g. Bedrock Knowledge Bases defaults to a managed OpenSearch Serverless vector store while Vertex AI RAG Engine defaults to a different backing index - both are swappable, but the defaults differ). This demonstrates transferable understanding rather than memorized vocabulary.
+
+</div>
+
+---
+
+## Study Notes
+
+**Must-know for interviews:**
+- Managed RAG: RAG Engine (GCP) / Knowledge Bases (AWS) / Azure AI Search integration (Azure) - same problem, different defaults
+- Data warehouse: BigQuery / Redshift / Fabric Warehouse - Fabric's OneLake is architecturally distinct (single logical storage layer) from BigQuery/Redshift's more siloed models
+- Globally distributed NoSQL: Spanner/Firestore / DynamoDB / Cosmos DB - all viable RAG vector stores via native vector search extensions
+- The interview-winning move is naming the capability and one real architectural difference, not just reciting product names
+
+**Quick recall Q&A:**
+- *What's the AWS equivalent of Vertex AI's RAG Engine?* Bedrock Knowledge Bases - managed chunking, embedding, and retrieval.
+- *What's the Azure equivalent of BigQuery?* Microsoft Fabric's Warehouse, built on the OneLake unified storage layer - architecturally different from BigQuery in that all Fabric workload types share one logical storage layer.
+- *Which AWS and Azure services are the closest match to Google Spanner?* DynamoDB (AWS) and Cosmos DB (Azure) - both globally distributed, though with different consistency/data-model tradeoffs than Spanner's strong consistency.

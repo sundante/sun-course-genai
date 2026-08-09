@@ -1,0 +1,44 @@
+image:
+  repository: vllm-serving
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount: 2
+
+resources:
+  requests:
+    cpu: "2"
+    memory: "8Gi"
+    nvidia.com/gpu: "1"
+  limits:
+    cpu: "4"
+    memory: "16Gi"
+    # Must equal the request - GPUs are not overcommittable, see
+    # Notes/02-Kubernetes-and-Helm.mdx
+    nvidia.com/gpu: "1"
+
+nodeSelector:
+  cloud.google.com/gke-accelerator: nvidia-tesla-t4
+
+tolerations:
+  - key: "nvidia.com/gpu"
+    operator: "Equal"
+    value: "present"
+    effect: "NoSchedule"
+
+service:
+  type: ClusterIP
+  port: 8000
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  # Requires a custom-metrics pipeline (DCGM exporter + Prometheus Adapter) -
+  # the default HPA only sees CPU/memory, see Notes/02-Kubernetes-and-Helm.mdx
+  targetGPUUtilizationPercentage: 70
+
+rollout:
+  strategy: RollingUpdate
+  maxSurge: 1
+  maxUnavailable: 0
