@@ -31,6 +31,13 @@ const STATS: [string, string][] = [
   ["Free", "Always"],
 ];
 
+const LANDING_NAV = [
+  { href: "#features", label: "Features" },
+  { href: "#path", label: "Path" },
+  { href: "#curriculum", label: "Curriculum" },
+  { href: "#paths", label: "Learning Paths" },
+];
+
 function StarSvg() {
   return (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -45,8 +52,21 @@ export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col bg-sun-bg">
       {/* Header */}
-      <header className="bg-glass-nav-bg backdrop-blur-glass-md border-b border-glass-nav-border px-4 sm:px-6 h-14 flex items-center justify-between gap-3 sticky top-0 z-40 shadow-glass-sm">
-        <span className="font-bold text-sun-dark tracking-tight text-sm">Learn GenAI</span>
+      <header className="bg-white border-b border-sun-yellow px-4 sm:px-6 h-14 flex items-center justify-between gap-3 sticky top-0 z-40">
+        <a href="#top" className="font-bold text-sun-dark tracking-tight text-sm shrink-0">
+          Learn GenAI
+        </a>
+        <nav className="hidden lg:flex items-center gap-5 text-xs font-semibold">
+          {LANDING_NAV.map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              className="text-sun-dark hover:text-sun-amber transition-colors"
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <a
@@ -55,6 +75,13 @@ export default function HomePage() {
             className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold bg-sun-yellow text-zinc-900 hover:bg-sun-yellow-dk rounded-md px-2.5 py-1.5 transition-colors"
           >
             <StarSvg /> Github
+          </a>
+          <a
+            href="https://suryaprakash.sunmintz.com/"
+            target="_blank" rel="noopener noreferrer"
+            className="hidden sm:inline-flex items-center text-xs font-semibold bg-sun-yellow text-zinc-900 hover:bg-sun-yellow-dk rounded-md px-3 py-1.5 transition-colors"
+          >
+            Author
           </a>
           <a
             href="https://sunmintz.com/"
@@ -68,7 +95,7 @@ export default function HomePage() {
 
       {/* Hero - full-width, centered, decorative radial glow behind the
           headline (theme-reactive via --sun-yellow-dim, no fixed colors) */}
-      <section className="relative overflow-hidden px-4 sm:px-6 pt-14 pb-10 sm:pt-20 sm:pb-14">
+      <section id="top" className="relative overflow-hidden px-4 sm:px-6 pt-14 pb-10 sm:pt-20 sm:pb-14 scroll-mt-14">
         <div
           className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[420px]"
           style={{ background: "radial-gradient(circle at 50% 0%, var(--sun-yellow-dim), transparent 65%)" }}
@@ -111,7 +138,7 @@ export default function HomePage() {
       </section>
 
       {/* Feature grid */}
-      <section className="px-4 sm:px-6 pb-12 sm:pb-16">
+      <section id="features" className="px-4 sm:px-6 pb-12 sm:pb-16 scroll-mt-20">
         <div className="max-w-6xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {FEATURES.map((f) => (
             <div
@@ -128,7 +155,7 @@ export default function HomePage() {
 
       {/* Your Path - horizontal stepper connecting the feature grid to the
           curriculum browser below */}
-      <section className="px-4 sm:px-6 pb-12 sm:pb-16">
+      <section id="path" className="px-4 sm:px-6 pb-12 sm:pb-16 scroll-mt-20">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-xs font-bold uppercase tracking-widest text-sun-muted mb-4 text-center">Your Path</h2>
           <div className="relative grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -149,7 +176,7 @@ export default function HomePage() {
       </section>
 
       {/* Curriculum browser */}
-      <section className="px-4 sm:px-6 pb-14 sm:pb-20">
+      <section id="curriculum" className="px-4 sm:px-6 pb-14 sm:pb-20 scroll-mt-20">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-5">
             <h2 className="text-xs font-bold uppercase tracking-widest text-sun-muted mb-2">Curriculum</h2>
@@ -160,7 +187,7 @@ export default function HomePage() {
       </section>
 
       {/* Learning paths */}
-      <section className="px-4 sm:px-6 pb-14 sm:pb-20">
+      <section id="paths" className="px-4 sm:px-6 pb-14 sm:pb-20 scroll-mt-20">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-xs font-bold uppercase tracking-widest text-sun-muted mb-4 text-center">Learning Paths</h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -178,7 +205,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA banner */}
-      <section className="px-4 sm:px-6 pb-14 sm:pb-20">
+      <section id="start" className="px-4 sm:px-6 pb-14 sm:pb-20 scroll-mt-20">
         <div className="max-w-6xl mx-auto rounded-2xl bg-zinc-900 text-white px-6 sm:px-10 py-10 sm:py-12 text-center">
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2">Ready to go from GenAI to Agentic AI?</h2>
           <p className="text-white/70 text-sm sm:text-base max-w-xl mx-auto mb-6">
