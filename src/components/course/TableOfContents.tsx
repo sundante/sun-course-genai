@@ -28,7 +28,7 @@ export function TableOfContents({ toc }: Props) {
   }, [toc]);
 
   return (
-    <div className="sticky top-20 py-3 px-2 overflow-y-auto max-h-[calc(100vh-6rem)] bg-glass-panel-bg backdrop-blur-glass-sm border border-glass-panel-border rounded-lg shadow-glass-sm">
+    <div className="sticky top-20 py-3 px-2 overflow-y-auto max-h-[calc(100vh-6rem)] bg-white border border-sun-yellow rounded-lg">
       <p className="text-xs font-bold uppercase tracking-widest text-sun-muted mb-4 px-1">
         On this page
       </p>

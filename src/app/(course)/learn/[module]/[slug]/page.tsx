@@ -62,25 +62,21 @@ export default async function CoursePage({ params }: Props) {
 
   return (
     <div className="flex flex-col min-h-full">
-      {/* Dark title banner - intentionally theme-invariant (bg-zinc-900, not the
-          reactive --sun-dark token, which inverts to near-white in dark mode and
-          made the hardcoded text-white illegible - see Section 4 finding in
-          vibes/glass-ui-redesign-checklist.md) */}
-      <div className="bg-zinc-900 border-b-2 border-sun-yellow px-6 lg:px-8 py-3 shadow-glass-sm">
-        <p className="text-xs font-bold uppercase tracking-widest text-sun-yellow mb-0.5">
+      <div className="bg-white border-b border-sun-yellow px-6 lg:px-8 py-3">
+        <p className="text-xs font-bold uppercase tracking-widest text-sun-amber mb-0.5">
           {moduleLabel}
         </p>
-        <h1 className="text-base font-bold text-white tracking-tight leading-tight">
+        <h1 className="text-base font-bold text-sun-dark tracking-tight leading-tight">
           {page.title}
         </h1>
       </div>
 
       {/* Content row */}
       <div className="flex gap-8 flex-1 px-6 lg:px-8 py-6">
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 max-w-5xl">
           <AudienceToggle />
           <article>
-            <div className="prose prose-base max-w-none">
+            <div className="prose max-w-none">
               <MDXRemote source={page.rawContent} options={mdxOptions} components={mdxComponents} />
             </div>
           </article>
@@ -93,11 +89,11 @@ export default async function CoursePage({ params }: Props) {
       </div>
 
       {/* Sticky prev/next + disclaimer footer */}
-      <div className="sticky bottom-0 z-10 bg-glass-nav-bg backdrop-blur-glass-md border-t-2 border-sun-yellow">
+      <div className="sticky bottom-0 z-10 bg-white border-t border-sun-yellow">
         <div className="px-6 lg:px-8 py-3">
           <PageNav prev={prev} next={next} className="flex justify-between" />
         </div>
-        <div className="border-t border-sun-coral-bdr/50">
+        <div className="border-t border-sun-yellow-bdr">
           <DisclaimerNote />
         </div>
       </div>
