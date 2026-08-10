@@ -25,6 +25,7 @@ const MODULE_META: Record<string, ModuleMeta> = {
   "production-engineering":  { num: "09", subtitle: "The Operations",   description: "Docker, Kubernetes and Helm for GPU inference, model lifecycle and rollout, and security & compliance controls.", notes: "5 notes", qa: "25+ Q&A" },
   "platform-breadth":        { num: "10", subtitle: "The Landscape",    description: "AWS Bedrock, Databricks & Spark, and Azure AI Foundry - a working map across every major cloud AI stack.", notes: "5 notes", qa: "20+ Q&A" },
   "prog-langs":              { num: "11", subtitle: "The Foundation",   description: "PyTorch fundamentals - tensors, autograd, the hand-written training loop, checkpointing, and mixed precision.", notes: "6 notes", qa: "20+ Q&A" },
+  "agent-engineering":       { num: "12", subtitle: "The Architecture", description: "Designing the system around the model - harness engineering, loop engineering, and when a loop should become a graph.", notes: "3 notes", qa: "No Q&A bank yet" },
 };
 
 /** Recursively find the "Concepts" group anywhere in a module's item tree
