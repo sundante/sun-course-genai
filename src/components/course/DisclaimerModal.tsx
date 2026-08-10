@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 
 const STORAGE_KEY = "genai_disclaimer_v1";
 export const OPEN_DISCLAIMER_EVENT = "open-disclaimer-modal";
-export const DISCLAIMER_DISMISSED_EVENT = "disclaimer-dismissed";
 
 export function DisclaimerModal() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -21,7 +20,6 @@ export function DisclaimerModal() {
   function dismiss() {
     localStorage.setItem(STORAGE_KEY, "1");
     setModalOpen(false);
-    window.dispatchEvent(new CustomEvent(DISCLAIMER_DISMISSED_EVENT));
   }
 
   if (!modalOpen) return null;

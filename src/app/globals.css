@@ -20,9 +20,9 @@
   --sun-yellow-dim:  rgba(255, 218, 71, 0.14);
   --sun-yellow-bdr:  rgba(255, 218, 71, 0.38);
   --sun-dark:        #111111;
-  --sun-muted:       #666666;
+  --sun-muted:       #111111;
   --sun-amber:       #7a6000;
-  --sun-bg:          #fafaf9;
+  --sun-bg:          #ffffff;
   --sun-surface:     #ffffff;
   --sun-coral:       #D97757;
   --sun-coral-dim:   rgba(217, 119, 87, 0.10);
@@ -30,20 +30,20 @@
   --sun-coral-text:  #a84f2f;
   --sun-wip:         #9ca3af;
 
-  /* Glass surfaces - light mode: translucent white over content, blurred */
-  --glass-panel-bg:     rgba(255, 255, 255, 0.55);
-  --glass-panel-border: rgba(255, 255, 255, 0.35);
-  --glass-nav-bg:       rgba(255, 255, 255, 0.65);
-  --glass-nav-border:   rgba(17, 17, 17, 0.06);
-  --glass-card-bg:      rgba(255, 255, 255, 0.50);
-  --glass-card-border:  rgba(17, 17, 17, 0.08);
-  --glass-modal-bg:     rgba(255, 255, 255, 0.75);
-  --glass-modal-border: rgba(255, 255, 255, 0.45);
+  /* Refined solid surfaces - named glass for existing utility compatibility. */
+  --glass-panel-bg:     #ffffff;
+  --glass-panel-border: rgba(255, 218, 71, 0.52);
+  --glass-nav-bg:       #ffffff;
+  --glass-nav-border:   rgba(255, 218, 71, 0.52);
+  --glass-card-bg:      #ffffff;
+  --glass-card-border:  rgba(255, 218, 71, 0.52);
+  --glass-modal-bg:     #ffffff;
+  --glass-modal-border: rgba(255, 218, 71, 0.52);
   --glass-scrim:        rgba(17, 17, 17, 0.35);
 
-  --glass-shadow-sm: 0 1px 2px rgba(17, 17, 17, 0.04), 0 1px 1px rgba(17, 17, 17, 0.03);
-  --glass-shadow-md: 0 8px 24px rgba(17, 17, 17, 0.08), 0 2px 6px rgba(17, 17, 17, 0.04);
-  --glass-shadow-lg: 0 16px 48px rgba(17, 17, 17, 0.12), 0 4px 12px rgba(17, 17, 17, 0.06);
+  --glass-shadow-sm: none;
+  --glass-shadow-md: none;
+  --glass-shadow-lg: none;
   --glass-glow-yellow: 0 0 0 1px var(--sun-yellow-bdr), 0 0 24px rgba(255, 218, 71, 0.25);
 
   --shadcn-background: 0 0% 100%;
@@ -54,16 +54,16 @@
   --shadcn-popover-foreground: 0 0% 7%;
   --shadcn-primary: 47 100% 64%;
   --shadcn-primary-foreground: 0 0% 7%;
-  --shadcn-secondary: 0 0% 96%;
+  --shadcn-secondary: 0 0% 100%;
   --shadcn-secondary-foreground: 0 0% 7%;
-  --shadcn-muted: 0 0% 96%;
-  --shadcn-muted-foreground: 0 0% 40%;
-  --shadcn-accent: 0 0% 96%;
+  --shadcn-muted: 0 0% 100%;
+  --shadcn-muted-foreground: 0 0% 7%;
+  --shadcn-accent: 0 0% 100%;
   --shadcn-accent-foreground: 0 0% 7%;
   --shadcn-destructive: 0 84% 60%;
   --shadcn-destructive-foreground: 0 0% 98%;
-  --shadcn-border: 0 0% 90%;
-  --shadcn-input: 0 0% 90%;
+  --shadcn-border: 47 100% 64%;
+  --shadcn-input: 47 100% 64%;
   --shadcn-ring: 47 100% 64%;
 }
 
@@ -155,9 +155,9 @@
   --shadow-glass-glow: var(--glass-glow-yellow);
 
   /* blur-glass-sm/md/lg + backdrop-blur-glass-sm/md/lg utilities */
-  --blur-glass-sm: 8px;
-  --blur-glass-md: 16px;
-  --blur-glass-lg: 28px;
+  --blur-glass-sm: 0px;
+  --blur-glass-md: 0px;
+  --blur-glass-lg: 0px;
 
   /* shadcn/ui tokens (bg-background, border-input, ring-ring, ...).        */
   /* These were previously only declared as raw HSL custom properties with  */
@@ -193,16 +193,25 @@
   color: #111111;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: var(--font-sans), system-ui, sans-serif;
   background: var(--sun-bg);
   color: var(--sun-dark);
+  font-size: 15px;
+  line-height: 1.6;
+  letter-spacing: 0;
 }
 
 /* Prose / course content overrides - all values reference the runtime       */
 /* sun-* / glass-* tokens (see :root/.dark above) so prose stays theme-       */
 /* reactive instead of baking a static light-mode hex value at build time.   */
 .prose {
+  font-size: 0.95rem;
+  line-height: 1.75;
   --tw-prose-headings:      var(--sun-dark);
   --tw-prose-body:          var(--sun-dark);
   --tw-prose-lead:          var(--sun-muted);
@@ -223,13 +232,48 @@ body {
   --tw-prose-td-borders:    var(--glass-card-border);
 }
 
+.prose h1 {
+  color: var(--sun-amber);
+  font-size: clamp(2rem, 3vw, 2.45rem);
+  line-height: 1.12;
+  letter-spacing: 0;
+  font-weight: 750;
+  margin-top: 1.5rem;
+  margin-bottom: 2rem;
+  text-decoration-line: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.12em;
+  text-decoration-color: var(--sun-amber);
+}
+
 .prose h2 {
   border-bottom: 1px solid var(--sun-yellow-bdr);
-  padding-bottom: 0.28rem;
+  color: var(--sun-amber);
+  font-size: clamp(1.45rem, 2vw, 1.75rem);
+  line-height: 1.2;
+  letter-spacing: 0;
+  font-weight: 750;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.36rem;
 }
 
 .prose h3 {
   color: var(--sun-amber);
+  font-size: 1.12rem;
+  line-height: 1.35;
+  letter-spacing: 0;
+  font-weight: 700;
+}
+
+.prose p,
+.prose li {
+  color: var(--sun-dark);
+}
+
+.prose ul > li::marker,
+.prose ol > li::marker {
+  color: var(--sun-yellow-dk);
 }
 
 .prose code:not(pre code) {
@@ -252,8 +296,6 @@ body {
 
 .prose table {
   background: var(--glass-card-bg);
-  backdrop-filter: blur(var(--blur-glass-sm));
-  -webkit-backdrop-filter: blur(var(--blur-glass-sm));
   border: 1px solid var(--glass-card-border);
   border-radius: 8px;
   overflow: hidden;

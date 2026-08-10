@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { DisclaimerModal } from "@/components/course/DisclaimerModal";
-import { AudienceOnboardingModal } from "@/components/course/AudienceOnboardingModal";
+import { AudienceSync } from "@/components/course/AudienceSync";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -41,7 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         {children}
         <DisclaimerModal />
-        <AudienceOnboardingModal />
+        <AudienceSync />
       </body>
     </html>
   );

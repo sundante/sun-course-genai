@@ -178,7 +178,7 @@ export function Sidebar({ nav, mobile = false }: Props) {
 
   return (
     <aside
-      className={`hidden lg:flex flex-col border-r border-sun-yellow-bdr h-[calc(100vh-3.5rem)] sticky top-14 overflow-hidden transition-all duration-200 bg-glass-nav-bg backdrop-blur-glass-md ${
+      className={`hidden lg:flex flex-col border-r border-sun-yellow h-[calc(100vh-3.5rem)] sticky top-14 overflow-hidden transition-all duration-200 bg-white ${
         collapsed ? "w-12" : "w-64"
       }`}
     >
@@ -200,7 +200,7 @@ export function Sidebar({ nav, mobile = false }: Props) {
               <ModuleSection key={mod.slug} mod={mod} index={i} />
             ))}
           </div>
-          <div className="px-4 py-2.5 border-t border-sun-yellow-bdr bg-glass-panel-bg backdrop-blur-glass-sm">
+          <div className="px-4 py-2.5 border-t border-sun-yellow bg-white">
             <p className="text-[10px] text-sun-wip leading-snug">
               <span className="font-semibold">WIP</span> pages are under active development - content is coming soon.
             </p>

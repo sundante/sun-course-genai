@@ -37,8 +37,8 @@ function XIcon() {
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-40 bg-glass-nav-bg backdrop-blur-glass-md border-b-2 border-sun-yellow shadow-glass-sm">
-      <div className="flex items-center h-13 px-4 gap-3">
+    <header className="sticky top-0 z-40 bg-white border-b border-sun-yellow">
+      <div className="flex items-center h-14 px-4 gap-3">
         <Link href="/" className="font-bold text-sun-dark text-sm tracking-tight shrink-0">
           Learn GenAI
         </Link>
