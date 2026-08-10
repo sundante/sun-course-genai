@@ -17,6 +17,7 @@ const MODULE_SLUG_MAP: Record<string, string> = {
   "Production Engineering": "production-engineering",
   "Platform Breadth": "platform-breadth",
   "Prog Langs": "prog-langs",
+  "Agent Engineering": "agent-engineering",
   "Knowledge Check": "knowledge-check",
 };
 
@@ -33,6 +34,7 @@ export const MODULE_DIR_MAP: Record<string, string> = {
   "production-engineering": "09-Production-Engineering",
   "platform-breadth": "10-Platform-Breadth",
   "prog-langs": "11-Prog-Langs",
+  "agent-engineering": "12-Agent-Engineering",
   "knowledge-check": "",
 };
 

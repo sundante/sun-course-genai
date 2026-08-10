@@ -1,0 +1,27 @@
+# 12 - Agent Engineering
+
+## What You Will Learn
+
+Agent Engineering is the practice of designing the system *around* the model rather than the model itself: what scaffolding it runs inside (harness), how you decide when work should self-iterate versus stay a single step (loop), and how you decide when a single iterating step should split into a coordinated structure of specialized parts (graph). Where Prompt Engineering optimizes a single call and Agentic AI covers the mechanics of a single agent loop, this module covers the architectural decisions that sit above both.
+
+## Why It Comes After Agents and Agentic AI
+
+You need to understand what an agent is (Topic 05) and how the base agent loop actually executes - the LLM/Tool Executor/Loop Controller, ReAct, termination conditions (Topic 06) - before the design-level questions here make sense. Harness Engineering asks what surrounds that loop to make it durable. Loop Engineering asks when building a loop at all is worth the setup cost. Graph Engineering asks when a single loop should become a coordinated structure instead.
+
+## Chapter Map
+
+| # | File | Topic |
+|---|------|-------|
+| 1 | [Harness Engineering](Notes/01-Harness-Engineering.mdx) | Agent = Model + Harness; storage, execution, context management, long-horizon support |
+| 2 | [Loop Engineering](Notes/02-Loop-Engineering.mdx) | Design loops not prompts; verification surface; the six-component practice; loop economics |
+| 3 | [Graph Engineering](Notes/03-Graph-Engineering.mdx) | Loop vs. graph; five signals justifying a graph; failure modes; hybrid architectures |
+
+## Recommended Path
+
+1. [Harness Engineering](Notes/01-Harness-Engineering.mdx) - what surrounds the model to make it functional and durable
+2. [Loop Engineering](Notes/02-Loop-Engineering.mdx) - deciding when and how to design work as a self-iterating loop
+3. [Graph Engineering](Notes/03-Graph-Engineering.mdx) - deciding when a loop should become a graph instead
+
+## Navigation
+
+[Previous: 11 - Prog Langs](../11-Prog-Langs/PyTorch/INDEX.mdx) | [Related: 06 - Agentic AI](../06-Agentic-AI/INDEX.mdx)
