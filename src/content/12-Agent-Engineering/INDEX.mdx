@@ -2,11 +2,11 @@
 
 ## What You Will Learn
 
-Agent Engineering is the practice of designing the system *around* the model rather than the model itself: what scaffolding it runs inside (harness), how you decide when work should self-iterate versus stay a single step (loop), and how you decide when a single iterating step should split into a coordinated structure of specialized parts (graph). Where Prompt Engineering optimizes a single call and Agentic AI covers the mechanics of a single agent loop, this module covers the architectural decisions that sit above both.
+Agent Engineering is the practice of designing the system *around* the model rather than the model itself: what scaffolding it runs inside (harness), how you decide when work should self-iterate versus stay a single step (loop), how you decide when a single iterating step should split into a coordinated structure of specialized parts (graph) - and, beyond those three, how you curate what the model sees (context), how you make "good" measurable at scale (evaluation & verifiers), how you build the worlds agents train and are tested in (environment), how you package reusable know-how (memory & skills), and what changes about software delivery once all of that is in place (spec & vibe engineering). Where Prompt Engineering optimizes a single call and Agentic AI covers the mechanics of a single agent loop, this module covers the architectural decisions that sit above both.
 
 ## Why It Comes After Agents and Agentic AI
 
-You need to understand what an agent is (Topic 05) and how the base agent loop actually executes - the LLM/Tool Executor/Loop Controller, ReAct, termination conditions (Topic 06) - before the design-level questions here make sense. Harness Engineering asks what surrounds that loop to make it durable. Loop Engineering asks when building a loop at all is worth the setup cost. Graph Engineering asks when a single loop should become a coordinated structure instead.
+You need to understand what an agent is (Topic 05) and how the base agent loop actually executes - the LLM/Tool Executor/Loop Controller, ReAct, termination conditions (Topic 06) - before the design-level questions here make sense. Harness Engineering asks what surrounds that loop to make it durable. Loop Engineering asks when building a loop at all is worth the setup cost. Graph Engineering asks when a single loop should become a coordinated structure instead. The five notes that follow build on all three: each one names a discipline that became necessary once teams tried to run harnesses, loops, and graphs reliably at scale.
 
 ## Chapter Map
 
@@ -15,12 +15,24 @@ You need to understand what an agent is (Topic 05) and how the base agent loop a
 | 1 | [Harness Engineering](Notes/01-Harness-Engineering.mdx) | Agent = Model + Harness; storage, execution, context management, long-horizon support |
 | 2 | [Loop Engineering](Notes/02-Loop-Engineering.mdx) | Design loops not prompts; verification surface; the six-component practice; loop economics |
 | 3 | [Graph Engineering](Notes/03-Graph-Engineering.mdx) | Loop vs. graph; five signals justifying a graph; failure modes; hybrid architectures |
+| 4 | [Context Engineering](Notes/04-Context-Engineering.mdx) | Curating the full token budget; context rot; retrieval, compaction, pruning, isolation |
+| 5 | [Evaluation & Verifier Engineering](Notes/05-Evaluation-and-Verifier-Engineering.mdx) | Rubric design; LLM-as-judge failure modes; reward hacking; RLVR |
+| 6 | [Environment Engineering](Notes/06-Environment-Engineering.mdx) | Building the sandboxed worlds agents train/are tested in; environment-as-product |
+| 7 | [Memory & Skill Engineering](Notes/07-Memory-and-Skill-Engineering.mdx) | Memory as an explicit subsystem; packaging procedural knowledge as reusable skills |
+| 8 | [Spec & Vibe Engineering](Notes/08-Spec-and-Vibe-Engineering.mdx) | Spec-driven development; disciplined vibe engineering vs. casual vibe coding |
+| - | [Q&A Review Bank](Notes/09-Interview-QA-Bank.mdx) | 30+ questions across all eight topics |
 
 ## Recommended Path
 
 1. [Harness Engineering](Notes/01-Harness-Engineering.mdx) - what surrounds the model to make it functional and durable
 2. [Loop Engineering](Notes/02-Loop-Engineering.mdx) - deciding when and how to design work as a self-iterating loop
 3. [Graph Engineering](Notes/03-Graph-Engineering.mdx) - deciding when a loop should become a graph instead
+4. [Context Engineering](Notes/04-Context-Engineering.mdx) - curating what the model sees, and avoiding context rot
+5. [Evaluation & Verifier Engineering](Notes/05-Evaluation-and-Verifier-Engineering.mdx) - making "good" measurable at scale
+6. [Environment Engineering](Notes/06-Environment-Engineering.mdx) - building the worlds agents are trained and graded in
+7. [Memory & Skill Engineering](Notes/07-Memory-and-Skill-Engineering.mdx) - packaging reusable know-how
+8. [Spec & Vibe Engineering](Notes/08-Spec-and-Vibe-Engineering.mdx) - where this all points for day-to-day software delivery
+9. Drill with the [Q&A Review Bank](Notes/09-Interview-QA-Bank.mdx) or the [Concept Review](../Interview-Questions/12-Agent-Engineering.mdx)
 
 ## Navigation
 
