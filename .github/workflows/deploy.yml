@@ -1,6 +1,9 @@
 name: Deploy to Hostinger
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -36,4 +39,4 @@ jobs:
           exclude: |
             **/.DS_Store
             **/*.txt
-          dangerous-clean-slate: false
+          dangerous-clean-slate: true
