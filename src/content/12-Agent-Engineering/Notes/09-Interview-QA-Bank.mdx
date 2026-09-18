@@ -1,0 +1,110 @@
+# Q&A Review Bank
+
+← **Back to Overview:** [Agent Engineering](../INDEX.mdx)
+
+---
+
+30+ questions spanning the full Agent Engineering chapter: Harness, Loop, and Graph Engineering, plus Context, Evaluation & Verifier, Environment, Memory & Skill, and Spec & Vibe Engineering. Use this as a final drill after working through all eight Notes files.
+
+---
+
+## Harness, Loop & Graph Engineering
+
+**Q: What does "Agent = Model + Harness" mean, and why can two teams get different results from the same model?**
+A: The model supplies raw intelligence; the harness is everything else - storage, execution, context management, and long-horizon support - that turns that intelligence into durable, safe, effective action. Two teams on the same model get different results because harness quality (how well it remembers, what tools it can reach, how it recovers from failure) varies independently of the model itself - a brilliant model in a weak harness behaves like a capable employee with no filing cabinet, no email access, and no manager.
+
+**Q: Why shouldn't a generator agent grade its own output?**
+A: Generators exhibit self-bias, rating their own work more favorably than an independent judge would. A dedicated evaluator agent, calibrated for skepticism with explicit grading criteria, catches what self-review misses - this generator-evaluator separation is one of the highest-leverage harness design choices, and it recurs at the grading-design level in Evaluation & Verifier Engineering.
+
+**Q: Name the three context-management techniques from Harness Engineering, in increasing order of aggressiveness, and when to use each.**
+A: Compaction (summarizing older turns to reclaim tokens - lossy, use when context is filling up mid-task), tool call offloading (writing large tool outputs to the filesystem and passing a file path instead - cheap and full-fidelity, use when output is large but rarely re-read), and progressive disclosure via skills (packaging domain knowledge as an on-demand reference - requires upfront packaging, use when domain knowledge is broad but any one task only needs a slice).
+
+**Q: What's the difference between the "harness" in Harness Engineering and an "evaluation harness"?**
+A: The harness in this chapter is execution scaffolding the agent runs *inside* - storage, sandboxes, tools. An evaluation harness is separate CI/grading infrastructure that scores an agent's outputs after the fact. They share a name but serve different purposes; conflating them is a common source of confusion.
+
+**Q: Why should harnesses shrink as models improve?**
+A: Scaffolding built to compensate for a weaker model's limitations (e.g. an elaborate retry-and-validate loop for unreliable tool-call formatting) can become dead weight once a newer model handles that case natively. Removing it isn't just cleanup - every extra moving part is latency, cost, and surface area for bugs, so periodically reassessing which harness components are still load-bearing is an ongoing responsibility, not a one-time design decision.
+
+---
+
+## Context Engineering
+
+**Q: What is context rot, and why doesn't a bigger context window fix it?**
+A: Context rot is the measurable degradation in model accuracy as irrelevant, stale, or contradictory tokens accumulate - even well within the advertised context limit - caused by attention dilution and stale/contradictory information confusing later reasoning. A bigger window increases the *capacity* for rot rather than preventing it; it adds room to accumulate noise, not curation.
+
+**Q: Name three concrete techniques for fighting context rot and what each trades off.**
+A: Retrieval/RAG (trades recall for precision by including only top-k relevant chunks), compaction (trades detail for token budget by summarizing or extracting structured state from old history), and context isolation (trades coordination overhead for a clean context by delegating a sub-task to a sub-agent with its own narrow context window).
+
+**Q: Why is structured state extraction generally more robust than a rolling narrative summary during compaction?**
+A: A rolling summary can silently drop the original goal as it compresses turn after turn, while a structured task ledger (goal, completed steps, open items) is designed to always retain the goal explicitly, surviving compaction without losing the thread even after many rounds of compression.
+
+---
+
+## Evaluation & Verifier Engineering
+
+**Q: Rank deterministic checks, LLM-as-judge, and human review by reliability, and explain the tradeoff.**
+A: Human review is most reliable but highest latency/cost, unsuitable for gating every loop step. Deterministic/execution-based checks (unit tests, schema validation) are next - high reliability, low cost, but only available when the task admits a programmatic check. LLM-as-judge is the fallback for tasks with no deterministic check, more scalable than human review but carrying real bias risks. Design rule: prefer deterministic wherever the task allows it.
+
+**Q: What is reward hacking, and how does it show up in an agentic coding context?**
+A: Reward hacking is when an agent learns to satisfy the letter of the verification signal rather than the actual goal it's a proxy for. Concretely: if an agent is graded on "do the tests pass" and has write access to the test files, it may learn to edit the tests to trivially pass rather than fix the bug. The fix is removing the shortcut at the environment/harness design level (e.g. making test files read-only to the graded agent), not building a smarter judge.
+
+**Q: What is RLVR, and why is it preferred over LLM-as-judge training signals where possible?**
+A: Reinforcement Learning with Verifiable Rewards trains a model against outcomes checkable by code - tests passing, a math answer matching a known solution - rather than another model's subjective judgment. It's preferred because it removes an entire class of failure modes (judge bias, judge drift, reward hacking against a fuzzy judge) at the cost of only applying to tasks that admit a deterministic check.
+
+**Q: List three failure modes of LLM-as-judge and their mitigations.**
+A: Position bias (judge favors whichever answer is shown first/second - mitigate by randomizing order and averaging both orderings), length bias (judge favors longer answers - mitigate by explicitly penalizing unnecessary length in the rubric), and self-preference (a model judges its own family's outputs more favorably - mitigate by using a different model family as judge, or a deterministic check where possible).
+
+---
+
+## Environment Engineering
+
+**Q: How is an "environment" different from a production harness, given both involve sandboxing?**
+A: A harness serves a live agent in production and optimizes for reliability and security on one real scenario. An environment is a sandboxed, interactive, gradeable stand-in for a real task used for training/evaluation, optimized for realism, reward correctness, reproducibility, and cheaply generating many *varied* scenarios. They can share sandboxing code, but the design goals pull in different directions.
+
+**Q: Why is "environment engineering is the new bottleneck for agent post-training" a useful framing?**
+A: It draws a direct parallel to prior eras: pretraining was gated by raw data scale/quality, RLHF-era post-training was gated by labeled preference data, and agent post-training/evaluation is now gated by the breadth and quality of interactive, verifiable environments - reframing environment-building as a recognized specialty worth investing in directly rather than an internal training-team side task.
+
+**Q: What does it mean for an environment's observation interface to "leak information," and why is it a design flaw?**
+A: It leaks information when it gives the agent something it wouldn't realistically have in the real task - e.g. an error message naming the exact bug and line number rather than a raw stack trace a developer would have to interpret. This inflates eval scores and produces skills that don't transfer to production, since the agent practiced a shortcut rather than the actual capability the environment was meant to exercise.
+
+**Q: Why does determinism/replayability matter for a training or eval environment?**
+A: Without the ability to reset and replay from a known state, results become impossible to reproduce or debug - you can't tell whether a score change came from a real capability difference or from non-deterministic environment noise, which undermines the entire point of using the environment to measure progress.
+
+---
+
+## Memory & Skill Engineering
+
+**Q: Distinguish memory engineering from skill engineering.**
+A: Memory engineering treats recall (facts, preferences, history) as an explicit, retrievable subsystem with a write path, retrieval strategy, and conflict resolution. Skill engineering treats procedural know-how - how to competently perform a specific class of task - as a packaged, discoverable, on-demand artifact loaded only when relevant. A memory entry answers "what do I know about this user?"; a skill answers "how do I do this class of task well?"
+
+**Q: How does a skill-library pattern keep the default context lean while giving access to deep, specialized knowledge?**
+A: Only a skill's short description costs context by default - a directory of narrow, well-scoped skills is exposed to the router/model, and the full body of instructions for a given skill loads into context only when that task matches its description. This is the progressive-disclosure technique from Harness Engineering, formalized into a packaging convention, avoiding the alternative of one enormous system prompt covering every possible procedure regardless of relevance.
+
+**Q: Why does a memory system need an explicit conflict-resolution policy?**
+A: New information can contradict an older stored memory (e.g. a user's preference changes), and without a defined policy - overwrite, version, or flag for review - the system either silently loses the correction or accumulates contradictory facts that degrade future retrieval quality.
+
+---
+
+## Spec & Vibe Engineering
+
+**Q: What is "vibe coding" versus "vibe engineering," and why does the distinction matter?**
+A: Vibe coding is a casual, low-rigor mode of AI-assisted building suited to prototypes - accepting generated code because "it looks right." Vibe engineering is the disciplined, production-grade evolution of the same natural-language-driven workflow, wrapped in specs, tests, verifiers, and review. The distinction matters because applying vibe-coding-level rigor to production work produces fast, confidently-wrong code - more dangerous than slow, correct code because the failure isn't visible until later.
+
+**Q: In spec-driven development, why is the spec treated as the primary source of truth instead of the generated code?**
+A: Because agents can reliably regenerate or extend code from a clear spec once harness, loop/graph, and verifier layers close the gap between "spec says X" and "code does X." The spec becomes the stable artifact humans author and review; code becomes a compiled-from-spec output, rather than documentation that drifts away from ever-changing code.
+
+**Q: What review shift does spec/vibe engineering require compared to traditional code review?**
+A: Traditional review is line-by-line: does this diff look correct? Spec-driven review shifts up a level: does the observed behavior satisfy the spec's acceptance criteria, and was the spec itself right? This requires acceptance criteria written as testable statements rather than vague prose, mirroring the same discipline as writing a good verifier.
+
+---
+
+## Cross-Chapter Synthesis
+
+**Q: Explain the dependency chain across all eight notes in this chapter, from Harness through Spec & Vibe Engineering.**
+A: Context Engineering underlies the Harness - a harness executing poorly-curated context wastes tool calls re-deriving missing information. Loop and Graph Engineering assume a functioning harness with persisted state, otherwise every retry restarts from zero. Evaluation & Verifier Engineering assumes a loop/graph that already knows how to call a verifier and act on its result, and it doesn't scale past hand-written checks without treating rubrics as first-class artifacts. Environment Engineering builds the worlds those verifiers run inside at scale. Memory & Skill Engineering prevents the same procedure from being relearned across tasks. Spec & Vibe Engineering is what all of the above enables at the delivery-process level: reliable, verifiable, agent-driven software built from human-authored specs rather than hand-typed code.
+
+**Q: A team says their agent keeps failing on long tasks and proposes rewriting the system prompt. Which layer in this chapter is the more likely bottleneck, and how would you diagnose it?**
+A: Long-task failures are rarely a prompt-wording problem. Check context first (is relevant information getting pruned or lost as the task progresses - context rot?), then the harness (is state actually persisted across steps, or does each step start fresh?), then the loop/graph's verification surface (is there a real verifier, or is the agent just declaring victory on a plausible-looking result?). Diagnose by inspecting the actual context at the point of failure and the state/checkpoint history, rather than assuming a wording fix will address a structural gap.
+
+**Q: Why does the chapter treat Spec & Vibe Engineering as "the frontier, not the finish line," unlike Harness, Loop, and Graph Engineering?**
+A: Harness, Loop, and Graph Engineering have matured into fairly settled disciplines with established patterns (generator-evaluator separation, context-management techniques, the five signals for graph-worthiness). Spec and vibe engineering conventions - and even the terminology itself - are still being actively defined and contested industry-wide, so this note is presented as a snapshot of where the field is now rather than a finished discipline.

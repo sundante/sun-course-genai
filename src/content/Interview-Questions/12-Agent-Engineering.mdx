@@ -1,0 +1,34 @@
+# Concept Review - Agent Engineering
+
+## Harness, Loop & Graph Questions
+
+**Q: What is the "Agent = Model + Harness" framing, and why does it matter?**
+The model supplies raw intelligence; the harness - storage, execution, context management, and long-horizon support - is everything that turns that intelligence into durable, safe, effective action. It matters because two teams on the same underlying model can get very different results purely based on harness quality, not model choice.
+
+**Q: Why shouldn't a generator agent grade its own output?**
+Generators exhibit self-bias, rating their own work more favorably than an independent judge would. Separating the agent that does the work from the agent (or check) that judges it is one of the highest-leverage design decisions in agent engineering.
+
+**Q: Name the three context-management techniques in Harness Engineering and rank them by aggressiveness.**
+Compaction (lossy, summarizes older turns), tool call offloading (full-fidelity, writes large outputs to the filesystem), and progressive disclosure via skills (requires upfront packaging, loads domain knowledge only when relevant) - in increasing order of setup cost and decreasing order of information loss.
+
+## Context, Evaluation & Environment Questions
+
+**Q: What is context rot, and why is a bigger context window not a fix for it?**
+Context rot is the measurable degradation in model accuracy as irrelevant or stale tokens accumulate, even within the advertised context limit. A bigger window increases the capacity for rot rather than preventing it - the fix is curation (retrieval, pruning, compaction), not more room.
+
+**Q: Why should deterministic checks be preferred over LLM-as-judge scoring wherever possible?**
+Deterministic and execution-based checks (tests passing, schema validation) avoid an entire class of failure modes that come with model-based grading - position bias, length bias, self-preference, and reward hacking against a fuzzy judge. This is the same principle behind Reinforcement Learning with Verifiable Rewards (RLVR).
+
+**Q: How is an "environment" different from a production harness?**
+A harness serves a live agent in production, optimized for reliability and security. An environment is a sandboxed, gradeable stand-in for a real task, optimized for realism, reproducibility, and generating many varied training/eval scenarios cheaply. They can share sandboxing code but serve different purposes.
+
+## Memory, Skill & Delivery Questions
+
+**Q: How is skill engineering different from memory engineering?**
+Memory engineering treats recall (facts, preferences, history) as an explicit subsystem. Skill engineering treats procedural know-how - how to competently perform a class of task - as a packaged, on-demand artifact loaded only when relevant, keeping the default context lean.
+
+**Q: What is the difference between "vibe coding" and "vibe engineering"?**
+Vibe coding is casual, low-rigor AI-assisted building suited to prototypes. Vibe engineering is the disciplined, production-grade version of the same workflow, wrapped in specs, tests, verifiers, and review so speed doesn't come at the cost of correctness.
+
+**Q: In spec-driven development, why is the spec treated as the primary source of truth instead of the code?**
+Because agents can reliably regenerate code from a clear spec once harness, loop/graph, and verifier layers close the gap between "spec says X" and "code does X" - the spec becomes the stable, reviewed artifact, and code becomes a compiled-from-spec output.
