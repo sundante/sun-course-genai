@@ -32,7 +32,7 @@ flowchart LR
     style A fill:#d4edda,stroke:#28a745
 ```
 
-This note is about the four things a harness is responsible for, and how to know when it's carrying its weight. It's distinct from the [Evaluation Harness](../../06-Agentic-AI/Notes/11-Evaluation-and-Observability.mdx) covered in Agentic AI - that's the CI/grading infrastructure that scores an agent's outputs. This harness is the execution scaffolding the agent runs *inside*.
+This note is about the four things a harness is responsible for, and how to know when it's carrying its weight. It's distinct from the [Evaluation Harness](../../11-Agentic-AI/Notes/11-Evaluation-and-Observability.mdx) covered in Agentic AI - that's the CI/grading infrastructure that scores an agent's outputs. This harness is the execution scaffolding the agent runs *inside*.
 
 ---
 
@@ -135,7 +135,7 @@ Long-running tasks need more than one continuous conversation - they need checkp
 
 <div class="audience-tech" markdown="1">
 
-**Generator-evaluator separation.** Don't rely on an agent to grade its own output - generators exhibit self-bias, rating their own work more favorably than an independent judge would. A dedicated evaluator agent, calibrated for skepticism and given explicit grading criteria, catches what self-review misses. This is the same principle behind [Design Patterns: Reflexion](../../06-Agentic-AI/Notes/07-Design-Patterns.mdx) in Agentic AI, applied at the harness level rather than the prompt level.
+**Generator-evaluator separation.** Don't rely on an agent to grade its own output - generators exhibit self-bias, rating their own work more favorably than an independent judge would. A dedicated evaluator agent, calibrated for skepticism and given explicit grading criteria, catches what self-review misses. This is the same principle behind [Design Patterns: Reflexion](../../11-Agentic-AI/Notes/07-Design-Patterns.mdx) in Agentic AI, applied at the harness level rather than the prompt level.
 
 **Context resets with structured handoffs.** Rather than letting one session run until it degrades, clear the context window entirely at a phase boundary and start a fresh agent - passing state through a structured handoff (a file, a summary, a task ledger) instead of raw conversation history. This addresses the coherence loss that comes from a context window stretched too thin.
 
@@ -166,5 +166,5 @@ Continuously reassess which harness components are load-bearing. A component bui
 - **Agent = Model + Harness.** The model provides intelligence; the harness is everything that turns that intelligence into durable, safe, effective action.
 - **Storage, execution, context management, and long-horizon support** are the four responsibilities a harness carries - miss one and the agent degrades in a predictable way (forgets everything, can't act, loses the thread, or can't sustain multi-phase work).
 - **Generators shouldn't grade themselves.** Separating the agent that does the work from the agent that judges it is one of the highest-leverage harness design choices.
-- **This is not the same "harness" as an evaluation harness.** One is execution scaffolding around the agent; the other is CI/grading infrastructure that scores the agent's outputs after the fact. See [Evaluation & Observability](../../06-Agentic-AI/Notes/11-Evaluation-and-Observability.mdx).
+- **This is not the same "harness" as an evaluation harness.** One is execution scaffolding around the agent; the other is CI/grading infrastructure that scores the agent's outputs after the fact. See [Evaluation & Observability](../../11-Agentic-AI/Notes/11-Evaluation-and-Observability.mdx).
 - **Harnesses should shrink as models improve.** Periodically remove scaffolding that a newer model no longer needs.
