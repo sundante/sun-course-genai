@@ -23,7 +23,7 @@ Running an LLM in production is fundamentally different from running inference i
 - OpenAI-compatible API (drop-in replacement for OpenAI SDK calls)
 - Tensor parallelism for multi-GPU
 
-> For hands-on depth on this stack - Paged Attention internals, GPTQ/AWQ serving-time quantization, batching/concurrency capacity planning, streaming and TTFT, and a real FastAPI + vLLM code lab with a load test - see [08-Serving-and-Inference](../../08-Serving-and-Inference/INDEX.mdx). This file stays at the conceptual overview level; that module doesn't re-derive what's here.
+> For hands-on depth on this stack - Paged Attention internals, GPTQ/AWQ serving-time quantization, batching/concurrency capacity planning, streaming and TTFT, and a real FastAPI + vLLM code lab with a load test - see [04-Serving-and-Inference](../../04-Serving-and-Inference/INDEX.mdx). This file stays at the conceptual overview level; that module doesn't re-derive what's here.
 
 ---
 
@@ -161,7 +161,7 @@ flowchart TD
 Suitable for: document QA, long-form summarization, book analysis.
 
 **Strategy 3: RAG (Retrieval-Augmented Generation)**
-Instead of loading the entire document, retrieve only relevant passages (see [RAG section](../../03-RAGs/Notes/01-RAG-Fundamentals.md)). This sidesteps the context window entirely for most questions.
+Instead of loading the entire document, retrieve only relevant passages (see [RAG section](../../08-RAGs/Notes/01-RAG-Fundamentals.md)). This sidesteps the context window entirely for most questions.
 
 **Strategy 4: Context Compression**
 - Use a smaller, faster model to compress/summarize less-relevant context
