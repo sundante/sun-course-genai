@@ -4,12 +4,14 @@ Pretraining turns trillions of tokens of text into a base model by predicting th
 
 ```objectives
 scope: module
-time: 4-5 hours today (growing as chapters are added)
+time: 8-10 hours
 outcomes:
   - Walk through a pretraining data pipeline - filtering, deduplication, quality scoring, mixing - and explain why each stage exists
   - Apply scaling laws to size a model and its token budget for a compute budget
   - Estimate training memory per parameter and explain how data, tensor, pipeline and ZeRO/FSDP parallelism divide it
-  - Explain the interconnect and precision choices that bound training throughput
+  - Explain the interconnect and precision choices that bound training throughput, and use the roofline model
+  - Choose a parallelism layout and precision (BF16/FP8) for a run, and estimate its MFU and cost
+  - Diagnose training instability and choose schedules and optimizers (WSD, μP, Muon)
 prerequisites:
   - "[LLM Foundations](../01-LLM-Foundations/INDEX.mdx) - the transformer and attention"
   - "[PyTorch Fundamentals](../02-Prog-Langs/PyTorch/INDEX.mdx) - the training loop, mixed precision"
@@ -19,14 +21,21 @@ prerequisites:
 
 | # | Note | Topic | Level |
 |---|------|-------|-------|
-| 1 | [Training & Pretraining](Notes/01-Training-and-Pretraining.mdx) | Data pipeline, tokenizers, objectives, Kaplan and Chinchilla scaling, distributed-training basics | Intermediate |
-| 2 | [GPU & Hardware](Notes/02-GPU-and-Hardware.mdx) | Memory estimation, quantization formats, DP/TP/PP/ZeRO, interconnects | Advanced |
+| 1 | [Training & Pretraining](Notes/01-Training-and-Pretraining.mdx) | The pipeline end to end: data, tokenizers, objectives, Kaplan and Chinchilla, distributed-training basics | Intermediate |
+| 2 | [GPU & Hardware](Notes/02-GPU-and-Hardware.mdx) | Memory estimation (16 B/param), quantization formats, DP/TP/PP/ZeRO, interconnects | Intermediate |
+| 3 | [Data Curation & Mixtures](Notes/03-Data-Curation-and-Mixtures.mdx) | Dedup (MinHash LSH), model-based quality filtering (FineWeb-Edu, DCLM), mixtures, annealing, mid-training, long-context stages, synthetic data | Advanced |
+| 4 | [Scaling Laws & Compute Budgets](Notes/04-Scaling-Laws-and-Compute-Budgets.mdx) | C ≈ 6ND, Chinchilla fit, inference-aware and data-constrained scaling, test-time compute | Advanced |
+| 5 | [Distributed Training at Scale](Notes/05-Distributed-Training-at-Scale.mdx) | 5D parallelism layout, pipeline bubbles, ring attention, expert parallelism, FP8 training, MFU, fault tolerance | Advanced |
+| 6 | [Training Stability & Optimizers](Notes/06-Training-Stability-and-Optimizers.mdx) | Loss spikes, QK-norm, z-loss, WSD schedules, μP, Muon and MuonClip | Advanced |
+| 7 | [Accelerators & Interconnects](Notes/07-Accelerators-and-Interconnects.mdx) | H100 → B200 / GB200 NVL72, AMD Instinct, TPU Ironwood, roofline model, FP8/MXFP4/NVFP4, scale-up vs scale-out | Advanced |
+| 8 | [Q&A Review Bank](Notes/08-Interview-QA-Bank.mdx) | 24 questions across data, scaling, distributed training, hardware and stability | All levels |
 
-> **Planned chapters (LLM-track content pass):** modern data curation (classifier-filtered web data, synthetic data, data mixing, annealing and mid-training, long-context extension); scaling laws after Chinchilla (inference-aware and data-constrained); 4D parallelism, FSDP2 and FP8 training; training stability (loss spikes, QK-norm, z-loss) and MFU; the H100-to-GB200 hardware generation; and a GPT-from-scratch lab in the PyTorch module.
+**Suggested order:** 1 → 2 → 4 → 3 → 5 → 6 → 7, then the bank. Pair chapter 5 with the [GPT From Scratch lab](../02-Prog-Langs/PyTorch/CodeLabs/02-GPT-From-Scratch.mdx) to compute MFU on a real run.
 
 ## Review
 
-- Q&A for this material currently lives in the [LLM Foundations Q&A Review Bank](../01-LLM-Foundations/Notes/08-Interview-QA-Bank.mdx); a dedicated bank arrives with the new chapters.
+- [Q&A Review Bank](Notes/08-Interview-QA-Bank.mdx) - 24 questions for this module
+- Related questions also appear in the [LLM Foundations Q&A Review Bank](../01-LLM-Foundations/Notes/08-Interview-QA-Bank.mdx)
 
 ---
 

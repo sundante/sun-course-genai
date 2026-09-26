@@ -1,0 +1,155 @@
+# Pretraining at Scale - Q&A Review Bank
+
+> 24 Q&A pairs. Tags: `[Easy]` = conceptual recall, `[Medium]` = design decisions and trade-offs, `[Hard]` = quantitative reasoning or system design.
+
+---
+
+## Data
+
+**Q1** `[Easy]` What are the main stages of a web-scale pretraining data pipeline?
+
+> Text extraction from HTML, language identification, heuristic filtering (length, symbol ratios, repetition), deduplication (exact and near-duplicate), model-based quality scoring, PII and safety filtering, benchmark decontamination, mixing with other sources (code, math, books, multilingual, synthetic), then tokenization and sharding.
+
+---
+
+**Q2** `[Medium]` How does MinHash LSH find near-duplicate documents without comparing every pair?
+
+> Each document is shingled into n-grams; for each of k hash functions, the minimum hash over its shingles is kept, and the fraction of matching minimums between two documents estimates their Jaccard similarity. LSH splits the k values into b bands of r rows and only compares documents that collide on a whole band, which makes candidate search sub-quadratic. The candidate probability is 1 - (1 - s^r)^b, so b and r set the similarity threshold.
+
+---
+
+**Q3** `[Medium]` What did FineWeb-Edu and DCLM show about quality filtering, and what is the risk?
+
+> Training a cheap classifier on quality labels (from an LLM judging educational value in FineWeb-Edu, or similarity to instruction-like reference data in DCLM) and keeping only top-scoring documents produced large benchmark gains at equal token counts. The risk is that the classifier encodes its labeller's taste: it can strip dialects, informal text and minority viewpoints and reduce diversity, hurting long-tail knowledge even as averages rise.
+
+---
+
+**Q4** `[Medium]` What is annealing in pretraining, and why is it useful for data decisions?
+
+> Annealing is the final phase where the learning rate decays toward zero; models are especially sensitive to the data seen then, so upweighting high-quality sources late gives outsized gains. Because the effect shows up after relatively few tokens, annealing a small model on a candidate dataset is a cheap way to estimate that dataset's value.
+
+---
+
+**Q5** `[Medium]` Why do models extend context length in a late stage instead of pretraining at 128K from the start?
+
+> Attention cost grows with sequence length, and most documents are short, so pretraining at 4K-8K is far cheaper per token. A later stage raises the RoPE base or applies RoPE scaling and trains on long documents to extend the window - Llama 3 went from 8K to 128K in six stages over about 800B tokens.
+
+---
+
+**Q6** `[Medium]` What is model collapse, and how do teams use synthetic data without triggering it?
+
+> Model collapse is the loss of the distribution's tails when models are trained repeatedly on their own generations without fresh real data. Teams avoid it by mixing synthetic with real data, filtering synthetic data (for math and code, keeping only verified outputs), using it for targeted skills rather than wholesale replacement, and decontaminating it against benchmarks.
+
+---
+
+## Scaling Laws
+
+**Q7** `[Easy]` Estimate the training compute of a dense 13B model trained on 3T tokens.
+
+> C ≈ 6ND = 6 × 13e9 × 3e12 ≈ 2.3 × 10²³ FLOPs.
+
+---
+
+**Q8** `[Medium]` What is the Chinchilla rule of thumb, and how did it differ from Kaplan et al.?
+
+> For a fixed compute budget, scale parameters and tokens equally - about 20 training tokens per parameter. Kaplan et al. concluded parameters should grow faster than data; the difference came largely from Kaplan not matching the learning-rate schedule to each run's length. Chinchilla (70B, 1.4T tokens) beat the 280B Gopher on the same compute.
+
+---
+
+**Q9** `[Hard]` You have 1.2 × 10²⁴ FLOPs. What is the Chinchilla-optimal model size and token count?
+
+> With D = 20N and C = 6ND = 120N², N = sqrt(C/120) = sqrt(1e22) = 100B parameters and D = 2T tokens.
+
+---
+
+**Q10** `[Medium]` Why are models like Llama 3 8B trained on ~1,900 tokens per parameter?
+
+> Chinchilla minimizes training cost only. A deployed model serves enormous numbers of tokens and serving cost scales with parameter count, so the lifetime-cost-optimal model is smaller and trained much longer (inference-aware scaling, Sardana et al.). Loss keeps improving past 20 tokens/parameter, just more slowly.
+
+---
+
+**Q11** `[Medium]` What happens when you run out of unique data?
+
+> Repeating data works surprisingly well up to about 4 epochs, which is nearly as good as fresh data; returns diminish quickly beyond that and around 16 epochs add almost nothing (Muennighoff et al.). Repeating the highest-quality data, synthetic data and better filtering are the main levers.
+
+---
+
+**Q12** `[Hard]` A cluster of 2,048 H100s runs for 30 days at 40% MFU. What is the compute budget?
+
+> 2048 × 30 × 86,400 s × 989e12 FLOP/s × 0.40 ≈ 2.1 × 10²⁴ FLOPs (using the dense BF16 peak of ~989 TFLOP/s).
+
+---
+
+## Distributed Training and Hardware
+
+**Q13** `[Medium]` Name the five parallelism dimensions used in frontier training and what each splits.
+
+> Data parallel / FSDP (the batch, and with FSDP the params, grads and optimizer state), tensor parallel (weight matrices within a layer), pipeline parallel (groups of layers), context parallel (the sequence, for attention - ring attention), and expert parallel (MoE experts across GPUs, with all-to-all token routing).
+
+---
+
+**Q14** `[Medium]` Why does tensor parallelism stay inside a node while data parallelism spans nodes?
+
+> Tensor parallelism performs collectives in every layer, so it needs NVLink-class bandwidth and latency; data parallelism communicates about once per step and can overlap with compute, so it tolerates the slower data-center network. An H100's NVLink is about 18× a 400 Gb/s network port.
+
+---
+
+**Q15** `[Hard]` A pipeline has 8 stages and 32 micro-batches with a 1F1B schedule. What is the bubble fraction?
+
+> (p - 1)/(m + p - 1) = 7/39 ≈ 18%.
+
+---
+
+**Q16** `[Hard]` How does FP8 training work, and what stays in higher precision?
+
+> Matmuls run in FP8 - typically E4M3 for weights and activations and E5M2 for gradients - with scale factors per tensor, or per tile/block (DeepSeek-V3) or per small block in microscaling formats, to fit values into FP8's narrow range. Master weights and optimizer state stay in FP32, and sensitive operations (embeddings, output head, normalization, softmax, often the MoE router) stay in BF16/FP32.
+
+---
+
+**Q17** `[Hard]` A 1,024-GPU H100 cluster trains a 70B dense model at 1.0M tokens/s. Compute the MFU.
+
+> Achieved = 6 × 70e9 × 1e6 = 4.2e17 FLOP/s. Peak = 1,024 × 989e12 ≈ 1.01e18 FLOP/s. MFU ≈ 41%.
+
+---
+
+**Q18** `[Medium]` What does a multi-week run need for fault tolerance?
+
+> Frequent asynchronous sharded checkpoints (plus fast local copies), automated failure detection (health checks, collective timeouts) with spare nodes and automatic restart, deterministic data-loader resumption, and monitoring for stragglers and silent data corruption. Llama 3 405B saw 466 interruptions in 54 days and still achieved over 90% effective training time.
+
+---
+
+**Q19** `[Easy]` Why should you halve many NVIDIA tensor-core TFLOPS figures?
+
+> The headline numbers assume 2:4 structured sparsity, which normal LLM workloads don't use; dense throughput is half.
+
+---
+
+**Q20** `[Medium]` Why is LLM decode memory-bound, and what does that imply for hardware choice?
+
+> At small batch sizes each weight is read once per token and used for about 2 FLOPs, far below the chip's FLOPs-per-byte ridge point (~300 on H100). Memory bandwidth and capacity, not FLOPs, set decode speed - which is why the H200 (same compute as H100, 43% more bandwidth, 76% more memory) serves noticeably faster.
+
+---
+
+## Stability and Optimizers
+
+**Q21** `[Medium]` List the standard defenses against loss spikes.
+
+> LR warmup, global gradient-norm clipping, AdamW with β₂ ≈ 0.95, pre-norm RMSNorm, QK-norm for attention logits, z-loss for output logits, logit soft-capping, and - when a spike doesn't recover - rolling back to an earlier checkpoint and skipping the offending batches.
+
+---
+
+**Q22** `[Medium]` What is a WSD schedule, and why do teams like it?
+
+> Warmup, a long stable phase at peak learning rate, then a short decay. The stable-phase checkpoint can be resumed to train longer without restarting, decays can be branched at several points to get multiple budgets from one run, and the decay phase pairs naturally with annealing on high-quality data.
+
+---
+
+**Q23** `[Hard]` What does μP give you?
+
+> A parametrization (width-dependent initialization and per-layer learning rates) under which the optimal hyperparameters stay roughly constant as the model widens, so a sweep on a small proxy transfers to the full-size model instead of requiring expensive tuning at scale.
+
+---
+
+**Q24** `[Hard]` How does Muon differ from AdamW, and what problem did MuonClip address?
+
+> Muon orthogonalizes the momentum update of each 2D weight matrix (approximately, with Newton-Schulz iterations) instead of scaling each element by its own second-moment estimate, and needs one state buffer instead of two; Moonshot reported about 2× compute efficiency over AdamW at scale. At trillion-parameter scale Muon led to exploding attention logits, and Kimi K2's MuonClip (QK-clip) rescales the query/key projections when the maximum logit exceeds a threshold, which let it pretrain on 15.5T tokens with no loss spikes.

@@ -54,8 +54,8 @@ Research rule (Phases 2-4): every new claim about a model, spec, API, or version
 ## Phase 2 - LLM track (modules 01-09)
 - [x] 01 LLM Foundations + Model Landscape 2026 page - new Modern Architectures (MLA, fine-grained MoE, local-global attention, sinks, hybrids, native multimodality) and Model Landscape notes (vendor pages checked 2026-09-26); stale current-model tables in notes 01/04 replaced with historical or family-level tables
 - [x] 02 PyTorch for LLMs + GPT-from-scratch lab - new PyTorch for LLMs note (APIs checked against torch 2.14); GPT lab run on CPU (tiny preset: loss 5.57 -> 1.85 in 400 steps; --compile path verified); default preset not GPU-verified
-- [ ] 03 Pretraining at Scale (new)
-- [ ] 04 Post-training & Reasoning (new)
+- [x] 03 Pretraining at Scale (new) - 5 new chapters (data curation, scaling laws, distributed training, stability/optimizers, accelerators) + 24-question bank; hardware figures from NVIDIA/Google spec pages (dense derived from sparse), worked numbers recomputed in Python
+- [x] 04 Post-training & Reasoning (new) - 3 new chapters (preference optimization, RL for LLMs, reasoning models & test-time compute) + 20-question bank; arXiv IDs spot-checked
 - [ ] 05 Fine-Tuning Lab (Qwen3, TRL SFT/DPO/GRPO)
 - [ ] 06 Evaluation & Benchmarks (new)
 - [ ] 07 Inference & Serving (deduped, vLLM V1 lab)
