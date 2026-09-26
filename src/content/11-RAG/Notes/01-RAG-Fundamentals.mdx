@@ -1,305 +1,200 @@
 # RAG Fundamentals
 
-## What Is Retrieval-Augmented Generation
+Retrieval-augmented generation (RAG) answers a question by first retrieving relevant passages from a corpus you control and then having a language model generate an answer grounded in, and citing, those passages.
 
-### Concept
+```objectives
+time: 45 min
+outcomes:
+  - Draw the indexing and query pipelines of a RAG system and name the design decision at each stage
+  - Explain which LLM limitations RAG addresses and which it does not
+  - Choose between RAG, fine-tuning and long-context prompting for a knowledge problem
+  - Map the classic failure modes of naive RAG to the chapters that fix them
+prerequisites:
+  - "[Context Engineering](../../10-Prompt-Engineering/Notes/06-Context-Engineering.mdx)"
+  - "[LLM Fundamentals](../../01-LLM-Foundations/Notes/01-LLM-Fundamentals.mdx)"
+```
 
-Retrieval-Augmented Generation (RAG) is an architecture that enhances an LLM's responses by providing relevant external context at inference time, retrieved from a corpus you control. Instead of relying solely on knowledge encoded in the model's weights during training, the model reads a curated context window assembled from your documents before generating an answer.
+## The Idea
 
-The term was formally introduced by Lewis et al. (2020) at Facebook AI Research, where the generator (a sequence-to-sequence model) was conditioned on retrieved documents from a non-parametric memory (a Wikipedia dense passage index). The core insight: separating **parametric memory** (weights) from **non-parametric memory** (documents) gives you the best of both worlds.
-
-**Three components:**
-1. **Retriever** - takes a query, searches a document store, returns top-k relevant passages
-2. **Augmentor** - assembles retrieved passages + original query into a structured prompt
-3. **Generator** - an LLM that reads the augmented prompt and produces a grounded answer
-
-**The fundamental contract:** The LLM is instructed (explicitly in the prompt) to answer using only the provided context. This constraint is what reduces hallucination - the model has less reason to fabricate when relevant facts are present in the context window.
+Lewis et al. (2020) combined a **parametric memory** - knowledge stored in model weights - with a **non-parametric memory**: a dense index over Wikipedia that the model could retrieve from at generation time. The idea became the dominant way to put private, fresh or verifiable knowledge in front of a model: keep facts in a store you can update and audit, and put the relevant ones in the context window when needed.
 
 ```mermaid
 flowchart TD
-    subgraph IDX["📥 Index Phase (offline)"]
-        D["📄 Documents"] --> CH["✂️ Chunk"] --> EMB["🧬 Embed"] --> VDB[("🗄️ Vector DB")]
+    subgraph IDX["📥 Indexing (offline, incremental)"]
+        D["📄 Sources<br/>PDFs, wikis, tickets, DBs"] --> P["🧹 Parse & clean<br/>layout, tables, metadata"]
+        P --> CH["✂️ Chunk"] --> EMB["🧬 Embed<br/>(+ sparse index)"] --> VS[("🗄️ Index<br/>vectors + text + metadata")]
     end
-    subgraph QRY["🔍 Query Phase (online)"]
-        Q["❓ User query"] --> EQ["🧬 Embed query<br/>(same model as indexing)"]
-        EQ --> ANN["📡 ANN search"] --> TOPK["📚 Top-k chunks"]
-        TOPK --> PR["📝 Build prompt<br/>context + query"]
-        PR --> LLM["🤖 LLM generates<br/>grounded answer"]
+    subgraph QRY["🔍 Query (online, per request)"]
+        Q["❓ Question"] --> QT["✏️ Query rewrite<br/>(optional)"]
+        QT --> RET["📡 Retrieve<br/>dense / sparse / hybrid<br/>+ metadata filters"]
+        RET --> RR["🎯 Rerank"]
+        RR --> CTX["🧩 Assemble context<br/>ordered, tagged, cited"]
+        CTX --> GEN["🤖 Generate<br/>grounded answer + citations"]
     end
-    VDB -.-> ANN
+    VS -.-> RET
 
-    style IDX fill:#e8f4fd,stroke:#4a9eca
-    style QRY fill:#d4edda,stroke:#28a745
+    style IDX fill:#e8e2d9,stroke:#ccc4b8
+    style QRY fill:#d8dfe8,stroke:#b0bac8
+    style GEN fill:#dde4dc,stroke:#b0c4b0
 ```
 
----
-
-## The Problem RAG Solves
-
-### Concept
-
-LLMs have three fundamental limitations that RAG addresses:
-
-**1. Knowledge cutoff (staleness)**
-Training data has a hard cutoff date. A model trained through April 2024 knows nothing about events after that date. In fast-moving domains (finance, news, product documentation, regulation), this renders the model unreliable. RAG bypasses the cutoff entirely - your vector DB is the source of truth, not the model weights.
-
-**2. Hallucination (confabulation)**
-LLMs generate plausible-sounding text by predicting tokens, not by retrieving facts. When a question touches knowledge the model has seen only sparsely, it will often generate confident-sounding wrong answers. Providing the correct passage in context dramatically reduces this - the model "reads" the answer rather than "inventing" it.
-
-Caveat: RAG does not eliminate hallucination. If the retrieved chunks are irrelevant, the model still hallucinates. If the retrieved chunks are relevant but the model ignores them (the "lost in the middle" problem), hallucination persists. RAG reduces hallucination; it does not eliminate it.
-
-**3. Private/proprietary knowledge**
-You cannot fine-tune a public model on your private documents every time they change. Even if you could, the cost is prohibitive. RAG gives you zero-latency "updates" - add a document to the vector DB and it's immediately retrievable.
-
-**What RAG does NOT solve:**
-- Complex reasoning requiring multi-step chains of thought (mitigated by Agentic RAG)
-- Numerical computation or structured data queries (use SQL/code tools instead)
-- Questions where the answer requires synthesizing thousands of documents (partially mitigated by GraphRAG)
-
-### Code
-
-```python
-# Demonstrating the "grounding" effect
-from langchain_google_genai import ChatGoogleGenerativeAI
-
-llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0)
-
-# Without RAG - likely to hallucinate on proprietary/recent info
-bare_answer = llm.invoke("What is the refund policy for Enterprise plan customers?")
-
-# With RAG - grounded in actual policy document
-context = """
-Enterprise plan customers are eligible for a full refund within 30 days of initial purchase.
-After 30 days, prorated refunds are available for unused months. Custom enterprise contracts
-may have different terms as specified in the signed agreement.
-"""
-grounded_answer = llm.invoke(
-    f"Using only the following context, answer the question.\n\n"
-    f"Context: {context}\n\n"
-    f"Question: What is the refund policy for Enterprise plan customers?\n\n"
-    f"If the context does not contain the answer, say 'I don't have that information.'"
-)
-```
-
----
-
-## RAG vs Fine-Tuning: When to Use Each
-
-### Concept
-
-This is one of the most common interview decision questions. The answer is nuanced - they address different problems, and sometimes you need both.
-
-**Fine-tuning** teaches the model new behavior patterns, styles, or formats by updating its weights. It does NOT reliably inject factual knowledge - studies show fine-tuned models still hallucinate on facts from the fine-tuning corpus.
-
-**RAG** injects factual knowledge at inference time without touching model weights. It does NOT teach the model new reasoning patterns or output styles.
-
-| Dimension | RAG | Fine-Tuning |
+| Stage | Key decision | Chapter |
 |---|---|---|
-| **Knowledge updates** | Instant (add to vector DB) | Requires retraining (hours/days) |
-| **Factual grounding** | Strong (explicit context) | Weak (facts stored in weights, prone to hallucination) |
-| **Cost per update** | Very low | High (compute + data) |
-| **Behavior/style adaptation** | Poor | Excellent |
-| **Domain-specific reasoning** | Depends on base model | Improved |
-| **Traceability** | High (source chunk is known) | None |
-| **Context length limit** | Yes (can't retrieve everything) | No (baked into weights) |
-| **Private data** | Stays in your DB | Must be in training data |
+| Parse and chunk | How documents become retrievable units | [Document Processing & Chunking](03-Document-Processing-and-Chunking.mdx) |
+| Embed and index | Which embedding model, which index, how much compression | [Embeddings & Vector Search](02-Embeddings-and-Vector-Search.mdx) |
+| Retrieve and rerank | Dense, sparse or hybrid; which reranker; how many candidates | [Retrieval & Reranking](04-Retrieval-and-Reranking.mdx) |
+| Generate | How context is arranged, how the model cites and abstains | [Grounded Generation & Citations](05-Grounded-Generation-and-Citations.mdx) |
+| Evaluate | Retrieval metrics, groundedness, answer quality | [RAG Evaluation](06-RAG-Evaluation.mdx) |
 
-**RAG wins when:**
-- Knowledge changes frequently (support docs, news, regulations)
-- You need source citations for auditability
-- The corpus is large and diverse
-- You can't afford fine-tuning compute
-
-**Fine-tuning wins when:**
-- You need a specific output format/style (JSON schemas, specialized language)
-- Domain-specific reasoning patterns are important (medical differential diagnosis)
-- Latency is critical and retrieval adds unacceptable overhead
-- The knowledge is small and stable (e.g., company jargon mapping)
-
-**Combined (RAG + Fine-Tuning):** Fine-tune for style and reasoning patterns, RAG for factual grounding. Example: a medical QA system where the fine-tuned model understands clinical reasoning patterns, and RAG provides specific drug information, guidelines, and patient records.
-
-**RAG vs Prompting (few-shot):** Few-shot prompting works when examples fit in the context window (~10 examples). RAG is needed when the knowledge base has thousands of relevant patterns - you can't manually select which 10 to include.
-
-### Code
-
-```python
-# Decision logic template for production
-def choose_knowledge_strategy(use_case: dict) -> str:
-    """
-    Returns: "rag", "finetune", "both", or "prompting"
-    """
-    if use_case["knowledge_changes_weekly"]:
-        if use_case["needs_citations"]:
-            return "rag"
-        return "rag"
-    
-    if use_case["needs_custom_reasoning_style"]:
-        if use_case["knowledge_is_large_and_changing"]:
-            return "both"
-        return "finetune"
-    
-    if use_case["examples_fit_in_context_window"]:
-        return "prompting"
-    
-    return "rag"  # default for most enterprise knowledge Q&A
-```
+**One invariant to remember:** the query must be embedded with the same model (and version) as the corpus. Vectors from different models live in different spaces; mixing them returns plausible-looking but meaningless results with no error. Changing the embedding model means re-embedding the whole corpus.
 
 ---
 
-## The Basic RAG Pipeline (Index → Retrieve → Augment → Generate)
+## A Minimal Pipeline
 
-### Concept
+Frameworks such as LangChain, LlamaIndex and Haystack package these steps, but the core fits in a few lines:
 
-The RAG pipeline has two distinct phases with very different performance characteristics:
+```python
+import numpy as np
+from sentence_transformers import SentenceTransformer
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-**Index Phase (offline, one-time + incremental updates)**
-```mermaid
-flowchart LR
-    A["📄 Raw Documents"] --> B["📥 Document loader<br/>(PDF, HTML, DOCX, etc.)"]
-    B --> D["✂️ Text splitter<br/>(chunking strategy)"]
-    D --> F["🧬 Embedding model<br/>(e.g., text-embedding-004)"]
-    F --> H[("🗄️ Vector Database<br/>Chroma, Pinecone, Vertex AI")]
+documents = {"refund-policy.md": "...", "sla.md": "..."}
+
+# Index (offline)
+splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=100)
+chunks = [(src, text) for src, doc in documents.items() for text in splitter.split_text(doc)]
+embedder = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+chunk_vecs = embedder.encode([t for _, t in chunks], normalize_embeddings=True)
+
+# Query (online)
+def retrieve(question: str, k: int = 5):
+    q = embedder.encode([question], normalize_embeddings=True)[0]
+    scores = chunk_vecs @ q                       # cosine similarity: vectors are normalised
+    return [(chunks[i][0], chunks[i][1]) for i in np.argsort(-scores)[:k]]
+
+def build_prompt(question: str, hits) -> str:
+    context = "\n".join(f'<doc id="{i}" source="{src}">{text}</doc>' for i, (src, text) in enumerate(hits, 1))
+    return ("Answer using only the documents below and cite them as [id]. "
+            "If they don't contain the answer, say you don't know.\n\n"
+            f"{context}\n\nQuestion: {question}")
+
+answer = llm(build_prompt(question, retrieve(question)))   # any chat model
 ```
 
-**Query Phase (online, per-request)**
-```mermaid
-flowchart LR
-    A["❓ User Query"] --> B["🧬 Embedding model<br/>(same model as index phase!)"]
-    B --> D["📡 ANN search<br/>(k=4-8 typical)"]
-    D --> E["📚 Top-k Chunks + Metadata"]
-    E --> F["📝 Prompt template"]
-    F --> G["🧾 Augmented Prompt"]
-    G --> H["🤖 LLM<br/>(Gemini, GPT-4, Claude)"]
-    H --> I(["✅ Answer"])
-```
+A production system adds document parsing, metadata and access filters, hybrid retrieval, a reranker, citation checking, caching, evaluation and monitoring - the rest of this module. The [code lab](../CodeLabs/01-Retrieval-Evaluation.mdx) measures how much each retrieval choice actually matters.
 
-**Critical invariant:** The embedding model used at query time MUST be the same model used during indexing. Switching embedding models requires re-indexing the entire corpus.
+---
 
-**Component choices and their trade-offs:**
+## What RAG Solves - and What It Doesn't
 
-| Component | Options | Key Trade-off |
+| LLM limitation | How RAG helps | Remaining risk |
 |---|---|---|
-| **Chunker** | Fixed-size, semantic, hierarchical | Chunk size: larger = more context, lower precision |
-| **Embedding model** | text-embedding-004, OpenAI ada-002, BGE-large | Quality vs cost vs latency |
-| **Vector DB** | Chroma (local), Pinecone (managed), pgvector (SQL) | Scale vs complexity vs cost |
-| **k (top-k)** | 3-8 typical | More chunks = more context, but also more noise |
-| **LLM** | Gemini, GPT-4, Claude | Quality vs cost vs latency |
+| **Knowledge cutoff** | The index can be updated minutes after a document changes | Stale index if ingestion lags or fails |
+| **Private knowledge** | Your documents are retrieved at query time; nothing is trained into weights | Access control must be enforced at retrieval |
+| **Hallucination** | The answer can be grounded in retrieved text | The model can still ignore, misread or embellish the context |
+| **Verifiability** | Answers cite sources a user can check | Citations can point to passages that don't support the claim |
 
-### Code
+RAG is the wrong tool - or needs help - for:
 
-```python
-import os
-from dotenv import load_dotenv
-from langchain_community.document_loaders import DirectoryLoader, PyPDFLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
-from langchain_community.vectorstores import Chroma
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnablePassthrough
-from langchain_core.output_parsers import StrOutputParser
+- **Aggregations and exact lookups over structured data** ("total revenue by region last quarter"): use SQL or an API as a tool.
+- **Computation**: use code execution.
+- **Questions needing synthesis across a whole corpus** ("what are the main themes in 10,000 reports?"): top-k retrieval sees a few chunks; graph-based or map-reduce approaches (see [Advanced RAG Patterns](07-Advanced-RAG-Patterns.mdx)) or agentic research (see [Agentic & Deep-Research RAG](08-Agentic-and-Deep-Research-RAG.mdx)) fit better.
+- **Small, stable corpora that fit in the context window**: just put them in the prompt and cache it (see [Long Context vs RAG vs CAG](09-Long-Context-RAG-and-CAG.mdx)).
 
-load_dotenv()
+---
 
-# --- INDEX PHASE ---
-loader = DirectoryLoader("./docs", glob="**/*.pdf", loader_cls=PyPDFLoader)
-raw_docs = loader.load()
+## RAG, Fine-Tuning or Long Context?
 
-splitter = RecursiveCharacterTextSplitter(
-    chunk_size=500,       # characters (not tokens)
-    chunk_overlap=50,     # overlap to avoid losing context at boundaries
-    separators=["\n\n", "\n", ". ", " "]  # prefer semantic breaks
-)
-chunks = splitter.split_documents(raw_docs)
+| Need | RAG | Fine-tuning | Long context (+ caching) |
+|---|---|---|---|
+| Facts that change weekly | ✅ Update the index | ❌ Retrain each time | ✅ If the corpus fits |
+| Citations and audit trail | ✅ Source per chunk | ❌ | ✅ With quote extraction |
+| Corpus of millions of documents | ✅ | ❌ | ❌ |
+| New output style, format or domain behaviour | ❌ | ✅ | ⚠️ Via examples |
+| Per-user access control | ✅ Filter at retrieval | ❌ | ⚠️ Per-user prompts |
+| Lowest latency per query | ⚠️ Retrieval adds ~50-300 ms | ✅ | ❌ Long prefill unless cached |
 
-embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
-vectorstore = Chroma.from_documents(
-    documents=chunks,
-    embedding=embeddings,
-    persist_directory="./chroma_db"
-)
+Fine-tuning changes **behaviour** reliably and injects **facts** unreliably - fine-tuned models still hallucinate about their training data, and updating facts means retraining. The common production combination is a fine-tuned or well-prompted model for behaviour plus RAG for knowledge. The decision between RAG and long-context prompting is covered in [Long Context vs RAG vs CAG](09-Long-Context-RAG-and-CAG.mdx).
 
-# --- QUERY PHASE ---
-retriever = vectorstore.as_retriever(
-    search_type="similarity",
-    search_kwargs={"k": 4}
-)
+---
 
-llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0)
+## Why Naive RAG Fails
 
-prompt = ChatPromptTemplate.from_template("""You are a helpful assistant. Answer the question using ONLY the provided context.
-If the context does not contain the answer, say "I don't have that information in my knowledge base."
+"Naive RAG" - fixed-size chunks, one embedding model, top-k, stuff the prompt - is a fine prototype and a poor product. Its failure modes, and where each is fixed:
 
-Context:
-{context}
+| Symptom | Root cause | Fix (chapter) |
+|---|---|---|
+| Right document exists but isn't retrieved | Vocabulary mismatch, rare terms, poor chunks | Hybrid retrieval, contextual chunks, query rewriting ([03](03-Document-Processing-and-Chunking.mdx), [04](04-Retrieval-and-Reranking.mdx)) |
+| Retrieved but ranked below noise | Bi-encoder imprecision | Reranking ([04](04-Retrieval-and-Reranking.mdx)) |
+| Answer spans two chunks | Chunk boundaries | Structure-aware chunking, parent-child retrieval ([03](03-Document-Processing-and-Chunking.mdx)) |
+| Tables and figures missing | Parsing loses layout | Layout-aware parsing, multimodal retrieval ([03](03-Document-Processing-and-Chunking.mdx), [07](07-Advanced-RAG-Patterns.mdx)) |
+| Context present but answer wrong or embellished | Generation ignores or misuses context | Context ordering, quote-then-answer, citation checks ([05](05-Grounded-Generation-and-Citations.mdx)) |
+| Multi-hop questions fail | One retrieval can't gather all hops | Iterative or agentic retrieval ([08](08-Agentic-and-Deep-Research-RAG.mdx)) |
+| Silent quality drift | No measurement | Retrieval and groundedness evals in CI and production ([06](06-RAG-Evaluation.mdx), [11](11-RAG-in-Production.mdx)) |
 
-Question: {question}
+---
 
-Answer:""")
+## Check Yourself
 
-def format_docs(docs):
-    return "\n\n---\n\n".join(doc.page_content for doc in docs)
-
-rag_chain = (
-    {"context": retriever | format_docs, "question": RunnablePassthrough()}
-    | prompt
-    | llm
-    | StrOutputParser()
-)
-
-answer = rag_chain.invoke("What are the key terms of the Enterprise SLA?")
-print(answer)
+```quiz
+- q: "After upgrading the embedding model used for queries, every answer becomes irrelevant but no errors appear. What happened?"
+  options:
+    - "The corpus was embedded with the old model, so query and document vectors are in different spaces"
+    - "The LLM changed"
+    - "The chunk size was too small"
+    - "The reranker is misconfigured"
+  answer: 1
+- q: "Which question is RAG over documents least suited to?"
+  options:
+    - "What was total revenue by region last quarter?"
+    - "What does our refund policy say about annual plans?"
+    - "Which runbook covers database failover?"
+    - "What did the 2025 security audit recommend?"
+  answer: 1
+  explain: "Aggregations over structured data belong in SQL or an analytics tool exposed to the model, not in top-k text retrieval."
+- q: "A 40-page product manual changes monthly and every answer must cite the page. Which approach is simplest?"
+  options:
+    - "Put the whole manual in a cached prompt and ask for quoted citations"
+    - "Fine-tune a model on the manual each month"
+    - "Build a GraphRAG index"
+    - "Train a custom embedding model"
+  answer: 1
+  explain: "A corpus that fits comfortably in the context window can be sent whole and cached; RAG earns its complexity at larger scale."
+- q: "Why does fine-tuning not replace RAG for fast-changing facts?"
+  answer: "Fine-tuning reliably changes behaviour and style but injects facts unreliably - models still hallucinate about their training data - and every fact change requires retraining and re-evaluation. RAG updates knowledge by updating the index and gives citations."
 ```
 
----
+## Exercises
 
-## Naive RAG Limitations
+```exercise
+- title: Run and break the minimal pipeline
+  task: |
+    Run the minimal pipeline above on 20 documents of your choice (e.g. a product's docs pages). Write 10 questions with known answers. Record how many retrieve the right chunk in the top 3. Then deliberately break it three ways - embed queries with a different model, set chunk_size to 50, set k to 1 - and record the effect of each.
+  solution: |
+    A different query model collapses retrieval to near random with no error; tiny chunks lose context and hurt answerability even when retrieval "hits"; k=1 loses recall on questions whose answer is spread across chunks. The exercise shows why each parameter needs measurement.
+- title: Choose an approach
+  task: |
+    For each case choose RAG, fine-tuning, long context, a tool (SQL/API) or a combination, and justify it in one sentence: (a) a support bot over 50,000 help-centre articles; (b) a model that must write discharge summaries in a hospital's house style; (c) "how many open P1 incidents do we have?"; (d) Q&A over a single 80-page contract.
+  solution: |
+    (a) RAG - large, changing corpus with citations. (b) Fine-tuning (or strong examples) for style, plus RAG for patient-specific facts. (c) A tool calling the incident system's API - an exact, live count. (d) Long context with caching and quote-then-answer - it fits in the window and needs whole-document reasoning.
+```
 
-### Concept
+## Study Notes
 
-Even the basic pipeline above has well-documented failure modes. Knowing these is critical for interview discussions about why you'd adopt Advanced or Modular RAG:
+**Must-know:**
+- RAG = retrieve relevant passages from your corpus, then generate a cited answer grounded in them (Lewis et al., 2020)
+- Two pipelines: indexing (parse, chunk, embed, index) and query (rewrite, retrieve, rerank, assemble, generate)
+- Same embedding model for queries and corpus - mismatches fail silently
+- RAG helps with freshness, private data, grounding and citations; not with aggregations, computation or whole-corpus synthesis
+- Fine-tune for behaviour, retrieve for knowledge; small stable corpora can simply go in a cached prompt
+- Naive RAG's failures map to chunking, hybrid retrieval, reranking, grounded generation, agentic retrieval and evaluation
 
-**1. Retrieval failures**
-- **Wrong k**: Too few chunks → missing information. Too many chunks → noise drowns signal.
-- **Query-document mismatch**: User uses colloquial language ("price"), document uses formal language ("pricing schedule"). Semantic embeddings help but don't fully solve this.
-- **Chunk boundary issues**: A key fact is split across two chunks; neither chunk alone contains the full answer.
+## References
 
-**2. Context window failures**
-- **Lost in the middle**: Studies (Liu et al., 2023) show LLMs perform significantly worse when relevant information is placed in the middle of a long context, not at the beginning or end.
-- **Context overflow**: Even with 128K context windows, 50+ chunks degrade generation quality.
+- Lewis et al., [Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401) (NeurIPS 2020)
+- Gao et al., [Retrieval-Augmented Generation for Large Language Models: A Survey](https://arxiv.org/abs/2312.10997) (2023)
+- Ovadia et al., [Fine-Tuning or Retrieval? Comparing Knowledge Injection in LLMs](https://arxiv.org/abs/2312.05934) (EMNLP 2024)
+- Gekhman et al., [Does Fine-Tuning LLMs on New Knowledge Encourage Hallucinations?](https://arxiv.org/abs/2405.05904) (EMNLP 2024)
 
-**3. Generation failures**
-- **Ignoring context**: Models sometimes default to parametric memory even when the retrieved context contains the correct answer.
-- **Over-reliance on context**: The model copies verbatim from context without synthesizing, producing answer "summaries" rather than answers.
-- **Hallucinated citations**: Models may confidently cite chunks that don't say what the model claims.
-
-**4. Index quality issues**
-- **Stale index**: New documents aren't indexed promptly; users get outdated answers.
-- **No de-duplication**: Near-duplicate chunks waste context window space and distort retrieval rankings.
-
----
-
-## Interview Q&A
-
-**Q: Why doesn't RAG fully eliminate hallucination?** `[Medium]`
-A: RAG reduces hallucination by providing relevant context, but three failure paths remain: (1) the retrieval step fails to surface the relevant chunk, leaving the model without grounding, (2) the "lost in the middle" effect causes the model to ignore relevant context placed in the middle of a long context window, (3) the model still has strong parametric priors that can override the retrieved context, especially for popular misconceptions the model saw repeatedly in training.
-
-**Q: When would you fine-tune a model instead of using RAG?** `[Easy]`
-A: Fine-tune when you need to change the model's reasoning patterns, output format/style, or domain-specific language use - behaviors that can't be achieved by injecting context at inference time. Examples: teaching a model to output medical SOAP notes in a specific format, or adapting a model to use specialized jargon correctly. RAG cannot teach new behavior; it can only provide new facts.
-
-**Q: What is the critical invariant in a RAG pipeline that, if violated, causes silent total failure?** `[Hard]`
-A: Using a different embedding model at query time than at index time. Since vector similarity is only meaningful within the same embedding space, switching models (e.g., from `text-embedding-004` to `ada-002`) causes every query to retrieve semantically unrelated chunks. The system still returns results (no error), but every answer will be wrong. This is a silent failure - no exception is thrown, and basic integration tests won't catch it unless they check answer quality.
-
-**Q: Explain the RAG pipeline to a non-technical stakeholder in one minute.** `[Easy]`
-A: Think of RAG like giving your AI assistant a book before asking it a question. Instead of expecting it to know everything from training, you find the relevant pages first (retrieval), clip them to the question (augmentation), then have the AI answer using those pages (generation). This makes answers more accurate and lets you update the "book" without retraining the AI.
-
-**Q: A RAG system has high retrieval recall but still produces wrong answers. What are the likely causes?** `[Hard]`
-A: If retrieval is good (relevant chunks ARE being retrieved), the problem is in generation or augmentation: (1) **Faithfulness failure** - the LLM ignores retrieved context and uses parametric memory instead; diagnose by checking RAGAS faithfulness score. (2) **Lost in the middle** - relevant chunk is retrieved but placed in the middle of the context; fix by reordering chunks or using a cross-encoder reranker to place the highest-scoring chunks first. (3) **Context contradiction** - retrieved chunks contain conflicting information; the model may average or choose the wrong one; fix with better deduplication and source filtering. (4) **Prompt design** - the instruction to "use only the context" is not strong enough; strengthen the grounding instruction.
-
-**Q: What's the difference between the index phase and query phase in terms of latency requirements?** `[Easy]`
-A: The index phase is offline/batch - latency is not user-facing, so you can spend seconds per document on expensive embedding calls. The query phase is online/real-time - users are waiting, so p95 latency should be under 2-3 seconds total (including retrieval + reranking + LLM generation). This asymmetry means you can afford expensive but high-quality embedding models in the index phase (they run once per document) but must be more careful about what you add to the query-time path.
-
-**Q: How would you handle a corpus with both English and Spanish documents in a RAG system?** `[Medium]`
-A: Two approaches: (1) **Multilingual embeddings** - use a model like `multilingual-e5-large` or `text-multilingual-embedding-002` (Vertex AI) that projects both languages into the same embedding space; query in any language and retrieve across languages. (2) **Language-separated indices** - detect query language, route to the corresponding language's index; more complex but allows language-specific embedding models for higher quality. For most production systems, approach 1 is simpler and good enough; approach 2 is worth the complexity when per-language retrieval quality must be maximized.
-
-**Q: The basic RAG pipeline retrieves k=4 chunks. A user complains answers are often incomplete. How do you debug this?** `[Medium]`
-A: Instrument the retrieval step to log (query, retrieved chunks, answer) triples. Check: (1) Are the right chunks being retrieved at rank 1-4, or are they ranked lower? If yes, increase k temporarily to verify - if answer quality improves with k=10, the issue is retrieval ranking, not retrieval recall. (2) Are the right chunks in the index at all? Search the vector DB for the exact answer text - if it's not there, the issue is chunking (information is split across chunks) or missing documents. (3) If the right chunk is retrieved, is it being used in the answer? Compare retrieved context to answer; if the answer ignores the context, it's a faithfulness/generation issue.
+*Last reviewed: 2026-09*

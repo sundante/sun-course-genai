@@ -1,455 +1,228 @@
-# Chunking and Indexing Strategies
+# Document Processing & Chunking
 
-## Why Chunking Matters
+Before anything can be retrieved, documents must be parsed into clean text with structure and metadata, and split into chunks small enough to retrieve precisely yet complete enough to answer from - decisions that set the ceiling on retrieval quality.
 
-### Concept
-
-Chunking is the most underappreciated quality lever in RAG. A perfect retriever can't save you if the answer is split across two chunks. A perfect embedding model can't save you if your chunks contain too much noise. **Chunking quality sets the ceiling of retrieval quality.**
-
-The core tension: chunk size creates a fundamental precision/recall trade-off.
-
-**Small chunks (100-300 chars):**
-- Higher semantic precision - the retrieved chunk is tightly focused on one idea
-- Lower contextual completeness - the surrounding context needed to understand the answer may be in adjacent chunks
-- More chunks in the index → higher storage and retrieval cost
-- Better for factoid Q&A: "What is the capital of France?"
-
-**Large chunks (1000-2000 chars):**
-- More context per chunk - surrounding sentences provide interpretive context
-- Lower retrieval precision - a large chunk about "pricing" also contains unrelated terms that dilute the embedding
-- Fewer chunks in index → lower storage cost
-- Better for summarization and nuanced questions
-
-**Rule of thumb starting points:**
-- Customer support / FAQ: 256-512 chars, 50 char overlap
-- Technical documentation: 512-1000 chars, 100 char overlap
-- Legal / regulatory documents: 1000-2000 chars, 200 char overlap (legal context matters)
-- Code: function-level chunking (not character-based)
-
-**The overlap parameter:** Overlap ensures information at chunk boundaries doesn't get lost. If chunk N ends mid-sentence, overlap means chunk N+1 starts 50 characters into chunk N, preserving the boundary context.
-
----
-
-## Fixed-Size Chunking
-
-### Concept
-
-The simplest strategy: split text into chunks of N characters (or tokens) with M character overlap. LangChain's `RecursiveCharacterTextSplitter` is the standard implementation - it tries to split on paragraph breaks first, then sentence breaks, then word breaks, only falling back to hard character splits if necessary.
-
-**Character-based vs token-based:**
-- Character-based: faster to compute, but chunks may vary in token count. A 500-char chunk in English averages ~125 tokens; in German or CJK languages, character-to-token ratio differs.
-- Token-based: more predictable context window usage. Use `tiktoken` or the model's tokenizer. Preferred when you're close to the LLM's context window limit.
-
-**Recursive separators (in priority order):**
-1. `"\n\n"` - paragraph break (strongest semantic boundary)
-2. `"\n"` - line break
-3. `". "` - sentence end
-4. `" "` - word boundary
-5. `""` - character boundary (last resort)
-
-This priority ensures chunks are split at the most meaningful boundaries available.
-
-### Code
-
-```python
-from langchain.text_splitter import (
-    RecursiveCharacterTextSplitter,
-    TokenTextSplitter
-)
-from langchain_community.document_loaders import PyPDFLoader
-
-# Character-based (most common)
-char_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=500,
-    chunk_overlap=50,
-    separators=["\n\n", "\n", ". ", " ", ""],
-    length_function=len  # len() counts characters
-)
-
-# Token-based (use when LLM context window is a concern)
-token_splitter = TokenTextSplitter(
-    chunk_size=128,     # tokens, not characters
-    chunk_overlap=10,
-    encoding_name="cl100k_base"  # GPT-4 / Gemini compatible
-)
-
-# Load and split
-loader = PyPDFLoader("policy.pdf")
-docs = loader.load()
-chunks = char_splitter.split_documents(docs)
-
-# Inspect chunk quality
-for i, chunk in enumerate(chunks[:3]):
-    print(f"Chunk {i}: {len(chunk.page_content)} chars")
-    print(f"  Preview: {chunk.page_content[:100]!r}")
-    print(f"  Metadata: {chunk.metadata}\n")
+```objectives
+time: 55 min
+outcomes:
+  - Choose a parsing approach for PDFs, scanned documents, HTML, tables and slides, and explain what layout-aware parsing preserves
+  - Compare fixed, recursive, structure-aware and semantic chunking, and pick a starting chunk size to tune on an eval
+  - Implement parent-child retrieval and contextual retrieval, and explain the problem each solves
+  - Explain late chunking and when it helps
+  - Design the metadata captured at ingest for filtering, citation and access control
+prerequisites:
+  - "[Embeddings & Vector Search](02-Embeddings-and-Vector-Search.mdx)"
 ```
 
----
+```mermaid
+flowchart LR
+    SRC["📄 Source file<br/>PDF, DOCX, HTML, slides"] --> PARSE["🔎 Parse<br/>text + layout + tables<br/>+ images"]
+    PARSE --> CLEAN["🧹 Clean & normalise<br/>headers/footers, dedup"]
+    CLEAN --> META["🏷️ Metadata<br/>source, section, date,<br/>ACL, version"]
+    META --> CHUNK["✂️ Chunk<br/>structure-aware"]
+    CHUNK --> ENRICH["✨ Enrich<br/>context prefix,<br/>summaries, questions"]
+    ENRICH --> IDX[("🗄️ Index")]
 
-## Semantic and Recursive Chunking
-
-### Concept
-
-Fixed-size chunking is blind to content structure. A 500-character hard split might bisect a key sentence or merge two unrelated topics. Semantic chunking analyzes the content and splits at points of semantic change.
-
-**Semantic chunking algorithm (LangChain `SemanticChunker`):**
-1. Split text into sentences
-2. Embed each sentence (or a sliding window of 3 sentences for stability)
-3. Compute cosine similarity between consecutive sentence groups
-4. Split where cosine similarity drops significantly (semantic breakpoint)
-5. Optionally set a minimum and maximum chunk size
-
-**Benefits:**
-- Each chunk is semantically coherent - about one topic
-- Splits happen at natural topic boundaries, not arbitrary character counts
-- Embeddings of semantic chunks have higher semantic purity → better retrieval precision
-
-**Drawbacks:**
-- Slower to build (requires embedding every sentence)
-- Produces variable-size chunks (hard to predict token budget)
-- Slightly worse recall for facts at topic boundaries
-
-**When to prefer semantic chunking:**
-- Long-form documents with multiple distinct topics (annual reports, research papers)
-- When retrieval precision is more important than build-time speed
-- When chunk sizes vary dramatically (some topics are brief, others extensive)
-
-### Code
-
-```python
-from langchain_experimental.text_splitter import SemanticChunker
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-
-embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
-
-# Percentile breakpoint: split where similarity drop is in bottom 5th percentile
-semantic_splitter = SemanticChunker(
-    embeddings=embeddings,
-    breakpoint_threshold_type="percentile",  # "percentile", "standard_deviation", "interquartile"
-    breakpoint_threshold_amount=95,           # split at top 5% sharpest drops
-)
-
-chunks = semantic_splitter.split_documents(docs)
-
-# Compare chunk sizes: semantic vs fixed
-fixed_chunks = RecursiveCharacterTextSplitter(chunk_size=500).split_documents(docs)
-print(f"Fixed: {len(fixed_chunks)} chunks, avg {sum(len(c.page_content) for c in fixed_chunks)//len(fixed_chunks)} chars")
-print(f"Semantic: {len(chunks)} chunks, avg {sum(len(c.page_content) for c in chunks)//len(chunks)} chars")
-
-# Custom semantic chunking for domain-specific documents
-def semantic_chunk_by_section(text: str) -> list[str]:
-    """Chunk research papers by section headers."""
-    import re
-    section_pattern = r'^#{1,3}\s+.+$'  # Markdown headers
-    parts = re.split(section_pattern, text, flags=re.MULTILINE)
-    headers = re.findall(section_pattern, text, flags=re.MULTILINE)
-    return [f"{h}\n{p}" for h, p in zip(headers, parts[1:]) if p.strip()]
+    style PARSE fill:#e8e0d4,stroke:#c8b89a
+    style CHUNK fill:#d8dfe8,stroke:#b0bac8
+    style ENRICH fill:#dde4dc,stroke:#b0c4b0
 ```
 
----
+## Parsing: Garbage In, Garbage Retrieved
 
-## Hierarchical and Parent-Child Chunking
+Many "retrieval failures" are parsing failures: a table flattened into a word salad, two-column text interleaved line by line, headers and footers repeated in every chunk, a scanned page with no text at all.
 
-### Concept
+| Content | Approach |
+|---|---|
+| Digital PDFs with simple layout | Text extraction (PyMuPDF / `pymupdf4llm` to Markdown) |
+| Complex layouts, multi-column, tables | Layout-aware parsers: Docling, Unstructured, Marker, or cloud services (Google Document AI layout parser, Amazon Textract, Azure Document Intelligence) |
+| Scanned documents | OCR - increasingly with vision-language models that output Markdown directly |
+| Tables | Keep them whole; serialise as Markdown or HTML with headers; for large tables, store rows in a database and let the model query it |
+| Figures and charts | Caption them with a vision model and index the caption, or retrieve page images directly (ColPali, see [Advanced RAG Patterns](07-Advanced-RAG-Patterns.mdx)) |
+| HTML | Extract the main content (e.g. Trafilatura), keep heading structure |
+| Code | Parse by syntax (functions, classes) rather than characters |
 
-Hierarchical chunking solves a fundamental retrieval-generation tension:
-- **Small chunks** → better retrieval precision (focused semantic content)
-- **Large chunks** → better generation quality (more context for the LLM)
-
-Parent-child chunking provides both by maintaining two levels of granularity:
-- **Small child chunks** (100-200 chars) are stored in the vector index and used for retrieval
-- **Large parent chunks** (1000-2000 chars) are stored separately and returned for generation
-
-At query time:
-1. Embed query → ANN search against small child chunk index
-2. Identify which child chunks matched
-3. Return their parent chunks (much richer context) to the LLM
-
-**Result:** Retrieval precision of small chunks + generation quality of large chunks.
-
-**Variants:**
-
-| Variant | Index | Return |
-|---|---|---|
-| Parent-child (standard) | Small children (~200 chars) | Parent (~1000 chars) |
-| Sentence window | Individual sentences | ±3 surrounding sentences |
-| Document-level | Paragraph-level chunks | Full document |
-
-### Code
-
-```python
-from langchain.retrievers import ParentDocumentRetriever
-from langchain.storage import InMemoryStore
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-
-# Parent chunks (large, for generation context)
-parent_splitter = RecursiveCharacterTextSplitter(chunk_size=1500, chunk_overlap=200)
-
-# Child chunks (small, for precise retrieval)
-child_splitter = RecursiveCharacterTextSplitter(chunk_size=200, chunk_overlap=20)
-
-# Storage: vector store for child embeddings, docstore for parent text
-from langchain_community.vectorstores import Chroma
-child_vectorstore = Chroma(embedding_function=embeddings, collection_name="children")
-parent_docstore = InMemoryStore()  # use Redis or GCS for production
-
-parent_retriever = ParentDocumentRetriever(
-    vectorstore=child_vectorstore,
-    docstore=parent_docstore,
-    child_splitter=child_splitter,
-    parent_splitter=parent_splitter,
-)
-
-# Index: adds both parent and child chunks
-parent_retriever.add_documents(docs)
-
-# Query: searches small children, returns large parents
-results = parent_retriever.invoke("What is the quarterly revenue growth rate?")
-# results contain parent chunk text (1500 chars), not child chunk (200 chars)
-
-# Sentence window retriever (manual implementation)
-def sentence_window_retrieve(query: str, window: int = 2) -> list[str]:
-    """Retrieve by sentence, return sentence + surrounding window."""
-    results = sentence_vectorstore.similarity_search(query, k=5)
-    enriched = []
-    for result in results:
-        source_doc_id = result.metadata["doc_id"]
-        sentence_idx = result.metadata["sentence_idx"]
-        all_sentences = sentence_index[source_doc_id]
-        
-        start = max(0, sentence_idx - window)
-        end = min(len(all_sentences), sentence_idx + window + 1)
-        enriched.append(" ".join(all_sentences[start:end]))
-    return enriched
-```
+Output **Markdown with headings preserved** where you can: it keeps the document's structure available for chunking and for the model. Spot-check parsed output for every new document type before indexing it - a five-minute look catches most problems.
 
 ---
 
-## Metadata and Filtering
+## Chunking Strategies
 
-### Concept
-
-Metadata pre-filtering is one of the most impactful but least discussed RAG optimizations. By filtering on structured attributes BEFORE the ANN search, you:
-1. Reduce the search space → faster ANN search and better recall within the relevant subset
-2. Enforce access control → prevent retrieving unauthorized documents
-3. Improve answer quality → answers from the relevant date/category/source
-
-**Types of metadata to capture at ingest:**
-- `source_type`: "policy", "faq", "legal", "technical"
-- `department`: "hr", "legal", "engineering"
-- `date`: document creation/update date (for time-windowed queries)
-- `author`: useful for attribution
-- `language`: for multilingual corpora
-- `security_level`: "public", "internal", "confidential"
-- `product`: "enterprise", "starter", "all"
-
-**Pre-filter vs post-filter:**
-- **Pre-filter** (database-level): filters applied INSIDE the ANN search. The search only considers matching vectors. Fast, but some vector DBs implement this imperfectly (lower recall for pre-filtered HNSW).
-- **Post-filter** (application-level): run ANN search on all vectors, then filter results. Fast ANN, but may return too few results after filtering if k is small.
-
-**Best practice:** Pre-filter for large exclusions (e.g., department isolation = exclude 80% of docs). Use a larger k (k=50 instead of k=5) when post-filtering to ensure enough results survive the filter.
-
-### Code
-
-```python
-from langchain_community.vectorstores import Chroma
-
-# Add metadata during indexing
-from langchain.schema import Document
-
-def create_chunk_with_metadata(text: str, source_file: str, page: int, 
-                                 department: str, date: str) -> Document:
-    return Document(
-        page_content=text,
-        metadata={
-            "source": source_file,
-            "page": page,
-            "department": department,
-            "date": date,
-            "content_hash": hashlib.md5(text.encode()).hexdigest()
-        }
-    )
-
-# Query with pre-filtering (Chroma)
-results = vectorstore.similarity_search(
-    query="refund policy",
-    k=5,
-    filter={
-        "department": "legal",
-        "$and": [
-            {"date": {"$gte": "2023-01-01"}},  # Chroma filter syntax
-            {"source_type": {"$eq": "policy"}}
-        ]
-    }
-)
-
-# Pinecone metadata filtering
-from langchain_pinecone import PineconeVectorStore
-
-pinecone_vs = PineconeVectorStore(index=index, embedding=embeddings)
-results = pinecone_vs.similarity_search(
-    query="refund policy",
-    k=5,
-    filter={
-        "department": {"$eq": "legal"},
-        "date": {"$gte": "2023-01-01"}
-    }
-)
-
-# Qdrant payload filtering (most expressive filter syntax)
-from qdrant_client.http.models import Filter, FieldCondition, MatchValue, Range
-
-qdrant_filter = Filter(
-    must=[
-        FieldCondition(key="department", match=MatchValue(value="legal")),
-        FieldCondition(key="year", range=Range(gte=2023))
-    ]
-)
-```
-
----
-
-## Document-Type Specific Strategies
-
-### Concept
-
-Different document types need different chunking approaches. Using a generic text splitter on all document types is a common production mistake.
-
-**PDFs:**
-- Challenge: headers, footers, page numbers, multi-column layouts, tables
-- Tool: `pymupdf` (`fitz`) for complex PDFs, or Google Document AI for scanned PDFs
-- Strategy: extract text page-by-page, strip page numbers/headers, then split semantically
-
-**HTML / Web pages:**
-- Challenge: navigation bars, ads, sidebars contain noise
-- Tool: `trafilatura` extracts main content and discards nav/footer/ads
-- Strategy: extract main content first, then split on HTML headers (`<h1>`, `<h2>`)
-
-**Code:**
-- Challenge: semantic meaning depends on function/class boundaries, not sentences
-- Tool: `RecursiveCharacterTextSplitter` with code-specific separators
-- Strategy: split by function/class definitions; include docstrings with the function body
-
-**Tables:**
-- Challenge: tabular data loses meaning when text-serialized and split mid-row
-- Strategy: serialize as Markdown tables (each row as one chunk), or use specialized table parsers
-- Alternatively: store tables in a structured database, query with SQL
-
-### Code
-
-```python
-# PDF with complex layout
-import fitz  # pymupdf
-
-def extract_pdf_clean(pdf_path: str) -> list[dict]:
-    doc = fitz.open(pdf_path)
-    pages = []
-    for page_num, page in enumerate(doc):
-        blocks = page.get_text("blocks")
-        # Filter out headers/footers by y-position
-        content_blocks = [
-            b[4] for b in blocks
-            if b[1] > 50 and b[3] < page.rect.height - 50  # exclude top/bottom 50 pts
-            and len(b[4].strip()) > 20  # skip short noise strings
-        ]
-        pages.append({"page": page_num + 1, "content": "\n".join(content_blocks)})
-    return pages
-
-# HTML content extraction
-from trafilatura import fetch_url, extract
-
-html = fetch_url("https://example.com/policy")
-clean_text = extract(html, include_tables=True, no_fallback=False)
-
-# Code chunking
-code_splitter = RecursiveCharacterTextSplitter.from_language(
-    language="python",
-    chunk_size=1000,
-    chunk_overlap=100
-)
-# Uses Python-specific separators: class defs, function defs, decorators
-
-# Table serialization
-def table_to_chunks(df) -> list[str]:
-    """Convert DataFrame to searchable text chunks (one row per chunk for precision)."""
-    chunks = []
-    for _, row in df.iterrows():
-        row_text = " | ".join([f"{col}: {val}" for col, val in row.items()])
-        chunks.append(row_text)
-    return chunks
-
-# Or as markdown (better for LLM generation)
-def df_to_markdown_chunks(df, chunk_rows: int = 20) -> list[str]:
-    """Chunk DataFrame as Markdown tables."""
-    chunks = []
-    for i in range(0, len(df), chunk_rows):
-        chunks.append(df.iloc[i:i+chunk_rows].to_markdown(index=False))
-    return chunks
-```
-
----
-
-## Cross-Chunk Retrieval Problem
-
-### Concept
-
-One of the most common retrieval failure modes: a semantic unit (key claim, definition, or answer) is **split across two or more adjacent chunks** by the chunking process. Neither chunk alone scores high enough in ANN search to be retrieved, so the answer is effectively lost even though the document contains it.
-
-**Why this happens:**
-- Fixed-size chunking splits at character/token counts, not topic boundaries
-- A definition may start at the end of chunk N and finish at the start of chunk N+1
-- An ANN search for the full concept matches neither chunk precisely - both are partial
-
-**Six strategies to mitigate cross-chunk retrieval failures:**
-
-| Strategy | How It Works | Implementation | Trade-off |
+| Strategy | How | Good for | Watch out for |
 |---|---|---|---|
-| **1. Hierarchical / Parent-Child Chunking** | Retrieve with small precise child chunks; return larger parent chunks to the LLM | `ParentDocumentRetriever` in LangChain | Higher storage (two indices); see dedicated section above |
-| **2. Chunk Overlap (20–40%)** | Adjacent chunks share a sliding window of content - boundary information appears in both chunks | `chunk_overlap=100` in `RecursiveCharacterTextSplitter` | Larger index size; redundant storage of ~30% of content |
-| **3. Multi-Vector Retrieval** | Generate multiple embeddings per chunk (summary + full text + hypothetical Q) | `MultiVectorRetriever`; index summary embedding, store full chunk | More complex ingest; improves recall for differently-phrased queries |
-| **4. Neighborhood Expansion at Retrieval** | After ANN search, fetch N adjacent chunks (before + after) and return them together | Post-retrieval step: look up `chunk_id ± 1` in the docstore | Increases context window usage; adds latency for docstore lookups |
-| **5. Cross-Encoder / Reranker over Expanded Set** | Over-retrieve k=20 candidates including neighbors, then rerank the full set with a cross-encoder | Stage 1: ANN k=20 + neighbors; Stage 2: cross-encoder rerank to top 5 | Best precision improvement; adds ~100ms reranking latency |
-| **6. Long-Context Models or Contextual Merging** | Use a model with a very large context window; merge all retrieved chunks into one long context | Gemini 1.5 Pro (1M tokens), GPT-4 Turbo (128K) as generator | High token cost per query; "lost in the middle" problem for very long contexts |
+| **Fixed-size (tokens)** | Every N tokens with overlap | Baselines; uniform text | Splits mid-sentence and mid-table |
+| **Recursive** | Split on paragraphs, then lines, then sentences, then words until chunks fit | A strong general default | Ignores document semantics beyond separators |
+| **Structure-aware** | Split on headings, sections, list items, code units; carry the heading path as metadata | Docs, manuals, policies, code | Very long sections need a secondary split |
+| **Semantic** | Embed sentences and split where similarity between neighbours drops | Long unstructured prose | Extra cost; studies find no consistent gain over simpler methods |
+| **Document-level** | Whole short documents (FAQ entries, tickets) | Naturally small units | Long documents exceed embedding limits |
 
-**Recommended production flow for cross-chunk recall:**
+```python
+from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
+
+# 1. Split on structure, keeping the heading path as metadata
+by_section = MarkdownHeaderTextSplitter(
+    headers_to_split_on=[("#", "h1"), ("##", "h2"), ("###", "h3")]
+).split_text(markdown_doc)
+
+# 2. Split long sections by tokens (measured with a real tokenizer)
+by_size = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+    encoding_name="o200k_base", chunk_size=400, chunk_overlap=60
+).split_documents(by_section)
+
+for chunk in by_size:   # prepend the heading path so the chunk is self-describing
+    path = " > ".join(v for k, v in chunk.metadata.items() if k.startswith("h"))
+    chunk.page_content = f"{path}\n\n{chunk.page_content}"
 ```
-1. Ingest with 20% overlap (cheap insurance against boundary splits)
-2. Use parent-child for documents with variable structure (annual reports, legal docs)
-3. At retrieval: ANN k=20 → fetch ±1 neighbors for top-5 candidates → rerank 25 → take top 5
-4. Monitor: if faithfulness drops for multi-paragraph answers, increase overlap or k
-```
 
-**Retrieval improvement at each stage:**
-
-| Stage | Method | Effect on Recall@5 |
-|---|---|---|
-| Baseline (dense k=5) | - | 0.62 |
-| + Overlap 20% | Chunk overlap | +0.05 → 0.67 |
-| + Hybrid (BM25 + dense) | RRF fusion | +0.06 → 0.73 |
-| + Neighborhood expansion | ±1 adjacent chunks | +0.03 → 0.76 |
-| + Cross-encoder rerank | Rerank k=20 → top 5 | +0.08 → 0.84 |
-
-*Note: numbers are representative benchmarks from RAG literature; results vary by corpus.*
+**Starting point:** structure-aware splitting, then 256-512-token chunks with 10-20% overlap, and the section path prepended to each chunk. Then tune chunk size and overlap on your retrieval eval - optimal sizes differ between FAQ-style and narrative corpora. Evaluations by Chroma (2024) and Qu et al. (2024) found that semantic chunking does not reliably beat well-tuned recursive chunking, so don't pay for it by default.
 
 ---
 
-## Interview Q&A
+## Decoupling Retrieval Units from Context Units
 
-**Q: What is the retrieval precision/recall trade-off in chunk sizing, and how do you decide?** `[Medium]`
-A: Smaller chunks have higher retrieval precision - the retrieved text is tightly focused on the relevant topic with less noise. But smaller chunks may miss surrounding context needed to answer the question, reducing generation quality. Larger chunks include more context but their embeddings are "diluted" by multiple topics, reducing retrieval precision. The right chunk size depends on query type: factoid Q&A benefits from small precise chunks; synthesis and analysis questions need larger contextual chunks. Parent-child chunking resolves the tension: retrieve with small chunks, generate with their larger parents.
+Small chunks retrieve precisely; large chunks give the model enough context. You can have both.
 
-**Q: Why does RecursiveCharacterTextSplitter outperform simple split-by-N-characters?** `[Easy]`
-A: RecursiveCharacterTextSplitter applies a priority list of separators, attempting to split at paragraph boundaries first, then sentence boundaries, then word boundaries, only falling back to hard character splits as a last resort. This ensures chunks respect semantic and syntactic boundaries where possible. A naive N-character split often bisects sentences mid-word, creating chunks with incomplete sentences and poor embeddings.
+| Pattern | Index | Return to the model |
+|---|---|---|
+| **Parent-child (small-to-big)** | Small child chunks (~100-200 tokens) | Their parent section (~1,000-2,000 tokens) |
+| **Sentence window** | Single sentences | The sentence ± a few neighbours |
+| **Neighbour expansion** | Normal chunks | The hit plus its adjacent chunks (`chunk_id ± 1`) |
+| **Multi-vector** | Several vectors per chunk: summary, hypothetical questions, full text | The full chunk |
 
-**Q: How does parent-child chunking improve RAG quality over standard chunking?** `[Medium]`
-A: Parent-child chunking decouples retrieval granularity from generation context. Small child chunks (100-200 chars) produce focused, high-precision embeddings - ANN search finds the right topic. But the LLM receives the larger parent chunk (1000-2000 chars) containing the full section context, improving answer completeness. Without this pattern, you face a dilemma: small chunks = good retrieval, poor generation; large chunks = poor retrieval, good generation. Parent-child gives both.
+```python
+from langchain_classic.retrievers import ParentDocumentRetriever
+from langchain_core.stores import InMemoryStore          # use Redis, a database or object storage in production
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-**Q: You're building a RAG system over a legal document corpus. What chunking strategy would you use and why?** `[Hard]`
-A: Legal documents require large chunks with substantial overlap because: (1) legal meaning is highly context-dependent - a definition in section 2 affects clause interpretation in section 8; (2) legal language is precise and formal, so semantic chunking on topic shifts works well; (3) cross-references between sections mean that a 200-char chunk often lacks the context to be understood alone. Strategy: semantic chunking with a minimum chunk size of 800 chars and maximum 2000 chars, with 20% overlap. Add rich metadata: section number, clause type (definition, obligation, exception), contract type, effective date. For retrieval, use parent-child: retrieve by clause (semantic unit), return the surrounding article (broader legal context) to the LLM.
+retriever = ParentDocumentRetriever(
+    vectorstore=vectorstore,                              # holds child-chunk embeddings
+    docstore=InMemoryStore(),                             # holds parent text by id
+    child_splitter=RecursiveCharacterTextSplitter(chunk_size=400),
+    parent_splitter=RecursiveCharacterTextSplitter(chunk_size=4000),
+)
+retriever.add_documents(docs)
+parents = retriever.invoke("What is the notice period for termination?")
+```
 
-**Q: How do you handle metadata filtering in a system where users have fine-grained access controls (e.g., user can access marketing docs from 2022-2024 but not HR docs)?** `[Hard]`
-A: Model access control as metadata attributes at ingest time: tag every chunk with `department`, `classification_level`, and `date`. At query time, compute the user's permission set from their IAM/RBAC role, translate to a metadata filter: `filter={"department": {"$in": allowed_departments}, "date": {"$range": [user_start, user_end]}, "classification_level": {"$lte": user_max_level}}`. This filter is applied at the vector DB layer - even if application code has a bug, the filter prevents unauthorized vectors from entering results. Critical: this must be enforced server-side (in the query service), never client-side. Audit log every (user_id, query, filter_applied, returned_doc_ids) for forensic capability.
+---
 
-**Q: What are the specific chunking challenges for code repositories?** `[Medium]`
-A: Three key challenges: (1) **Semantic unit is function/class**, not paragraph - a function definition should never be split mid-body; use `RecursiveCharacterTextSplitter.from_language("python")` which splits on class/function boundaries. (2) **Context dependency** - a function's meaning depends on its docstring, imports, and class context; include function signatures and docstrings together. (3) **Long functions** - a 300-line function exceeds any reasonable chunk size; strategy: chunk at method level (include the class definition and method signature as context in metadata), or use a code-specific parser (ast module in Python) to extract logical units. Also index function names and docstrings separately for keyword-based retrieval.
+## Contextual Retrieval
+
+A chunk like *"The company's revenue grew by 3% over the previous quarter"* is unretrievable for "ACME Q2 2025 revenue growth" - the chunk never says which company or quarter. **Contextual retrieval** (Anthropic, 2024) uses an LLM to write a short context for every chunk, drawn from the whole document, and prepends it before embedding *and* before BM25 indexing.
+
+```python
+CONTEXT_PROMPT = """<document>
+{document}
+</document>
+Here is a chunk from the document:
+<chunk>
+{chunk}
+</chunk>
+Write a short (50-100 token) context that situates this chunk within the document,
+to improve search retrieval of the chunk. Answer with the context only."""
+
+def contextualize(document: str, chunks: list[str]) -> list[str]:
+    # The document is the same for every chunk: put it first and cache it
+    return [llm(CONTEXT_PROMPT.format(document=document, chunk=c)) + "\n\n" + c for c in chunks]
+```
+
+Reported results on Anthropic's evaluation (failure rate = 1 − recall@20):
+
+| Configuration | Retrieval failure rate | Reduction |
+|---|---|---|
+| Embeddings only (baseline) | 5.7% | - |
+| Contextual embeddings | 3.7% | 35% |
+| Contextual embeddings + contextual BM25 | 2.9% | 49% |
+| + reranking | 1.9% | 67% |
+
+With prompt caching of the document, generating the contexts cost about $1 per million document tokens in their setup. It is an indexing-time cost, paid once per document version.
+
+---
+
+## Late Chunking
+
+Standard chunking embeds each chunk in isolation, so pronouns and references to earlier text lose their antecedents. **Late chunking** (Günther et al., 2024) runs a long-context embedding model over the whole document (or a large window) first, then pools the token embeddings *within each chunk's span*, so every chunk vector is conditioned on the surrounding document. It needs a long-context embedding model and access to token-level outputs, costs no LLM calls, and helps most where chunks depend on earlier context. Contextual retrieval achieves a similar effect with an LLM; late chunking does it inside the embedding model.
+
+---
+
+## Metadata, Deduplication and Versions
+
+Capture metadata at ingest - it is far harder to add later:
+
+| Field | Used for |
+|---|---|
+| `source`, `url`, `page`, `section_path` | Citations and deep links |
+| `doc_id`, `version`, `content_hash` | Updates, deletes, deduplication, reproducing old answers |
+| `created_at`, `effective_date` | Freshness filters and conflict resolution ("latest policy wins") |
+| `acl` / `allowed_groups`, `tenant_id` | Access control enforced at retrieval ([RAG in Production](11-RAG-in-Production.mdx)) |
+| `doc_type`, `language`, `product` | Routing and filters |
+
+Deduplicate exact copies by hash and near-duplicates (the same policy in five slide decks) with MinHash or embedding similarity - duplicates crowd out diverse evidence in the top-k. When a document changes, delete its old chunks by `doc_id` before inserting the new ones.
+
+---
+
+## Check Yourself
+
+```quiz
+- q: "A chunk reads 'Revenue grew 3% versus the prior quarter.' Queries about 'ACME Q2 revenue' never retrieve it. Which technique targets exactly this problem?"
+  options:
+    - "Contextual retrieval: prepend an LLM-written context naming the company and period before embedding and BM25 indexing"
+    - "Increasing chunk overlap"
+    - "Switching from cosine to dot product"
+    - "Lowering the temperature"
+  answer: 1
+- q: "What does parent-child retrieval decouple?"
+  options:
+    - "The unit you search over (small chunks) from the unit you give the model (larger parents)"
+    - "Dense from sparse retrieval"
+    - "The embedding model from the LLM"
+    - "Metadata from text"
+  answer: 1
+- q: "What is the best evidence-based default when choosing between semantic and recursive chunking?"
+  options:
+    - "Start with structure-aware recursive chunking and tune size on an eval; semantic chunking has not shown consistent gains"
+    - "Always use semantic chunking - it is state of the art"
+    - "Always use 1,000-character fixed chunks"
+    - "Never overlap chunks"
+  answer: 1
+- q: "Why prepend the section heading path to each chunk?"
+  answer: "It makes each chunk self-describing: the heading carries context (product, policy, section) that the chunk's own text may omit, which improves both embedding and keyword retrieval and gives the model context when the chunk is read in isolation."
+```
+
+## Exercises
+
+```exercise
+- title: Chunk-size sweep
+  task: |
+    Take 50-100 documents from your domain and 50 questions with labelled answer passages. Index with recursive chunking at 128, 256, 512 and 1,024 tokens (15% overlap) and measure recall@5 and nDCG@10. Then add the heading path to each chunk and repeat the best size.
+  solution: |
+    Expect an interior optimum (often 256-512 tokens) that depends on how your questions are phrased, and a measurable gain from heading paths on structured documents. Report the numbers with intervals - differences between neighbouring sizes are often small.
+- title: Contextual retrieval, cheaply
+  task: |
+    Implement contextual retrieval for 20 long documents using a small, cheap model with prompt caching. Compare recall@20 for plain chunks vs contextualized chunks, for dense retrieval and for BM25. What did it cost per 1,000 chunks?
+  hints: ["Place the document first in the prompt and mark it for caching so each chunk only pays for its own tokens."]
+  solution: |
+    Expect gains for both dense and BM25, larger for chunks that depend on document-level context (financial reports, contracts). With caching, cost is dominated by the per-chunk output tokens - a few cents per thousand chunks with a small model. Record the numbers; they justify (or don't) the indexing cost for your corpus.
+```
+
+## Study Notes
+
+**Must-know:**
+- Parsing quality bounds retrieval quality; use layout-aware parsers for complex PDFs, keep tables whole, caption or retrieve images
+- Defaults: structure-aware split + 256-512-token recursive chunks, 10-20% overlap, heading path prepended; tune on an eval
+- Semantic chunking isn't consistently better; don't pay for it by default
+- Parent-child / sentence window / neighbour expansion decouple retrieval and context units
+- Contextual retrieval: LLM-written chunk context before embedding and BM25; 35-67% fewer retrieval failures in Anthropic's tests
+- Late chunking: embed the whole document, pool per chunk
+- Capture metadata (source, version, dates, ACLs) at ingest; deduplicate; delete-then-insert on updates
+
+## References
+
+- Anthropic, [Introducing Contextual Retrieval](https://www.anthropic.com/news/contextual-retrieval) (2024)
+- Günther et al., [Late Chunking: Contextual Chunk Embeddings Using Long-Context Embedding Models](https://arxiv.org/abs/2409.04701) (2024)
+- Qu, Tu & Bao, [Is Semantic Chunking Worth the Computational Cost?](https://arxiv.org/abs/2410.13070) (2024)
+- Smith & Troynikov, [Evaluating Chunking Strategies for Retrieval](https://research.trychroma.com/evaluating-chunking) (Chroma, 2024)
+- Auer et al., [Docling Technical Report](https://arxiv.org/abs/2408.09869) (2024)
+- LangChain, [Text splitters](https://python.langchain.com/docs/concepts/text_splitters/)
+
+*Last reviewed: 2026-09*

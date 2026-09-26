@@ -1,97 +1,92 @@
 # 11 - RAG (Retrieval-Augmented Generation)
 
-**Level:** General to Advanced  
-**Format:** Prose + code + Q&A pairs tagged `[Easy]` `[Medium]` `[Hard]`
+How to ground a model's answers in your own documents: parsing and chunking, embeddings and vector search, hybrid retrieval and reranking, grounded generation with citations, evaluation, advanced and agentic patterns, when to skip retrieval for long context, and how to design, run and secure RAG in production.
 
----
+```objectives
+scope: module
+time: 13-15 hours (notes + lab)
+outcomes:
+  - Build a RAG pipeline end to end and justify each design choice with measurements
+  - Evaluate retrieval (recall@k, nDCG, MRR) and generation (groundedness, correctness, citations) separately, and diagnose failures from the numbers
+  - Choose between hybrid, learned-sparse, dense and late-interaction retrieval, rerankers, graph-based and agentic patterns for a given question shape
+  - Decide between RAG, long-context prompting and cache-augmented generation on quality and cost
+  - Design, deploy and secure a multi-tenant RAG system, on your own infrastructure or a cloud's managed service
+prerequisites:
+  - "[Prompt & Context Engineering](../10-Prompt-Engineering/INDEX.mdx) - context engineering and structured outputs"
+  - "[Evaluation & Benchmarks](../06-Evaluation/INDEX.mdx) - metrics and confidence intervals"
+```
 
-## What You Will Learn
+## Where This Module Fits
 
-- Why LLMs hallucinate and how RAG addresses it (and its limits)
-- How embeddings and vector databases enable semantic search - the math and the algorithms
-- Chunking and indexing strategies that determine retrieval quality
-- Dense, sparse, hybrid retrieval - BM25 formula, RRF, reranking mechanics
-- Advanced patterns: Self-RAG, GraphRAG, FLARE, CRAG, Agentic RAG
-- How to evaluate RAG systems with RAGAS and how to debug failures
-- The complete taxonomy of RAG types from Naive → GraphRAG
-- Production system design for 10M-100M document corpora
-- Vertex AI Search, RAG Engine, Grounding API - when to use which
-- Deploying, monitoring, and scaling RAG in production on GCP
-- LLM-specific failure modes: hallucination, lost-in-the-middle, prompt injection
-- 80+ curated Q&A pairs covering all weak spots
+RAG is [context engineering](../10-Prompt-Engineering/Notes/06-Context-Engineering.mdx) for knowledge: selecting the right evidence for each call. It builds on how models use context (Module 10) and on [serving](../07-Serving-and-Inference/INDEX.mdx) (KV caches explain the cost of long context). It leads into [agents](../12-Agent-Foundations/INDEX.mdx), where retrieval becomes one tool among many and the model decides when to use it.
 
----
+```mermaid
+flowchart LR
+    F["01 Fundamentals"] --> E["02 Embeddings &<br/>vector search"]
+    F --> C["03 Parsing &<br/>chunking"]
+    E --> R["04 Retrieval &<br/>reranking"]
+    C --> R
+    R --> G["05 Grounded<br/>generation"]
+    G --> V["06 Evaluation"]
+    V --> A["07 Advanced<br/>patterns"]
+    V --> AG["08 Agentic RAG"]
+    V --> LC["09 Long context<br/>vs RAG vs CAG"]
+    A & AG & LC --> SD["10 System design"]
+    SD --> P["11 Production"]
+    SD --> M["12 Managed RAG<br/>on clouds"]
+
+    style F fill:#d8dfe8,stroke:#b0bac8
+    style V fill:#dde4dc,stroke:#b0c4b0
+    style SD fill:#e8e0d4,stroke:#c8b89a
+    style P fill:#ddd8e4,stroke:#b8b0c8
+```
 
 ## Chapter Map
 
-| # | File | Topic | Difficulty |
-|---|------|-------|-----------|
-| 1 | [RAG Fundamentals](Notes/01-RAG-Fundamentals.mdx) | What RAG is, pipeline, RAG vs fine-tuning, naive RAG limitations | ★★☆ |
-| 2 | [Embeddings and Vector Stores](Notes/02-Embeddings-and-Vector-Stores.mdx) | Embedding math, cosine vs dot vs euclidean, HNSW/IVF/PQ, vector DB comparison | ★★★ |
-| 3 | [Chunking and Indexing](Notes/03-Chunking-and-Indexing.mdx) | Fixed/semantic/hierarchical chunking, parent-child, metadata filtering | ★★☆ |
-| 4 | [Retrieval Strategies](Notes/04-Retrieval-Strategies.mdx) | BM25 math, hybrid search, RRF formula, reranking, HyDE, MMR | ★★★ |
-| 5 | [RAG Types & Advanced Patterns](Notes/05-RAG-Types-and-Advanced-Patterns.mdx) | Naive→Modular→Agentic evolution; Self-RAG, FLARE, GraphRAG, CRAG, Multimodal | ★★★ |
-| 6 | [Evaluation and Failure Modes](Notes/06-RAG-Evaluation-and-Failure-Modes.mdx) | RAGAS metrics/formulas, LLM-as-Judge, tracing, A/B testing | ★★★ |
-| 7 | [RAG System Design](Notes/07-RAG-System-Design.mdx) | Production architecture, latency budgets, caching, scaling 100M docs | ★★★ |
-| 8 | [Vertex AI RAG](Notes/08-Vertex-AI-RAG.mdx) | Vertex AI Search, RAG Engine, Grounding API, Vector Search, AlloyDB | ★★★ |
-| 9 | [Production Deployment](Notes/09-Production-Deployment.mdx) | Cloud Run vs GKE, monitoring, CI/CD eval gates, security, PII | ★★★ |
-| 10 | [Scaling and LLM Issues](Notes/10-Scaling-and-LLM-Issues.mdx) | Hallucination types, lost-in-the-middle, context management, prompt injection | ★★★ |
-| 11 | [Q&A Review Bank](Notes/11-Interview-QA-Bank.mdx) | 80+ Q&A pairs: fundamentals → system design → GCP → production debugging | ★★★ |
+| # | Chapter | You will learn | Time |
+|---|---|---|---|
+| 1 | [RAG Fundamentals](Notes/01-RAG-Fundamentals.mdx) | The two pipelines, what RAG solves, RAG vs fine-tuning, why naive RAG fails | 45 min |
+| 2 | [Embeddings & Vector Search](Notes/02-Embeddings-and-Vector-Search.mdx) | Embedding models, choosing one, HNSW/IVF/PQ/ScaNN/DiskANN, quantization, vector stores | 55 min |
+| 3 | [Document Processing & Chunking](Notes/03-Document-Processing-and-Chunking.mdx) | Parsing, chunking strategies, parent-child, contextual retrieval, late chunking, metadata | 55 min |
+| 4 | [Retrieval & Reranking](Notes/04-Retrieval-and-Reranking.mdx) | BM25, SPLADE, ColBERT, hybrid + RRF, rerankers, query transformation | 60 min |
+| 5 | [Grounded Generation & Citations](Notes/05-Grounded-Generation-and-Citations.mdx) | Post-retrieval failures, context assembly, citations, abstention | 45 min |
+| 6 | [RAG Evaluation](Notes/06-RAG-Evaluation.mdx) | Retrieval and generation metrics, test sets, diagnosis, CI | 60 min |
+| 7 | [Advanced RAG Patterns](Notes/07-Advanced-RAG-Patterns.mdx) | Routing, Self-RAG, CRAG, FLARE, Speculative RAG, GraphRAG, LightRAG, ColPali | 60 min |
+| 8 | [Agentic & Deep-Research RAG](Notes/08-Agentic-and-Deep-Research-RAG.mdx) | Retrieval as a tool, budgets, deep-research architectures, RL-trained search agents | 50 min |
+| 9 | [Long Context vs RAG vs CAG](Notes/09-Long-Context-RAG-and-CAG.mdx) | Evidence, cost arithmetic, KV memory, decision guide | 40 min |
+| 10 | [RAG System Design](Notes/10-RAG-System-Design.mdx) | Latency budgets, index scaling, multi-tenancy, caching, degradation, a worked design | 60 min |
+| 11 | [RAG in Production](Notes/11-RAG-in-Production.mdx) | Deployment, change management, observability, drift, security | 55 min |
+| 12 | [Managed RAG on Cloud Platforms](Notes/12-Managed-RAG-on-Cloud-Platforms.mdx) | Google Agent Platform, Amazon Bedrock, Azure AI Search / Foundry IQ | 50 min |
+| 13 | [Q&A Review Bank](Notes/13-Interview-QA-Bank.mdx) | 60 questions across the module | 75 min |
 
----
+## Code Lab
+
+| Lab | What you build | Runs on |
+|---|---|---|
+| [Retrieval Evaluation](CodeLabs/01-Retrieval-Evaluation.mdx) | BM25, dense, hybrid, reranked, SPLADE and quantized retrieval on BEIR SciFact, with nDCG/Recall/MRR implemented by hand | Laptop CPU, 3-8 min |
 
 ## System Designs
 
-End-to-end production system designs with GCP service mapping, scalability analysis, and interview-style Q&A.
+| Design | Pattern |
+|---|---|
+| [Simple RAG Pipeline](SystemDesigns/01-simple-rag.mdx) | Hybrid retrieval, reranking, grounding checks, semantic cache - an enterprise knowledge base on Google Cloud |
+| [Agentic RAG - Hybrid Vector + Graph](SystemDesigns/02-agentic-rag-hybrid.mdx) | Agent over a knowledge graph and a document index for multi-hop biomedical questions |
 
-| # | Design | Pattern | Difficulty |
-|---|--------|---------|-----------|
-| SD-1 | [Simple RAG Pipeline](SystemDesigns/01-simple-rag.mdx) | Vector + BM25 hybrid, reranking, semantic cache | ★★★ |
-| SD-2 | [Agentic RAG - Hybrid Vector + Graph](SystemDesigns/02-agentic-rag-hybrid.mdx) | ReAct agent, Spanner Graph, multi-hop reasoning | ★★★★ |
+## Mini-Project
 
----
+Build a **cited Q&A assistant** over a corpus of at least 500 documents from a domain you know:
 
-## Recommended Learning Paths
+1. A labelled eval set: 100 questions with relevant chunk ids and reference answers, including 15 unanswerable, 15 multi-hop and 15 identifier questions.
+2. A retrieval comparison (BM25, dense, hybrid, + reranker) with nDCG@10 and Recall@20, using the code lab as a starting point.
+3. Grounded generation with citations and abstention; report groundedness, correctness and citation precision, with a judge validated on 30 hand-labelled answers.
+4. One improvement chosen from your error analysis (contextual chunks, a better reranker, parent-child retrieval or an agentic loop), with before/after numbers and confidence intervals.
+5. A one-page design note: latency budget, cost per 1,000 questions, access-control approach and how you'd monitor it.
 
-### Path A: First time through (full learning)
-1. [RAG Types & Advanced Patterns](Notes/05-RAG-Types-and-Advanced-Patterns.mdx) - mental map first (taxonomy section)
-2. [RAG Fundamentals](Notes/01-RAG-Fundamentals.mdx) - why RAG exists
-3. [Embeddings and Vector Stores](Notes/02-Embeddings-and-Vector-Stores.mdx) - the retrieval engine
-4. [Chunking and Indexing](Notes/03-Chunking-and-Indexing.mdx) - the quality bottleneck
-5. [Retrieval Strategies](Notes/04-Retrieval-Strategies.mdx) - improve recall and precision
-6. [RAG Types & Advanced Patterns](Notes/05-RAG-Types-and-Advanced-Patterns.mdx) - production-grade patterns (full read)
-7. [Evaluation and Failure Modes](Notes/06-RAG-Evaluation-and-Failure-Modes.mdx) - measure and debug
-8. [RAG System Design](Notes/07-RAG-System-Design.mdx) - interview system design depth
-9. [Vertex AI RAG](Notes/08-Vertex-AI-RAG.mdx) - GCP-specific knowledge
-10. [Scaling and LLM Issues](Notes/10-Scaling-and-LLM-Issues.mdx) - tricky edge cases
-11. [Production Deployment](Notes/09-Production-Deployment.mdx) - real-world ops
-12. [Q&A Review Bank](Notes/11-Interview-QA-Bank.mdx) - final consolidation
+## Review
 
-### Path B: Accelerated Deep Dive (4–5 hours)
-1. [RAG Types & Advanced Patterns](Notes/05-RAG-Types-and-Advanced-Patterns.mdx) - taxonomy + GraphRAG, Self-RAG (60 min)
-2. [Retrieval Strategies](Notes/04-Retrieval-Strategies.mdx) - BM25 + hybrid math (45 min)
-3. [RAG System Design](Notes/07-RAG-System-Design.mdx) - system design depth (60 min)
-4. [Vertex AI RAG](Notes/08-Vertex-AI-RAG.mdx) - GCP specifics (30 min)
-5. [Q&A Review Bank](Notes/11-Interview-QA-Bank.mdx) - all 80 Q&A pairs (90 min)
-
-### Path C: Weak spots only
-- System design → [08-RAG-System-Design.md](Notes/07-RAG-System-Design.mdx)
-- Retrieval math → [04-Retrieval-Strategies.md](Notes/04-Retrieval-Strategies.mdx)
-- Advanced patterns + taxonomy → [05-RAG-Types-and-Advanced-Patterns.md](Notes/05-RAG-Types-and-Advanced-Patterns.mdx)
-- Vertex AI / GCP → [09-Vertex-AI-RAG.md](Notes/08-Vertex-AI-RAG.mdx)
+- [Q&A Review Bank](Notes/13-Interview-QA-Bank.mdx) - consolidated questions for this module
+- [Knowledge Check](../Interview-Questions/08-RAGs.mdx) - short-form review
 
 ---
-
-## Why RAG Comes After Prompts
-
-RAG is fundamentally a prompt construction strategy - you retrieve context and inject it into a prompt. You need solid prompting foundations (Topic 07) before tackling RAG. You also need to understand embeddings, which require understanding how LLMs represent text (Topic 01).
-
-## Why RAG Comes Before MCP and Agents
-
-RAG solves the knowledge problem for a single-turn pipeline. MCP generalizes this into a protocol. Agents generalize it further into autonomous retrieval decisions. RAG is the stepping stone.
-
----
-
-## Next Topic
 
 Previous: [10 - Prompt & Context Engineering](../10-Prompt-Engineering/INDEX.mdx) · Next: [12 - Agent Foundations](../12-Agent-Foundations/INDEX.mdx)

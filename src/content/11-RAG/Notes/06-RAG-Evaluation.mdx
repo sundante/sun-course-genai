@@ -1,365 +1,211 @@
-# RAG Evaluation and Failure Modes
+# RAG Evaluation
 
-## Common Failure Modes
+RAG evaluation measures the retriever and the generator separately - did we find the right evidence, and did the answer use it faithfully and correctly - so that a failure can be traced to the stage that caused it.
 
-### Concept
+```objectives
+time: 60 min
+outcomes:
+  - Compute recall@k, precision@k, MRR and nDCG@k by hand and explain what each rewards
+  - Define groundedness (faithfulness), answer relevance, answer correctness and context recall, and how LLM-judged metrics compute them
+  - Build a RAG test set from real queries and synthetic generation, including unanswerable questions
+  - Diagnose a failing system from a pattern of retrieval and generation scores, and gate changes in CI
+prerequisites:
+  - "[Grounded Generation & Citations](05-Grounded-Generation-and-Citations.mdx)"
+  - "[LLM-as-Judge](../../06-Evaluation/Notes/03-LLM-as-Judge.mdx)"
+```
 
-RAG failures fall into three categories: retrieval failures, generation failures, and pipeline failures. Understanding the taxonomy is critical for both building and debugging RAG systems.
+## Two Layers of Metrics
 
 ```mermaid
-mindmap
-  root((RAG Failure<br/>Taxonomy))
-    Generation Failures
-      Hallucination despite context
-      Ignoring retrieved context
-      Verbatim copying without synthesis
-      Lost in the middle
-    Retrieval Failures
-      Wrong chunks retrieved
-      Relevant chunks not retrieved
-      Correct chunks, wrong order
-      No chunks retrieved
-    Pipeline Failures
-      Chunk boundary bisects key info
-      Index is stale
-      Query-document vocabulary mismatch
-      Context window overflow
+flowchart LR
+    Q["❓ Question"] --> R["📡 Retriever"] --> C["📚 Retrieved context"] --> G["🤖 Generator"] --> A["💬 Answer"]
+    C -.-> RM["📏 Retrieval metrics<br/>recall@k, nDCG, MRR<br/>(needs relevance labels)"]
+    A -.-> GM["📏 Generation metrics<br/>groundedness, relevance,<br/>correctness, citations"]
+    A -.-> EM["📏 End-to-end<br/>task success, user feedback,<br/>latency, cost"]
+
+    style RM fill:#d8dfe8,stroke:#b0bac8
+    style GM fill:#dde4dc,stroke:#b0c4b0
+    style EM fill:#e8e0d4,stroke:#c8b89a
 ```
-
-**Retrieval failures:**
-- **Relevance failure**: The ANN search returns chunks that are semantically adjacent but not actually relevant. Example: query about "Python snake" retrieves programming docs instead of zoology docs in a mixed corpus.
-- **Recall failure**: The relevant chunk exists in the index but isn't in top-k. Fix: increase k, add hybrid search, improve embedding model, improve chunking.
-- **Ranking failure**: Right chunks retrieved but ranked below irrelevant ones. Fix: add reranking.
-
-**Generation failures:**
-- **Faithfulness failure**: The LLM generates claims not supported by the retrieved context. Most insidious - the answer looks correct but contains invented details.
-- **Context utilization failure**: The LLM has the right context but ignores it, preferring its parametric memory. Common with GPT-3.5 / older models on highly contested facts.
-- **Lost in the middle**: Extensive research (Liu et al., 2023) shows performance degrades significantly for relevant content placed in the middle of a long context. Position 0 and position N (last) are best attended to.
 
 ---
 
-## 8-Dimension RAG Evaluation Framework
+## Retrieval Metrics
 
-### Concept
+Given, for each query, the set of relevant documents (from human labels or a benchmark's *qrels*) and the system's ranked list:
 
-RAGAS covers the core four metrics, but production RAG evaluation requires a broader lens. This 8-dimension framework maps every failure mode to its measurement tool.
+| Metric | Definition | Rewards |
+|---|---|---|
+| **Recall@k** | Relevant docs in the top k ÷ all relevant docs | Finding the evidence at all - the key metric for the stage *before* a reranker or the LLM |
+| **Precision@k** | Relevant docs in the top k ÷ k | Not wasting context on noise |
+| **Hit rate@k** | 1 if any relevant doc is in the top k | Single-answer questions |
+| **MRR@k** | 1 ÷ rank of the first relevant doc (0 if none in top k), averaged | Putting one good answer first |
+| **nDCG@k** | DCG ÷ ideal DCG, where DCG = Σ rel_i / log₂(i + 1) | Graded relevance and good ordering throughout the list; the standard for comparing rankers (BEIR, MTEB) |
 
-| Dimension | What It Measures | Tools | Key Metrics |
+**Worked example.** One relevant document; the system ranks it 3rd. MRR = 1/3. DCG@10 = 1/log₂(4) = 0.5; the ideal DCG = 1/log₂(2) = 1; nDCG@10 = 0.5. Recall@10 = 1, Recall@2 = 0.
+
+```python
+import math
+
+def ndcg_at_k(ranked_ids, relevance: dict, k=10):
+    dcg = sum(relevance.get(d, 0) / math.log2(i + 2) for i, d in enumerate(ranked_ids[:k]))
+    ideal = sorted(relevance.values(), reverse=True)[:k]
+    idcg = sum(r / math.log2(i + 2) for i, r in enumerate(ideal))
+    return dcg / idcg if idcg else 0.0
+```
+
+The [code lab](../CodeLabs/01-Retrieval-Evaluation.mdx) implements all of these and compares five retrieval configurations on a public benchmark. For a fixed LLM, a pipeline's retrieval metrics are cheap, deterministic and fast to compute - run them on every change.
+
+---
+
+## Generation Metrics
+
+| Metric | Question it answers | Needs | Typical computation |
 |---|---|---|---|
-| **Retrieval Quality** | Are the right chunks being found? Covers precision, recall, and ranking order of retrieved context | RAGAS (`context_precision`, `context_recall`), custom Recall@k test sets | Context Precision, Context Recall, NDCG@k, MRR |
-| **Groundedness / Faithfulness** | Are generated claims supported by retrieved context? Detects fabricated or unsupported assertions | RAGAS (`faithfulness`), TruLens, LangSmith, FactCC | Faithfulness score (0–1), Claim Support Rate |
-| **Hallucination Detection** | Identifies model-generated content that contradicts the source or knowledge base | SelfCheckGPT (multi-sample consistency), GPTScore, NLI-based classifiers | Hallucination Rate, Contradiction Score |
-| **Answer Quality** | Measures relevance, completeness, and clarity of the final answer | RAGAS (`answer_relevancy`), G-Eval / LLM-as-Judge, BERTScore, ROUGE-L | Answer Relevancy, ROUGE-L, BERTScore F1, Human BLEU |
-| **Robustness** | How well does the system handle adversarial inputs, ambiguous queries, and out-of-distribution questions? | Adversarial test suites, perturbation testing | Accuracy under query paraphrase, accuracy under context noise |
-| **End-to-End Task Metrics** | Task-specific correctness - F1, Exact Match, pass@k for code, accuracy for QA benchmarks | Dataset-specific (SQuAD F1, HotpotQA EM, HumanEval pass@k) | Exact Match, F1, pass@1, NDCG for ranking tasks |
-| **Latency & Cost** | P50/P95 TTFT, tokens per query, embedding cost, rerank cost | Langfuse, LangSmith, Arize Phoenix, Cloud Trace | P95 latency, cost per query, cache hit rate |
-| **User Feedback Loop** | Real-world quality signal - thumbs up/down, escalations, follow-up clarifications | Thumbs up/down UI, support ticket analysis, explicit feedback collection | Negative feedback rate, clarification rate, resolution rate |
+| **Groundedness / faithfulness** | Is every claim in the answer supported by the retrieved context? | Answer + context | Split the answer into atomic claims; an LLM or NLI model checks each against the context; score = supported ÷ total |
+| **Answer relevance** | Does the answer address the question? | Question + answer | LLM judge, or generate questions from the answer and compare them to the original |
+| **Answer correctness** | Is it right? | A reference answer | LLM judge comparing claims to the reference, or exact/F1 match for short answers |
+| **Context recall** | Does the retrieved context contain everything the reference answer needs? | Reference answer + context | Check each reference claim against the context |
+| **Context precision** | Are the relevant chunks ranked high? | Relevance judgements (labelled or LLM-judged) | Precision@k weighted by rank |
+| **Citation recall / precision** | Are statements supported by the passages they cite? | Answer with citations + passages | Entailment per statement-citation pair ([Grounded Generation](05-Grounded-Generation-and-Citations.mdx)) |
 
-**How to prioritize dimensions in practice:**
+**Groundedness ≠ correctness.** A faithful answer built on an outdated document is grounded and wrong; an answer from the model's own correct knowledge is correct and ungrounded. Track both.
 
-| Application Type | Primary Metric | Secondary Metric |
-|---|---|---|
-| Legal / Medical / Financial Q&A | Faithfulness (hallucination is catastrophic) | Retrieval Recall |
-| Customer Support Chatbot | Answer Quality + User Feedback | Latency |
-| Code Assistant | End-to-End Task (pass@k) | Robustness |
-| Internal Knowledge Search | Retrieval Quality | Latency & Cost |
-| Real-time Streaming RAG | Latency & Cost | Groundedness |
+The "RAG triad" (TruLens) summarises the three core checks: context relevance (question ↔ context), groundedness (context ↔ answer), answer relevance (question ↔ answer).
 
-**Recommended evaluation stack per dimension:**
-- **Retrieval**: RAGAS + hand-labeled golden test set (200–500 (q, expected_chunk) pairs)
-- **Faithfulness**: RAGAS faithfulness + FactCC for claim-level verification
-- **Hallucination**: SelfCheckGPT (sample 5 responses, check internal consistency)
-- **Answer quality**: LLM-as-Judge (G-Eval) + human spot-checks for 5% of traffic
-- **Latency**: Langfuse or Arize Phoenix for distributed tracing with per-stage spans
-- **User feedback**: Thumbs up/down in UI → store to evaluation dataset → weekly RAGAS re-evaluation
+### Tooling
 
----
-
-## RAGAS Metrics
-
-### Concept
-
-RAGAS (Retrieval Augmented Generation Assessment) is the standard evaluation framework. It measures four dimensions, each using LLM-based scoring:
-
-**1. Faithfulness** - Does the generated answer only contain claims that are supported by the retrieved context?
-
-```
-Faithfulness = (number of claims in answer supported by context) / (total claims in answer)
-```
-
-Implementation: extract all factual claims from the answer using an LLM, then for each claim, ask a judge LLM if the context supports it. Average across claims.
-
-Score = 1.0: every claim in the answer is directly traceable to the context
-Score = 0.0: answer is entirely fabricated or contradicts the context
-
-**2. Answer Relevancy** - How relevant is the generated answer to the user's question?
-
-```
-Answer Relevancy = average cosine_similarity(original_question, reverse_generated_questions)
-```
-
-Implementation: prompt an LLM to generate N questions that the answer would answer, embed those generated questions, compute cosine similarity with the original question. If the answer is relevant to the question, the reverse-generated questions should be similar to the original.
-
-**3. Context Precision** - Of the retrieved chunks, what fraction are actually relevant to the question?
-
-```
-Context Precision@k = (relevant_chunks_in_top_k / k) with position weighting
-```
-
-Measures retrieval precision. A high context precision means the retriever isn't adding noise.
-
-**4. Context Recall** - Do the retrieved chunks cover all the information needed to answer the question?
-
-```
-Context Recall = (sentences in ground truth answer attributable to retrieved context) / (total sentences in ground truth)
-```
-
-Requires a ground truth answer. Measures whether retrieval "missed" any necessary information.
-
-**Which metric matters most?**
-- Faithfulness: most important for factual/legal/medical applications where hallucination has real consequences
-- Context Recall: most important during development to diagnose retrieval gaps
-- Answer Relevancy: important for conversational applications where the answer should stay on-topic
-- Context Precision: important for cost optimization (fewer chunks = lower token cost)
-
-### Code
+RAGAS, TruLens, DeepEval, ARES, Arize Phoenix and LangSmith implement these metrics with LLM judges. RAGAS 0.4's metric API:
 
 ```python
-from ragas import evaluate
-from ragas.metrics import (
-    faithfulness,
-    answer_relevancy,
-    context_precision,
-    context_recall
+from openai import AsyncOpenAI
+from ragas.llms import llm_factory
+from ragas.metrics.collections import Faithfulness, ContextRecall
+
+judge = llm_factory("<judge-model>", client=AsyncOpenAI())
+
+faithfulness = await Faithfulness(llm=judge).ascore(
+    user_input="What is the refund window for Enterprise plans?",
+    response="Enterprise customers can get a full refund within 30 days.",
+    retrieved_contexts=["Enterprise customers can request a full refund within 30 days of purchase."],
 )
-from ragas.metrics.critique import harmfulness
-from datasets import Dataset
-
-# Build evaluation dataset
-eval_data = {
-    "question": ["What is the refund policy?", "How long is the warranty?"],
-    "answer": ["Customers can get a full refund within 30 days.", "The warranty lasts 2 years."],
-    "contexts": [
-        ["Refunds are available within 30 days of purchase for all plans..."],  # retrieved chunks
-        ["All products come with a 2-year limited warranty..."]
-    ],
-    "ground_truth": [
-        "Customers are eligible for a full refund within 30 days.",  # optional: for recall
-        "The product warranty covers 2 years from purchase date."
-    ]
-}
-
-dataset = Dataset.from_dict(eval_data)
-result = evaluate(
-    dataset,
-    metrics=[faithfulness, answer_relevancy, context_precision, context_recall]
+recall = await ContextRecall(llm=judge).ascore(
+    user_input="What is the refund window for Enterprise plans?",
+    retrieved_contexts=["Enterprise customers can request a full refund within 30 days of purchase."],
+    reference="A full refund is available within 30 days of purchase.",
 )
-print(result)
-# Output: {'faithfulness': 0.95, 'answer_relevancy': 0.88, 'context_precision': 0.9, 'context_recall': 0.85}
-
-# Manual faithfulness check (useful when RAGAS is overkill)
-def check_faithfulness(answer: str, context: str, llm) -> float:
-    prompt = f"""Extract all factual claims from the answer. For each claim, 
-determine if it is SUPPORTED or NOT_SUPPORTED by the context.
-
-Context: {context}
-Answer: {answer}
-
-For each claim, write: CLAIM: <claim> | VERDICT: <SUPPORTED/NOT_SUPPORTED>"""
-    
-    response = llm.invoke(prompt).content
-    lines = [l for l in response.split("\n") if "VERDICT:" in l]
-    if not lines:
-        return 0.0
-    supported = sum(1 for l in lines if "SUPPORTED" in l and "NOT_SUPPORTED" not in l)
-    return supported / len(lines)
+print(faithfulness.value, recall.value)
 ```
+
+Evaluation libraries change their APIs often and have heavy dependency trees - **pin their versions** in the eval environment. Whatever the tool, the judge is a model with biases: validate it against 50-100 human-labelled examples before trusting its scores, and keep the judge model fixed across comparisons (see [LLM-as-Judge](../../06-Evaluation/Notes/03-LLM-as-Judge.mdx)).
 
 ---
 
-## LLM-as-Judge
+## Building the Test Set
 
-### Concept
-
-Beyond RAGAS's automated metrics, LLM-as-Judge uses an LLM to evaluate response quality on dimensions that are hard to formalize mathematically: clarity, completeness, tone, citation quality.
-
-**G-Eval framework:**
-Define evaluation criteria as natural language rubrics, then ask an LLM to score (1-5) on each criterion. More reliable when using chain-of-thought before scoring.
-
-**Key considerations for LLM judges:**
-- Use a stronger model as judge than the model being evaluated (use GPT-4o to judge GPT-3.5)
-- Self-evaluation is biased - a model tends to prefer its own outputs
-- Position bias: LLMs tend to favor the first response in pairwise comparison
-- Verbosity bias: LLMs tend to prefer longer, more detailed answers
-
-**When to use LLM-as-Judge vs RAGAS:**
-- RAGAS: automated CI/CD gates on well-defined metrics (faithfulness, recall)
-- LLM-as-Judge: qualitative human-preference-aligned evaluation, A/B testing new retrieval strategies
-
-### Code
-
-```python
-def g_eval_rag(question: str, context: str, answer: str, judge_llm) -> dict:
-    prompt = f"""You are evaluating a RAG system's response. Score each criterion 1-5.
-
-Question: {question}
-Retrieved Context: {context}
-Generated Answer: {answer}
-
-Evaluate:
-1. Faithfulness (1=completely fabricated, 5=every claim supported by context)
-2. Relevance (1=completely off-topic, 5=directly and completely answers the question)  
-3. Completeness (1=major information missing, 5=all aspects addressed)
-4. Clarity (1=confusing/misleading, 5=clear and precise)
-
-First explain your reasoning for each, then provide scores in this format:
-Faithfulness: X/5
-Relevance: X/5
-Completeness: X/5
-Clarity: X/5"""
-    
-    response = judge_llm.invoke(prompt).content
-    scores = {}
-    for metric in ["Faithfulness", "Relevance", "Completeness", "Clarity"]:
-        import re
-        match = re.search(rf"{metric}: (\d)/5", response)
-        if match:
-            scores[metric.lower()] = int(match.group(1)) / 5.0
-    return scores
-```
-
----
-
-## Tracing and Observability
-
-### Concept
-
-You cannot improve what you cannot measure. Production RAG systems need end-to-end tracing to diagnose latency, quality, and cost issues.
-
-**What to instrument:**
-```
-Per request, trace:
-├── query_id: unique ID for correlation
-├── query: original user query
-├── preprocessed_query: after rewriting/expansion
-├── retrieval_latency: time to retrieve
-├── retrieved_docs: {id, score, content_preview}[]
-├── rerank_latency: if reranking used
-├── reranked_docs: {id, score}[]
-├── llm_latency: time to first token
-├── total_tokens: prompt + completion tokens (cost tracking)
-├── answer: final generated text
-└── user_feedback: thumbs up/down if available
-```
-
-**Tools:**
-
-| Tool | Type | Features |
+| Source | Strength | Weakness |
 |---|---|---|
-| **LangSmith** | LangChain native | Full trace, LLM call inspection, eval datasets |
-| **Arize Phoenix** | Open source | Local + cloud, RAGAS integration, drift detection |
-| **Vertex AI Tracing** | GCP native | Integration with Cloud Trace, spans per service |
-| **W&B Weave** | Weights & Biases | Experiment tracking + LLM tracing |
-| **Langfuse** | Open source | EU-hosted option, RAGAS integration |
+| **Real user queries** with labelled relevant chunks and reference answers | Matches production | Needs labelling effort; early products have few queries |
+| **Synthetic questions** generated from chunks by an LLM (RAGAS and others provide generators) | Fast, large, covers the corpus | Questions echo the chunk's wording (easy for retrieval), miss real user phrasing, and skew to single-hop |
+| **Public benchmarks** (BEIR, MS MARCO, Natural Questions, HotpotQA, MultiHop-RAG, FRAMES, CRAG) | Comparable, well-studied | Not your domain; possible training contamination |
 
-**Key metrics to monitor in production:**
-- `retrieval_latency_p95`: alert if > 100ms
-- `answer_quality_score`: sampled RAGAS faithfulness, alert if drops > 5% from baseline
-- `cache_hit_rate`: alert if drops below 20% (indicates query distribution shift)
-- `token_cost_per_query`: budget tracking
-- `user_negative_feedback_rate`: thumbs down / complaint rate
+Practical recipe:
 
-### Code
+1. Start with 50-100 synthetic questions, **rewritten by people** to sound like users (vaguer, misspelled, multi-part).
+2. Add real queries from logs as soon as you have them; label the relevant chunks and write short reference answers.
+3. Include **unanswerable** questions (10-20%), **multi-hop** questions, questions with **exact identifiers**, and **conflict** cases (two versions of a policy).
+4. Tag each item by category so you can report per-slice.
+5. Every production failure becomes a new test item.
 
-```python
-# LangSmith tracing (minimal setup)
-import os
-os.environ["LANGCHAIN_TRACING_V2"] = "true"
-os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGCHAIN_API_KEY")
-os.environ["LANGCHAIN_PROJECT"] = "rag-production"
+Size for the effect you need to detect: with 200 questions, a 95% interval on a proportion near 0.8 is about ±5.5 points; use paired comparisons across the same questions to detect smaller changes (see [Building Your Own Evals](../../06-Evaluation/Notes/04-Building-Your-Own-Evals.mdx)).
 
-# All LangChain calls are now automatically traced - no code changes needed
+---
 
-# Custom structured logging for non-LangChain components
-import structlog
-import time
+## Diagnosing from the Numbers
 
-log = structlog.get_logger()
+| Pattern | Likely cause | Next step |
+|---|---|---|
+| Low recall@k (dense and BM25) | Parsing or chunking lost the content, or it isn't indexed | Search the index for the answer text; inspect parsed output |
+| Low recall@k for dense, fine for BM25 | Vocabulary or identifier queries | Hybrid retrieval, contextual chunks |
+| Good recall@50, poor nDCG@10 | Ranking | Add or improve the reranker |
+| Good context recall, low groundedness | Generation ignores or embellishes context | Prompt (quote-then-answer), fewer passages, stronger model |
+| High groundedness, low correctness | Wrong or outdated sources | Source quality, versioning, recency filters |
+| High answer relevance, many user complaints | Test set doesn't reflect real queries | Sample and label production traffic |
 
-def traced_retrieve(query: str, retriever) -> tuple[list, float]:
-    start = time.perf_counter()
-    docs = retriever.invoke(query)
-    latency = time.perf_counter() - start
-    
-    log.info("retrieval_complete",
-        query=query[:100],
-        num_docs=len(docs),
-        latency_ms=round(latency * 1000, 2),
-        top_doc_preview=docs[0].page_content[:100] if docs else None,
-        doc_sources=[d.metadata.get("source") for d in docs]
-    )
-    return docs, latency
+---
 
-# Arize Phoenix (open source observability)
-import phoenix as px
-from phoenix.trace.langchain import LangChainInstrumentor
+## Evaluation in the Lifecycle
 
-px.launch_app()  # starts local Phoenix server
-LangChainInstrumentor().instrument()  # auto-instruments all LangChain calls
+- **Offline, in CI**: retrieval metrics on every index or retriever change; generation metrics on a fixed set when prompts or models change; block merges on paired regressions per slice.
+- **Online**: sample live traffic for LLM-judged groundedness; track user feedback, "no answer" rate, citation clicks, and escalations; compare shadow pipelines on the same traffic before switching.
+- **Periodically**: re-label a fresh sample of production queries to catch drift in what users ask.
+
+These practices are wired into deployment in [RAG in Production](11-RAG-in-Production.mdx).
+
+---
+
+## Check Yourself
+
+```quiz
+- q: "A query has one relevant document, ranked 2nd. What are MRR@10 and nDCG@10?"
+  options:
+    - "MRR = 0.5, nDCG = 1/log2(3) ≈ 0.63"
+    - "MRR = 0.5, nDCG = 0.5"
+    - "MRR = 1, nDCG = 1"
+    - "MRR = 2, nDCG = 0.63"
+  answer: 1
+- q: "Context recall is 0.92 but faithfulness is 0.55. Where is the problem?"
+  options:
+    - "Generation - the evidence is retrieved but the answer isn't sticking to it"
+    - "Retrieval recall"
+    - "Chunking"
+    - "The embedding model"
+  answer: 1
+- q: "Why are LLM-generated synthetic test questions often too easy for retrieval?"
+  options:
+    - "They reuse the source chunk's wording, so lexical and semantic overlap with the target chunk is unrealistically high"
+    - "They are too long"
+    - "They are always multi-hop"
+    - "They have no reference answers"
+  answer: 1
+- q: "Can an answer be perfectly grounded and still wrong? Give an example."
+  answer: "Yes - if the retrieved source is wrong or outdated. E.g. the index still contains last year's pricing page; the answer faithfully quotes the old price. Groundedness scores it 1.0; correctness scores it 0. Track both, and fix with source versioning and recency filters."
 ```
 
----
+## Exercises
 
-## A/B Testing RAG
+```exercise
+- title: Metrics by hand
+  task: |
+    A query has relevant documents A (relevance 2) and B (relevance 1). The system returns [C, A, D, B, E]. Compute Recall@3, Precision@3, MRR@5 and nDCG@5.
+  solution: |
+    Recall@3 = 1/2 (only A in the top 3). Precision@3 = 1/3. MRR@5 = 1/2 (first relevant at rank 2).
+    DCG@5 = 2/log2(3) + 1/log2(5) = 1.262 + 0.431 = 1.693. Ideal order [A, B]: IDCG = 2/log2(2) + 1/log2(3) = 2 + 0.631 = 2.631. nDCG@5 = 0.643.
+- title: Validate a judge
+  task: |
+    Take 60 (question, context, answer) triples from your system. Label groundedness yourself (supported / not supported per answer). Score them with an LLM-judged faithfulness metric. Compute agreement (accuracy and Cohen's kappa) at a threshold of 0.8, and inspect disagreements.
+  solution: |
+    Expect good agreement on clear cases and disagreements on partial support and on claims that paraphrase or combine passages. If kappa is low, tighten the judge prompt or claim-splitting, or switch judge models, before using the metric as a CI gate.
+```
 
-### Concept
+## Study Notes
 
-To improve a RAG system, you need to know when a change is actually better. A/B testing RAG requires:
+**Must-know:**
+- Evaluate retrieval (recall@k, precision@k, MRR, nDCG) and generation (groundedness, answer relevance, correctness, context recall, citations) separately
+- nDCG@k = DCG/IDCG with log₂(rank + 1) discount; recall@k at the candidate depth bounds everything downstream
+- Groundedness ≠ correctness
+- LLM-judged metrics need validation against human labels, a fixed judge, and pinned library versions
+- Test sets: real queries + humanised synthetic + unanswerable, multi-hop, identifier and conflict cases, tagged by slice
+- Diagnose by pattern; gate changes in CI with paired comparisons; monitor online
 
-**Offline evaluation (pre-deployment):**
-Maintain a golden dataset of 100-500 (question, expected_answer, expected_source) tuples from production traffic. Before deploying a change, run both old and new pipelines against the golden set, compare RAGAS scores. Deploy only if new ≥ old on primary metric (typically faithfulness or Recall@5).
+## References
 
-**Online evaluation (shadow mode):**
-Run new pipeline in parallel with production pipeline but only log results (don't serve to users). Compare quality scores from the shadow pipeline vs production.
+- Järvelin & Kekäläinen, [Cumulated Gain-Based Evaluation of IR Techniques](https://dl.acm.org/doi/10.1145/582415.582418) (TOIS 2002) - nDCG
+- Thakur et al., [BEIR](https://arxiv.org/abs/2104.08663) (NeurIPS 2021)
+- Es et al., [RAGAS: Automated Evaluation of Retrieval Augmented Generation](https://arxiv.org/abs/2309.15217) (EACL 2024 Demo)
+- Saad-Falcon et al., [ARES: An Automated Evaluation Framework for RAG Systems](https://arxiv.org/abs/2311.09476) (NAACL 2024)
+- Yang et al., [CRAG - Comprehensive RAG Benchmark](https://arxiv.org/abs/2406.04744) (NeurIPS 2024 Datasets and Benchmarks)
+- Krishna et al., [Fact, Fetch, and Reason: A Unified Evaluation of Retrieval-Augmented Generation (FRAMES)](https://arxiv.org/abs/2409.12941) (2024)
+- [RAGAS documentation](https://docs.ragas.io/), [TruLens RAG triad](https://www.trulens.org/getting_started/core_concepts/rag_triad/)
 
-**Metric selection:**
-Choose one primary metric for go/no-go decisions. Faithfulness for factual applications. Answer relevancy for conversational. Recall@5 for retrieval-focused improvements.
-
----
-
-## When RAG Is NOT the Answer
-
-### Concept
-
-RAG is not always the right solution. Over-applying it wastes cost and latency.
-
-| Scenario | Why RAG Fails | Better Approach |
-|---|---|---|
-| **Structured data queries** | "Show me all orders over $1000" - semantic search is wrong tool | SQL / text-to-SQL |
-| **Real-time computation** | "What is 15% of $847?" - LLM should compute, not retrieve | Calculator tool, code execution |
-| **Tiny static corpus** | 10 FAQ answers that never change | Stuff all FAQs into system prompt (no retrieval needed) |
-| **Very low latency (< 200ms)** | RAG adds 100-500ms minimum | Fine-tuning or few-shot in system prompt |
-| **All answers from one document** | A report that is always the full context | Summarization chain, not RAG |
-| **Private numerical data** | Customer's account balance - lookup, not retrieval | Direct database query |
-
----
-
-## Interview Q&A
-
-**Q: What is RAGAS faithfulness and how is it computed?** `[Medium]`
-A: Faithfulness measures what fraction of factual claims in the generated answer are supported by the retrieved context. Computation: (1) extract all factual claims from the answer using an LLM, (2) for each claim, prompt a judge LLM with both the claim and the context, asking if the context supports the claim, (3) faithfulness = supported claims / total claims. A score of 1.0 means the answer only contains claims directly traceable to retrieved context; 0.0 means the answer is entirely fabricated or contradicts the context.
-
-**Q: How do you debug a RAG system where faithfulness is low (0.4) but context recall is high (0.9)?** `[Hard]`
-A: High context recall means the retriever IS finding relevant documents (90% of needed information is present). Low faithfulness means the LLM is ignoring the retrieved context and generating unsupported claims. Diagnoses: (1) check if the LLM's system prompt instructs it strongly enough to use only the provided context - strengthen the grounding instruction. (2) Test if the model ignores context for specific topics it has strong parametric priors about - the model may "know" a wrong answer and prefer it. (3) Check position - is the relevant context placed in the middle of a long context? Try reordering so highest-scored chunks appear first. (4) Check if retrieved chunks contain contradictory information - the model may blend both versions.
-
-**Q: You have no labeled data for evaluation. How do you set up a RAG evaluation pipeline?** `[Hard]`
-A: Use synthetic ground truth generation: (1) take 200 random document chunks from your corpus, (2) for each chunk, use an LLM to generate 2-3 realistic questions a user might ask that the chunk can answer, (3) use the same LLM to generate the expected answer from the chunk alone - this becomes your "ground truth." You now have 400-600 (question, context, expected_answer) tuples. Run RAGAS on these. Caveat: synthetic test sets are biased toward content the LLM can answer from the chunks - test on real user queries as soon as you have production traffic.
-
-**Q: What is the "lost in the middle" problem and how do you mitigate it?** `[Medium]`
-A: Studies show that LLMs perform significantly worse when the relevant information is placed in the middle of a long context window, compared to beginning or end positions. With k=5 retrieved chunks, position 0 and position 4 are best attended; positions 1-3 are less reliably used. Mitigations: (1) **Reranking + ordering** - use a cross-encoder reranker, then place the highest-scored chunks at position 0 and 4 (top and bottom), lower-scored ones in the middle. (2) **Contextual compression** - reduce each chunk to only its relevant sentences, so total context is shorter and the problem is less severe. (3) **Fewer, higher-quality chunks** - k=3 with high-precision reranking often outperforms k=8 without it.
-
-**Q: What's the difference between context precision and context recall in RAGAS?** `[Easy]`
-A: Context precision measures the fraction of retrieved chunks that are relevant to the question - it's a retriever quality metric about noise. Context recall measures whether the retrieved chunks contain all the information needed to answer the question - it's a retriever quality metric about completeness. High context precision + low context recall: the retriever returns only relevant chunks but misses some necessary ones (try increasing k or improving hybrid search). Low context precision + high context recall: the retriever returns all necessary information but also a lot of noise (try better reranking or lower k).
-
-**Q: When should you NOT use RAG?** `[Easy]`
-A: RAG adds latency and cost unnecessarily when: (1) the entire knowledge base fits in a system prompt (10 FAQ entries - just include them all); (2) queries are computationally answerable (math, SQL queries over structured data - use tools, not retrieval); (3) latency requirements are very tight (<200ms) and the corpus is static and small enough to fine-tune; (4) every query needs the full document (legal contract review, financial report analysis - pass the full document, not retrieved snippets).
+*Last reviewed: 2026-09*

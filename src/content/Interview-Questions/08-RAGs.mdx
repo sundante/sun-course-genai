@@ -45,7 +45,7 @@ Index small chunks (child) for precise retrieval, but when a child chunk is retr
 ## Evaluation Questions
 
 **Q: How do you evaluate a RAG system?**
-Two dimensions: retrieval quality and generation quality. Retrieval metrics: recall@k (was the relevant chunk retrieved?), precision@k (were the retrieved chunks relevant?). Generation metrics: faithfulness (does the answer contradict the retrieved context?), answer relevance (does the answer address the question?), context utilization. RAGAS is a popular framework that measures all of these with LLM-as-judge.
+Two dimensions: retrieval quality and generation quality. Retrieval metrics: recall@k (was the relevant chunk retrieved?), precision@k (were the retrieved chunks relevant?). Generation metrics: faithfulness/groundedness (is every claim supported by the retrieved context?), answer relevance (does the answer address the question?), context utilization. Frameworks such as RAGAS and TruLens measure these with LLM judges - validate the judge against human labels first. See [RAG Evaluation](../11-RAG/Notes/06-RAG-Evaluation.mdx).
 
 **Q: What are the main failure modes of RAG?**
 (1) Retrieval failure: relevant chunks not retrieved - caused by poor embeddings, bad chunking, or query-document mismatch. (2) Context poisoning: irrelevant chunks retrieved and hallucinated into the answer. (3) Lost in the middle: LLMs ignore context in the middle of long retrieved passages - put the most relevant chunk first or last. (4) Faithfulness failure: model uses its parametric knowledge instead of the retrieved context. (5) Chunking boundary: answer spans a chunk boundary, so it's never fully retrieved.

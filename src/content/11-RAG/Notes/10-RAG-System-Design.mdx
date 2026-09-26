@@ -1,455 +1,222 @@
 # RAG System Design
 
-This is the highest-leverage section for building production RAG expertise. Every system design question about RAG follows the same structure - learn to decompose it into components, draw the two pipelines, and then drill into trade-offs.
+Designing a production RAG system means turning requirements - corpus size, query volume, latency, freshness, access control and quality targets - into concrete choices for ingestion, indexing, retrieval, generation, caching and failure handling, with the numbers to justify them.
+
+```objectives
+time: 60 min
+outcomes:
+  - Run a structured RAG design discussion from requirements to trade-offs
+  - Build a per-stage latency budget and identify which stages to optimise
+  - Size an index and choose sharding, replication and freshness strategies for 10M-100M+ chunks
+  - Design multi-tenancy and access control that fail closed
+  - Specify caching layers and graceful degradation, including the risks of semantic caching
+prerequisites:
+  - "[Retrieval & Reranking](04-Retrieval-and-Reranking.mdx)"
+  - "[Grounded Generation & Citations](05-Grounded-Generation-and-Citations.mdx)"
+```
+
+## A Framework for the Design Discussion
+
+| Step | Questions to settle |
+|---|---|
+| **1. Requirements** | Corpus size and growth? Document types? QPS (average, peak)? Latency SLO (p95 TTFT and total)? Freshness (minutes, hours, daily)? Who may see what? Quality bar and cost per query? |
+| **2. Two pipelines** | Ingest (offline, event-driven or batch) and query (online) - draw both |
+| **3. Components** | Parsing and chunking; embedding model; index and store; retrieval (hybrid?), reranker; generator; citations |
+| **4. Numbers** | Index size, latency budget, cost per query, throughput per component |
+| **5. Trade-offs** | Latency vs quality (reranker, query rewriting), cost vs quality (model size, context size), freshness vs complexity |
+| **6. Operations** | Evaluation gates, monitoring, failure modes, security ([RAG in Production](11-RAG-in-Production.mdx)) |
 
 ---
 
-## Framework: How to Approach Any RAG System Design
-
-When designing a RAG system for a given use case, structure your thinking in 5 minutes:
-
-```
-1. Clarify requirements  (2 min)
-   - Scale: How many documents? How many QPS?
-   - Latency SLA: p95 under how many seconds?
-   - Freshness: How often does content change?
-   - Quality: Precision vs recall vs cost trade-off?
-   - Multi-tenancy: One corpus or per-tenant isolation?
-
-2. Draw two pipelines  (3 min)
-   - Ingest (offline): how documents get into the system
-   - Query (online): how user questions get answered
-
-3. Drill into each component  (5 min)
-   - Chunking strategy
-   - Embedding model choice
-   - Vector DB choice + configuration
-   - Retrieval strategy (dense / hybrid / rerank)
-   - Prompt design
-
-4. Discuss trade-offs  (3 min)
-   - Latency vs quality
-   - Cost vs accuracy
-   - Freshness vs stability
-
-5. Production concerns  (2 min)
-   - Monitoring: what metrics do you watch?
-   - Failure modes: what breaks first at scale?
-```
-
----
-
-## Full Production Architecture
+## Reference Architecture
 
 ```mermaid
 flowchart TD
-    subgraph INGEST["📥 Ingest Pipeline (offline / async)"]
-        DS["🗄️ Data Sources<br/>S3, GCS, SharePoint, Confluence, DB"] --> DP["⚙️ Document Processor<br/>Loader → Extract → Clean → Chunk → Embed"]
-        DP <-.-> Q["📬 Queue (Pub/Sub, SQS)<br/>async processing"]
-        DP --> VS[("🗄️ Vector Store<br/>upsert vectors + metadata")]
+    subgraph ING["📥 Ingestion (async)"]
+        SRC["🗄️ Sources<br/>object storage, wikis, tickets, DBs"] --> EV["📬 Change events / scheduler"]
+        EV --> Q1["🧾 Work queue"]
+        Q1 --> W["⚙️ Workers<br/>parse → chunk → enrich → embed"]
+        W --> IDX[("🗄️ Hybrid index<br/>vectors + BM25 + metadata/ACL")]
+        W --> DOCS[("📦 Document store<br/>full text, versions")]
     end
-
-    subgraph QUERY["🔍 Query Pipeline (online / synchronous)"]
-        UQ["❓ User query"] --> QP["✏️ Query Preprocessing<br/>rewrite / expand / classify"]
-        QP --> CACHE["⚡ Cache Layer<br/>semantic cache (Redis + vector search)"]
-        CACHE -->|cache miss| RET["📡 Retriever<br/>hybrid (dense + BM25) → top-20"]
-        RET --> RR["🎯 Reranker<br/>cross-encoder → top-4 chunks"]
-        RR --> CA["🧩 Context Assembly<br/>format chunks + citations"]
-        CA --> LLM["🤖 LLM Generation<br/>Gemini / GPT-4 with grounding prompt"]
-        LLM --> PP["🧹 Post-processing<br/>citation formatting, PII scrubbing"]
-        PP --> ANS(["✅ Answer + Source Citations"])
+    subgraph QRY["🔍 Query (sync)"]
+        U["🧑 User + identity"] --> API["🚪 API / gateway<br/>auth, rate limits"]
+        API --> QP["✏️ Query processing<br/>rewrite, filters, route"]
+        QP --> RET["📡 Hybrid retrieval<br/>ACL-filtered, top 50"]
+        RET --> RR["🎯 Reranker → top 5-8"]
+        RR --> GEN["🤖 LLM, streaming<br/>grounded + cited"]
+        GEN --> OUT(["💬 Answer + citations"])
     end
+    IDX -.-> RET
+    DOCS -.-> RR
+    OUT -.-> FB["📊 Logs, feedback,<br/>sampled evals"]
 
-    subgraph FEEDBACK["🔁 Feedback Loop (async)"]
-        UF["👍 User Feedback"] --> ES["🗂️ Eval Store"] --> QM["📊 Quality Metrics"] --> TR["🔧 Trigger Re-index /<br/>Rerank Tuning"]
-    end
-
-    VS -.-> RET
-    ANS -.-> UF
-
-    style INGEST fill:#e8f4fd,stroke:#4a9eca
-    style QUERY fill:#d4edda,stroke:#28a745
-    style FEEDBACK fill:#fde8d8,stroke:#fd7e14
+    style ING fill:#e8e2d9,stroke:#ccc4b8
+    style QRY fill:#d8dfe8,stroke:#b0bac8
+    style FB fill:#dde4dc,stroke:#b0c4b0
 ```
 
 ---
 
-## Ingest Pipeline Design
+## Latency Budget
 
-### Concept
+A p95 target of about 3 seconds end to end, with streaming so the user sees text in about 1 second:
 
-The ingest pipeline runs offline or on a schedule. It's the foundation - errors here propagate silently to all future queries.
-
-**Stages:**
-
-**1. Document Loading**
-Different document types require different loaders:
-- PDFs: `PyPDFLoader`, `pymupdf` (better for complex layouts), or cloud services (Google Document AI, AWS Textract) for scanned PDFs
-- HTML: `BeautifulSoupTransformer`, `Trafilatura` (extracts clean content, ignores nav/footer)
-- DOCX/PPTX: `Docx2txtLoader`, `python-pptx`
-- Databases: custom SQL queries → structured rows → templated text
-
-**2. Document Cleaning**
-Remove: HTML tags, page numbers, headers/footers, boilerplate legal text, repeated disclaimers. Extract: meaningful metadata (title, author, date, section, URL) for later filtering.
-
-**3. Chunking**
-(see file 03 for full details). Default: `RecursiveCharacterTextSplitter`, 500 chars, 50 overlap. For domain-specific: semantic chunking.
-
-**4. Embedding**
-Batch embed chunks. CRITICAL: batch size matters - most embedding APIs accept 100-2048 texts per call. Batching 1 text at a time is 100x slower and 100x more expensive.
-
-**5. Upsert**
-Write (vector, metadata, document_id) to vector DB. Handle:
-- **De-duplication**: hash chunk content, skip if hash exists
-- **Updates**: when a document changes, delete old vectors by document_id, re-embed, re-upsert
-
-### Code
-
-```python
-import hashlib
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_community.vectorstores import Chroma
-from langchain_community.document_loaders import PyPDFLoader
-
-def ingest_document(file_path: str, source_id: str, vectorstore: Chroma):
-    # Load
-    loader = PyPDFLoader(file_path)
-    docs = loader.load()
-    
-    # Clean and add metadata
-    for doc in docs:
-        doc.metadata["source_id"] = source_id
-        doc.metadata["ingested_at"] = datetime.utcnow().isoformat()
-    
-    # Chunk
-    splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
-    chunks = splitter.split_documents(docs)
-    
-    # De-duplicate: skip chunks already in index
-    new_chunks = []
-    for chunk in chunks:
-        content_hash = hashlib.md5(chunk.page_content.encode()).hexdigest()
-        if not chunk_exists(vectorstore, content_hash):
-            chunk.metadata["content_hash"] = content_hash
-            new_chunks.append(chunk)
-    
-    # Batch embed + upsert (batches of 100)
-    for i in range(0, len(new_chunks), 100):
-        batch = new_chunks[i:i+100]
-        vectorstore.add_documents(batch)
-    
-    print(f"Ingested {len(new_chunks)} new chunks from {source_id}")
-
-def update_document(source_id: str, vectorstore: Chroma):
-    # Delete all vectors for this source, then re-ingest
-    vectorstore.delete(where={"source_id": source_id})
-    ingest_document(new_file_path, source_id, vectorstore)
-```
-
----
-
-## Query Pipeline: Latency Budget
-
-### Concept
-
-For a p95 latency SLA of 2 seconds, you need to budget time across each stage:
-
-| Stage | Typical Latency | Notes |
+| Stage | Typical p95 | Levers |
 |---|---|---|
-| Query preprocessing (rewrite) | 200-400ms | Optional - skip if query is clear |
-| Cache lookup | 5-20ms | Redis or in-memory |
-| Query embedding | 10-30ms | Cached if same query |
-| ANN search (dense) | 5-20ms | HNSW at k=20 |
-| BM25 search | 2-10ms | In-memory |
-| RRF merge | <1ms | Trivial computation |
-| Cross-encoder rerank | 80-200ms | 20 pairs × ~8ms each |
-| LLM generation | 800-1500ms | First token; streaming hides this |
-| **Total (optimistic)** | **~900ms** | With caching + fast LLM |
-| **Total (pessimistic)** | **~2200ms** | Without caching, with rewrite |
+| Auth, routing, filters | 10-30 ms | - |
+| Query rewrite (LLM) | 200-800 ms | Skip for standalone queries; use a small model |
+| Query embedding | 10-50 ms | Self-host or cache |
+| Hybrid retrieval (ANN + BM25) | 10-80 ms | Index tuning, replicas, filter selectivity |
+| Reranking 50 candidates | 30-300 ms | Smaller or GPU-hosted reranker; fewer candidates |
+| LLM time to first token | 300-1,500 ms | Smaller model, shorter context, prompt caching, lower reasoning effort |
+| LLM generation | 1-5 s | Stream it; concise answers |
 
-**Optimization hierarchy (biggest wins first):**
-1. **Semantic caching** - deduplicate near-identical queries (30-60% hit rate for customer support)
-2. **Skip reranking for high-confidence retrievals** - if top BM25 and top dense agree, skip cross-encoder
-3. **Smaller reranker model** - `MiniLM-L-6-v2` (6-layer) is 3x faster than `L-12-v2` at ~80% quality
-4. **Streaming LLM output** - stream tokens immediately; users perceive faster responses
-5. **Pre-computed query embeddings cache** - hash query string, cache embedding for 24h
-
-### Code
-
-```python
-import hashlib, json
-import redis
-
-cache = redis.Redis(host="localhost", port=6379)
-CACHE_TTL = 3600  # 1 hour
-
-def semantic_cache_lookup(query: str, threshold: float = 0.95) -> str | None:
-    """Check if a semantically similar query was answered recently."""
-    query_vec = embeddings.embed_query(query)
-    
-    # Check vector similarity against cached query embeddings
-    cached_queries = cache.keys("rag_cache:*")
-    for key in cached_queries[:100]:  # limit lookup to 100 recent queries
-        cached = json.loads(cache.get(key))
-        sim = cosine_similarity(query_vec, cached["query_vec"])
-        if sim >= threshold:
-            return cached["answer"]
-    return None
-
-def cache_answer(query: str, query_vec: list[float], answer: str):
-    key = f"rag_cache:{hashlib.md5(query.encode()).hexdigest()}"
-    cache.setex(key, CACHE_TTL, json.dumps({
-        "query": query,
-        "query_vec": query_vec,
-        "answer": answer
-    }))
-```
+Rules of thumb: the **LLM dominates**, so context size, model choice and caching matter more than shaving milliseconds from the vector search; run retrieval branches **in parallel**; and every optional LLM step (rewrite, grading, reranking with an LLM) needs to earn its latency on the eval.
 
 ---
 
-## Scalability: Designing for 100M+ Documents
+## Scaling the Index
 
-### Concept
+**Sizing.** 100M documents × 1.2 chunks × 768 dimensions × 4 bytes ≈ 369 GB of float32 vectors - more than a single machine's RAM for an in-memory HNSW index. Options, from [Embeddings & Vector Search](02-Embeddings-and-Vector-Search.mdx): int8 (≈92 GB) or binary with rescoring (≈12 GB in RAM), IVF-PQ or DiskANN, or a distributed managed service.
 
-At 100M documents, several assumptions of standard RAG break. Here's how to handle each:
+| Concern | Approach |
+|---|---|
+| **Throughput** | Replicate the index; queries are read-only and scale horizontally |
+| **Size** | Shard; each shard searched in parallel, results merged (top-k per shard, then global top-k) |
+| **Shard key** | Hash sharding spreads load evenly but every query fans out to all shards; sharding by tenant or domain lets filtered queries hit one shard |
+| **Freshness** | Event-driven upserts: on change, delete the document's chunks by `doc_id`, then insert new ones; idempotent workers; a dead-letter queue for failures |
+| **Big rebuilds** (new embedding model, new chunking) | Build a new index alongside, evaluate, switch traffic with an alias (blue/green), keep the old one for rollback |
+| **Ingestion throughput** | Batch embedding calls, parallel workers behind a queue, back-pressure on API rate limits |
 
-**1. Index size**
-100M documents × 500 chars avg × 1.2 chunks/doc = 120M chunks
-120M chunks × 768 floats × 4 bytes = ~369 GB - won't fit in memory on a single machine.
+---
 
-Solution: **IVF (Inverted File Index)** + optionally PQ compression, OR distributed vector DB (Vertex AI Vector Search, Pinecone, Qdrant distributed mode).
+## Multi-Tenancy and Access Control
 
-**2. Query throughput (QPS)**
-A single vector DB node handles ~500-2000 QPS. At 10K QPS, you need horizontal scaling.
+Retrieval must never return a chunk the user isn't allowed to see - once a chunk is in the prompt, the model may repeat it.
 
-Solution: **Read replicas** - the vector index is read-heavy; create multiple read replicas. Queries are load-balanced across replicas.
+| Isolation model | How | Use when |
+|---|---|---|
+| **Index per tenant** | Separate collections/indexes | Strict contractual or regulatory isolation; few, large tenants |
+| **Namespace / partition per tenant** | Engine-level partitions in a shared cluster | Many tenants of varied size - the common SaaS default |
+| **Shared index + mandatory filter** | `tenant_id` and ACL fields on every chunk | Internal tools; many tiny tenants |
 
-**3. Write throughput (ingestion rate)**
-Re-indexing 100M documents is not feasible in real-time. 
+Principles:
 
-Solution: **Write-ahead log** - new documents go to a write log; a background job merges them into the main index on a schedule. Queries search both the main index and the recent write log (union of results).
+- **Enforce at retrieval, server-side, from the authenticated identity** - never from a parameter the client or the model can set.
+- **Fail closed**: if the user's permissions can't be resolved, return nothing.
+- **Mirror source permissions** (document ACLs, groups) into chunk metadata at ingest, and re-sync when permissions change - stale ACLs are a leak.
+- **Test it**: include cross-tenant probes in the eval set and alert on any hit.
+- **Cache keys must include the tenant and the permission set** (see below).
 
-**4. Sharding**
-Two strategies:
-- **Document-based sharding**: shard by document source, category, or date range. Queries route to the relevant shard(s). Requires a routing layer.
-- **Hash-based sharding**: distribute vectors uniformly by ID hash. All queries fan out to all shards. Simpler but all shards participate in every query.
+---
 
-**5. Multi-region**
-For global products, replicate the index to multiple regions. Use eventual consistency for index updates - slight staleness (seconds to minutes) is acceptable for most RAG use cases.
+## Caching
+
+| Layer | Key → value | Hit rate | Risks |
+|---|---|---|---|
+| **Query embedding cache** | normalised query text → vector | Moderate | Negligible |
+| **Retrieval cache** | (query, filters, index version) → candidate ids | Moderate | Stale after index updates - include index version in key |
+| **Exact answer cache** | (normalised query, tenant, permissions, index version, prompt version) → answer | Low-moderate; high for FAQ-like traffic | Staleness - invalidate on document change |
+| **Semantic answer cache** | nearest cached query above a similarity threshold → answer | Higher | **False hits**: "refund policy for Enterprise" and "for Starter" may be 0.95 similar but need different answers; cross-tenant leaks if the key omits the tenant |
+| **Prompt cache (provider)** | Stable prompt prefix → KV state | Automatic | See [Prompt Caching & Cost](../../10-Prompt-Engineering/Notes/07-Prompt-Caching-and-Cost.mdx) |
+
+Implement a semantic cache with a real vector index (not a scan over cache keys), partition it by tenant and permissions, use a conservative threshold tuned on labelled near-duplicate pairs, and keep TTLs short. For many products, an exact cache plus prompt caching delivers most of the savings with none of the false-hit risk.
+
+---
+
+## Graceful Degradation
 
 ```mermaid
 flowchart TD
-    subgraph ARCH["🏗️ Architecture for 100M documents"]
-        I["☁️ Ingest Service (Cloud Run)<br/>Doc processor × 10 workers (Pub/Sub queue)<br/>Batch embedding (text-embedding-004, batch=512)"]
-        V["📡 Vertex AI Vector Search (managed HNSW)<br/>Index: 120M vectors, 768-dim, cosine<br/>Read replicas: 3 (auto-scaled by QPS)<br/>Deployed endpoint: HTTP call → top-k"]
-        Q["☁️ Query Service (Cloud Run, min-instances=3)<br/>Semantic cache (Cloud Memorystore Redis)<br/>Hybrid search (Vector Search + Elasticsearch BM25)<br/>Reranker (MiniLM on Cloud Run GPU)<br/>Gemini API for generation"]
-        I --> V --> Q
-    end
+    VF["🗄️ Vector search down"] --> VF1["↪️ BM25-only retrieval"]
+    RF["🎯 Reranker down or slow"] --> RF1["↪️ Serve first-stage order<br/>(tighter k)"]
+    LF["🤖 LLM rate-limited / down"] --> LF1["↪️ Fallback model or provider"]
+    LF1 --> LF2["↪️ Show retrieved passages<br/>without a generated answer"]
+    EF["🧬 Embedding API down"] --> EF1["↪️ Cached embeddings or BM25"]
 
-    style ARCH fill:#f4f1ec,stroke:#ccc4b8
+    style VF fill:#e8e0d4,stroke:#c8b89a
+    style RF fill:#e8e0d4,stroke:#c8b89a
+    style LF fill:#e8e0d4,stroke:#c8b89a
+    style EF fill:#e8e0d4,stroke:#c8b89a
 ```
+
+Wrap each dependency with timeouts and circuit breakers, and make the degraded mode explicit to users ("showing matching documents; answer generation is temporarily unavailable") rather than silently answering from the model's own knowledge.
 
 ---
 
-## Caching Strategies
+## Worked Design: Enterprise Knowledge Assistant
 
-### Concept
+**Prompt:** 10M documents across HR, Legal and Engineering; 5,000 employees; answers with citations; p95 under 3 s; daily updates; department-level access control.
 
-Three caching layers, each with different hit rates and complexity:
-
-**1. Query embedding cache**
-- Cache: query_text → embedding_vector
-- TTL: 24 hours
-- Hit rate: ~40-70% (many users ask the same question)
-- Cost savings: eliminates repeated embedding API calls
-
-**2. Semantic result cache**
-- Cache: (query_embedding, filters) → (retrieved_chunks, answer)
-- Uses vector similarity to find "close enough" cached queries (threshold ~0.95)
-- TTL: 30-60 minutes (balance freshness vs hit rate)
-- Hit rate: ~30-60% for customer support, ~10-20% for open-domain
-- Implementation: GPTCache, Redis + FAISS, or Qdrant as cache store
-
-**3. LLM response cache**
-- Cache: exact prompt hash → LLM response
-- TTL: 5-30 minutes
-- Only useful for deterministic prompts (temperature=0)
-- Hit rate: very low for open-ended queries; high for templated reports
+| Decision | Choice and reason |
+|---|---|
+| Load | 5,000 users × 20 queries/day ≈ 100K/day ≈ 3.5 QPS average over 8 working hours, ~20 QPS peak |
+| Chunks and index | ~12M chunks × 768 dims ≈ 37 GB float32 → int8 HNSW (~9 GB) with rescoring; hybrid BM25 in the same engine |
+| Access control | `department` and document ACL groups on every chunk; filter from the SSO identity; fail closed |
+| Retrieval | Hybrid top 50 → reranker top 6 → mid-size LLM with prompt caching of the instructions |
+| Freshness | Nightly batch plus event-driven updates for high-churn spaces; blue/green rebuild for model changes |
+| Quality gates | 300-question golden set per department (incl. unanswerable and cross-department probes); retrieval metrics on every index change; groundedness sampled in production |
+| Degradation | BM25-only fallback; passages-only mode if the LLM is unavailable |
+| Estimated latency | ~40 ms retrieval + ~150 ms rerank + ~800 ms TTFT → first token ≈ 1 s; full answer ≈ 2.5 s |
 
 ---
 
-## Index Freshness
+## Check Yourself
 
-### Concept
-
-How quickly do changes in source documents appear in the RAG system?
-
-**Batch re-indexing** (simplest):
-- Schedule: nightly or weekly
-- Freshness: up to 24h stale
-- Use when: content changes slowly (annual reports, product documentation)
-
-**Event-driven incremental updates** (real-time):
-- Trigger: document change event (Pub/Sub, Webhooks)
-- Freshness: seconds to minutes
-- Process: extract changed doc → re-chunk → re-embed → update vector DB (delete old, insert new)
-- Complexity: need to handle document versioning and ID-based deletion
-
-**Hybrid (write-ahead log)**:
-- New/changed documents go to a "hot" index (small, always fresh)
-- Large corpus stays in "cold" index (stale by hours)
-- Query searches both indices, merges results
-- Best balance of cost and freshness
-
-### Code
-
-```python
-# Event-driven update using Pub/Sub
-from google.cloud import pubsub_v1
-import json
-
-subscriber = pubsub_v1.SubscriberClient()
-subscription_path = subscriber.subscription_path(project_id, "doc-updates-sub")
-
-def process_update_message(message):
-    event = json.loads(message.data.decode())
-    doc_id = event["document_id"]
-    action = event["action"]  # "created", "updated", "deleted"
-    
-    if action == "deleted":
-        vectorstore.delete(where={"doc_id": doc_id})
-    elif action in ("created", "updated"):
-        if action == "updated":
-            vectorstore.delete(where={"doc_id": doc_id})
-        new_doc = fetch_document(doc_id)
-        ingest_document(new_doc, doc_id, vectorstore)
-    
-    message.ack()
-
-streaming_pull_future = subscriber.subscribe(subscription_path, callback=process_update_message)
+```quiz
+- q: "Where should the tenant/ACL filter be applied in a multi-tenant RAG system?"
+  options:
+    - "In the retrieval query, server-side, derived from the authenticated identity"
+    - "In the system prompt, telling the model not to reveal other tenants' data"
+    - "After generation, by redacting the answer"
+    - "In the client application"
+  answer: 1
+- q: "A semantic answer cache with a 0.95 threshold returns Enterprise refund terms to a Starter-plan question. What is the root problem?"
+  options:
+    - "Embedding similarity doesn't capture the one attribute that changes the answer; the cache threshold/key design is unsafe for this query class"
+    - "The TTL is too long"
+    - "The embedding model is too small"
+    - "The LLM hallucinated"
+  answer: 1
+- q: "In a typical RAG request, which stage usually dominates latency?"
+  options: ["LLM prefill and generation", "ANN search", "BM25", "Auth"]
+  answer: 1
+- q: "How do you switch to a new embedding model without downtime?"
+  answer: "Build a new index with the new model alongside the old one, evaluate it on the golden set, then switch query traffic (and the query-embedding model) together via an alias - blue/green - keeping the old index for rollback. Never mix models in one index."
 ```
 
----
+## Exercises
 
-## Failure Handling and Graceful Degradation
-
-### Concept
-
-Production RAG systems must handle partial failures gracefully. The user should always get an answer, even if degraded.
-
-**Failure hierarchy:**
-```mermaid
-flowchart TD
-    A["🗄️ Vector DB unavailable"] --> A1["↪️ Fallback to BM25-only<br/>(Elasticsearch / in-memory index)"]
-    A1 --> A2["↪️ If BM25 also unavailable → LLM with<br/>no context + uncertainty disclaimer"]
-
-    B["🧬 Embedding model API unavailable"] --> B1["↪️ If query embedding fails →<br/>serve stale cache if available"]
-    B1 --> B2["↪️ If no cache → fallback to BM25"]
-
-    C["🤖 LLM API rate limited / unavailable"] --> C1["↪️ Queue request,<br/>return 'processing' response"]
-    C1 --> C2["↪️ For sync requirement →<br/>switch to smaller/faster fallback model"]
-
-    D["🎯 Reranker unavailable"] --> D1["↪️ Skip reranking,<br/>use first-stage retrieval order"]
-    D1 --> D2["↪️ Monitor precision drop<br/>in downstream metrics"]
-
-    style A fill:#f8d7da,stroke:#dc3545
-    style B fill:#f8d7da,stroke:#dc3545
-    style C fill:#f8d7da,stroke:#dc3545
-    style D fill:#f8d7da,stroke:#dc3545
+```exercise
+- title: Size and cost a design
+  task: |
+    Design RAG for 50M support articles and tickets (≈80M chunks, 1,024-dim embeddings), 200 QPS peak, p95 first token under 1.5 s, per-customer isolation for 3,000 customers. Specify index technology and memory, sharding and replication, the isolation model, the caching layers and the latency budget.
+  solution: |
+    Vectors: 80M × 1,024 × 4 ≈ 328 GB float32 → binary in RAM (~10 GB) + int8 or float on SSD for rescoring, or a managed/distributed engine; shard by customer group so filtered queries hit few shards; replicas sized for 200 QPS with headroom. Isolation: namespaces per customer (or per group of small customers) plus mandatory ACL filters. Caching: embedding and exact-answer caches keyed by customer; provider prompt caching; semantic cache only for curated FAQ intents. Budget: ~50 ms retrieval, ~100 ms GPU rerank, ~800 ms TTFT with a mid-size model and short context.
+- title: Failure drill
+  task: |
+    For the worked design above, write the runbook entries for (a) reranker latency doubling, (b) the vector index returning stale results after a failed nightly job, (c) a cross-department probe in the eval set returning a restricted chunk.
+  solution: |
+    (a) Circuit breaker trips to first-stage order with smaller k; alert; investigate GPU capacity. (b) Index-freshness metric (newest indexed timestamp) alerts; rerun ingestion from the queue; if needed serve with a visible freshness warning. (c) Sev-1: disable the assistant for that department or all, audit the ACL sync for affected documents, fix, re-run the full cross-tenant probe suite before re-enabling.
 ```
 
-**Circuit breaker pattern:**
-Wrap each external dependency (embedding API, vector DB, LLM) in a circuit breaker. If error rate exceeds threshold (e.g., 5% in 60 seconds), open the circuit and immediately serve fallback responses. Reset after a probe interval.
+## Study Notes
 
-```python
-from circuitbreaker import circuit
+**Must-know:**
+- Design flow: requirements → two pipelines → components → numbers → trade-offs → operations
+- Latency is dominated by the LLM; budget each stage; parallelise retrieval branches; stream
+- Index sizing: N × d × 4 bytes float32; compress, shard, replicate; blue/green rebuilds for model changes
+- Freshness: event-driven delete-then-insert with idempotent workers, or batch
+- Multi-tenancy: per-tenant index, namespaces, or shared + mandatory filters; enforce server-side from identity; fail closed; test with probes
+- Caches: embedding, retrieval, exact answer, semantic answer (false hits - key by tenant/permissions, conservative thresholds), provider prompt cache
+- Degrade explicitly: BM25 fallback, skip reranker, fallback model, passages-only mode
 
-@circuit(failure_threshold=5, recovery_timeout=60, expected_exception=Exception)
-def embed_with_circuit_breaker(query: str) -> list[float]:
-    return embeddings.embed_query(query)
+## References
 
-@circuit(failure_threshold=10, recovery_timeout=30, expected_exception=Exception)
-def vector_search_with_circuit_breaker(query_vec: list[float], k: int) -> list:
-    return vectorstore.similarity_search_by_vector(query_vec, k=k)
-```
+- Gao et al., [Retrieval-Augmented Generation for Large Language Models: A Survey](https://arxiv.org/abs/2312.10997) (2023)
+- Barnett et al., [Seven Failure Points When Engineering a Retrieval Augmented Generation System](https://arxiv.org/abs/2401.05856) (CAIN 2024)
+- Google Cloud, [RAG infrastructure for generative AI using Agent Platform and Vector Search](https://docs.cloud.google.com/architecture/gen-ai-rag-vertex-ai-vector-search)
+- AWS, [Amazon Bedrock Knowledge Bases](https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base.html)
 
----
-
-## System Design Walkthrough: Enterprise Knowledge Base
-
-**Question:** "Design a RAG system for a 10M-document enterprise knowledge base with 5,000 employees querying it. SLA: p95 < 2.5s. Documents update daily. Multi-tenant: HR, Legal, Engineering departments have separate access."
-
-**Sample answer structure:**
-
-**Requirements:**
-- Scale: 10M docs → ~12M chunks after chunking
-- QPS: 5,000 users × estimated 20 queries/day / 28,800 working seconds = ~3.5 QPS average, ~20 QPS peak
-- Freshness: daily batch re-indexing acceptable
-- Multi-tenancy: namespace isolation by department + RBAC
-
-**Architecture:**
-
-```mermaid
-flowchart TD
-    subgraph ING["📥 Ingest (daily batch, 9 PM)"]
-        S["📄 SharePoint / Confluence"] --> DP["⚙️ Doc processor (Cloud Run)"]
-        DP --> TC["✂️ Text clean + chunk (500 chars)"]
-        TC --> BE["🧬 Batch embed (text-embedding-004)"]
-        BE --> VS[("🗄️ Vertex AI Vector Search<br/>upsert, namespace=department")]
-    end
-
-    subgraph QRY["🔍 Query (real-time)"]
-        EQ["🧑 Employee query"] --> AUTH["🔐 Auth check<br/>IAM → map user to department"]
-        AUTH --> SC["⚡ Semantic cache (Redis)<br/>30-60% hit rate expected"]
-        SC -->|cache miss| HR["📡 Hybrid retrieval<br/>Vector Search + Elasticsearch BM25<br/>filter={department: user_dept}"]
-        HR --> RR["🎯 Cohere Rerank API<br/>top-20 → top-5"]
-        RR --> GEN["🤖 Gemini Pro<br/>(generation, streaming)"]
-        GEN --> ANS(["✅ Answer + citations<br/>doc title, department, URL"])
-    end
-
-    VS -.-> HR
-
-    style ING fill:#e8f4fd,stroke:#4a9eca
-    style QRY fill:#d4edda,stroke:#28a745
-```
-
-**Latency budget:**
-- Cache hit: ~20ms total
-- Cache miss: embed (20ms) + Vector Search (15ms) + BM25 (5ms) + Rerank (150ms) + Gemini (800ms) = ~990ms → within SLA
-
-**Failure handling:**
-- Vector Search unavailable → fallback to Elasticsearch full-text search
-- Reranker unavailable → skip, use RRF-merged first-stage results
-- Gemini rate limited → queue + async delivery, or switch to Gemini Flash
-
-**Monitoring:**
-- Retrieval latency p50/p95 per department
-- Answer quality score (RAGAS faithfulness, sampled 1%)
-- Cache hit rate (alert if drops below 20%)
-- Daily: run eval set of 100 golden Q&A pairs, alert if Recall@5 drops below baseline
-
----
-
-## Interview Q&A
-
-**Q: A product manager asks you to design a RAG system for a company with 10M internal documents. Walk me through your approach.** `[Hard]`
-A: I'd start with 5 clarifying questions: QPS, latency SLA, update frequency, access control requirements, and whether answers need citations. Then I'd draw the two pipelines - ingest (offline: load → chunk → embed → upsert) and query (online: cache check → hybrid retrieval → rerank → generate). For 10M docs at ~5 QPS, I'd use Vertex AI Vector Search for managed scale, Elasticsearch for BM25, Cohere Rerank, and Gemini Pro. Daily batch re-indexing at low-traffic hours. Namespace-based tenant isolation if multiple departments. p95 target: under 2s (cache hit: 20ms, cache miss: ~1s).
-
-**Q: How do you handle index freshness in a RAG system where documents update every hour?** `[Medium]`
-A: Use event-driven incremental updates. Subscribe to document change events (Pub/Sub or Webhooks). On each event: (1) delete existing vectors with that document_id from the vector DB, (2) re-chunk and re-embed the new version, (3) upsert new vectors. For high-throughput update scenarios, buffer changes in a "hot" write-ahead index that is searched alongside the main "cold" index. This avoids re-indexing the entire corpus for each update.
-
-**Q: What is a semantic cache and how does it differ from a standard key-value cache?** `[Medium]`
-A: A standard key-value cache returns a hit only on exact string matches. A semantic cache stores query embeddings alongside answers and returns a cache hit when a new query's embedding is within a cosine similarity threshold (e.g., 0.95) of a cached query. This handles paraphrases: "What is your refund policy?" and "How do I get a refund?" both hit the same cache entry. Tools: GPTCache (open source), Redis + FAISS, or Qdrant as a vector-based cache store.
-
-**Q: How would you design a multi-tenant RAG system where tenants must not see each other's data?** `[Hard]`
-A: Two isolation strategies: (1) **Namespace isolation** - store all tenants in one vector DB but with a tenant_id namespace/collection. At query time, apply a mandatory metadata filter: `filter={"tenant_id": current_user.tenant_id}`. This is simple but relies on correct filter application at every query - a missed filter leaks data. (2) **Index isolation** - separate vector DB indices per tenant. Stronger isolation, but higher operational overhead (N indices to manage). For high-security requirements (HIPAA, SOC2), index isolation is preferred. For standard enterprise, namespace isolation with application-layer enforcement + audit logging is sufficient.
-
-**Q: How do you detect and handle retrieval quality degradation in production?** `[Hard]`
-A: Set up three signals: (1) **Offline eval**: a fixed set of 100-500 golden (question, expected_answer) pairs; run weekly, alert if Recall@5 or faithfulness score drops >5% from baseline. (2) **Online signals**: thumbs down / feedback buttons; low user rating rate is a leading indicator of quality degradation. (3) **Embedding distribution drift**: periodically compute the centroid of recent query embeddings; if it drifts significantly from the training distribution of your embedding model, re-evaluate whether to switch models. Common causes of degradation: corpus changes (new document types or vocabulary), index staleness, or changes in user query patterns.
-
-**Q: What are the trade-offs between batch and streaming ingestion for a RAG system?** `[Medium]`
-A: Batch ingestion (nightly runs) is simple, cost-efficient (bulk embedding API rates), and idempotent - easy to retry and monitor. Freshness SLA: hours to a day. Streaming ingestion (event-driven) achieves minute-level freshness but adds operational complexity: you need idempotent updates (delete old vectors → insert new ones), handling of race conditions (same document updated twice in quick succession), and dead-letter queues for failed ingestion events. Choose based on freshness requirement: most enterprise knowledge bases are fine with daily batch; customer support (where KB articles change hourly) needs streaming.
-
-**Q: How do you prevent the RAG system from returning confidential documents to unauthorized users?** `[Hard]`
-A: Defense in depth: (1) **Metadata tagging at ingest** - tag every document with its access control level (public, internal, confidential, top-secret) and owner group during ingestion. (2) **Mandatory metadata filtering at query time** - the retrieval function always includes a filter based on the authenticated user's permissions. This filter must be applied at the vector DB layer, not in application code after retrieval. (3) **Audit logging** - log every (user, query, retrieved_doc_ids) tuple for forensic capability. (4) **Index-level isolation** for highly sensitive data (never co-locate top-secret documents with general documents in the same index, regardless of filters).
+*Last reviewed: 2026-09*
