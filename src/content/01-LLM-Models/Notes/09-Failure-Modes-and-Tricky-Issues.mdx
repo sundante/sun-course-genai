@@ -34,11 +34,11 @@ After fine-tuning:
 ### Mitigations
 
 **1. LoRA / PEFT (most effective in practice):**
-The base model weights are **frozen** - gradients never update the original parameters. Only the LoRA adapter (BA) is trained. Since the base model cannot be modified, catastrophic forgetting is theoretically impossible.
+The base model weights are **frozen** - gradients never update the original parameters. Only the low-rank adapter (BA) is trained, so the change to the network is limited in rank and the original model is always recoverable by removing the adapter. This **reduces** forgetting but does not eliminate it: the served model is W_0 + BA, and with the adapter active, general capabilities can still degrade. Biderman et al. (2024, "LoRA Learns Less and Forgets Less") measured less forgetting than full fine-tuning, not zero.
 
 ```
 W_new = W_0 + B·A
-∂L/∂W_0 = 0  (frozen)  ← prevents catastrophic forgetting
+∂L/∂W_0 = 0  (frozen)  ← limits how far the model can drift
 ∂L/∂B, ∂L/∂A → update only the adapter
 ```
 
@@ -113,7 +113,7 @@ The model shows primacy bias (start) and recency bias (end) - both ends of the c
 2. **Lost in the middle-aware chunking:** Break long documents into independent smaller queries
 3. **Re-reading prompts:** "Read this document twice: [doc]" - empirically helps in some evaluations
 4. **Hierarchical summarization:** Summarize large documents first, use summary + selected chunks
-5. **Better attention:** Flash Attention 3, sparse attention patterns may help, but fundamental bias persists
+5. **Long-context training:** models trained with long-context data and positional scaling degrade less in the middle, but the positional bias does not disappear. (FlashAttention changes speed and memory, not which tokens the model attends to, so it is not a mitigation.)
 
 ---
 
@@ -202,7 +202,7 @@ As a prompt approaches the model's context window limit, performance degrades - 
 **Practical thresholds (rough guidance):**
 - Models reliably handle the first 50–70% of their stated context window well
 - Performance noticeably degrades in the last 20–30% of the window
-- Exception: models explicitly trained for long-context (Gemini 1.5, LLaMA-3.1 with yarn/rope scaling) are more reliable at the limit
+- Exception: models explicitly trained for long context (a dedicated long-context training stage with RoPE scaling, e.g. Llama 3.1's staged extension to 128K) are more reliable near the limit; measure with RULER-style tests rather than trusting the advertised window
 
 **Workarounds:**
 - Keep total context under 70% of the limit
@@ -291,7 +291,7 @@ When providing few-shot examples, models exhibit bias toward the **label distrib
 - Number tokenization → arithmetic failures → use Python tools for computation
 
 **Quick recall Q&A:**
-- *What is catastrophic forgetting and how does LoRA prevent it?* Fine-tuning overwrites general capabilities by updating all weights. LoRA freezes base model weights - only adapters (BA matrices) are updated, making forgetting impossible.
+- *What is catastrophic forgetting and how does LoRA reduce it?* Fine-tuning overwrites general capabilities by updating all weights. LoRA freezes the base weights and trains a low-rank delta, so it forgets less than full fine-tuning - but not zero, because the served model is W_0 + BA.
 - *Why does lost-in-the-middle happen?* Attention concentrates on beginning (primacy) and recent (recency) tokens; middle positions receive diluted attention.
 - *Why does RLHF cause sycophancy?* Human raters prefer agreeable responses → reward model scores them higher → PPO optimizes for agreement → model learns to be sycophantic.
 - *What is intrinsic hallucination?* A response that contradicts the provided source context - the model generates facts that conflict with what's in the prompt.

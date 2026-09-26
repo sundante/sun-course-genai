@@ -106,11 +106,11 @@ GPUs can do 16-bit math roughly 2-3x faster than 32-bit math and it uses about h
 <div class="audience-tech" markdown="1">
 
 ```python
-from torch.cuda.amp import autocast, GradScaler
+from torch.amp import autocast, GradScaler   # torch.cuda.amp is deprecated
 
 model = MyModel().to(device)
 optimizer = optim.Adam(model.parameters(), lr=1e-3)
-scaler = GradScaler()
+scaler = GradScaler("cuda")                  # only needed for float16, not bfloat16
 
 for epoch in range(num_epochs):
     model.train()
@@ -118,7 +118,7 @@ for epoch in range(num_epochs):
         batch_x, batch_y = batch_x.to(device), batch_y.to(device)
         optimizer.zero_grad()
 
-        with autocast():                     # ops inside run in fp16 where safe
+        with autocast(device_type="cuda", dtype=torch.float16):  # ops inside run in fp16 where safe
             outputs = model(batch_x)
             loss = loss_fn(outputs, batch_y)
 

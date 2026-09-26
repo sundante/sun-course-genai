@@ -45,7 +45,7 @@ Tokens-per-second (TPS)    = 1 / per-token-decode-time
 - Scales with prompt length
 - All input tokens are processed in parallel (like training)
 - Bottleneck: compute (matrix multiplications for all tokens simultaneously)
-- Typical: 1–5 seconds for 10K tokens on A100
+- Rough cost: ~2 × params FLOPs per token, so 10K tokens on a 7B model is ~1.4 × 10^14 FLOPs - roughly 0.5-1 s on one A100 at realistic utilization, and ~10× longer for a 70B model
 
 **Decode time** (generating each output token):
 - Each token requires one full forward pass through the model
@@ -173,9 +173,19 @@ Instead of loading the entire document, retrieve only relevant passages (see [RA
 For models trained with RoPE positional encoding, you can extend the context window beyond training length by scaling the RoPE frequencies:
 
 ```
-YaRN (Yet another RoPE extensioN):
-  Multiply RoPE base frequency by a scaling factor
-  LLaMA-3.1: trained at 8K, YaRN extends to 128K with quality
+Position Interpolation (Chen et al., 2023):
+  Divide positions by a scale factor so long sequences map into the trained range
+
+NTK-aware / base-frequency (ABF) scaling:
+  Increase the RoPE base (theta) so low frequencies stretch while high frequencies stay sharp
+
+YaRN (Peng et al., 2023):
+  Interpolate each RoPE frequency band differently (high-frequency dims untouched,
+  low-frequency dims interpolated) + an attention temperature correction.
+  Needs only a short fine-tune on long sequences; used by e.g. Qwen2.5/Qwen3 long-context variants
+
+Llama 3.1 (128K): its own "llama3" RoPE frequency scaling + a staged
+  long-context continued-pretraining phase - not YaRN
   
 LongLoRA: 
   Fine-tune with sparse attention (shift-short-attention) on longer sequences

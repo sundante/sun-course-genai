@@ -78,6 +78,7 @@ Two more checks round this out: automated scanning that catches known vulnerabil
 - **Access control** - unique user identification, automatic logoff, encryption/decryption of PHI at rest
 - **Audit controls** - hardware/software mechanisms that record and examine activity in systems containing PHI
 - **Integrity controls** - mechanisms to confirm PHI hasn't been improperly altered or destroyed
+- **Person or entity authentication** - verify that whoever requests PHI is who they claim to be (SSO + MFA, service identities for workloads)
 - **Transmission security** - encryption in transit (TLS) for PHI moving across a network
 
 Audit logging in particular needs to answer, for any PHI access: who accessed it, when, and why - sufficient to satisfy a regulator's after-the-fact review, not just an engineer's after-the-fact debugging session.
@@ -92,11 +93,11 @@ Audit logging in particular needs to answer, for any PHI access: who accessed it
 - Least privilege means scoping IAM per component, not one shared broad-access service account
 - Secrets never belong in a prompt, log, or committed config - and prompt templates are an easy-to-miss leak vector
 - Tracing/eval tooling captures everything by default - PHI/PII redaction has to be an explicit step, not an afterthought
-- HIPAA's technical safeguards are four named things: access control, audit controls, integrity controls, transmission security - naming them precisely reads as far more credible than "we're HIPAA compliant"
+- HIPAA's technical safeguards are five named things: access control, audit controls, integrity, person or entity authentication, transmission security - naming them precisely reads as far more credible than "we're HIPAA compliant"
 - SAST + dependency scanning belong in CI, blocking merge on high-severity findings
 
 **Quick recall Q&A:**
 - *Why is a shared "AI service account" with broad permissions risky?* It turns a compromise of any single component into full-system access, defeating the point of scoping permissions at all.
 - *Why do tracing tools pose a specific compliance risk for LLM systems that they don't for typical apps?* They're designed to capture full request/response content by default for debugging, and in an LLM system that content routinely includes the sensitive data users typed into the prompt.
-- *What are HIPAA's four technical safeguards?* Access control, audit controls, integrity controls, and transmission security (45 CFR §164.312).
+- *What are HIPAA's five technical safeguards?* Access control, audit controls, integrity, person or entity authentication, and transmission security (45 CFR §164.312).
 - *What should trigger a CI pipeline to block a merge, from a security standpoint?* A high-severity finding from SAST (code-level vulnerability) or dependency scanning (known-CVE in a third-party package).

@@ -26,21 +26,30 @@ Bytes per precision:
 - 405B model: 405 × 2 = 810 GB → needs 10+ A100-80GB
 
 **Training overhead (Adam optimizer):**
-Adam optimizer stores 3 copies per parameter: current weights (2 bytes BF16) + momentum (4 bytes FP32) + variance (4 bytes FP32) = 10 bytes per parameter.
+Standard mixed-precision training with Adam keeps **16 bytes per parameter** of model state (Rajbhandari et al., ZeRO, 2019):
 
 ```
-Training VRAM ≈ 10 bytes × num_parameters
-  7B model: 70 GB → needs 2× A100-40GB minimum with ZeRO
-  70B model: 700 GB → needs 9+ A100-80GB
+BF16 weights            2 bytes   (used in forward/backward)
+BF16 gradients          2 bytes
+FP32 master weights     4 bytes   (the optimizer updates these, then re-casts to BF16)
+FP32 Adam momentum (m)  4 bytes
+FP32 Adam variance (v)  4 bytes
+-------------------------------
+Model state            16 bytes × num_parameters   (before activations)
+
+  7B model:   7B × 16 = 112 GB  → does not fit one 80 GB GPU; shard with ZeRO/FSDP
+  70B model: 70B × 16 = 1.12 TB → ~14+ GPUs of 80 GB just for model state, fully sharded
 ```
+
+Activations come on top and scale with batch × sequence length × layers; activation checkpointing trades recompute for most of that memory. Memory-saving optimizers (8-bit Adam, Adafactor) and FP8 training reduce the 16-byte figure, but it remains the standard baseline for estimates.
 
 **Additional VRAM components:**
 
 | Component | Size | Notes |
 |-----------|------|-------|
 | Model weights | params × bytes | Dominant |
-| Optimizer states | 2× params (Adam FP32) | Training only |
-| Gradients | 1× params | Training only |
+| FP32 master weights + Adam m, v | 12 bytes × params | Training only |
+| Gradients | 2 bytes × params (BF16) | Training only |
 | Activations | Seq_len × d_model × n_layers × batch | Cleared by grad checkpointing |
 | KV cache | See formula in file 05 | Inference only |
 
@@ -113,7 +122,7 @@ Quantization reduces the numerical precision of model weights (and sometimes act
 **How it works:**
 - 4-bit format with bins placed at equal probability intervals of the standard normal distribution N(0,1)
 - LLM weights have a near-normal distribution → NF4 bins are optimally placed
-- Used exclusively for QLoRA base model storage; combined with FP16/BF16 LoRA adapters
+- Introduced with QLoRA and used mainly for storing frozen base weights during fine-tuning; combined with BF16 LoRA adapters
 
 **Not intended for standalone inference** - primarily a training-efficiency format.
 
@@ -185,13 +194,15 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    IN["📥 Linear(d_model, d_ffn)"] --> G0["🖥️ GPU 0<br/>first d_ffn/2 columns → output_0"]
-    IN --> G1["🖥️ GPU 1<br/>last d_ffn/2 columns → output_1"]
-    G0 --> AR["🔄 All-reduce<br/>output = concat(output_0, output_1)"]
+    IN["📥 x (replicated)"] --> G0["🖥️ GPU 0<br/>W1 columns 0..d_ffn/2 → act<br/>W2 rows 0..d_ffn/2 → partial_0"]
+    IN --> G1["🖥️ GPU 1<br/>W1 columns d_ffn/2..d_ffn → act<br/>W2 rows d_ffn/2..d_ffn → partial_1"]
+    G0 --> AR["🔄 All-reduce<br/>y = partial_0 + partial_1"]
     G1 --> AR
 ```
 
-**Communication cost:** One all-reduce per layer forward AND backward. High communication - requires NVLink for efficiency (PCIe is too slow).
+The first FFN matrix is split by **columns** (each GPU computes its slice of the hidden activation, and the elementwise activation needs no communication); the second is split by **rows**, so each GPU produces a partial sum of the output. One all-reduce combines them. Attention works the same way with heads as the split dimension.
+
+**Communication cost:** Two all-reduces per transformer layer in the forward pass (one after attention, one after the FFN) and two in the backward pass. High communication - requires NVLink for efficiency (PCIe is too slow).
 
 **When to use:** Single layer too large for one GPU; NVLink interconnect available.
 
@@ -236,7 +247,7 @@ ZeRO (Rajbhandari et al., 2019) eliminates redundant copies of optimizer states,
 Stage 1 - Optimizer State Partitioning:
   Each GPU stores only 1/N of optimizer states (momentum, variance)
   Parameters and gradients: still replicated on all GPUs
-  Memory reduction: 4× (optimizer states are typically 2× weights in Adam)
+  Memory reduction: up to ~4× as N grows (optimizer state is 12 of the 16 bytes/param)
 
 Stage 2 - Gradient Partitioning:
   Each GPU stores only 1/N of gradients during backward pass
@@ -293,7 +304,9 @@ GPU-to-GPU communication speed determines how well parallelism strategies scale.
 | Interconnect | Bandwidth | Latency | Use |
 |-------------|-----------|---------|-----|
 | PCIe 4.0 ×16 | ~32 GB/s (bidirectional) | Medium | Consumer GPUs, budget clusters |
-| NVLink 4.0 | ~900 GB/s (bidirectional) | Low | A100, H100 - production AI clusters |
+| NVLink 3.0 | ~600 GB/s (total per GPU) | Low | A100 SXM |
+| NVLink 4.0 | ~900 GB/s (total per GPU) | Low | H100/H200 SXM |
+| NVLink 5.0 | ~1.8 TB/s (total per GPU) | Low | B200/GB200 (NVL72 racks) |
 | NVSwitch | ~3.6 TB/s (all-to-all) | Very low | H100 SXM clusters |
 
 **Practical impact:**
@@ -324,10 +337,10 @@ def estimate_vram(
     weight_gb = num_params_billions * 1e9 * bpp / 1e9
     
     if mode == "training":
-        # Adam: weights (bpp) + momentum (4B) + variance (4B) = bpp + 8
-        optimizer_factor = (4 + 4) / bpp  # extra FP32 copies
-        total = weight_gb * (1 + optimizer_factor)
-        return {"weights": weight_gb, "total_approx": total}
+        # Mixed-precision Adam: BF16 weights (2) + BF16 grads (2)
+        # + FP32 master weights (4) + FP32 m (4) + FP32 v (4) = 16 bytes/param
+        state_gb = num_params_billions * 16
+        return {"weights": weight_gb, "model_state_excl_activations": state_gb}
     else:
         kv_gb = (n_layers * kv_cache_tokens * 2 * n_kv_heads * d_head * 2 * batch_size) / 1e9
         return {"weights": weight_gb, "kv_cache": kv_gb, "total_approx": weight_gb + kv_gb}
@@ -380,7 +393,7 @@ Want to apply this VRAM/quantization math to an actual training run? See the [Fi
 
 **Must-know for interviews:**
 - VRAM for weights = params × bytes_per_precision (BF16=2, INT8=1, INT4=0.5)
-- Training VRAM ≈ 10× params in bytes (Adam optimizer stores FP32 momentum + variance + weights)
+- Training model state ≈ 16 bytes/param with mixed-precision Adam (BF16 weights + BF16 grads + FP32 master weights + FP32 m + FP32 v), before activations
 - 70B in FP16 = 140 GB → needs 2× A100-80GB for inference; INT4 = 35 GB → 1 GPU
 - Quantization hierarchy: BF16 (best quality) → INT8 (near-lossless) → AWQ INT4 (recommended 4-bit) → NF4 (QLoRA only)
 - Data parallelism: replicate model, split batch; Tensor parallelism: split weight matrices; Pipeline: split layers
@@ -389,7 +402,7 @@ Want to apply this VRAM/quantization math to an actual training run? See the [Fi
 
 **Quick recall Q&A:**
 - *A 13B model in BF16 - how much VRAM for inference?* 13 × 2 = 26 GB → needs 1× A100-40GB or more.
-- *What 3 things does Adam store per parameter?* Current weights (BF16), first moment/momentum (FP32), second moment/variance (FP32).
+- *What does mixed-precision Adam store per parameter?* BF16 weights and gradients (2 + 2 bytes) plus an FP32 master copy, FP32 momentum and FP32 variance (4 + 4 + 4 bytes) = 16 bytes.
 - *What is the key difference between GPTQ and AWQ?* AWQ uses activation statistics to identify and protect important weight channels before quantization - better quality at the same bit-width.
 - *What does ZeRO Stage 3 partition?* Optimizer states + gradients + parameters (model weights themselves).
 - *Why does tensor parallelism require NVLink?* It requires all-reduce communication after every layer (forward and backward) - PCIe bandwidth is a severe bottleneck at this frequency.

@@ -157,7 +157,7 @@ Security best practices are encoded in the protocol spec and reinforced by offic
 
 ### Protocol Versioning
 
-MCP versions are date-based (`2025-03-26`). New features are added in new versions; old versions continue working through capability negotiation. Servers built on `2025-03-26` continue working with hosts that support `2026-01-01` - the session is negotiated down to the common version.
+MCP versions are date-based. The published revisions so far are `2024-11-05`, `2025-03-26`, `2025-06-18` and `2025-11-25`. During `initialize`, the client sends the latest version it supports; the server replies with that version if it supports it, or with another version it does support, and the client disconnects if it cannot speak the server's choice. Features within a version are then gated by capability negotiation, so a server built on `2025-03-26` keeps working with a host that also supports `2025-11-25`.
 
 ### Model Independence
 

@@ -107,7 +107,7 @@ Special tokens: `<bos>`, `<start_of_turn>`, `<end_of_turn>`
 
 ---
 
-**ChatML (Mistral, Qwen, many others):**
+**ChatML (Qwen, OpenAI's original chat format, many open fine-tunes):**
 ```
 <|im_start|>system
 You are a helpful assistant.<|im_end|>
@@ -115,7 +115,9 @@ You are a helpful assistant.<|im_end|>
 What is attention in transformers?<|im_end|>
 <|im_start|>assistant
 ```
-Special tokens: `<|im_start|>`, `<|im_end|>` (im = "inner monologue")
+Special tokens: `<|im_start|>`, `<|im_end|>`
+
+(Mistral's instruct models use their own `[INST] ... [/INST]` format, not ChatML. Always read the template from `tokenizer.chat_template` rather than hand-writing it.)
 
 ---
 
@@ -206,27 +208,25 @@ At step 2 (after "{\""):
 - **Instructor**: wraps LLM calls with Pydantic validation + retry logic
 
 ```python
+# Outlines 1.x API
 import outlines
 from pydantic import BaseModel
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 class ModelInfo(BaseModel):
     model_name: str
     parameters_billions: float
     architecture: str
 
-@outlines.prompt
-def model_info_prompt(description: str):
-    """Extract model information from the description.
-    
-    Description: {{ description }}
-    """
+name = "Qwen/Qwen3-0.6B"  # small model for demo
+model = outlines.from_transformers(
+    AutoModelForCausalLM.from_pretrained(name), AutoTokenizer.from_pretrained(name)
+)
 
-# With outlines, generation is guaranteed to match the schema
-# (no post-processing needed)
-model = outlines.models.transformers("gpt2")  # small model for demo
-generator = outlines.generate.json(model, ModelInfo)
-# result = generator(model_info_prompt("LLaMA-3 is a 8B parameter decoder-only model from Meta"))
-# type(result) == ModelInfo - guaranteed
+prompt = "Extract model information: Llama 3 is an 8B parameter decoder-only model from Meta."
+# Decoding is constrained token-by-token, so the output always parses against the schema
+raw = model(prompt, output_type=ModelInfo, max_new_tokens=100)  # JSON string
+info = ModelInfo.model_validate_json(raw)
 ```
 
 ---

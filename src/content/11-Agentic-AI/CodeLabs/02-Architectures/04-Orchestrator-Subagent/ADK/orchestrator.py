@@ -9,7 +9,7 @@ import asyncio
 import os
 from dotenv import load_dotenv
 from google.adk.agents import Agent
-from google.adk.runners import InMemoryRunner
+from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types as genai_types
 
@@ -103,7 +103,7 @@ async def run_orchestrator(city: str) -> str:
     session = await session_service.create_session(
         app_name="trip_orchestrator", user_id="user_01"
     )
-    runner = InMemoryRunner(agent=orchestrator, session_service=session_service)
+    runner = Runner(agent=orchestrator, app_name="trip_orchestrator", session_service=session_service)
     query = f"Create a complete trip package for {city}."
 
     print(f"Query: {query}\n")

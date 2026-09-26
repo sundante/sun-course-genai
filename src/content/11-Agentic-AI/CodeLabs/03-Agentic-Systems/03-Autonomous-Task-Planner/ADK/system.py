@@ -12,13 +12,15 @@ What this demonstrates:
   - Bounded execution through agent instructions
 """
 
+import asyncio
 import os
 import json
 from dotenv import load_dotenv
 from google.adk.agents import Agent, SequentialAgent
 from google.adk.tools import FunctionTool
-from google.adk.runners import InProcessRunner
+from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
+from google.genai import types as genai_types
 
 load_dotenv()
 
@@ -146,21 +148,27 @@ task_planner_system = SequentialAgent(
 # ── Runner ──────────────────────────────────────────────────────────────────────
 
 def run_planner(goal: str) -> str:
-    session_service = InMemorySessionService()
-    runner = InProcessRunner(
-        agent=task_planner_system,
-        session_service=session_service,
-        app_name="task_planner",
-    )
-    session = session_service.create_session(app_name="task_planner", user_id="u001")
+    """Synchronous entry point; ADK runners are async, so drive them with asyncio."""
+    return asyncio.run(_run_planner_async(goal))
 
-    from google.adk.types import Content, Part
-    response = runner.run(
+
+async def _run_planner_async(goal: str) -> str:
+    session_service = InMemorySessionService()
+    # create_session is async, and the Runner's app_name must match the session's
+    session = await session_service.create_session(app_name="task_planner", user_id="u001")
+    runner = Runner(agent=task_planner_system, app_name="task_planner", session_service=session_service)
+
+    # run_async yields a stream of events (tool calls, sub-agent outputs, ...);
+    # keep the text of the final response
+    final_text = ""
+    async for event in runner.run_async(
         user_id="u001",
         session_id=session.id,
-        new_message=Content(parts=[Part(text=f"Goal: {goal}")]),
-    )
-    return response.text if hasattr(response, 'text') else str(response)
+        new_message=genai_types.Content(role="user", parts=[genai_types.Part(text=f"Goal: {goal}")]),
+    ):
+        if event.is_final_response() and event.content and event.content.parts:
+            final_text = "".join(p.text or "" for p in event.content.parts)
+    return final_text
 
 
 # ── Main ───────────────────────────────────────────────────────────────────────

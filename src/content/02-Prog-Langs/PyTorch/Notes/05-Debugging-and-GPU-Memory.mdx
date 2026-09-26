@@ -132,7 +132,7 @@ RuntimeError: CUDA out of memory. Tried to allocate 2.00 GiB (GPU 0; 15.78 GiB t
 train_loader = DataLoader(train_ds, batch_size=16)  # was 64
 
 # 2. Use mixed precision (roughly halves activation memory)
-with autocast():
+with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
     outputs = model(batch_x)
 
 # 3. Use gradient accumulation to keep effective batch size while lowering peak memory

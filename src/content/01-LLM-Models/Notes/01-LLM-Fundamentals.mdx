@@ -103,8 +103,8 @@ LLMs operate on **tokens** - subword units produced by a tokenizer - not charact
 import tiktoken
 from transformers import AutoTokenizer
 
-# GPT-4 / Claude-family tokenizer
-enc = tiktoken.get_encoding("cl100k_base")
+# OpenAI tokenizers: cl100k_base (GPT-4), o200k_base (GPT-4o and later)
+enc = tiktoken.get_encoding("o200k_base")
 text = "The tokenization of language models is surprisingly tricky."
 tokens = enc.encode(text)
 print(f"Token count: {len(tokens)}")
@@ -177,23 +177,27 @@ The context window is the maximum number of tokens an LLM can process in a singl
 | Fixed Context | Choose max tokens at model design time (e.g., 2K, 8K) | Early GPTs, BERT |
 | Sliding Window / Chunking | Split input into overlapping windows (e.g., 512 tokens with 128 overlap) | RAG / long-doc QA |
 | Adaptive Context | Dynamically select relevant chunks based on task | Attention routing systems |
-| Sparse Attention | Fixed-size context but sparsified heads - reduces O(n²) cost | Longformer, BigBird, FlashAttention |
+| Sparse / Local Attention | Each token attends to a subset (local window + global tokens) - reduces O(n²) cost | Longformer, BigBird, sliding-window layers (Mistral 7B v0.1, Gemma 2/3) |
+| IO-aware Exact Attention | Same exact attention, computed in tiles so the n×n matrix is never materialized - memory O(n), compute still O(n²) | FlashAttention 1/2/3 (used almost everywhere) |
 | Memory-efficient Transformers | Linear attention or recurrent state instead of full attention | Performer, RWKV, Mamba |
-| Recurrence / Caching | Reuse past hidden states or token representations | LLaMA 2/3, RWKV, Gemini, GPT Turbo |
+| Segment Recurrence | Carry hidden states from previous segments forward | Transformer-XL, RWKV |
 | Retriever-Augmented (RAG) | Retrieve external chunks to keep active context short and focused | All RAG systems |
 | Compressed Context | Summarize long text, feed a compact version to the model | Hybrid long-doc systems |
-| RoPE Interpolation | Rescale rotary position embeddings to extend native context window | GPT-NeoX, Mistral 7B, Claude 3, LLaMA 2/3 |
+| RoPE Scaling | Rescale rotary position frequencies (Position Interpolation, NTK/base-frequency scaling, YaRN) plus a short long-context training stage | Code Llama, Llama 3.1, Qwen2.5/Qwen3 (YaRN) |
 
 **Context window sizes in current models (2025/2026):**
 
+Closed-model providers do not publish how they reach long context, so only the open-weight rows below have a documented mechanism. See the Model Landscape page for current context lengths.
+
 | Model | Context Length | How it's achieved |
 |-------|---------------|-------------------|
-| GPT-3.5 | 4K / 16K | Naive Transformer |
-| GPT-4 / GPT-4.1 | 128K / 1M | FlashAttention + chunking |
-| Claude 3 / Sonnet 4 | 200K | Sparse attention + retrieval + caching |
-| Gemini 2.5 Pro | 1M | Memory compression + long-context training |
-| LLaMA 4 Scout | 10M | MoE + extreme context training |
-| Mistral 7B | 32K (tested 64K) | RoPE interpolation |
+| GPT-3.5 | 4K / 16K | Dense attention |
+| GPT-4.1 | 1M | Undisclosed |
+| Claude (Sonnet 4.x) | 200K (1M beta) | Undisclosed |
+| Gemini 2.5 Pro | 1M | Undisclosed |
+| Llama 3.1 | 128K | RoPE scaling + staged long-context pretraining (Meta, 2024) |
+| Llama 4 Scout | 10M | Interleaved RoPE / no-position-encoding layers (iRoPE) + long-context training (Meta, 2025) |
+| Mistral 7B | 8K (v0.1) / 32K (v0.2+) | Sliding-window attention (v0.1); larger RoPE base (v0.2) |
 | Longformer | 4K–16K | Sparse local + global attention |
 | RWKV | Infinite (streaming) | RNN-like with token recurrence |
 | Mamba | Sub-quadratic | Attention-free state-space model |

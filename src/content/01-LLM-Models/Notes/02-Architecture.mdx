@@ -122,11 +122,17 @@ LayerNorm(x) = γ * (x - μ) / (σ + ε) + β
 ```
 Where γ, β are learned scale and shift parameters; μ, σ are computed per-token across features.
 
+**RMSNorm (used by Llama, Mistral, Qwen, Gemma, DeepSeek):** drops the mean-centering and the bias, normalizing only by the root-mean-square:
+```
+RMSNorm(x) = γ * x / sqrt(mean(x²) + ε)
+```
+It is cheaper than LayerNorm and trains just as well, which is why nearly every modern decoder uses it. Where this note says "LayerNorm" in a Pre-LN block, modern models use RMSNorm in that position.
+
 **Pre-LN vs Post-LN - a critical difference:**
 
 | | Post-LN (original "Attention is All You Need") | Pre-LN (modern LLMs: LLaMA, GPT-3) |
 |--|----------------------------------------------|-------------------------------------|
-| Formula | `x + Sublayer(LayerNorm(x))` (LN after residual) | `x + Sublayer(LayerNorm(x))` (LN before sublayer) |
+| Formula | `LayerNorm(x + Sublayer(x))` (LN after residual) | `x + Sublayer(LayerNorm(x))` (LN before sublayer) |
 | Training stability | Requires careful learning rate warmup; can diverge | Much more stable; easier to train without warmup |
 | Final layer | Needs no extra LN | Needs final LN before the output projection |
 | Gradient flow | Gradients pass through LN at every layer | LN is bypassed by the residual path |

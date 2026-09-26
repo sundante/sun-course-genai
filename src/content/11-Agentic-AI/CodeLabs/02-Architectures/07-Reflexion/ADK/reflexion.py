@@ -10,7 +10,7 @@ import asyncio
 import os
 from dotenv import load_dotenv
 from google.adk.agents import Agent
-from google.adk.runners import InMemoryRunner
+from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types as genai_types
 
@@ -92,7 +92,7 @@ async def run_reflexion(destination: str) -> str:
     session = await session_service.create_session(
         app_name="reflexion_writer", user_id="u1"
     )
-    runner = InMemoryRunner(agent=agent, session_service=session_service)
+    runner = Runner(agent=agent, app_name="reflexion_writer", session_service=session_service)
     query = f"Write a travel recommendation for {destination}."
 
     print(f"Query: {query}\n")

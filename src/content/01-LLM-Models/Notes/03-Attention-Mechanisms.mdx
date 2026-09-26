@@ -152,12 +152,14 @@ Standard self-attention is O(n²) in both memory and compute for sequence length
 
 **Practical implications:**
 
-| Sequence length | Attention matrix size | At d_model=4096 |
-|-----------------|----------------------|-----------------|
-| 2K | 4M entries | ~16 MB per layer (FP16) |
-| 32K | 1B entries | ~2 GB per layer |
-| 128K | 16B entries | ~32 GB per layer |
-| 1M | 1T entries | ~2 TB per layer - impossible to materialize |
+| Sequence length | Attention matrix entries (n²) | Memory per head (FP16) | Per layer with 32 heads |
+|-----------------|-------------------------------|------------------------|-------------------------|
+| 2K | ~4.2M | ~8 MB | ~256 MB |
+| 32K | ~1.1B | ~2 GB | ~64 GB |
+| 128K | ~17B | ~32 GB | ~1 TB |
+| 1M | ~1.1T | ~2 TB | ~64 TB - impossible to materialize |
+
+(Per sequence; multiply by batch size. FlashAttention never materializes this matrix, which is why long context is feasible at all.)
 
 This is why long-context models need specialized attention implementations.
 
@@ -300,7 +302,9 @@ K_t = torch.randn(2, 8, 512, 64)
 V_t = torch.randn(2, 8, 512, 64)
 
 # is_causal=True automatically applies causal masking with Flash Attention backend
-with torch.backends.cuda.sdp_kernel(enable_flash=True, enable_math=False):
+# torch.nn.attention.sdpa_kernel replaces the deprecated torch.backends.cuda.sdp_kernel
+from torch.nn.attention import sdpa_kernel, SDPBackend
+with sdpa_kernel(SDPBackend.FLASH_ATTENTION):
     output_flash = F.scaled_dot_product_attention(Q_t, K_t, V_t, is_causal=True)
 
 print(f"\nFlash Attention output shape: {output_flash.shape}")

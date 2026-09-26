@@ -119,30 +119,32 @@ Where:
 
 In plain English: increase the log-probability of preferred responses relative to the reference model; decrease the log-probability of rejected responses - all in one supervised loss without RL.
 
-**Why DPO is preferred in 2024:**
+**Why DPO became a common default for preference tuning:**
 - No separate reward model training
 - No PPO instability
 - Single training stage (like SFT)
-- Competitive or superior results on most benchmarks
-- Used by: LLaMA-3, Gemma 2 instruction tuning, Mistral models
+- Competitive results on chat-preference benchmarks
+- Example: Llama 3's post-training used SFT + rejection sampling + DPO rather than PPO (Dubey et al., 2024)
+
+**Its limit:** DPO is *offline* - it learns only from a fixed set of preference pairs. Online RL, where the model is trained on its own fresh samples, came back with reasoning models (see GRPO below).
 
 | Method | Reward model? | RL training? | Stability | Used by |
 |--------|--------------|-------------|-----------|---------|
-| RLHF/PPO | Yes (separate) | Yes (PPO) | Difficult | GPT-3.5, early ChatGPT |
-| DPO | No | No (supervised) | Easy | LLaMA-3, Gemma 2 |
-| ORPO | No | No | Easiest | Some recent models |
-| RFT | Reward signal | No PPO loop | Moderate | Gemini, open LLMs |
-| GRPO | Generative RL | Yes (GRPO) | Good at scale | DeepSeek-R1, reasoning models |
+| RLHF/PPO | Yes (separate) | Yes (PPO, with a critic) | Difficult | InstructGPT, early ChatGPT |
+| DPO | No | No (offline, supervised-style loss) | Easy | Llama 3 post-training |
+| ORPO | No | No (folds preference into SFT, no reference model) | Easy | Smaller open fine-tunes |
+| Rejection-sampling FT | Scorer or verifier | No (sample, keep the best, SFT on them) | Easy | Llama 2/3 post-training |
+| GRPO | Reward function or verifier | Yes (online, no critic) | Good at scale | DeepSeekMath, DeepSeek-R1, open reasoning models |
 
 ---
 
-## RFT and GRPO - Modern Alignment Alternatives
+## Rejection Sampling and GRPO - Modern Alternatives
 
 ### Concept
 
-**RFT (Reward Function Fine-Tuning):** Trains the model directly with reward signals without running the full PPO loop. Simpler than RLHF and often more stable, though less expressive than full RL. Best used when you want alignment improvements with less complexity than RLHF.
+**Rejection-sampling fine-tuning (RSFT, sometimes called RFT):** Sample several responses per prompt, score them with a reward model or a verifier (unit tests, exact-match answers), keep the best, and run ordinary SFT on them. No RL machinery, so it is simple and stable, but it only learns from what the model already produces. (Note: "RFT" is also OpenAI's product name for *reinforcement* fine-tuning, which is an online RL method - the acronym is ambiguous, so spell it out.)
 
-**GRPO (Group Relative Policy Optimization):** A generative RL algorithm that optimizes model policies with better sample efficiency than PPO. Instead of a value function, GRPO estimates baselines from groups of sampled outputs - making it more stable and scalable to long-sequence generation.
+**GRPO (Group Relative Policy Optimization; Shao et al., DeepSeekMath, 2024):** A PPO-style *online* RL algorithm that drops the learned value function (critic). For each prompt it samples a group of outputs, scores them, and uses each output's reward relative to the group mean as its advantage. That removes a whole model from training memory and works well with sparse, verifiable rewards.
 
 ```
 GRPO vs PPO key difference:
@@ -154,15 +156,16 @@ GRPO: samples a group of outputs, uses relative reward within the group as basel
 
 **Why GRPO matters for reasoning models:**
 - DeepSeek-R1 (2025) used GRPO to train long chain-of-thought reasoning - the model learns to produce extended reasoning traces that score higher on math/code benchmarks
-- GRPO's group-relative baseline naturally handles sparse rewards (e.g., "is the final answer correct?") which PPO struggles with at long horizons
-- Enables "thinking out loud" behavior where intermediate steps are rewarded
+- GRPO's group-relative baseline naturally handles sparse rewards (e.g., "is the final answer correct?") without training a critic over very long responses
+- This is **RL with verifiable rewards (RLVR)**: R1-Zero was rewarded only on final-answer correctness and format, not on intermediate steps - long, self-checking reasoning emerged because it raised the outcome reward
+- Follow-ups such as DAPO and Dr. GRPO fix GRPO's length and normalization biases; the Post-training module covers them
 
 | Method | Reward model needed? | Stability | Best for |
 |--------|---------------------|-----------|---------|
 | RLHF/PPO | Yes (separate) | Difficult | Helpfulness + safety alignment |
 | DPO | No | Easy | Preference alignment from pairs |
-| RFT | Reward signal only | Moderate | Structured response format alignment |
-| GRPO | Reward function | Good | Reasoning, long-form generation, math |
+| Rejection-sampling FT | Scorer or verifier | Easy | Bootstrapping from the model's own best samples |
+| GRPO | Reward function or verifier | Good | Reasoning, math, code (verifiable rewards) |
 
 ---
 
@@ -173,7 +176,7 @@ GRPO: samples a group of outputs, uses relative reward within the group as basel
 Full fine-tuning updates all model parameters. For a 7B model, that's 7 billion gradients, a full copy of optimizer states, etc. PEFT methods update a tiny fraction of parameters.
 
 **Why not full fine-tuning?**
-1. **Cost:** Adam optimizer states = 3× model size in memory (momentum + variance + params)
+1. **Cost:** mixed-precision Adam needs ~16 bytes per parameter (BF16 weights + grads, FP32 master weights + momentum + variance) - 8× the BF16 weights alone
 2. **Catastrophic forgetting:** Full updates overwrite general capabilities
 3. **Storage:** Each fine-tuned variant requires saving the full model
 4. **Composability:** Hard to combine multiple task-specific fine-tunes
@@ -233,8 +236,8 @@ QLoRA (Dettmers et al., 2023) enables fine-tuning very large models on consumer 
 
 **VRAM comparison for fine-tuning LLaMA-3 8B:**
 ```
-Full fine-tuning (BF16):    8B × 2 bytes = 16 GB weights
-                            + 3× for optimizer = 48 GB total ≈ 4× A100-40GB
+Full fine-tuning (BF16):    8B × 16 bytes = 128 GB model state + activations
+                            → sharded (ZeRO-3/FSDP) across 2-4× 80 GB GPUs
 
 LoRA (BF16 base):           16 GB weights + ~0.3 GB adapters + optimizer ≈ 24 GB
                             Fits on 1× A100-40GB

@@ -114,7 +114,7 @@ A: Either side sends `notifications/cancelled` with the `requestId` of the in-fl
 
 **Q18: Why does MCP protocol versioning use dates rather than semantic versions (e.g., 1.2.3)?** `[Hard]`
 
-A: Date-based versions (`2025-03-26`) communicate when the spec was last changed, not a subjective compatibility tier. For a protocol used across many independent implementations, "major/minor/patch" judgment calls are ambiguous - "is adding a new capability flag a breaking change?" depends on who you ask. Date versioning is unambiguous: a server implementing `2025-03-26` and a client implementing `2026-01-01` negotiate based on feature declarations, not version arithmetic. The spec can also have multiple active versions (clients/servers support a range) with clear negotiation rules, which is harder to express cleanly in semver without complex compatibility matrices.
+A: Date-based versions (`2025-03-26`) communicate when the spec was last changed, not a subjective compatibility tier. For a protocol used across many independent implementations, "major/minor/patch" judgment calls are ambiguous - "is adding a new capability flag a breaking change?" depends on who you ask. Date versioning is unambiguous: a server implementing `2025-03-26` and a client implementing `2025-11-25` negotiate based on feature declarations, not version arithmetic. The spec can also have multiple active versions (clients/servers support a range) with clear negotiation rules, which is harder to express cleanly in semver without complex compatibility matrices.
 
 ---
 

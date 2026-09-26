@@ -15,9 +15,9 @@ flowchart LR
 ```
 
 **Scale of pretraining:**
-- LLaMA-3 8B: trained on ~15 trillion tokens (15T), >2M GPU-hours on H100
+- Llama 3 8B: ~15 trillion tokens (15T), ~1.3M H100 GPU-hours (Meta model card; the 70B took ~6.4M)
 - GPT-4: estimated 10T+ tokens, undisclosed compute
-- Rule of thumb: 1B GPU-hours on modern H100s costs ~$1M–$3M at cloud prices
+- Rule of thumb: at roughly $2-4 per H100-hour, **1M GPU-hours costs ~$2M-$4M** in cloud compute (a frontier run is tens of millions of GPU-hours)
 
 ---
 
@@ -40,8 +40,8 @@ The quality of pretraining data is at least as important as model architecture. 
 flowchart TD
     A["🌐 Raw web text"] --> B["🚫 URL/domain filtering<br/>block adult content, spam, low-quality domains"]
     B --> C["🌍 Language detection<br/>keep target languages"]
-    C --> D["🔁 Exact deduplication<br/>MinHash, exact hash"]
-    D --> E["🔁 Near-deduplication<br/>SimHash, n-gram overlap"]
+    C --> D["🔁 Exact deduplication<br/>URL + content hashes"]
+    D --> E["🔁 Near-deduplication<br/>MinHash LSH, SimHash, n-gram overlap"]
     E --> F["⭐ Quality filtering<br/>perplexity · heuristic rules · classifier scoring"]
     F --> G["🔒 PII removal<br/>email, phone numbers, SSNs"]
     G --> H["✅ Final tokenization + storage"]
@@ -49,13 +49,13 @@ flowchart TD
 
 **Why deduplication matters:** Training on duplicate data memorizes specific text rather than learning generalizable patterns. Deduplication also reduces privacy risk (memorized PII).
 
-**Data mixture ratios** (approximate, from public information):
+**Data mixture ratios** (as published in the Llama 3 paper, Dubey et al., 2024):
 ```
-LLaMA-3 8B training mix:
-~50% general web (filtered Common Crawl)
-~15% code
-~10% curated/academic
-~25% other high-quality sources
+Llama 3 final pretraining mix (by token category):
+~50% general knowledge
+~25% mathematical and reasoning
+~17% code
+~8%  multilingual
 ```
 
 ---
@@ -103,8 +103,8 @@ Example:
 | tiktoken (OpenAI) | GPT-custom BPE | Special tokens, efficient | GPT-3, GPT-4 | Very fast | Custom, undocumented |
 
 **Key practical notes:**
-- **SentencePiece (LLaMA, Gemma):** Works on raw bytes without pre-tokenization - handles all languages and code uniformly; no whitespace issues.
-- **tiktoken (GPT-4):** Uses cl100k_base with a 100K vocabulary - larger vocab reduces token counts, improving efficiency for English and code.
+- **SentencePiece (LLaMA 1/2, Gemma, T5):** Works on raw text without pre-tokenization - handles all languages and code uniformly; no whitespace issues.
+- **tiktoken (OpenAI):** GPT-4 uses `cl100k_base` (~100K vocabulary); GPT-4o and later use `o200k_base` (~200K). Larger vocabularies cut token counts, especially for non-English text and code. Llama 3 moved from SentencePiece to a tiktoken-based 128K BPE vocabulary for the same reason.
 - **Multilingual/emoji-rich datasets:** Always use byte-level tokenization to avoid OOV.
 - **Training vs inference:** Tokenizer must match exactly - inconsistency causes silent failures.
 
@@ -116,15 +116,15 @@ Example:
 | | GPT2Tokenizer | Byte-Level BPE | GPT-2, GPT-Neo |
 | | RobertaTokenizer | BPE | No space token splitting |
 | | T5Tokenizer | SentencePiece (Unigram) | Used in T5, mT5 |
-| | LlamaTokenizer | SentencePiece (BPE) | Used in LLaMA 1/2/3 |
+| | LlamaTokenizer | SentencePiece (BPE) | Used in LLaMA 1/2 (Llama 3 switched to a tiktoken-based BPE) |
 | | BloomTokenizer | Byte-Level BPE | For BLOOM |
 | GCP / Vertex AI | Gemini 1.5 | SentencePiece (Unigram, Byte-Level) | Google prefers SentencePiece |
 | | PaLM / T5 / mT5 | SentencePiece (Unigram) | Internal tokenizer tools |
-| AWS Bedrock | Claude (Anthropic) | BPE / Custom variant | Similar to GPT-2 tokenizer |
+| AWS Bedrock | Claude (Anthropic) | Proprietary | Not publicly documented; count tokens with the provider's token-counting API |
 | | Mistral / LLaMA | SentencePiece (BPE) | HF model hosted via Bedrock |
-| OpenAI | GPT-3, GPT-4 | tiktoken (custom BPE) | Based on GPT-2 tokenizer |
-| Meta | LLaMA 1/2/3 | SentencePiece (BPE) | Open, multilingual |
-| Anthropic | Claude 1/2/3 | BPE-like, tiktoken-compatible | Focused on safety tokenization |
+| OpenAI | GPT-3.5/GPT-4, GPT-4o+ | tiktoken BPE (`cl100k_base`, `o200k_base`) | Open-source encoder library |
+| Meta | LLaMA 1/2 | SentencePiece (BPE), 32K vocab | Open |
+| Meta | Llama 3+ | tiktoken-based BPE, 128K vocab | Open, better multilingual compression |
 
 **Popular tokenization libraries:**
 
@@ -290,7 +290,7 @@ for step in range(10):
 
     print(f"Step {step}: loss={loss.item():.4f}")
 
-# BPE tokenizer training demo (SentencePiece)
+# BPE tokenizer training demo (HuggingFace `tokenizers`)
 from tokenizers import Tokenizer
 from tokenizers.models import BPE
 from tokenizers.trainers import BpeTrainer

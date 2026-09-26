@@ -160,7 +160,7 @@ const DOMAINS: Domain[] = [
 const QUESTIONS = [
   { id: "multistep",  text: "Does the task require multiple coordinated steps (not just one prompt → one answer)?" },
   { id: "tools",      text: "Does it need to access external data, APIs, or take real-world actions?" },
-  { id: "branching",  text: "Is the path unpredictable — different inputs lead to very different sequences of steps?" },
+  { id: "branching",  text: "Is the path unpredictable - different inputs lead to very different sequences of steps?" },
   { id: "frequency",  text: "Does this happen frequently enough that automation has clear ROI?" },
   { id: "variability",text: "Can you tolerate some degree of output variability (vs. 100% deterministic output)?" },
 ];
@@ -280,7 +280,7 @@ function DecisionWizard() {
       {allDone && rec && (
         <div className={`mt-5 rounded-lg border-2 ${rec.border} ${rec.color} px-4 py-3`}>
           <p className="text-[13px] font-bold text-zinc-900 mb-0.5">
-            {yesCount}/5 Yes — {rec.headline}
+            {yesCount}/5 Yes - {rec.headline}
           </p>
           <p className="text-[12px] text-zinc-800 leading-snug">{rec.body}</p>
         </div>

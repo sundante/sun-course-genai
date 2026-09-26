@@ -22,7 +22,7 @@ Full prompt/response logging in a healthcare context will almost certainly captu
 The service that runs model inference only gets permission to read the model weights it needs - it has no ability to write to the training data, delete logs, or access unrelated systems. If that service is ever compromised, the attacker inherits exactly that narrow set of permissions, not the whole environment.
 
 **Q: What's the practical difference between claiming "we're HIPAA compliant" and naming the specific safeguards you implemented?**
-"HIPAA compliant" is a vague self-assessment that invites follow-up questions in an interview or audit. Naming the actual technical safeguards - access control, audit controls, integrity controls, transmission security (45 CFR §164.312) - and pointing to how each is implemented (e.g. "audit controls: every PHI access logged with user ID and timestamp, retained 6 years") is verifiable and reads as far more credible.
+"HIPAA compliant" is a vague self-assessment that invites follow-up questions in an interview or audit. Naming the actual technical safeguards - access control, audit controls, integrity controls, person or entity authentication, transmission security (45 CFR §164.312) - and pointing to how each is implemented (e.g. "audit controls: every PHI access logged with user ID and timestamp, retained 6 years") is verifiable and reads as far more credible.
 
 ---
 

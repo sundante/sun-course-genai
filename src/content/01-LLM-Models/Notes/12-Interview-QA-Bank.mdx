@@ -1,6 +1,6 @@
 # LLM Models - Q&A Review Bank
 
-> 80+ curated Q&A pairs. Tags: `[Easy]` = conceptual recall, `[Medium]` = design decisions / tradeoffs, `[Hard]` = math-level, system design, or tricky edge cases.
+> 68 curated Q&A pairs. Tags: `[Easy]` = conceptual recall, `[Medium]` = design decisions / tradeoffs, `[Hard]` = math-level, system design, or tricky edge cases.
 
 ---
 
@@ -160,7 +160,7 @@
 
 **Q25** `[Medium]` Calculate the KV cache size for LLaMA-3 8B (n_layers=32, n_kv_heads=8, d_head=128) at 32K tokens in BF16.
 
-> `32 × 32768 × 2 × 8 × 128 × 2 bytes = 536,870,912 bytes ≈ 0.5 GB`. Formula: `n_layers × seq_len × 2 (K+V) × n_kv_heads × d_head × bytes_per_element`.
+> `32 × 32768 × 2 × 8 × 128 × 2 bytes = 4,294,967,296 bytes = 4 GiB` per sequence (at batch size 1). Formula: `n_layers × seq_len × 2 (K+V) × n_kv_heads × d_head × bytes_per_element`.
 
 ---
 
@@ -246,15 +246,15 @@
 
 ---
 
-**Q39** `[Medium]` Why is DPO preferred over RLHF/PPO in 2024?
+**Q39** `[Medium]` Why did DPO become a common default over PPO-based RLHF, and where does online RL still win?
 
-> DPO reformulates preference optimization as a supervised loss directly on (chosen, rejected) pairs - no separate reward model training, no PPO. RLHF/PPO challenges: reward model is a proxy (can be gamed), PPO is unstable (KL constraint must be tuned carefully), requires two separate training stages. DPO: one training stage, same stability as SFT, competitive or better results on most benchmarks. Used by LLaMA-3, Gemma 2, Mistral instruction-tuned models.
+> DPO reformulates preference optimization as a supervised loss directly on (chosen, rejected) pairs - no separate reward model training, no PPO. RLHF/PPO challenges: reward model is a proxy (can be gamed), PPO is unstable (KL constraint must be tuned carefully), requires two separate training stages. DPO: one training stage, same stability as SFT, competitive results on chat-preference benchmarks. Llama 3's post-training, for example, used SFT + rejection sampling + DPO rather than PPO. The limit: DPO is offline (it learns from a fixed set of pairs), so it cannot discover behaviours beyond that data. Reasoning models brought online RL back - GRPO-style RL with verifiable rewards (DeepSeek-R1, 2025) trains on the model's own fresh samples scored by a checker, which is how long chain-of-thought reasoning is elicited.
 
 ---
 
 **Q40** `[Hard]` How do you handle task interference in multi-head fine-tuning?
 
-> Three main approaches: (1) **LoRA per task**: freeze the shared backbone, train separate LoRA adapters per task - mathematically impossible for tasks to interfere since backbone is untouched. (2) **Gradient surgery (PCGrad)**: project each task's gradient onto the perpendicular of conflicting gradients from other tasks before summing - reduces destructive interference. (3) **Task-specific learning rates**: use a small LR for the shared encoder (slow drift) and larger LR for task heads (fast adaptation). Also: balanced sampling (prevent one task dominating the batch) and auxiliary losses.
+> Three main approaches: (1) **LoRA per task**: freeze the shared backbone, train separate LoRA adapters per task - the tasks share no trainable parameters, so they cannot interfere with each other's weights (each adapter can still degrade general behaviour when it is active). (2) **Gradient surgery (PCGrad)**: project each task's gradient onto the perpendicular of conflicting gradients from other tasks before summing - reduces destructive interference. (3) **Task-specific learning rates**: use a small LR for the shared encoder (slow drift) and larger LR for task heads (fast adaptation). Also: balanced sampling (prevent one task dominating the batch) and auxiliary losses.
 
 ---
 
@@ -266,9 +266,9 @@
 
 ---
 
-**Q42** `[Medium]` What are the three components Adam optimizer stores per parameter, and what does that imply for training VRAM?
+**Q42** `[Medium]` How many bytes per parameter does mixed-precision Adam training need, and what does that imply for training VRAM?
 
-> Current weights (BF16, 2 bytes) + first moment/momentum (FP32, 4 bytes) + second moment/variance (FP32, 4 bytes) = 10 bytes per parameter. A 7B model requires 7B × 10 = 70 GB for weights + optimizer states alone - before activations or KV cache. Full training of 7B requires ~2–4 A100-40GB with ZeRO-2.
+> 16 bytes per parameter: BF16 weights (2) + BF16 gradients (2) + FP32 master weights (4) + FP32 momentum (4) + FP32 variance (4). A 7B model needs 7B × 16 = 112 GB of model state before activations - more than one 80 GB GPU, so full fine-tuning of 7B is sharded with ZeRO-3/FSDP across 2+ GPUs (or uses 8-bit optimizers / CPU offload). This is why LoRA/QLoRA exist: they avoid gradients and optimizer state for the frozen base weights.
 
 ---
 
@@ -304,9 +304,9 @@
 
 ---
 
-**Q48** `[Medium]` How does LoRA prevent catastrophic forgetting?
+**Q48** `[Medium]` How does LoRA reduce catastrophic forgetting, and why doesn't it eliminate it?
 
-> LoRA freezes the base model weights - the original W_0 is never updated. Only the LoRA adapters (B and A matrices) receive gradient updates. Since W_0 is frozen, the general capabilities encoded in the base model cannot be overwritten. The adapter learns the task-specific delta ΔW = BA while the base model remains intact.
+> LoRA freezes the base weights W_0 and trains only a low-rank delta ΔW = BA, so the change to the network is constrained in rank and magnitude and the original model can always be recovered by removing the adapter. But the model you actually serve is W_0 + BA: with the adapter active, general capabilities can still degrade, especially with high rank, many steps, or data far from pretraining. Biderman et al. (2024, "LoRA Learns Less and Forgets Less") found LoRA forgets less than full fine-tuning, not zero. Mitigations: mix in general-domain replay data, keep rank and learning rate modest, and evaluate on general benchmarks before and after.
 
 ---
 
@@ -451,7 +451,7 @@
 | LoRA parameters | `r × (d_in + d_out)` |
 | VRAM formula | `params × bytes_per_precision` |
 | BF16 memory | 2 bytes per param |
-| Adam training VRAM | ~10 bytes per param |
+| Adam training model state | 16 bytes per param (mixed precision) |
 | KV cache per token | `n_layers × 2 × n_kv_heads × d_head × bytes` |
 | GQA reduction | h/G× KV cache vs MHA |
 | Speculative decoding speedup | 2–3× |

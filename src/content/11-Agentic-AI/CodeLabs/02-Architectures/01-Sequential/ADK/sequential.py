@@ -9,7 +9,7 @@ import asyncio
 import os
 from dotenv import load_dotenv
 from google.adk.agents import Agent
-from google.adk.runners import InMemoryRunner
+from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types as genai_types
 
@@ -77,7 +77,7 @@ async def run_sequential(cities: list[str]) -> str:
     session = await session_service.create_session(
         app_name="sequential_travel_reporter", user_id="user_01"
     )
-    runner = InMemoryRunner(agent=agent, session_service=session_service)
+    runner = Runner(agent=agent, app_name="sequential_travel_reporter", session_service=session_service)
     query = f"Create a travel report comparing: {', '.join(cities)}."
 
     print(f"Query: {query}\n")

@@ -14,7 +14,7 @@ A small CNN image classifier trained end-to-end in **raw PyTorch** - no `Trainer
 | Model | A small hand-written CNN (`SimpleCNN` in `model.py`) |
 | Training | Hand-written loop - custom `Dataset` usage via `torchvision`, `DataLoader`, forward/backward/step |
 | Checkpointing | Saves model + optimizer state every N epochs to `checkpoints/` |
-| Mixed Precision | `torch.cuda.amp.autocast()` + `GradScaler` (auto-disabled gracefully on CPU-only machines) |
+| Mixed Precision | `torch.amp.autocast("cuda")` + `GradScaler` (auto-disabled gracefully on CPU-only machines) |
 | Output | Final train/val accuracy printed at the end of the run |
 | Complexity | Beginner-Intermediate |
 | Files | `01-Raw-PyTorch-Classifier/{train.py, model.py, requirements.txt, README.mdx}` |
@@ -50,4 +50,4 @@ pip install -r requirements.txt
 python train.py
 ```
 
-Full details, code walkthrough, and what each part demonstrates: see [README](01-Raw-PyTorch-Classifier/README.mdx).
+Full details, code walkthrough, and what each part demonstrates: see [README](https://github.com/sundante/sun-course-genai/tree/main/src/content/02-Prog-Langs/PyTorch/CodeLabs/01-Raw-PyTorch-Classifier).

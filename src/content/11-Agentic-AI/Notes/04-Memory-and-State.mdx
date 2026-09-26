@@ -274,7 +274,9 @@ LangGraph has built-in checkpointing via its `MemorySaver` and `SqliteSaver` bac
 ```python
 from langgraph.checkpoint.sqlite import SqliteSaver
 
-memory = SqliteSaver.from_conn_string("checkpoints.db")
+# from_conn_string() returns a context manager in current LangGraph; pass a connection for long-lived use
+import sqlite3
+memory = SqliteSaver(sqlite3.connect("checkpoints.db", check_same_thread=False))
 graph = workflow.compile(checkpointer=memory)
 
 # Resume from a previous checkpoint

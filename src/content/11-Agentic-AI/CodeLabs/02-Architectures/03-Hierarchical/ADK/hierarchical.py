@@ -10,7 +10,7 @@ import asyncio
 import os
 from dotenv import load_dotenv
 from google.adk.agents import Agent
-from google.adk.runners import InMemoryRunner
+from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types as genai_types
 
@@ -104,7 +104,7 @@ async def run_hierarchical(cities: list[str]) -> str:
     session = await session_service.create_session(
         app_name="travel_manager", user_id="user_01"
     )
-    runner = InMemoryRunner(agent=manager_agent, session_service=session_service)
+    runner = Runner(agent=manager_agent, app_name="travel_manager", session_service=session_service)
     query = f"Compare these cities for travel: {', '.join(cities)}. Produce a full hierarchical report."
 
     print(f"Query: {query}\n")

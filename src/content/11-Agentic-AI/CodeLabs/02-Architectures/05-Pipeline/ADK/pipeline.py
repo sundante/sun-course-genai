@@ -10,7 +10,7 @@ import os
 import json
 from dotenv import load_dotenv
 from google.adk.agents import Agent
-from google.adk.runners import InMemoryRunner
+from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types as genai_types
 
@@ -77,7 +77,7 @@ Execute all 3 steps sequentially.""",
 async def run_pipeline(raw_data: list[str]) -> str:
     session_service = InMemorySessionService()
     session = await session_service.create_session(app_name="etl_pipeline", user_id="u1")
-    runner = InMemoryRunner(agent=agent, session_service=session_service)
+    runner = Runner(agent=agent, app_name="etl_pipeline", session_service=session_service)
     raw_str = "\n".join(raw_data)
     query = f"Run the ETL pipeline on this data:\n{raw_str}"
 

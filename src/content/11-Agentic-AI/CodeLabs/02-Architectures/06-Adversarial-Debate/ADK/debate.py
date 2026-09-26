@@ -10,7 +10,7 @@ import asyncio
 import os
 from dotenv import load_dotenv
 from google.adk.agents import Agent
-from google.adk.runners import InMemoryRunner
+from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types as genai_types
 
@@ -71,7 +71,7 @@ moderator_agent = Agent(
 async def run_debate(claim: str) -> str:
     session_service = InMemorySessionService()
     session = await session_service.create_session(app_name="debate_moderator", user_id="u1")
-    runner = InMemoryRunner(agent=moderator_agent, session_service=session_service)
+    runner = Runner(agent=moderator_agent, app_name="debate_moderator", session_service=session_service)
     query = f"Debate this claim: '{claim}'"
 
     print(f"Claim: {claim}\n")

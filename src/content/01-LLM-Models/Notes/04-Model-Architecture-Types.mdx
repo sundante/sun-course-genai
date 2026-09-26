@@ -166,7 +166,7 @@ flowchart LR
 **Key MoE concept: sparse activation**
 - Total parameters: N × (d_model × d_ffn) - much larger than a dense model
 - Active parameters per token: only K experts are used - much smaller computation
-- Example: Mixtral-8x7B has 8 experts of 7B each ≈ 47B total parameters, but activates 2 experts per token ≈ 13B active parameters
+- Example: Mixtral-8x7B has 8 expert FFNs per layer and routes each token to 2 of them. Only the FFN blocks are replicated - attention and embeddings are shared - so the total is ~47B parameters (not 8 × 7B = 56B), with ~13B active per token
 
 **MoE advantages:**
 - Scale model capacity without proportional compute increase
@@ -176,7 +176,7 @@ flowchart LR
 **MoE challenges:**
 - Load balancing: without constraints, router collapses all tokens to the same 1–2 experts
 - Communication overhead in distributed training (all-to-all for expert routing)
-- KV cache still scales with total layers - memory savings only in FFN compute
+- MoE saves compute, not memory: all experts must be resident in GPU memory (47B for Mixtral), and the KV cache is unchanged because attention is not sparse
 
 **Models:**
 - Mixtral-8x7B: 8 experts, top-2 routing, 47B total / 13B active

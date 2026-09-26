@@ -15,7 +15,7 @@ export async function generateStaticParams() {
 export default function QuizModulePage() {
   return (
     <UnderDevelopment
-      title="Module Quiz — Coming Soon"
+      title="Module Quiz - Coming Soon"
       description="Module-specific quizzes are under development. Check back soon."
     />
   );

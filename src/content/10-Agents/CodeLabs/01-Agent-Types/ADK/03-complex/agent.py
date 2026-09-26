@@ -23,7 +23,7 @@ from typing import Optional
 from dotenv import load_dotenv
 
 from google.adk.agents import Agent
-from google.adk.runners import InMemoryRunner
+from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types as genai_types
 
@@ -164,7 +164,7 @@ Always complete all 4 steps. Never skip the critique.""",
 async def run_with_streaming(query: str) -> str:
     session_service = InMemorySessionService()
     session = await session_service.create_session(app_name="trip_planner", user_id="user_01")
-    runner = InMemoryRunner(agent=agent, session_service=session_service)
+    runner = Runner(agent=agent, app_name="trip_planner", session_service=session_service)
 
     print(f"User: {query}\n")
     print("--- Agent trace (streaming) ---")

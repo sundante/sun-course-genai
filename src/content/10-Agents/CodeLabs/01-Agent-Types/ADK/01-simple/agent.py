@@ -8,7 +8,7 @@ Model     : gemini-2.0-flash (via Gemini API key)
 What this demonstrates:
   - Defining tools as Python functions decorated with type hints
   - Creating an ADK Agent with a system instruction and tools
-  - Using InMemoryRunner to run the agent locally
+  - Using Runner + InMemorySessionService to run the agent locally
   - The ReAct loop: model decides when and which tool to call
 
 Mock tools used (no credentials needed):
@@ -21,7 +21,7 @@ import os
 from dotenv import load_dotenv
 
 from google.adk.agents import Agent
-from google.adk.runners import InMemoryRunner
+from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types as genai_types
 
@@ -98,7 +98,7 @@ async def run(query: str) -> str:
         app_name="weather_app",
         user_id="user_01",
     )
-    runner = InMemoryRunner(agent=agent, session_service=session_service)
+    runner = Runner(agent=agent, app_name="weather_app", session_service=session_service)
 
     response_text = ""
     async for event in runner.run_async(

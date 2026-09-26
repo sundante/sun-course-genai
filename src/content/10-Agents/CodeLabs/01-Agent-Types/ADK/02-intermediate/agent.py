@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 
 from google.adk.agents import Agent
-from google.adk.runners import InMemoryRunner
+from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types as genai_types
 
@@ -124,7 +124,7 @@ async def create_session():
 
 
 async def run(query: str, session_id: str) -> str:
-    runner = InMemoryRunner(agent=agent, session_service=session_service)
+    runner = Runner(agent=agent, app_name="travel_app", session_service=session_service)
     response_text = ""
     async for event in runner.run_async(
         user_id="user_01",

@@ -20,12 +20,14 @@ Architecture:
   )
 """
 
+import asyncio
 import os
 from dotenv import load_dotenv
 from google.adk.agents import Agent, ParallelAgent, SequentialAgent
 from google.adk.tools import FunctionTool
-from google.adk.runners import InProcessRunner
+from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
+from google.genai import types as genai_types
 
 load_dotenv()
 
@@ -179,33 +181,34 @@ research_assistant = SequentialAgent(
 # ── Runner setup ───────────────────────────────────────────────────────────────
 
 def run_research_assistant(query: str) -> str:
-    """Run the research assistant system and return the final report."""
+    """Run the research assistant system and return the final report.
+
+    ADK runners are async, so this synchronous entry point drives them with asyncio.
+    """
+    return asyncio.run(_run_research_assistant_async(query))
+
+
+async def _run_research_assistant_async(query: str) -> str:
     session_service = InMemorySessionService()
-    runner = InProcessRunner(
-        agent=research_assistant,
-        session_service=session_service,
-        app_name="research_assistant",
-    )
-
-    session = session_service.create_session(
-        app_name="research_assistant",
-        user_id="user_001",
-    )
-
+    # create_session is async, and the Runner's app_name must match the session's
+    session = await session_service.create_session(app_name="research_assistant", user_id="user_001")
+    runner = Runner(agent=research_assistant, app_name="research_assistant", session_service=session_service)
     print(f"\n{'='*60}")
     print("RESEARCH ASSISTANT - ADK")
     print(f"Query: {query}")
     print(f"{'='*60}")
 
-    from google.adk.types import Content, Part
-
-    response = runner.run(
+    # run_async yields a stream of events (tool calls, sub-agent outputs, ...);
+    # keep the text of the final response
+    final_text = ""
+    async for event in runner.run_async(
         user_id="user_001",
         session_id=session.id,
-        new_message=Content(parts=[Part(text=query)]),
-    )
-
-    return response.text if hasattr(response, 'text') else str(response)
+        new_message=genai_types.Content(role="user", parts=[genai_types.Part(text=query)]),
+    ):
+        if event.is_final_response() and event.content and event.content.parts:
+            final_text = "".join(p.text or "" for p in event.content.parts)
+    return final_text
 
 
 # ── Main ───────────────────────────────────────────────────────────────────────
