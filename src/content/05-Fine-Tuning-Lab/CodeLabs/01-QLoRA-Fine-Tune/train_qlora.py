@@ -1,20 +1,22 @@
 """QLoRA fine-tuning script for a small open instruction model.
 
 Demonstrates, in one runnable file, every mechanic covered in the
-07-Fine-Tuning-Lab Notes: loading a base model in 4-bit NF4 via
+Fine-Tuning Lab notes (module 05): loading a base model in 4-bit NF4 via
 bitsandbytes, attaching a LoRA adapter via peft, formatting and masking
 an instruction dataset so loss is only computed on completion tokens,
 and running a real training loop (transformers.Trainer) that saves a
 small, portable adapter checkpoint.
 
-Default base model is a ~1.5B parameter instruction model small enough
-to fine-tune on a single consumer/free-tier GPU (e.g. a T4 or a 4090)
-with 4-bit quantization. Swap --base-model for any other causal LM.
+Default base model is Qwen3-1.7B, small enough to fine-tune on a single
+consumer/free-tier GPU (e.g. a T4 or a 4090) with 4-bit quantization.
+Swap --base-model for any other causal LM. This lab deliberately does the
+formatting and loss masking by hand; Lab 02 shows the same job with TRL.
 
 Usage:
     python train_qlora.py
     python train_qlora.py --epochs 3 --batch-size 4 --lr 2e-4
     python train_qlora.py --data-file my_instructions.jsonl --output-dir ./qlora-adapter
+    python train_qlora.py --base-model <tiny-model> --no-quantize --epochs 1   # CPU smoke test
 """
 
 import argparse
@@ -71,7 +73,7 @@ DEMO_EXAMPLES = [
 
 def parse_args():
     parser = argparse.ArgumentParser(description="QLoRA fine-tune a small causal LM.")
-    parser.add_argument("--base-model", type=str, default="Qwen/Qwen2.5-1.5B-Instruct")
+    parser.add_argument("--base-model", type=str, default="Qwen/Qwen3-1.7B")
     parser.add_argument("--data-file", type=str, default=None,
                          help="JSONL file with 'instruction'/'response' fields. "
                               "Falls back to a small built-in demo dataset if omitted.")
@@ -86,6 +88,9 @@ def parse_args():
     parser.add_argument("--lora-dropout", type=float, default=0.05)
     parser.add_argument("--eval-fraction", type=float, default=0.15)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--no-quantize", action="store_true",
+                         help="Load in full precision instead of 4-bit NF4 (CPU / Apple silicon smoke tests; "
+                              "bitsandbytes 4-bit needs a CUDA GPU).")
     return parser.parse_args()
 
 
@@ -105,7 +110,10 @@ def build_tokenize_fn(tokenizer, max_length: int):
     def tokenize_example(example):
         prompt_messages = [{"role": "user", "content": example["instruction"]}]
         prompt_text = tokenizer.apply_chat_template(
-            prompt_messages, tokenize=False, add_generation_prompt=True
+            prompt_messages, tokenize=False, add_generation_prompt=True,
+            # Qwen3's template supports a thinking mode; these targets are direct answers.
+            # Templates without the flag ignore unknown kwargs.
+            enable_thinking=False,
         )
         full_text = prompt_text + example["response"] + tokenizer.eos_token
 
@@ -145,7 +153,9 @@ def attach_lora(model, r: int, alpha: int, dropout: float):
         r=r,
         lora_alpha=alpha,
         lora_dropout=dropout,
-        target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
+        # All linear layers (attention + MLP), as recommended by the QLoRA paper -
+        # attention-only LoRA leaves most of the model's capacity untouched.
+        target_modules="all-linear",
         bias="none",
         task_type="CAUSAL_LM",
     )
@@ -169,7 +179,10 @@ def main():
     train_ds, eval_ds = split["train"], split["test"]
     print(f"train examples: {len(train_ds)} | held-out eval examples: {len(eval_ds)}")
 
-    model = load_quantized_base_model(args.base_model)
+    if args.no_quantize:
+        model = AutoModelForCausalLM.from_pretrained(args.base_model)
+    else:
+        model = load_quantized_base_model(args.base_model)
     model = attach_lora(model, args.lora_r, args.lora_alpha, args.lora_dropout)
 
     data_collator = DataCollatorForSeq2Seq(

@@ -56,8 +56,8 @@ Research rule (Phases 2-4): every new claim about a model, spec, API, or version
 - [x] 02 PyTorch for LLMs + GPT-from-scratch lab - new PyTorch for LLMs note (APIs checked against torch 2.14); GPT lab run on CPU (tiny preset: loss 5.57 -> 1.85 in 400 steps; --compile path verified); default preset not GPU-verified
 - [x] 03 Pretraining at Scale (new) - 5 new chapters (data curation, scaling laws, distributed training, stability/optimizers, accelerators) + 24-question bank; hardware figures from NVIDIA/Google spec pages (dense derived from sparse), worked numbers recomputed in Python
 - [x] 04 Post-training & Reasoning (new) - 3 new chapters (preference optimization, RL for LLMs, reasoning models & test-time compute) + 20-question bank; arXiv IDs spot-checked
-- [ ] 05 Fine-Tuning Lab (Qwen3, TRL SFT/DPO/GRPO)
-- [ ] 06 Evaluation & Benchmarks (new)
+- [x] 05 Fine-Tuning Lab (Qwen3, TRL SFT/DPO/GRPO) - Lab 01 moved to Qwen3-1.7B, all-linear LoRA, `--no-quantize` CPU path (train + benchmark smoke-tested on CPU with transformers 5.17 / peft 0.21); new Lab 02 SFT -> DPO -> GRPO with TRL 1.14 (all three stages smoke-tested on CPU, reward functions unit-tested); HF ecosystem note gains the post-training stack. Full-size runs not GPU-verified
+- [x] 06 Evaluation & Benchmarks (new) - 4 chapters (benchmarks, contamination & leaderboards, LLM-as-judge, building your own evals) + 16-question bank + Eval Harness lab (lm-eval 0.4.13 CLI and paired-bootstrap compare.py smoke-tested on CPU)
 - [ ] 07 Inference & Serving (deduped, vLLM V1 lab)
 - [ ] 08 Production Engineering
 - [ ] 09 Cloud Platforms

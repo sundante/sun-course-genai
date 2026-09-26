@@ -4,7 +4,7 @@ Every decision about a model - which one to deploy, whether a fine-tune helped, 
 
 ```objectives
 scope: module
-time: 4-6 hours (when complete)
+time: 5-6 hours
 outcomes:
   - Read a model card's benchmark table critically - what each benchmark measures, and how saturation and contamination distort it
   - Design a task-specific evaluation set and pick metrics for it
@@ -15,18 +15,21 @@ prerequisites:
   - "[Fine-Tuning Lab](../05-Fine-Tuning-Lab/INDEX.mdx) - its base-vs-tuned benchmark is the starting point for this module's lab"
 ```
 
-> **This module is being written.** Its chapters arrive in the LLM-track content pass. Until then, the closest existing material is [Benchmarking Base vs Tuned](../05-Fine-Tuning-Lab/Notes/04-Benchmarking-Base-vs-Tuned.mdx) (task evaluation and LLM-as-judge for a fine-tune), and agent-level evaluation in [Production Agents](../16-Production-Agents/Notes/02-Evaluation-and-Observability.mdx).
+## Chapter Map
 
-## Planned Chapters
+| # | Page | Topic | Level |
+|---|------|-------|-------|
+| 1 | [What Benchmarks Measure](Notes/01-What-Benchmarks-Measure.mdx) | Knowledge, reasoning, math, code, agentic, instruction-following, factuality and long-context benchmarks; scoring; pass@k vs pass^k; saturation | Beginner |
+| 2 | [Contamination & Leaderboards](Notes/02-Contamination-and-Leaderboards.mdx) | How contamination happens, detection (n-gram, Min-K%, canaries, GSM1k-style variants), time-split evals, arenas and their caveats | Intermediate |
+| 3 | [LLM-as-Judge](Notes/03-LLM-as-Judge.mdx) | Pointwise vs pairwise, rubrics, biases and mitigations, validating a judge against humans | Intermediate |
+| 4 | [Building Your Own Evals](Notes/04-Building-Your-Own-Evals.mdx) | Eval sets from real traffic, metrics per task, confidence intervals and paired tests, long-context evals, CI regression gates | Advanced |
+| 5 | [Q&A Review Bank](Notes/05-Interview-QA-Bank.mdx) | 16 questions across the module | All levels |
 
-| # | Topic |
-|---|-------|
-| 1 | What benchmarks measure - knowledge, reasoning, math, code, agentic tasks; saturation and why the leaderboard keeps moving |
-| 2 | Contamination - how test data leaks into training data, and how to detect and avoid it |
-| 3 | Model-graded evaluation - LLM-as-judge, pairwise comparison, human preference arenas, and their biases |
-| 4 | Long-context evaluation - needle-in-a-haystack and why harder tests are needed |
-| 5 | Building your own eval - task sets, metrics, regression gates in CI |
-| 6 | Lab - run an evaluation harness on a base vs fine-tuned model |
+## Code Lab
+
+- [Eval Harness - Base vs Tuned](CodeLabs/01-Eval-Harness.mdx) - run lm-evaluation-harness on two models and compare them with paired bootstrap confidence intervals.
+
+Agent-level evaluation (trajectories, pass^k, public agent benchmarks) continues in [Production Agents](../16-Production-Agents/Notes/02-Evaluation-and-Observability.mdx).
 
 ---
 

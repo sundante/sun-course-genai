@@ -59,12 +59,12 @@ Every model on the Hub, no matter who trained it or which architecture it uses i
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-model_name = "Qwen/Qwen2.5-1.5B-Instruct"
+model_name = "Qwen/Qwen3-1.7B"
 
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForCausalLM.from_pretrained(model_name, dtype="auto")
 
-print(type(model).__name__)      # e.g. Qwen2ForCausalLM
+print(type(model).__name__)      # e.g. Qwen3ForCausalLM
 print(model.config.num_hidden_layers, model.config.hidden_size)
 ```
 
@@ -222,6 +222,19 @@ tokenizer.push_to_hub("your-username/qwen2.5-1.5b-instruct-lora-support-bot")
 This uploads the current `state_dict` (or, for a `PeftModel`, just the small adapter weights - see the next Notes file) plus `config.json`, creating a new Hub repo with model-card scaffolding you can then edit.
 
 ---
+
+## The Post-Training Stack
+
+`transformers` loads and runs models; a few libraries on top of it do the training you will use most:
+
+| Library | What it gives you | Use it when |
+|---------|-------------------|-------------|
+| **PEFT** | LoRA, QLoRA (with `bitsandbytes`), DoRA and other adapters; `target_modules="all-linear"`; merging adapters back into the base | Any parameter-efficient fine-tune |
+| **TRL** | `SFTTrainer`, `DPOTrainer`, `GRPOTrainer` (plus reward-model and other preference trainers) that handle chat templates, loss masking, packing and reference models | SFT, preference tuning and RL - see [Lab 02](../CodeLabs/02-SFT-DPO-GRPO-with-TRL.mdx) |
+| **Unsloth** | Hand-written kernels and memory tricks for faster, lower-memory LoRA/QLoRA on one GPU | Squeezing a fine-tune onto a small GPU |
+| **Axolotl** | YAML-configured fine-tuning recipes over the same stack, including multi-GPU (FSDP/DeepSpeed) | Repeatable runs driven by config files |
+
+[Lab 01](../CodeLabs/01-QLoRA-Fine-Tune.mdx) does formatting and loss masking by hand so you see every step; [Lab 02](../CodeLabs/02-SFT-DPO-GRPO-with-TRL.mdx) does the same kind of job with TRL, which is what you would use in practice.
 
 ## Study Notes
 

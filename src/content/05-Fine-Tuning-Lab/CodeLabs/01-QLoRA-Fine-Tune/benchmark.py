@@ -43,7 +43,7 @@ DEMO_EVAL_EXAMPLES = [
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Benchmark base model vs QLoRA-tuned model.")
-    parser.add_argument("--base-model", type=str, default="Qwen/Qwen2.5-1.5B-Instruct")
+    parser.add_argument("--base-model", type=str, default="Qwen/Qwen3-1.7B")
     parser.add_argument("--adapter-dir", type=str, required=True,
                          help="Directory containing the saved LoRA adapter from train_qlora.py.")
     parser.add_argument("--eval-file", type=str, default=None,
@@ -87,7 +87,7 @@ def load_tuned(base_model: str, adapter_dir: str):
 
 def generate_response(model, tokenizer, instruction: str, max_new_tokens: int) -> str:
     messages = [{"role": "user", "content": instruction}]
-    prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+    prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True, enable_thinking=False)
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
     with torch.no_grad():
         output = model.generate(

@@ -133,7 +133,7 @@ bnb_config = BitsAndBytesConfig(
 )
 
 base_model = AutoModelForCausalLM.from_pretrained(
-    "Qwen/Qwen2.5-1.5B-Instruct",
+    "Qwen/Qwen3-1.7B",
     quantization_config=bnb_config,
     device_map="auto",
 )
@@ -185,7 +185,7 @@ model.save_pretrained("./qwen2.5-1.5b-support-bot-lora")  # a few MB, not the fu
 
 # ... later, at inference time ...
 from peft import PeftModel
-base = AutoModelForCausalLM.from_pretrained("Qwen/Qwen2.5-1.5B-Instruct", dtype="auto")
+base = AutoModelForCausalLM.from_pretrained("Qwen/Qwen3-1.7B", dtype="auto")
 inference_model = PeftModel.from_pretrained(base, "./qwen2.5-1.5b-support-bot-lora")
 ```
 

@@ -80,7 +80,7 @@ python train_qlora.py --data-file my_instructions.jsonl --output-dir ./qlora-ada
 python benchmark.py --adapter-dir ./qlora-adapter
 ```
 
-`bitsandbytes` 4-bit quantization requires a CUDA GPU - this script is not runnable on CPU-only machines. The default base model (`Qwen/Qwen2.5-1.5B-Instruct`) fits comfortably within a single free-tier T4 GPU (16 GB) in 4-bit.
+`bitsandbytes` 4-bit quantization requires a CUDA GPU. The default base model (`Qwen/Qwen3-1.7B`) fits comfortably within a single free-tier T4 GPU (16 GB) in 4-bit. To check the pipeline on a laptop, run `python train_qlora.py --base-model trl-internal-testing/tiny-Qwen3ForCausalLM --no-quantize --epochs 1` - it trains a tiny random model in full precision, so the loss is meaningless but every code path runs (verified with transformers 5.17 / peft 0.21 on CPU).
 
 Expected output at the end of a benchmark run:
 

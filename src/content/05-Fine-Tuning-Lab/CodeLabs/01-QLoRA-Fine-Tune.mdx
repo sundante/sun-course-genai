@@ -11,7 +11,7 @@ A real, runnable QLoRA fine-tune of a small open instruction model on a compact 
 | Property | Detail |
 |---|---|
 | Task | Instruction-following fine-tune (support-ticket-style responses; swappable for any instruction/response dataset) |
-| Base model | A small open ~1-2B instruction model (default: `Qwen/Qwen2.5-1.5B-Instruct`), reachable on a single consumer/free-tier GPU |
+| Base model | A small open ~1-2B instruction model (default: `Qwen/Qwen3-1.7B`), reachable on a single consumer/free-tier GPU |
 | Quantization | 4-bit NF4 base weights via `bitsandbytes`, BF16 LoRA adapters |
 | Adapter | `peft` `LoraConfig` targeting attention projections |
 | Training | Masked prompt/completion loss, `transformers.Trainer`, checkpointed adapter output |
