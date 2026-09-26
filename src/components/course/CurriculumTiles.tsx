@@ -23,7 +23,7 @@ const MODULE_META: Record<string, ModuleMeta> = {
   "evaluation":             { subtitle: "The Yardstick",    description: "Measuring models honestly - benchmarks, contamination, LLM-as-judge, and building your own evaluation harness." },
   "serving-and-inference":  { subtitle: "The Delivery",     description: "Serving models fast and cheaply - KV cache, vLLM, quantized inference, batching, streaming, and deployment." },
   "production-engineering": { subtitle: "The Operations",   description: "Docker, Kubernetes and Helm for GPU inference, model lifecycle and rollout, and security & compliance controls." },
-  "platform-breadth":       { subtitle: "The Landscape",    description: "AWS Bedrock, Databricks & Spark, and Azure AI Foundry - a working map across the major cloud AI stacks." },
+  "platform-breadth":       { subtitle: "The Landscape",    description: "AWS Bedrock, Google Cloud's agent platform (formerly Vertex AI), Microsoft Foundry, and Databricks - a working map across the major cloud AI stacks." },
   "prompt-engineering":     { subtitle: "The Interface",    description: "Talking to models well - prompting techniques, prompting mechanics, production prompt systems, and optimization." },
   "rag":                    { subtitle: "The Memory",       description: "Retrieval-Augmented Generation - giving LLMs access to your own knowledge and keeping answers grounded." },
   "agents":                 { subtitle: "The Actors",       description: "What agents are and how they work - the agent loop, tool use, memory, and planning." },

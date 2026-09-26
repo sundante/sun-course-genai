@@ -32,10 +32,10 @@ Job clusters are automated, spinning up per run and terminating after, and bill 
 
 ---
 
-## Azure AI Foundry
+## Microsoft Foundry
 
-**Q: What was Azure AI Foundry previously called?**
-Azure AI Studio - a rebrand, not a functional change; it remains Microsoft's model catalog, deployment, and evaluation layer.
+**Q: What is Microsoft Foundry's naming history?**
+Azure AI Studio → Azure AI Foundry (Ignite 2024) → Microsoft Foundry (Ignite, November 2025). The latest rename put agents at the centre (Foundry Agent Service) alongside the model catalog, deployments and evaluations.
 
 **Q: What's architecturally distinct about Microsoft Fabric compared to BigQuery?**
 Fabric is built around OneLake, a single logical storage layer shared by every workload type (warehouse, lakehouse, BI) - BigQuery's ecosystem is more storage-agnostic across separate component services.
@@ -52,3 +52,18 @@ GCP: RAG Engine (Vertex AI). AWS: Knowledge Bases (Bedrock). Azure: Azure AI Sea
 
 **Q: In a platform-breadth interview answer, what makes a response stronger than just naming the equivalent products across clouds?**
 Naming one concrete architectural difference that actually matters (e.g. differing default vector store backends, or Fabric's single-storage-layer design vs BigQuery's more siloed model) - it demonstrates transferable understanding of the underlying capability, not just memorized vocabulary mapping.
+
+## Google Cloud and Cross-Cloud
+
+**Q: What happened to Vertex AI in 2026?**
+Google announced (April 2026) that Vertex AI evolved into the Gemini Enterprise Agent Platform, with all Vertex AI services and roadmap delivered through it - Model Garden, Agent Studio, ADK, Agent Runtime, Memory Bank, Agent Sandbox, and governance via Agent Identity, Registry and Gateway with Model Armor.
+
+**Q: Map the managed agent runtime across the three clouds.**
+Google: Agent Runtime (formerly Vertex AI Agent Engine) with ADK; AWS: Bedrock AgentCore; Azure: Microsoft Foundry Agent Service.
+
+**Q: Do you still need to request model access in Amazon Bedrock?**
+No - since September 2025 serverless models are enabled by default in all commercial Regions (Anthropic models need a one-time use-case form). Restrict access with IAM policies and SCPs.
+
+**Q: What is the AWS counterpart to Google Spanner, and why isn't it DynamoDB?**
+Aurora DSQL - a distributed, PostgreSQL-compatible SQL database with multi-Region strong consistency. DynamoDB is a key-value/document NoSQL store with a different data model and consistency options, so it matches Firestore or Bigtable use cases better than Spanner's.
+

@@ -59,10 +59,11 @@ Research rule (Phases 2-4): every new claim about a model, spec, API, or version
 - [x] 05 Fine-Tuning Lab (Qwen3, TRL SFT/DPO/GRPO) - Lab 01 moved to Qwen3-1.7B, all-linear LoRA, `--no-quantize` CPU path (train + benchmark smoke-tested on CPU with transformers 5.17 / peft 0.21); new Lab 02 SFT -> DPO -> GRPO with TRL 1.14 (all three stages smoke-tested on CPU, reward functions unit-tested); HF ecosystem note gains the post-training stack. Full-size runs not GPU-verified
 - [x] 06 Evaluation & Benchmarks (new) - 4 chapters (benchmarks, contamination & leaderboards, LLM-as-judge, building your own evals) + 16-question bank + Eval Harness lab (lm-eval 0.4.13 CLI and paired-bootstrap compare.py smoke-tested on CPU)
 - [x] 07 Inference & Serving (deduped, vLLM V1 lab) - new Modern Serving Stack note (goodput, chunked prefill, P/D disaggregation, KV-aware routing/offload, FP8/FP4, speculative decoding, MoE and multi-LoRA serving, Dynamo/llm-d); Quantized Inference rewritten around FP8/FP4 + llm-compressor (AutoAWQ archived May 2025); third copies of engine table/batching removed from Production Deployment; lab moved to V1 `AsyncLLM` (vLLM >= 0.11, API checked against source; not GPU-run) with chat-template requests; QA bank 15 -> 22; `check:content` now validates #anchors
-- [ ] 08 Production Engineering
-- [ ] 09 Cloud Platforms
+- [x] 08 Production Engineering - new LLM Serving on Kubernetes note (GPU Operator, MIG/time-slicing/DRA [GA 1.34], KServe, LWS, Gateway API Inference Extension, llm-d, queue-depth autoscaling with verified vLLM metric names, cold starts); security note gains OWASP LLM Top 10 (2025), model supply chain, EU AI Act timeline as amended by the July 2026 Digital Omnibus; MLflow stages -> aliases; CUDA 12.8.1 / Ubuntu 24.04 images (tags verified) with PEP 668-safe venv installs; autoscaling advice reconciled; QA 15 -> 21
+- [x] 09 Cloud Platforms - Bedrock (auto-enabled model access since Sept 2025, AgentCore GA Oct 2025, cost/customization levers); Azure note -> Microsoft Foundry (Ignite 2025 rename); new Google Cloud Agent Platform note (Vertex AI -> Gemini Enterprise Agent Platform, Apr 2026); comparison table fixed (Spanner <-> Aurora DSQL), GPU clouds added; QA 13 -> 17
 
 ## Phase 3 - Applications track (modules 10-11)
+- Carry-over from Phase 2: Vertex AI is now the Gemini Enterprise Agent Platform (Apr 2026) - update `11-RAG/Notes/08-Vertex-AI-RAG.mdx` naming, and the RAG/agent system designs that cite Vertex AI / Gemini 1.5 / `text-embedding-004`
 - [ ] 10 Prompt & Context Engineering (fold in 01/11)
 - [ ] 11 RAG
 

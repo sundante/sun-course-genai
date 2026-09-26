@@ -22,7 +22,7 @@ Unlike CPU/memory, GPUs aren't a divisible or overcommittable resource by defaul
 A taint on the GPU nodes repels any pod without a matching toleration, keeping ordinary CPU workloads off expensive GPU machines. Only pods that explicitly declare the toleration - typically GPU-serving pods - get scheduled there.
 
 **Q: Does the default HPA autoscale on GPU utilization out of the box?**
-No - the default HPA only watches CPU and memory metrics. GPU-aware autoscaling requires a custom metrics pipeline (e.g. DCGM exporter feeding Prometheus, surfaced to the HPA via the Prometheus Adapter).
+No - the default HPA only watches CPU and memory metrics. GPU-aware autoscaling requires a custom metrics pipeline (e.g. DCGM exporter feeding Prometheus, surfaced to the HPA via the Prometheus Adapter, or KEDA). For LLM serving, though, GPU utilization is a weak signal - a batching server looks busy at any load - so scale on queue depth (`vllm:num_requests_waiting`) or latency instead.
 
 **Q: What's the difference between `helm template` and `helm install --dry-run`?**
 `helm template` renders the chart locally with zero cluster contact. `helm install --dry-run` renders and also validates the output against the live cluster's API, catching schema/admission errors that pure local templating would miss.
@@ -35,7 +35,7 @@ No - the default HPA only watches CPU and memory metrics. GPU-aware autoscaling 
 Blue/green runs two full environments and cuts traffic over atomically - fast rollback, but no gradual signal. Canary ramps a new version's traffic share gradually (e.g. 5% → 25% → 100%), pausing or reverting on regression. Champion-challenger is an ongoing comparison pattern (not just a one-time rollout event) where a challenger must win on live-traffic metrics before being promoted.
 
 **Q: What does a model registry like MLflow actually provide, and what does it not provide?**
-It provides lineage and metadata tracking - training run, metrics, artifacts, promotion stage (Staging/Production/Archived). It does not move traffic or serve the model itself; deployment tooling reads from the registry to decide what to deploy.
+It provides lineage and metadata tracking - training run, metrics, artifacts, promotion status (MLflow aliases such as `@champion` / `@challenger`, which replaced the deprecated Staging/Production/Archived stages). It does not move traffic or serve the model itself; deployment tooling reads from the registry to decide what to deploy.
 
 **Q: Why should rollback criteria be defined before launch rather than during an incident?**
 Under incident pressure, teams either under-react (hoping a regression self-resolves) or over-react (rolling back noise). Pre-agreed, quantitative thresholds - error rate, p95 latency, eval score - turn the in-incident decision into a lookup instead of a judgment call made under stress.
@@ -58,3 +58,24 @@ Who accessed the PHI, when, and for what reason - sufficient for a regulator's a
 
 **Q: What's the difference between SAST and dependency scanning in a CI pipeline?**
 SAST analyzes your own codebase for vulnerability patterns without executing it; dependency scanning checks third-party packages (including ML libraries like `transformers`/`torch`) against known-CVE databases. Both should block merge on high-severity findings.
+
+## LLM Serving on Kubernetes, Supply Chain and Regulation
+
+**Q: Name four ways to share or allocate GPUs in Kubernetes and when to use each.**
+Whole GPUs via the device plugin (default for LLMs); MIG partitions for many small, isolated models; time-slicing for dev/test without isolation; and DRA resource claims (GA in Kubernetes 1.34) to request devices by attributes on heterogeneous fleets.
+
+**Q: What does the Gateway API Inference Extension add over a normal load balancer?**
+Model-aware routing for LLM pools: it picks a replica by queue length, KV-cache utilization or loaded LoRA adapter instead of round-robin, which matters because LLM requests vary enormously in cost and replicas differ in what they have cached.
+
+**Q: How do you reduce cold-start time for a 70B model?**
+Keep weights out of the image on fast local storage or stream them straight into GPU memory, pre-pull slim images, keep warm minimum capacity, and use FP8 or smaller checkpoints to cut the bytes to load. Load time is roughly weight size ÷ read bandwidth plus engine start-up.
+
+**Q: Which OWASP LLM Top 10 risks are most relevant to a RAG chatbot with tool access?**
+Prompt injection (LLM01) via retrieved content, sensitive information disclosure (LLM02), improper output handling (LLM05), excessive agency (LLM06) for its tools, vector and embedding weaknesses (LLM08) such as retrieving documents the user may not see, and unbounded consumption (LLM10).
+
+**Q: Why should you avoid loading pickled checkpoints from public hubs?**
+PyTorch .pt/.bin files are pickles and can execute arbitrary code when loaded. Use safetensors, `torch.load(..., weights_only=True)`, pinned and mirrored artifacts, and signature verification (e.g. OpenSSF model signing).
+
+**Q: When do the EU AI Act's high-risk obligations apply after the 2026 Digital Omnibus?**
+2 December 2027 for stand-alone Annex III high-risk systems and 2 August 2028 for AI embedded in Annex I regulated products; GPAI obligations applied from August 2025 and Article 50 transparency duties from 2 August 2026.
+

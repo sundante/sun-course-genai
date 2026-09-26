@@ -24,7 +24,7 @@ A model registry is a paper trail - which model version is currently serving, wh
 
 <div class="audience-tech" markdown="1">
 
-Tools like MLflow Model Registry track a model's lineage: training run, metrics, artifacts, and stage (`Staging` / `Production` / `Archived`). This is metadata infrastructure - it doesn't move traffic by itself; it's the source of truth that rollout tooling (Kubernetes, a feature-flag/traffic-splitting layer) reads from when deciding what to deploy where. See [Fine-Tuning Lab](../../05-Fine-Tuning-Lab/Notes/04-Benchmarking-Base-vs-Tuned.mdx) for how the base-vs-tuned benchmark table this course builds earlier becomes the registry entry that justifies a promotion to `Production`.
+Tools like MLflow Model Registry track a model's lineage: training run, metrics, artifacts, and which version is currently promoted. Current MLflow does this with **aliases** (mutable named pointers such as `@champion` and `@challenger`) and tags; the older fixed stages (`Staging` / `Production` / `Archived`) have been deprecated since MLflow 2.9. Serving code loads `models:/support-bot@champion`, and promotion is just moving the alias. This is metadata infrastructure - it doesn't move traffic by itself; it's the source of truth that rollout tooling (Kubernetes, a feature-flag/traffic-splitting layer) reads from when deciding what to deploy where. See [Fine-Tuning Lab](../../05-Fine-Tuning-Lab/Notes/04-Benchmarking-Base-vs-Tuned.mdx) for how the base-vs-tuned benchmark table this course builds earlier becomes the registry entry that justifies moving the `@champion` alias to the new version.
 
 </div>
 
@@ -90,4 +90,4 @@ Rollback criteria should be quantitative and pre-agreed: error rate above X%, p9
 **Quick recall Q&A:**
 - *What's the difference between canary and champion-challenger?* Canary is a temporary, ramping traffic shift during a single rollout event; champion-challenger is an ongoing comparison pattern that can run continuously, not just during a deploy.
 - *Why is "we'll decide if it's bad enough to roll back when we see it" a risky plan?* Under incident pressure, teams tend to under-react (hoping it self-resolves) or over-react (rolling back a false alarm) - pre-agreed quantitative thresholds remove that judgment call from the highest-stress moment.
-- *What does a model registry actually store?* Lineage and metadata - training run, metrics, artifacts, and promotion stage - not the serving infrastructure itself.
+- *What does a model registry actually store?* Lineage and metadata - training run, metrics, artifacts, and promotion status (aliases such as `@champion`) - not the serving infrastructure itself.

@@ -55,10 +55,14 @@ RUN pip install torch vllm
 
 ```dockerfile
 # Correct base for GPU inference
-FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04
-RUN apt-get update && apt-get install -y python3.11 python3-pip
-RUN pip install torch vllm
+FROM nvidia/cuda:12.8.1-runtime-ubuntu24.04
+RUN apt-get update && apt-get install -y python3.12 python3.12-venv
+# Ubuntu 24.04 blocks system-wide pip installs (PEP 668), so install into a virtualenv
+RUN python3.12 -m venv /opt/venv && /opt/venv/bin/pip install vllm
+ENV PATH="/opt/venv/bin:$PATH"
 ```
+
+For a standard OpenAI-compatible server you can also start from the project's own image (`vllm/vllm-openai`), which already pins matching CUDA, PyTorch and vLLM versions.
 
 </div>
 
@@ -101,23 +105,23 @@ A multi-stage build compiles and installs everything needed to build the applica
 
 ```dockerfile
 # ---- Stage 1: build ----
-FROM nvidia/cuda:12.1.0-devel-ubuntu22.04 AS builder
-RUN apt-get update && apt-get install -y python3.11 python3-pip python3.11-venv
+FROM nvidia/cuda:12.8.1-devel-ubuntu24.04 AS builder
+RUN apt-get update && apt-get install -y python3.12 python3-pip python3.12-venv
 WORKDIR /build
 COPY requirements.txt .
-RUN python3.11 -m venv /opt/venv \
+RUN python3.12 -m venv /opt/venv \
     && /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
 
 # ---- Stage 2: runtime ----
-FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04
-RUN apt-get update && apt-get install -y python3.11 --no-install-recommends \
+FROM nvidia/cuda:12.8.1-runtime-ubuntu24.04
+RUN apt-get update && apt-get install -y python3.12 --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 WORKDIR /app
 COPY serve.py .
 EXPOSE 8000
-CMD ["python3.11", "serve.py"]
+CMD ["python3.12", "serve.py"]
 ```
 
 **Why this matters here specifically:** the `-devel` CUDA image (with `nvcc`, headers, and build tools for compiling packages like `flash-attn` from source) can be 2-3 GB larger than the `-runtime` variant. Building in a `-devel` stage and shipping only the resulting virtualenv on a `-runtime` base can meaningfully cut final image size while keeping the exact same compiled binaries. See the [Code Lab Dockerfile](../CodeLabs/01-Helm-Chart-and-Release-Checklist/Dockerfile) for a complete, runnable version of this pattern.

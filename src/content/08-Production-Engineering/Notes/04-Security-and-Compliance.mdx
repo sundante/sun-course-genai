@@ -87,6 +87,52 @@ Audit logging in particular needs to answer, for any PHI access: who accessed it
 
 ---
 
+## LLM-Specific Threats: OWASP Top 10 for LLM Applications (2025)
+
+Classic application security still applies, but LLM systems add their own failure modes. OWASP's 2025 list is the common vocabulary:
+
+| # | Risk | One-line example | First-line controls |
+|---|------|------------------|---------------------|
+| LLM01 | Prompt injection | A retrieved web page tells the model to email the user's data elsewhere | Treat all model inputs as untrusted; separate instructions from data; restrict what tools can do |
+| LLM02 | Sensitive information disclosure | The model repeats another customer's data from context or training | Minimize data in context; output filtering; tenant isolation |
+| LLM03 | Supply chain | A pickled checkpoint from a public hub runs code on load | safetensors only, pinned and signed artifacts (below) |
+| LLM04 | Data and model poisoning | Fine-tuning data seeded with a backdoor trigger | Data provenance, review, and evaluation on held-out sets |
+| LLM05 | Improper output handling | Model output inserted into SQL or HTML unescaped | Treat output like user input - validate, escape, parameterize |
+| LLM06 | Excessive agency | An agent with delete permissions acts on an injected instruction | Least-privilege tools, human approval for irreversible actions |
+| LLM07 | System prompt leakage | Secrets or internal rules placed in the system prompt are extracted | Never put secrets in prompts; enforce rules outside the model |
+| LLM08 | Vector and embedding weaknesses | RAG retrieves documents the user isn't allowed to see | Permission-aware retrieval (filter by ACL at query time) |
+| LLM09 | Misinformation | Confident but wrong answers in a medical or legal flow | Grounding, citations, calibrated refusal, human review |
+| LLM10 | Unbounded consumption | A user triggers huge contexts or loops that run up GPU cost | Rate limits, token and step budgets, quotas per tenant |
+
+Agent-specific security (prompt injection through tools, sandboxing, the "lethal trifecta") is covered in [Production Agents](../../16-Production-Agents/INDEX.mdx).
+
+---
+
+## Model Supply Chain
+
+- **No pickles from strangers.** PyTorch `.pt`/`.bin` checkpoints are pickles and can execute code on load. Prefer `safetensors`; if you must load a pickle, use `torch.load(..., weights_only=True)` (the default since PyTorch 2.6).
+- **Pin and verify.** Pin model repositories to a commit hash, mirror approved artifacts into your own registry, and record checksums.
+- **Sign artifacts.** The OpenSSF model-signing specification (built on Sigstore) lets you sign model files and verify them before deployment, like container image signing.
+- **Track provenance and licences.** Record where every base model, dataset and adapter came from and under which licence - several open-weight licences restrict usage or require attribution.
+
+---
+
+## Regulation: The EU AI Act Timeline
+
+The EU AI Act (Regulation (EU) 2024/1689) applies in stages. Dates as amended by the "Digital Omnibus on AI", which entered into force on 27 July 2026:
+
+| Date | What applies |
+|------|--------------|
+| 2 February 2025 | Prohibited practices; AI-literacy obligations |
+| 2 August 2025 | Obligations for general-purpose AI (GPAI) model providers; governance and penalties |
+| 2 August 2026 | Article 50 transparency duties - disclose AI interaction, label AI-generated or manipulated content |
+| 2 December 2027 | High-risk obligations for stand-alone Annex III systems (e.g. employment, credit, education uses) - deferred from August 2026 |
+| 2 August 2028 | High-risk obligations for AI embedded in products under Annex I sector law - deferred from August 2027 |
+
+**What engineers should take from it:** know whether your system could be high-risk under Annex III, keep documentation, logging, human-oversight and data-governance evidence from day one (it is far cheaper than retrofitting), and label AI-generated content where Article 50 requires it. Legal classification is a question for counsel - this table is orientation, not advice.
+
+---
+
 ## Study Notes
 
 **Must-know for interviews:**
@@ -101,3 +147,12 @@ Audit logging in particular needs to answer, for any PHI access: who accessed it
 - *Why do tracing tools pose a specific compliance risk for LLM systems that they don't for typical apps?* They're designed to capture full request/response content by default for debugging, and in an LLM system that content routinely includes the sensitive data users typed into the prompt.
 - *What are HIPAA's five technical safeguards?* Access control, audit controls, integrity, person or entity authentication, and transmission security (45 CFR §164.312).
 - *What should trigger a CI pipeline to block a merge, from a security standpoint?* A high-severity finding from SAST (code-level vulnerability) or dependency scanning (known-CVE in a third-party package).
+
+## References
+
+- OWASP, [Top 10 for LLM Applications 2025](https://genai.owasp.org/llm-top-10/)
+- OpenSSF, [Model Signing](https://github.com/sigstore/model-transparency)
+- EU, [Regulation (EU) 2024/1689 (AI Act)](https://eur-lex.europa.eu/eli/reg/2024/1689/oj); Gibson Dunn, [EU AI Act Omnibus Agreement - Postponed High-Risk Deadlines](https://www.gibsondunn.com/eu-ai-act-omnibus-agreement-postponed-high-risk-deadlines-and-other-key-changes/) (2026)
+- US HHS, [HIPAA Security Rule, 45 CFR §164.312](https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164/subpart-C/section-164.312)
+
+*Last reviewed: 2026-09*

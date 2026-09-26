@@ -9,6 +9,8 @@
 - Model lifecycle: registries (MLflow), blue/green vs canary vs champion-challenger rollout, rollback criteria decided before launch
 - Security and compliance for AI systems: IAM least privilege, secrets management, PHI/PII in traces and eval datasets, SAST/dependency scanning, HIPAA's five technical safeguards
 - Building a release-readiness checklist you'd introduce in a first 90 days
+- Kubernetes for LLMs: GPU sharing and DRA, multi-node replicas, model-aware routing, queue-depth autoscaling, cold starts
+- LLM-specific security (OWASP LLM Top 10), model supply-chain hygiene, and the EU AI Act timeline
 
 ## Chapter Map
 
@@ -17,8 +19,9 @@
 | 1 | [Docker for GPU Inference](Notes/01-Docker-for-GPU-Inference.mdx) | CUDA base images, multi-stage builds, weight mounting | Intermediate |
 | 2 | [Kubernetes & Helm](Notes/02-Kubernetes-and-Helm.mdx) | Deployment/Service/Ingress/HPA, GPU scheduling, Helm charts | Advanced |
 | 3 | [Model Lifecycle & Rollout](Notes/03-Model-Lifecycle-and-Rollout.mdx) | Registries, blue/green, canary, champion-challenger, rollback criteria | Advanced |
-| 4 | [Security & Compliance](Notes/04-Security-and-Compliance.mdx) | IAM, secrets, PHI/PII handling, SAST, HIPAA safeguards | Advanced |
-| 5 | [Q&A Review Bank](Notes/05-Interview-QA-Bank.mdx) | 15 Q&A pairs across all topics | All levels |
+| 4 | [Security & Compliance](Notes/04-Security-and-Compliance.mdx) | IAM, secrets, PHI/PII handling, SAST, HIPAA safeguards, OWASP LLM Top 10, model supply chain, EU AI Act timeline | Advanced |
+| 5 | [LLM Serving on Kubernetes](Notes/05-LLM-Serving-on-Kubernetes.mdx) | GPU Operator, MIG / time-slicing / DRA, KServe, LeaderWorkerSet, Gateway API Inference Extension, llm-d, queue-depth autoscaling, cold starts | Advanced |
+| 6 | [Q&A Review Bank](Notes/06-Interview-QA-Bank.mdx) | 21 Q&A pairs across all topics | All levels |
 
 ## Recommended Learning Paths
 
@@ -31,7 +34,7 @@
 1. [Kubernetes & Helm](Notes/02-Kubernetes-and-Helm.mdx) - GPU scheduling questions are common at Director/Principal level
 2. [Model Lifecycle & Rollout](Notes/03-Model-Lifecycle-and-Rollout.mdx) - canary vs champion-challenger is a frequent distinction to defend
 3. [Security & Compliance](Notes/04-Security-and-Compliance.mdx) - HIPAA safeguards named precisely
-4. [Q&A Review Bank](Notes/05-Interview-QA-Bank.mdx) - drill all questions
+4. [Q&A Review Bank](Notes/06-Interview-QA-Bank.mdx) - drill all questions
 
 ### Path C: Regulated/Healthcare Roles
 1. [Security & Compliance](Notes/04-Security-and-Compliance.mdx)
@@ -40,14 +43,14 @@
 
 ## Resources
 
-- [Q&A Review Bank](Notes/05-Interview-QA-Bank.mdx) - 15 Q&A pairs in this module
+- [Q&A Review Bank](Notes/06-Interview-QA-Bank.mdx) - 21 Q&A pairs in this module
 - [Cross-topic Interview Questions](../Interview-Questions/05-Production-Engineering.mdx)
 
 ## Key Cross-References
 
-- Serving the model that gets deployed here → [Serving & Inference](../07-Serving-and-Inference/INDEX.mdx)
+- Serving the model that gets deployed here → [Inference & Serving](../07-Serving-and-Inference/INDEX.mdx)
 - Registry promotion evidence → [Fine-Tuning Lab: Benchmarking Base vs Tuned](../05-Fine-Tuning-Lab/Notes/04-Benchmarking-Base-vs-Tuned.mdx)
-- Tracing and eval-gate infrastructure → [Agentic AI: Evaluation & Observability](../16-Production-Agents/Notes/02-Evaluation-and-Observability.mdx)
+- Tracing and eval-gate infrastructure → [Production Agents: Evaluation & Observability](../16-Production-Agents/Notes/02-Evaluation-and-Observability.mdx)
 - PHI-handling worked examples → [Prior Authorization](../16-Production-Agents/SystemDesigns/02-Prior-Authorization.mdx), [Smart Diagnostic Assistant](../16-Production-Agents/SystemDesigns/03-Smart-Diagnostic-Assistant-1.mdx)
 
 ---
