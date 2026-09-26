@@ -8,6 +8,7 @@ import rehypeRaw from "rehype-raw";
 import { getAllPages, getPageWithNavigation } from "@/lib/content/loader";
 import { getNavigationTree } from "@/lib/content/nav";
 import { remarkRewriteMdLinks } from "@/lib/content/remarkRewriteMdLinks";
+import { remarkCourseFences } from "@/lib/content/remarkCourseFences";
 import { AudienceToggle } from "@/components/course/AudienceToggle";
 import { TableOfContents } from "@/components/course/TableOfContents";
 import { PageNav } from "@/components/course/PageNav";
@@ -36,12 +37,10 @@ export default async function CoursePage({ params }: Props) {
   if (!result) notFound();
 
   const { page, prev, next } = result;
-  const { flatPages } = getNavigationTree();
+  const { flatPages, modules } = getNavigationTree();
 
-  const moduleLabel = moduleSlug
-    .split("-")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
+  const mod = modules.find((m) => m.slug === moduleSlug);
+  const moduleLabel = mod ? `${String(mod.number).padStart(2, "0")} · ${mod.title}` : moduleSlug;
 
   const mdxOptions = {
     parseFrontmatter: false,
@@ -49,6 +48,8 @@ export default async function CoursePage({ params }: Props) {
       format: "md" as const,
       remarkPlugins: [
         remarkGfm,
+        // Fences first, so links inside quiz/objectives/exercise Markdown get rewritten too
+        remarkCourseFences() as never,
         remarkRewriteMdLinks(page.filePath, flatPages) as never,
       ],
       rehypePlugins: [

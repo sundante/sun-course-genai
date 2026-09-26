@@ -284,6 +284,12 @@ body {
   font-size: 0.82em;
 }
 
+/* The typography plugin wraps inline code in literal backticks; the pill above replaces them */
+.prose code:not(pre code)::before,
+.prose code:not(pre code)::after {
+  content: none;
+}
+
 .prose pre {
   /* background comes from --tw-prose-pre-bg above (solid, theme-matched -   */
   /* code text needs a reliable backdrop, so it stays solid rather than      */

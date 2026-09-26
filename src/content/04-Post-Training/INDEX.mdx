@@ -1,0 +1,36 @@
+# 04 - Post-Training & Reasoning
+
+A pretrained base model continues text; it does not follow instructions, refuse harmful requests, or reason step by step on demand. Post-training adds those behaviours: supervised fine-tuning on demonstrations, preference optimization, and reinforcement learning - including the RL-with-verifiable-rewards recipe behind today's reasoning models.
+
+```objectives
+scope: module
+time: 3-4 hours today (growing as chapters are added)
+outcomes:
+  - Explain the post-training pipeline from SFT to preference tuning to RL, and what each stage changes in the model
+  - Compare RLHF with PPO, DPO-family methods and GRPO by what they need (reward model, critic, online samples) and what they cost
+  - Explain how LoRA and QLoRA make fine-tuning affordable, and what they do not fix
+  - Describe how RL with verifiable rewards produces long chain-of-thought reasoning
+prerequisites:
+  - "[LLM Foundations](../01-LLM-Foundations/INDEX.mdx)"
+  - "[Pretraining at Scale](../03-Pretraining/INDEX.mdx) - especially the training memory math"
+```
+
+## Chapter Map
+
+| # | Note | Topic | Level |
+|---|------|-------|-------|
+| 1 | [Fine-Tuning & Alignment](Notes/01-Fine-Tuning-and-Alignment.mdx) | SFT, RLHF/PPO, DPO, rejection sampling, GRPO, LoRA/QLoRA, PEFT comparison | Advanced |
+
+> **Planned chapters (LLM-track content pass):** the preference-optimization family (DPO, IPO, KTO, SimPO, ORPO); RLVR with GRPO and its successors (DAPO, Dr. GRPO); reward models, process vs outcome rewards and reward hacking; reasoning models and test-time compute; distillation from reasoning models; newer PEFT variants (DoRA, rsLoRA).
+
+Hands-on practice for this module is in the [Fine-Tuning Lab](../05-Fine-Tuning-Lab/INDEX.mdx).
+
+## Review
+
+- Q&A for this material currently lives in the [LLM Foundations Q&A Review Bank](../01-LLM-Foundations/Notes/06-Interview-QA-Bank.mdx); a dedicated bank arrives with the new chapters.
+
+---
+
+## Next Topic
+
+Previous: [03 - Pretraining at Scale](../03-Pretraining/INDEX.mdx) · Next: [05 - Fine-Tuning Lab](../05-Fine-Tuning-Lab/INDEX.mdx)

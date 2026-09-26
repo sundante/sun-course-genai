@@ -1,15 +1,8 @@
 import { UnderDevelopment } from "@/components/course/UnderDevelopment";
+import { getNavigationTree } from "@/lib/content/nav";
 
 export async function generateStaticParams() {
-  return [
-    { module: "llm-models" },
-    { module: "prompt-engineering" },
-    { module: "rag" },
-    { module: "mcp" },
-    { module: "agents" },
-    { module: "agentic-ai" },
-    { module: "knowledge-check" },
-  ];
+  return getNavigationTree().modules.map((mod) => ({ module: mod.slug }));
 }
 
 export default function QuizModulePage() {

@@ -1,20 +1,20 @@
+# Single source of truth for navigation.
+# - Each top-level `Title: [...]` entry is a module; its slug comes from MODULE_SLUG_MAP in src/lib/content/nav.ts.
+# - `- track: Name` entries are unnumbered group labels; every module after one belongs to that track.
+# - Modules are numbered in the sidebar by their order here, so keep folder prefixes (01-, 02-, ...) in the same order.
 nav:
   - Home: index.mdx
-  - LLM Models:
-    - Overview: 01-LLM-Models/INDEX.mdx
+
+  - track: Foundations
+  - LLM Foundations:
+    - Overview: 01-LLM-Foundations/INDEX.mdx
     - Concepts:
-      - LLM Fundamentals: 01-LLM-Models/Notes/01-LLM-Fundamentals.mdx
-      - Transformer Architecture: 01-LLM-Models/Notes/02-Architecture.mdx
-      - Attention Mechanisms: 01-LLM-Models/Notes/03-Attention-Mechanisms.mdx
-      - Model Architecture Types: 01-LLM-Models/Notes/04-Model-Architecture-Types.mdx
-      - KV Cache & Inference: 01-LLM-Models/Notes/05-KV-Cache-and-Inference-Optimization.mdx
-      - Training & Pretraining: 01-LLM-Models/Notes/06-Training-and-Pretraining.mdx
-      - Fine-Tuning: 01-LLM-Models/Notes/07-Fine-Tuning.mdx
-      - GPU & Hardware: 01-LLM-Models/Notes/08-GPU-and-Hardware.mdx
-      - Failure Modes & Tricky Issues: 01-LLM-Models/Notes/09-Failure-Modes-and-Tricky-Issues.mdx
-      - Production Deployment: 01-LLM-Models/Notes/10-Production-Deployment.mdx
-      - Prompting Strategies: 01-LLM-Models/Notes/11-Prompting-Strategies.mdx
-      - Q&A Review Bank: 01-LLM-Models/Notes/12-Interview-QA-Bank.mdx
+      - LLM Fundamentals: 01-LLM-Foundations/Notes/01-LLM-Fundamentals.mdx
+      - Transformer Architecture: 01-LLM-Foundations/Notes/02-Architecture.mdx
+      - Attention Mechanisms: 01-LLM-Foundations/Notes/03-Attention-Mechanisms.mdx
+      - Model Architecture Types: 01-LLM-Foundations/Notes/04-Model-Architecture-Types.mdx
+      - Failure Modes & Tricky Issues: 01-LLM-Foundations/Notes/05-Failure-Modes-and-Tricky-Issues.mdx
+      - Q&A Review Bank: 01-LLM-Foundations/Notes/06-Interview-QA-Bank.mdx
   - Prog Langs:
     - PyTorch Fundamentals:
       - Overview: 02-Prog-Langs/PyTorch/INDEX.mdx
@@ -27,161 +27,192 @@ nav:
         - Q&A Review Bank: 02-Prog-Langs/PyTorch/Notes/06-Interview-QA-Bank.mdx
       - Code Labs:
         - Raw PyTorch Classifier: 02-Prog-Langs/PyTorch/CodeLabs/01-Raw-PyTorch-Classifier.mdx
+
+  - track: Building Models
+  - Pretraining at Scale:
+    - Overview: 03-Pretraining/INDEX.mdx
+    - Concepts:
+      - Training & Pretraining: 03-Pretraining/Notes/01-Training-and-Pretraining.mdx
+      - GPU & Hardware: 03-Pretraining/Notes/02-GPU-and-Hardware.mdx
+  - Post-Training & Reasoning:
+    - Overview: 04-Post-Training/INDEX.mdx
+    - Concepts:
+      - Fine-Tuning & Alignment: 04-Post-Training/Notes/01-Fine-Tuning-and-Alignment.mdx
   - Fine-Tuning Lab:
-    - Overview: 03-Fine-Tuning-Lab/INDEX.mdx
+    - Overview: 05-Fine-Tuning-Lab/INDEX.mdx
     - Concepts:
-      - HuggingFace Ecosystem: 03-Fine-Tuning-Lab/Notes/01-HuggingFace-Ecosystem.mdx
-      - LoRA & QLoRA Hands-On: 03-Fine-Tuning-Lab/Notes/02-LoRA-and-QLoRA-Hands-On.mdx
-      - Instruction Data & Training Runs: 03-Fine-Tuning-Lab/Notes/03-Instruction-Data-and-Training-Runs.mdx
-      - Benchmarking Base vs Tuned: 03-Fine-Tuning-Lab/Notes/04-Benchmarking-Base-vs-Tuned.mdx
-      - Q&A Review Bank: 03-Fine-Tuning-Lab/Notes/05-Interview-QA-Bank.mdx
+      - HuggingFace Ecosystem: 05-Fine-Tuning-Lab/Notes/01-HuggingFace-Ecosystem.mdx
+      - LoRA & QLoRA Hands-On: 05-Fine-Tuning-Lab/Notes/02-LoRA-and-QLoRA-Hands-On.mdx
+      - Instruction Data & Training Runs: 05-Fine-Tuning-Lab/Notes/03-Instruction-Data-and-Training-Runs.mdx
+      - Benchmarking Base vs Tuned: 05-Fine-Tuning-Lab/Notes/04-Benchmarking-Base-vs-Tuned.mdx
+      - Q&A Review Bank: 05-Fine-Tuning-Lab/Notes/05-Interview-QA-Bank.mdx
     - Code Labs:
-      - QLoRA Fine-Tune: 03-Fine-Tuning-Lab/CodeLabs/01-QLoRA-Fine-Tune.mdx
-  - Serving & Inference:
-    - Overview: 04-Serving-and-Inference/INDEX.mdx
+      - QLoRA Fine-Tune: 05-Fine-Tuning-Lab/CodeLabs/01-QLoRA-Fine-Tune.mdx
+  - Evaluation & Benchmarks:
+    - Overview: 06-Evaluation/INDEX.mdx
+
+  - track: Serving & Production
+  - Inference & Serving:
+    - Overview: 07-Serving-and-Inference/INDEX.mdx
     - Concepts:
-      - vLLM & Paged Attention: 04-Serving-and-Inference/Notes/01-vLLM-and-Paged-Attention.mdx
-      - Quantized Inference: 04-Serving-and-Inference/Notes/02-Quantized-Inference.mdx
-      - Batching, Concurrency & Latency: 04-Serving-and-Inference/Notes/03-Batching-Concurrency-and-Latency.mdx
-      - Streaming & TTFT: 04-Serving-and-Inference/Notes/04-Streaming-and-TTFT.mdx
-      - Q&A Review Bank: 04-Serving-and-Inference/Notes/05-Interview-QA-Bank.mdx
+      - KV Cache & Inference: 07-Serving-and-Inference/Notes/01-KV-Cache-and-Inference-Optimization.mdx
+      - vLLM & Paged Attention: 07-Serving-and-Inference/Notes/02-vLLM-and-Paged-Attention.mdx
+      - Quantized Inference: 07-Serving-and-Inference/Notes/03-Quantized-Inference.mdx
+      - Batching, Concurrency & Latency: 07-Serving-and-Inference/Notes/04-Batching-Concurrency-and-Latency.mdx
+      - Streaming & TTFT: 07-Serving-and-Inference/Notes/05-Streaming-and-TTFT.mdx
+      - Production Deployment: 07-Serving-and-Inference/Notes/06-Production-Deployment.mdx
+      - Q&A Review Bank: 07-Serving-and-Inference/Notes/07-Interview-QA-Bank.mdx
     - Code Labs:
-      - FastAPI + vLLM Endpoint: 04-Serving-and-Inference/CodeLabs/01-FastAPI-vLLM-Endpoint.mdx
+      - FastAPI + vLLM Endpoint: 07-Serving-and-Inference/CodeLabs/01-FastAPI-vLLM-Endpoint.mdx
   - Production Engineering:
-    - Overview: 05-Production-Engineering/INDEX.mdx
+    - Overview: 08-Production-Engineering/INDEX.mdx
     - Concepts:
-      - Docker for GPU Inference: 05-Production-Engineering/Notes/01-Docker-for-GPU-Inference.mdx
-      - Kubernetes & Helm: 05-Production-Engineering/Notes/02-Kubernetes-and-Helm.mdx
-      - Model Lifecycle & Rollout: 05-Production-Engineering/Notes/03-Model-Lifecycle-and-Rollout.mdx
-      - Security & Compliance: 05-Production-Engineering/Notes/04-Security-and-Compliance.mdx
-      - Q&A Review Bank: 05-Production-Engineering/Notes/05-Interview-QA-Bank.mdx
+      - Docker for GPU Inference: 08-Production-Engineering/Notes/01-Docker-for-GPU-Inference.mdx
+      - Kubernetes & Helm: 08-Production-Engineering/Notes/02-Kubernetes-and-Helm.mdx
+      - Model Lifecycle & Rollout: 08-Production-Engineering/Notes/03-Model-Lifecycle-and-Rollout.mdx
+      - Security & Compliance: 08-Production-Engineering/Notes/04-Security-and-Compliance.mdx
+      - Q&A Review Bank: 08-Production-Engineering/Notes/05-Interview-QA-Bank.mdx
     - Code Labs:
-      - Helm Chart & Release Checklist: 05-Production-Engineering/CodeLabs/01-Helm-Chart-and-Release-Checklist.mdx
-  - Platform Breadth:
-    - Overview: 06-Platform-Breadth/INDEX.mdx
+      - Helm Chart & Release Checklist: 08-Production-Engineering/CodeLabs/01-Helm-Chart-and-Release-Checklist.mdx
+  - Cloud Platforms:
+    - Overview: 09-Cloud-Platforms/INDEX.mdx
     - Concepts:
-      - AWS Bedrock: 06-Platform-Breadth/Notes/01-AWS-Bedrock.mdx
-      - Databricks & Spark: 06-Platform-Breadth/Notes/02-Databricks-and-Spark.mdx
-      - Azure AI Foundry: 06-Platform-Breadth/Notes/03-Azure-AI-Foundry.mdx
-      - Platform Comparison Table: 06-Platform-Breadth/Notes/04-Platform-Comparison-Table.mdx
-      - Q&A Review Bank: 06-Platform-Breadth/Notes/05-Interview-QA-Bank.mdx
-  - Prompt Engineering:
-    - Overview: 07-Prompts/INDEX.mdx
+      - AWS Bedrock: 09-Cloud-Platforms/Notes/01-AWS-Bedrock.mdx
+      - Databricks & Spark: 09-Cloud-Platforms/Notes/02-Databricks-and-Spark.mdx
+      - Azure AI Foundry: 09-Cloud-Platforms/Notes/03-Azure-AI-Foundry.mdx
+      - Platform Comparison Table: 09-Cloud-Platforms/Notes/04-Platform-Comparison-Table.mdx
+      - Q&A Review Bank: 09-Cloud-Platforms/Notes/05-Interview-QA-Bank.mdx
+
+  - track: Building Apps
+  - Prompt & Context Engineering:
+    - Overview: 10-Prompt-Engineering/INDEX.mdx
     - Concepts:
-      - Prompt Basics: 07-Prompts/Notes/01-Prompt-Basics.mdx
-      - Core Techniques: 07-Prompts/Notes/02-Core-Techniques.mdx
-      - Advanced Techniques: 07-Prompts/Notes/03-Advanced-Techniques.mdx
-      - Prompts in Production: 07-Prompts/Notes/04-Prompt-Engineering-for-Production.mdx
-      - Prompt Optimization & Automation: 07-Prompts/Notes/05-Prompt-Optimization-and-Automation.mdx
-      - Q&A Review Bank: 07-Prompts/Notes/06-Interview-QA-Bank.mdx
+      - Prompt Basics: 10-Prompt-Engineering/Notes/01-Prompt-Basics.mdx
+      - Core Techniques: 10-Prompt-Engineering/Notes/02-Core-Techniques.mdx
+      - Advanced Techniques: 10-Prompt-Engineering/Notes/03-Advanced-Techniques.mdx
+      - Prompts in Production: 10-Prompt-Engineering/Notes/04-Prompt-Engineering-for-Production.mdx
+      - Prompt Optimization & Automation: 10-Prompt-Engineering/Notes/05-Prompt-Optimization-and-Automation.mdx
+      - Prompting Mechanics: 10-Prompt-Engineering/Notes/06-Prompting-Mechanics.mdx
+      - Q&A Review Bank: 10-Prompt-Engineering/Notes/07-Interview-QA-Bank.mdx
   - RAG:
-    - Overview: 08-RAGs/INDEX.mdx
+    - Overview: 11-RAG/INDEX.mdx
     - Concepts:
-      - RAG Fundamentals: 08-RAGs/Notes/01-RAG-Fundamentals.mdx
-      - Embeddings & Vector Stores: 08-RAGs/Notes/02-Embeddings-and-Vector-Stores.mdx
-      - Chunking & Indexing: 08-RAGs/Notes/03-Chunking-and-Indexing.mdx
-      - Retrieval Strategies: 08-RAGs/Notes/04-Retrieval-Strategies.mdx
-      - RAG Types & Advanced Patterns: 08-RAGs/Notes/05-RAG-Types-and-Advanced-Patterns.mdx
-      - Evaluation & Failure Modes: 08-RAGs/Notes/06-RAG-Evaluation-and-Failure-Modes.mdx
-      - RAG System Design: 08-RAGs/Notes/08-RAG-System-Design.mdx
-      - Vertex AI RAG: 08-RAGs/Notes/09-Vertex-AI-RAG.mdx
-      - Production Deployment: 08-RAGs/Notes/10-Production-Deployment.mdx
-      - Scaling & LLM Issues: 08-RAGs/Notes/11-Scaling-and-LLM-Issues.mdx
-      - Q&A Review Bank: 08-RAGs/Notes/12-Interview-QA-Bank.mdx
+      - RAG Fundamentals: 11-RAG/Notes/01-RAG-Fundamentals.mdx
+      - Embeddings & Vector Stores: 11-RAG/Notes/02-Embeddings-and-Vector-Stores.mdx
+      - Chunking & Indexing: 11-RAG/Notes/03-Chunking-and-Indexing.mdx
+      - Retrieval Strategies: 11-RAG/Notes/04-Retrieval-Strategies.mdx
+      - RAG Types & Advanced Patterns: 11-RAG/Notes/05-RAG-Types-and-Advanced-Patterns.mdx
+      - Evaluation & Failure Modes: 11-RAG/Notes/06-RAG-Evaluation-and-Failure-Modes.mdx
+      - RAG System Design: 11-RAG/Notes/07-RAG-System-Design.mdx
+      - Vertex AI RAG: 11-RAG/Notes/08-Vertex-AI-RAG.mdx
+      - Production Deployment: 11-RAG/Notes/09-Production-Deployment.mdx
+      - Scaling & LLM Issues: 11-RAG/Notes/10-Scaling-and-LLM-Issues.mdx
+      - Q&A Review Bank: 11-RAG/Notes/11-Interview-QA-Bank.mdx
     - System Designs:
-      - Simple RAG Pipeline: 08-RAGs/SystemDesigns/01-simple-rag.mdx
-      - Agentic RAG - Hybrid Vector + Graph: 08-RAGs/SystemDesigns/02-agentic-rag-hybrid.mdx
-  - MCP:
-    - Overview: 09-MCP/INDEX.mdx
+      - Simple RAG Pipeline: 11-RAG/SystemDesigns/01-simple-rag.mdx
+      - Agentic RAG - Hybrid Vector + Graph: 11-RAG/SystemDesigns/02-agentic-rag-hybrid.mdx
+
+  - track: Agents
+  - Agent Foundations:
+    - Overview: 12-Agent-Foundations/INDEX.mdx
     - Concepts:
-      - The Problem: 09-MCP/Notes/01-The-Problem.mdx
-      - Definition: 09-MCP/Notes/02-Definition.mdx
-      - The Solution: 09-MCP/Notes/03-The-Solution.mdx
-      - Components: 09-MCP/Notes/04-Components.mdx
-      - Capabilities: 09-MCP/Notes/05-Capabilities.mdx
-      - Why It Matters: 09-MCP/Notes/06-Why-MCP-Matters.mdx
-      - Architecture Deep-Dive: 09-MCP/Notes/07-Architecture-Deep-Dive.mdx
-      - Getting Started: 09-MCP/Notes/08-Getting-Started.mdx
-      - Q&A Review Bank: 09-MCP/Notes/09-QA-Review-Bank.mdx
-  - AI Agents:
-    - Overview: 10-Agents/INDEX.mdx
+      - What Are AI Agents: 12-Agent-Foundations/Notes/01-What-Are-AI-Agents.mdx
+      - Agentic Concepts: 12-Agent-Foundations/Notes/02-Agentic-Concepts.mdx
+      - Anatomy of an AI Agent: 12-Agent-Foundations/Notes/03-Anatomy-of-an-AI-Agent.mdx
+      - The Agent Loop: 12-Agent-Foundations/Notes/04-The-Agent-Loop.mdx
+      - Tool Use & Function Calling: 12-Agent-Foundations/Notes/05-Tool-Use-and-Function-Calling.mdx
+      - Agent Memory: 12-Agent-Foundations/Notes/06-Agent-Memory.mdx
+      - Memory & State: 12-Agent-Foundations/Notes/07-Memory-and-State.mdx
+      - Planning & Reasoning: 12-Agent-Foundations/Notes/08-Planning-and-Reasoning.mdx
+      - AI Agent Capabilities: 12-Agent-Foundations/Notes/09-Agent-Capabilities.mdx
+      - AI Agent Use Cases: 12-Agent-Foundations/Notes/10-Agent-Use-Cases.mdx
+      - Enterprise vs Personal AI Agents: 12-Agent-Foundations/Notes/11-Enterprise-vs-Personal-Agents.mdx
+      - Agent Evaluation Basics: 12-Agent-Foundations/Notes/12-Agent-Evaluation-Basics.mdx
+  - MCP & A2A:
+    - Overview: 13-MCP-and-A2A/INDEX.mdx
     - Concepts:
-      - What Are AI Agents: 10-Agents/Notes/01-What-Are-AI-Agents.mdx
-      - Anatomy of an AI Agent: 10-Agents/Notes/02-Anatomy-of-an-AI-Agent.mdx
-      - Agent Memory: 10-Agents/Notes/03-Agent-Memory.mdx
-      - AI Agent Capabilities: 10-Agents/Notes/04-Agent-Capabilities.mdx
-      - AI Agent Use Cases: 10-Agents/Notes/05-Agent-Use-Cases.mdx
-      - Enterprise vs Personal AI Agents: 10-Agents/Notes/06-Enterprise-vs-Personal-Agents.mdx
-      - Agent Evaluation Basics: 10-Agents/Notes/07-Agent-Evaluation-Basics.mdx
+      - The Problem: 13-MCP-and-A2A/Notes/01-The-Problem.mdx
+      - Definition: 13-MCP-and-A2A/Notes/02-Definition.mdx
+      - The Solution: 13-MCP-and-A2A/Notes/03-The-Solution.mdx
+      - Components: 13-MCP-and-A2A/Notes/04-Components.mdx
+      - Capabilities: 13-MCP-and-A2A/Notes/05-Capabilities.mdx
+      - Why It Matters: 13-MCP-and-A2A/Notes/06-Why-MCP-Matters.mdx
+      - Architecture Deep-Dive: 13-MCP-and-A2A/Notes/07-Architecture-Deep-Dive.mdx
+      - Getting Started: 13-MCP-and-A2A/Notes/08-Getting-Started.mdx
+      - Q&A Review Bank: 13-MCP-and-A2A/Notes/09-QA-Review-Bank.mdx
+  - Agent Patterns & Multi-Agent:
+    - Overview: 14-Agent-Patterns/INDEX.mdx
+    - Concepts:
+      - Architectural Patterns: 14-Agent-Patterns/Notes/01-Architectural-Patterns.mdx
+      - Design Patterns: 14-Agent-Patterns/Notes/02-Design-Patterns.mdx
+      - Multi-Agent Systems: 14-Agent-Patterns/Notes/03-Multi-Agent-Systems.mdx
+      - Q&A Review Bank: 14-Agent-Patterns/Notes/04-Interview-QA-Bank.mdx
     - Code Labs:
-      - AI Agent Types: 10-Agents/CodeLabs/01-Agent-Types.mdx
+      - Architecture Patterns: 14-Agent-Patterns/CodeLabs/01-Architectures.mdx
+  - Agent Frameworks:
+    - Overview: 15-Agent-Frameworks/INDEX.mdx
+    - Concepts:
+      - Agent Frameworks: 15-Agent-Frameworks/Notes/01-Agent-Frameworks.mdx
+    - Code Labs:
+      - AI Agent Types: 15-Agent-Frameworks/CodeLabs/01-Agent-Types.mdx
+      - Agentic Systems: 15-Agent-Frameworks/CodeLabs/02-Agentic-Systems.mdx
+    - Framework Guides:
       - GCP ADK:
-        - Overview: 10-Agents/GCP-ADK/INDEX.mdx
-        - ADK Fundamentals: 10-Agents/GCP-ADK/01-ADK-Fundamentals.mdx
-        - Simple Agent: 10-Agents/GCP-ADK/02-Simple-Agent.mdx
-        - Complex Agent: 10-Agents/GCP-ADK/03-Complex-Agent.mdx
+        - Overview: 15-Agent-Frameworks/GCP-ADK/INDEX.mdx
+        - ADK Fundamentals: 15-Agent-Frameworks/GCP-ADK/01-ADK-Fundamentals.mdx
+        - Simple Agent: 15-Agent-Frameworks/GCP-ADK/02-Simple-Agent.mdx
+        - Complex Agent: 15-Agent-Frameworks/GCP-ADK/03-Complex-Agent.mdx
       - LangChain:
-        - Overview: 10-Agents/LangChain/INDEX.mdx
-        - LangChain Fundamentals: 10-Agents/LangChain/01-LangChain-Fundamentals.mdx
-        - Simple Agent: 10-Agents/LangChain/02-Simple-Agent.mdx
-        - Complex Agent: 10-Agents/LangChain/03-Complex-Agent.mdx
+        - Overview: 15-Agent-Frameworks/LangChain/INDEX.mdx
+        - LangChain Fundamentals: 15-Agent-Frameworks/LangChain/01-LangChain-Fundamentals.mdx
+        - Simple Agent: 15-Agent-Frameworks/LangChain/02-Simple-Agent.mdx
+        - Complex Agent: 15-Agent-Frameworks/LangChain/03-Complex-Agent.mdx
       - LangGraph:
-        - Overview: 10-Agents/LangGraph/INDEX.mdx
-        - LangGraph Fundamentals: 10-Agents/LangGraph/01-LangGraph-Fundamentals.mdx
-        - Simple Agent: 10-Agents/LangGraph/02-Simple-Agent.mdx
-        - Complex Agent: 10-Agents/LangGraph/03-Complex-Agent.mdx
+        - Overview: 15-Agent-Frameworks/LangGraph/INDEX.mdx
+        - LangGraph Fundamentals: 15-Agent-Frameworks/LangGraph/01-LangGraph-Fundamentals.mdx
+        - Simple Agent: 15-Agent-Frameworks/LangGraph/02-Simple-Agent.mdx
+        - Complex Agent: 15-Agent-Frameworks/LangGraph/03-Complex-Agent.mdx
       - CrewAI:
-        - Overview: 10-Agents/CrewAI/INDEX.mdx
-        - CrewAI Fundamentals: 10-Agents/CrewAI/01-CrewAI-Fundamentals.mdx
-        - Simple Agent: 10-Agents/CrewAI/02-Simple-Agent.mdx
-        - Complex Agent: 10-Agents/CrewAI/03-Complex-Agent.mdx
-  - Agentic AI:
-    - Overview: 11-Agentic-AI/INDEX.mdx
+        - Overview: 15-Agent-Frameworks/CrewAI/INDEX.mdx
+        - CrewAI Fundamentals: 15-Agent-Frameworks/CrewAI/01-CrewAI-Fundamentals.mdx
+        - Simple Agent: 15-Agent-Frameworks/CrewAI/02-Simple-Agent.mdx
+        - Complex Agent: 15-Agent-Frameworks/CrewAI/03-Complex-Agent.mdx
+  - Production Agents:
+    - Overview: 16-Production-Agents/INDEX.mdx
     - Concepts:
-      - Agentic Concepts: 11-Agentic-AI/Notes/01-Agentic-Concepts.mdx
-      - The Agent Loop: 11-Agentic-AI/Notes/02-The-Agent-Loop.mdx
-      - Tool Use & Function Calling: 11-Agentic-AI/Notes/03-Tool-Use-and-Function-Calling.mdx
-      - Memory & State: 11-Agentic-AI/Notes/04-Memory-and-State.mdx
-      - Planning & Reasoning: 11-Agentic-AI/Notes/05-Planning-and-Reasoning.mdx
-      - Architectural Patterns: 11-Agentic-AI/Notes/06-Architectural-Patterns.mdx
-      - Design Patterns: 11-Agentic-AI/Notes/07-Design-Patterns.mdx
-      - Multi-Agent Systems: 11-Agentic-AI/Notes/08-Multi-Agent-Systems.mdx
-      - Agent Frameworks: 11-Agentic-AI/Notes/09-Agent-Frameworks.mdx
-      - Agentic System Design: 11-Agentic-AI/Notes/10-Agentic-System-Design.mdx
-      - Evaluation & Observability: 11-Agentic-AI/Notes/11-Evaluation-and-Observability.mdx
-      - Q&A Review Bank: 11-Agentic-AI/Notes/12-Interview-QA-Bank.mdx
+      - Agentic System Design: 16-Production-Agents/Notes/01-Agentic-System-Design.mdx
+      - Evaluation & Observability: 16-Production-Agents/Notes/02-Evaluation-and-Observability.mdx
     - System Designs:
-      - Insurance Claims Processor: 11-Agentic-AI/SystemDesigns/insurance-claims-processor.mdx
-      - Prior Authorization: 11-Agentic-AI/SystemDesigns/prior-authorization.mdx
-      - Smart Diagnostic Assistant 1: 11-Agentic-AI/SystemDesigns/smart-diagnostic-assistant-interview-answer-1.mdx
-      - Smart Diagnostic Assistant 2: 11-Agentic-AI/SystemDesigns/smart-diagnostic-assistant-interview-answer-2.mdx
-    - Code Labs:
-      - Architecture Patterns: 11-Agentic-AI/CodeLabs/02-Architectures.mdx
-      - Agentic Systems: 11-Agentic-AI/CodeLabs/03-Agentic-Systems.mdx
+      - Insurance Claims Processor: 16-Production-Agents/SystemDesigns/01-Insurance-Claims-Processor.mdx
+      - Prior Authorization: 16-Production-Agents/SystemDesigns/02-Prior-Authorization.mdx
+      - Smart Diagnostic Assistant 1: 16-Production-Agents/SystemDesigns/03-Smart-Diagnostic-Assistant-1.mdx
+      - Smart Diagnostic Assistant 2: 16-Production-Agents/SystemDesigns/04-Smart-Diagnostic-Assistant-2.mdx
   - Agent Engineering:
-    - Overview: 12-Agent-Engineering/INDEX.mdx
+    - Overview: 17-Agent-Engineering/INDEX.mdx
     - Concepts:
-      - Harness Engineering: 12-Agent-Engineering/Notes/01-Harness-Engineering.mdx
-      - Loop Engineering: 12-Agent-Engineering/Notes/02-Loop-Engineering.mdx
-      - Graph Engineering: 12-Agent-Engineering/Notes/03-Graph-Engineering.mdx
-      - Context Engineering: 12-Agent-Engineering/Notes/04-Context-Engineering.mdx
-      - Evaluation & Verifier Engineering: 12-Agent-Engineering/Notes/05-Evaluation-and-Verifier-Engineering.mdx
-      - Environment Engineering: 12-Agent-Engineering/Notes/06-Environment-Engineering.mdx
-      - Memory & Skill Engineering: 12-Agent-Engineering/Notes/07-Memory-and-Skill-Engineering.mdx
-      - Spec & Vibe Engineering: 12-Agent-Engineering/Notes/08-Spec-and-Vibe-Engineering.mdx
-      - Q&A Review Bank: 12-Agent-Engineering/Notes/09-Interview-QA-Bank.mdx
+      - Harness Engineering: 17-Agent-Engineering/Notes/01-Harness-Engineering.mdx
+      - Loop Engineering: 17-Agent-Engineering/Notes/02-Loop-Engineering.mdx
+      - Graph Engineering: 17-Agent-Engineering/Notes/03-Graph-Engineering.mdx
+      - Context Engineering: 17-Agent-Engineering/Notes/04-Context-Engineering.mdx
+      - Evaluation & Verifier Engineering: 17-Agent-Engineering/Notes/05-Evaluation-and-Verifier-Engineering.mdx
+      - Environment Engineering: 17-Agent-Engineering/Notes/06-Environment-Engineering.mdx
+      - Memory & Skill Engineering: 17-Agent-Engineering/Notes/07-Memory-and-Skill-Engineering.mdx
+      - Spec & Vibe Engineering: 17-Agent-Engineering/Notes/08-Spec-and-Vibe-Engineering.mdx
+      - Q&A Review Bank: 17-Agent-Engineering/Notes/09-Interview-QA-Bank.mdx
+
+  - track: Review
   - Knowledge Check:
-    - All Questions: All_Questions.mdx
     - Overview: Interview-Questions/INDEX.mdx
-    - LLM Models: Interview-Questions/01-LLM-Models.mdx
+    - All Questions: All_Questions.mdx
+    - LLM Foundations: Interview-Questions/01-LLM-Models.mdx
     - PyTorch Fundamentals: Interview-Questions/02-PyTorch-Fundamentals.mdx
     - Fine-Tuning Lab: Interview-Questions/03-Fine-Tuning-Lab.mdx
-    - Serving & Inference: Interview-Questions/04-Serving-and-Inference.mdx
+    - Inference & Serving: Interview-Questions/04-Serving-and-Inference.mdx
     - Production Engineering: Interview-Questions/05-Production-Engineering.mdx
-    - Platform Breadth: Interview-Questions/06-Platform-Breadth.mdx
+    - Cloud Platforms: Interview-Questions/06-Platform-Breadth.mdx
     - Prompt Engineering: Interview-Questions/07-Prompt-Engineering.mdx
-    - RAGs: Interview-Questions/08-RAGs.mdx
-    - MCP: Interview-Questions/09-MCP.mdx
-    - Agents: Interview-Questions/10-Agents.mdx
+    - RAG: Interview-Questions/08-RAGs.mdx
+    - Agents: Interview-Questions/09-Agents.mdx
+    - MCP: Interview-Questions/10-MCP.mdx
     - Agentic AI: Interview-Questions/11-Agentic-AI.mdx
     - Agent Engineering: Interview-Questions/12-Agent-Engineering.mdx

@@ -9,6 +9,10 @@ export interface NavItem {
 export interface NavModule {
   title: string;
   slug: string;
+  /** 1-based position in nav.yml - the number shown in the sidebar and on the home page */
+  number: number;
+  /** Unnumbered group label from nav.yml (`- track: Name`) */
+  track?: string;
   items: NavItem[];
 }
 

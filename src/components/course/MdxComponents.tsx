@@ -1,5 +1,6 @@
 import { MermaidDiagram } from "./MermaidDiagram";
 import { AgentUseCaseMindmap } from "./AgentUseCaseMindmap";
+import { CourseDiv } from "./CourseFences";
 import { ComponentPropsWithoutRef, ReactElement } from "react";
 
 function CustomPre(props: ComponentPropsWithoutRef<"pre">) {
@@ -31,4 +32,6 @@ function CustomPre(props: ComponentPropsWithoutRef<"pre">) {
 
 export const mdxComponents = {
   pre: CustomPre,
+  // ```objectives / ```quiz / ```exercise fences arrive as cf-* divs (remarkCourseFences.ts)
+  div: CourseDiv,
 };

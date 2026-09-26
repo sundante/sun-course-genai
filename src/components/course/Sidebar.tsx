@@ -11,12 +11,6 @@ interface Props {
   mobile?: boolean;
 }
 
-function getModuleAbbr(title: string): string {
-  const words = title.trim().split(/\s+/);
-  if (words.length >= 2) return words.map((w) => w[0]).join("").toUpperCase().slice(0, 2);
-  return title.slice(0, 3).toUpperCase();
-}
-
 function normalizePath(p: string) {
   return p.replace(/\/$/, "");
 }
@@ -101,7 +95,7 @@ function NavSection({ item }: { item: NavItem }) {
   );
 }
 
-function ModuleSection({ mod, index }: { mod: NavModule; index: number }) {
+function ModuleSection({ mod }: { mod: NavModule }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(() => containsPath(mod.items, pathname));
 
@@ -117,7 +111,7 @@ function ModuleSection({ mod, index }: { mod: NavModule; index: number }) {
         className="flex items-center gap-1.5 w-full text-left text-xs font-bold uppercase tracking-widest text-sun-dark py-2 px-1 hover:text-sun-amber transition-colors"
       >
         {open ? <ChevronDown className="h-3.5 w-3.5 shrink-0" /> : <ChevronRight className="h-3.5 w-3.5 shrink-0" />}
-        <span className="text-sun-yellow mr-0.5">{String(index + 1).padStart(2, "0")}.</span>
+        <span className="text-sun-yellow mr-0.5">{String(mod.number).padStart(2, "0")}.</span>
         {mod.title}
       </button>
       {open && (
@@ -131,10 +125,28 @@ function ModuleSection({ mod, index }: { mod: NavModule; index: number }) {
   );
 }
 
+/** Modules in nav order, with an unnumbered track label wherever the track changes. */
+function ModuleList({ modules }: { modules: NavModule[] }) {
+  return (
+    <>
+      {modules.map((mod, i) => (
+        <div key={mod.slug}>
+          {mod.track && mod.track !== modules[i - 1]?.track && (
+            <div className={`text-[10px] font-semibold uppercase tracking-[0.18em] text-sun-muted/80 px-1 pb-0.5 ${i > 0 ? "pt-4" : "pt-1"}`}>
+              {mod.track}
+            </div>
+          )}
+          <ModuleSection mod={mod} />
+        </div>
+      ))}
+    </>
+  );
+}
+
 function CollapsedRail({ nav, onExpand }: { nav: NavigationTree; onExpand: () => void }) {
   const pathname = usePathname();
   return (
-    <div className="flex flex-col items-center py-3 gap-1">
+    <div className="flex flex-col items-center py-3 gap-1 overflow-y-auto">
       <button
         onClick={onExpand}
         className="p-1.5 mb-2 text-sun-muted hover:text-sun-dark hover:bg-sun-yellow-dim rounded transition-colors"
@@ -149,13 +161,13 @@ function CollapsedRail({ nav, onExpand }: { nav: NavigationTree; onExpand: () =>
             key={mod.slug}
             onClick={onExpand}
             title={mod.title}
-            className={`w-9 h-9 rounded-md text-[10px] font-bold transition-colors ${
+            className={`shrink-0 w-9 h-8 rounded-md text-[10px] font-bold tabular-nums transition-colors ${
               active
                 ? "bg-sun-yellow text-zinc-900"
                 : "text-sun-muted hover:text-sun-dark hover:bg-sun-yellow-dim"
             }`}
           >
-            {getModuleAbbr(mod.title)}
+            {String(mod.number).padStart(2, "0")}
           </button>
         );
       })}
@@ -169,9 +181,7 @@ export function Sidebar({ nav, mobile = false }: Props) {
   if (mobile) {
     return (
       <div className="py-5 px-4">
-        {nav.modules.map((mod, i) => (
-          <ModuleSection key={mod.slug} mod={mod} index={i} />
-        ))}
+        <ModuleList modules={nav.modules} />
       </div>
     );
   }
@@ -196,9 +206,7 @@ export function Sidebar({ nav, mobile = false }: Props) {
             </button>
           </div>
           <div className="flex-1 overflow-y-auto px-4 pb-5">
-            {nav.modules.map((mod, i) => (
-              <ModuleSection key={mod.slug} mod={mod} index={i} />
-            ))}
+            <ModuleList modules={nav.modules} />
           </div>
           <div className="px-4 py-2.5 border-t border-sun-yellow bg-white">
             <p className="text-[10px] text-sun-wip leading-snug">

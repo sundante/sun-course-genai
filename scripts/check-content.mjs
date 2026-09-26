@@ -29,7 +29,8 @@ const navPaths = new Set();
 function collect(entries) {
   for (const entry of entries) {
     if (typeof entry === "string") continue;
-    for (const value of Object.values(entry)) {
+    for (const [key, value] of Object.entries(entry)) {
+      if (key === "track") continue; // `- track: Name` is a group label, not a page
       if (typeof value === "string") {
         // nav.ts skips the "Home" entry; the landing page is src/app/page.tsx, not a content file
         if (value === "index.mdx") continue;
@@ -77,12 +78,41 @@ for (const file of mdxFiles) {
 
   for (const { lang, body } of fences) {
     if (!["quiz", "objectives", "exercise"].includes(lang)) continue;
+    let data;
     try {
-      yaml.load(body);
+      data = yaml.load(body);
     } catch (e) {
       errors.push(`invalid ${lang} YAML in ${rel}: ${e.message.split("\n")[0]}`);
+      continue;
     }
+    // Same rules remarkCourseFences.ts enforces at render time
+    const problem = fenceProblem(lang, data);
+    if (problem) errors.push(`invalid ${lang} block in ${rel}: ${problem}`);
   }
+}
+
+function fenceProblem(lang, data) {
+  if (lang === "objectives") {
+    if (!Array.isArray(data?.outcomes) || !data.outcomes.length) return "`outcomes` must be a non-empty list";
+    return null;
+  }
+  if (lang === "quiz") {
+    if (!Array.isArray(data) || !data.length) return "expected a non-empty list of questions";
+    for (const [i, q] of data.entries()) {
+      if (!q?.q) return `question ${i + 1} has no \`q\``;
+      if (Array.isArray(q.options)) {
+        if (!Number.isInteger(q.answer) || q.answer < 1 || q.answer > q.options.length) {
+          return `question ${i + 1}: \`answer\` must be the 1-based number of the correct option`;
+        }
+      } else if (q.answer === undefined) {
+        return `question ${i + 1} needs \`options\` + \`answer\`, or a free-text \`answer\``;
+      }
+    }
+    return null;
+  }
+  const items = Array.isArray(data) ? data : [data];
+  const missing = items.findIndex((item) => !item?.task);
+  return missing === -1 ? null : `exercise ${missing + 1} has no \`task\``;
 }
 
 // Em dashes in content and site source

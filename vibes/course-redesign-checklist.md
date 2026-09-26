@@ -43,11 +43,13 @@ Research rule (Phases 2-4): every new claim about a model, spec, API, or version
 - Numbering gaps (`08-RAGs/Notes`, `11-Agentic-AI/CodeLabs`) deferred to the Phase 1 restructure, which renumbers both directories
 
 ## Phase 1 - Platform & restructure
-- [ ] Code-fence components: `objectives`, `quiz`, `exercise`
-- [ ] Derive home tiles / stats / quiz params from nav tree
-- [ ] Restructure to 17-module layout (git mv, nav.yml, nav.ts maps, track labels)
+- [x] Code-fence components: `objectives`, `quiz`, `exercise` (remark plugin + components, schema-checked by `check:content`, worked example in the KV-cache note, documented in CLAUDE.md)
+- [x] Derive home tiles / stats / quiz params from nav tree (plus the lesson-header module label)
+- [x] Restructure to 17-module layout (git mv, nav.yml, nav.ts maps, track labels) - new overview pages for 03, 04, 06, 15, 16; rewritten 01, 12, 14; regenerated Next Topic footers
 - [x] `scripts/check-content.mjs` + `npm run check:content` (done in Phase 0)
-- [ ] Clear the two numbering gaps during the restructure
+- [x] Clear the two numbering gaps during the restructure
+- [x] Old URLs of the 62 moved pages forward via the 404 page (`legacy-redirects.json`)
+- Deferred to Phase 5: `/quiz/[module]` pages stay stubs until quizzes exist across the course
 
 ## Phase 2 - LLM track (modules 01-09)
 - [ ] 01 LLM Foundations + Model Landscape 2026 page

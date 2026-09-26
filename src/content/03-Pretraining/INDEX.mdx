@@ -1,0 +1,35 @@
+# 03 - Pretraining at Scale
+
+Pretraining turns trillions of tokens of text into a base model by predicting the next token, over and over, on thousands of GPUs. This module covers what goes into that run - the data pipeline, the objective, how compute is split across GPUs, and the memory and hardware budget that decides what is feasible.
+
+```objectives
+scope: module
+time: 4-5 hours today (growing as chapters are added)
+outcomes:
+  - Walk through a pretraining data pipeline - filtering, deduplication, quality scoring, mixing - and explain why each stage exists
+  - Apply scaling laws to size a model and its token budget for a compute budget
+  - Estimate training memory per parameter and explain how data, tensor, pipeline and ZeRO/FSDP parallelism divide it
+  - Explain the interconnect and precision choices that bound training throughput
+prerequisites:
+  - "[LLM Foundations](../01-LLM-Foundations/INDEX.mdx) - the transformer and attention"
+  - "[PyTorch Fundamentals](../02-Prog-Langs/PyTorch/INDEX.mdx) - the training loop, mixed precision"
+```
+
+## Chapter Map
+
+| # | Note | Topic | Level |
+|---|------|-------|-------|
+| 1 | [Training & Pretraining](Notes/01-Training-and-Pretraining.mdx) | Data pipeline, tokenizers, objectives, Kaplan and Chinchilla scaling, distributed-training basics | Intermediate |
+| 2 | [GPU & Hardware](Notes/02-GPU-and-Hardware.mdx) | Memory estimation, quantization formats, DP/TP/PP/ZeRO, interconnects | Advanced |
+
+> **Planned chapters (LLM-track content pass):** modern data curation (classifier-filtered web data, synthetic data, data mixing, annealing and mid-training, long-context extension); scaling laws after Chinchilla (inference-aware and data-constrained); 4D parallelism, FSDP2 and FP8 training; training stability (loss spikes, QK-norm, z-loss) and MFU; the H100-to-GB200 hardware generation; and a GPT-from-scratch lab in the PyTorch module.
+
+## Review
+
+- Q&A for this material currently lives in the [LLM Foundations Q&A Review Bank](../01-LLM-Foundations/Notes/06-Interview-QA-Bank.mdx); a dedicated bank arrives with the new chapters.
+
+---
+
+## Next Topic
+
+Previous: [02 - PyTorch Fundamentals](../02-Prog-Langs/PyTorch/INDEX.mdx) · Next: [04 - Post-Training & Reasoning](../04-Post-Training/INDEX.mdx)

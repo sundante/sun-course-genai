@@ -1,0 +1,35 @@
+# 06 - Evaluation & Benchmarks
+
+Every decision about a model - which one to deploy, whether a fine-tune helped, whether a new checkpoint regressed - is only as good as the evaluation behind it. This module covers how LLMs are measured: public benchmarks and what they actually test, contamination, model-graded evaluation and its biases, long-context evaluation, and building an evaluation harness of your own.
+
+```objectives
+scope: module
+time: 4-6 hours (when complete)
+outcomes:
+  - Read a model card's benchmark table critically - what each benchmark measures, and how saturation and contamination distort it
+  - Design a task-specific evaluation set and pick metrics for it
+  - Use an LLM as a judge while controlling for position, verbosity and self-preference bias
+  - Run a standard evaluation harness against a base and a fine-tuned model and interpret the difference
+prerequisites:
+  - "[LLM Foundations](../01-LLM-Foundations/INDEX.mdx)"
+  - "[Fine-Tuning Lab](../05-Fine-Tuning-Lab/INDEX.mdx) - its base-vs-tuned benchmark is the starting point for this module's lab"
+```
+
+> **This module is being written.** Its chapters arrive in the LLM-track content pass. Until then, the closest existing material is [Benchmarking Base vs Tuned](../05-Fine-Tuning-Lab/Notes/04-Benchmarking-Base-vs-Tuned.mdx) (task evaluation and LLM-as-judge for a fine-tune), and agent-level evaluation in [Production Agents](../16-Production-Agents/Notes/02-Evaluation-and-Observability.mdx).
+
+## Planned Chapters
+
+| # | Topic |
+|---|-------|
+| 1 | What benchmarks measure - knowledge, reasoning, math, code, agentic tasks; saturation and why the leaderboard keeps moving |
+| 2 | Contamination - how test data leaks into training data, and how to detect and avoid it |
+| 3 | Model-graded evaluation - LLM-as-judge, pairwise comparison, human preference arenas, and their biases |
+| 4 | Long-context evaluation - needle-in-a-haystack and why harder tests are needed |
+| 5 | Building your own eval - task sets, metrics, regression gates in CI |
+| 6 | Lab - run an evaluation harness on a base vs fine-tuned model |
+
+---
+
+## Next Topic
+
+Previous: [05 - Fine-Tuning Lab](../05-Fine-Tuning-Lab/INDEX.mdx) · Next: [07 - Inference & Serving](../07-Serving-and-Inference/INDEX.mdx)

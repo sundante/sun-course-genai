@@ -1,0 +1,57 @@
+# 12 - Agent Foundations
+
+An AI agent is an LLM that runs in a loop: it reads its context, decides on an action (usually a tool call), observes the result, and repeats until the goal is met. This module builds that idea from first principles - the loop, tools, memory and planning - before later modules add protocols (13), multi-agent patterns (14), frameworks (15) and production concerns (16).
+
+```objectives
+scope: module
+time: 8-10 hours
+outcomes:
+  - Explain what separates an agent from a chatbot or a fixed workflow, and place a system on the autonomy spectrum
+  - Trace the agent loop at the API level - what the model sees on each turn and how tool results re-enter the context
+  - Design tool schemas and error handling that a model can use reliably
+  - Choose between working, episodic, semantic and procedural memory for a given task, and manage context over long runs
+  - Compare planning strategies (ReAct, plan-and-execute, reflection) and know when a reasoning model changes the choice
+  - Build a first evaluation set for a single agent
+prerequisites:
+  - "[LLM Foundations](../01-LLM-Foundations/INDEX.mdx) - tokens, context windows, sampling"
+  - "[Prompt & Context Engineering](../10-Prompt-Engineering/INDEX.mdx) - system prompts and structured output"
+```
+
+> **Consolidation in progress.** This module merges the former *AI Agents* and *Agentic AI* foundations. Two pairs of notes still overlap - *What Are AI Agents* / *Agentic Concepts* and *Agent Memory* / *Memory & State* - and will be merged into single notes in the next content pass.
+
+## Chapter Map
+
+| # | Note | Topic | Level |
+|---|------|-------|-------|
+| 1 | [What Are AI Agents](Notes/01-What-Are-AI-Agents.mdx) | Definition, the four pillars, the autonomy spectrum | Beginner |
+| 2 | [Agentic Concepts](Notes/02-Agentic-Concepts.mdx) | Agent vs chatbot vs workflow, core properties, vocabulary | Beginner |
+| 3 | [Anatomy of an AI Agent](Notes/03-Anatomy-of-an-AI-Agent.mdx) | The six components: brain, planning, tools, memory, perception, governance | Beginner |
+| 4 | [The Agent Loop](Notes/04-The-Agent-Loop.mdx) | Loop mechanics at the API level, context growth, termination | Intermediate |
+| 5 | [Tool Use & Function Calling](Notes/05-Tool-Use-and-Function-Calling.mdx) | Schemas, tool chaining, parallel calls, errors, least privilege | Intermediate |
+| 6 | [Agent Memory](Notes/06-Agent-Memory.mdx) | Memory types and the memory lifecycle | Intermediate |
+| 7 | [Memory & State](Notes/07-Memory-and-State.mdx) | Working memory, checkpointing, semantic memory, context management | Intermediate |
+| 8 | [Planning & Reasoning](Notes/08-Planning-and-Reasoning.mdx) | CoT, ReAct, plan-and-execute, Tree of Thoughts, Reflexion, replanning | Intermediate |
+| 9 | [AI Agent Capabilities](Notes/09-Agent-Capabilities.mdx) | Perception, reasoning, planning, memory, tool use, self-correction | Beginner |
+| 10 | [AI Agent Use Cases](Notes/10-Agent-Use-Cases.mdx) | When an agent is the right tool, with domain examples | Beginner |
+| 11 | [Enterprise vs Personal AI Agents](Notes/11-Enterprise-vs-Personal-Agents.mdx) | Production requirements, security, governance | Intermediate |
+| 12 | [Agent Evaluation Basics](Notes/12-Agent-Evaluation-Basics.mdx) | Test sets, tool-call and output checks, LLM-as-judge for one agent | Intermediate |
+
+## Recommended Path
+
+1. Notes 1-3 for the vocabulary and the component model.
+2. Notes 4-5 for the mechanics - read these slowly; everything later builds on them.
+3. Notes 6-8 for memory and planning.
+4. Notes 9-11 to decide *where* agents are worth building.
+5. Note 12, then continue to [MCP & A2A](../13-MCP-and-A2A/INDEX.mdx) for how agents connect to tools and to each other.
+
+Hands-on framework labs live in [Agent Frameworks](../15-Agent-Frameworks/INDEX.mdx); system-level evaluation and security live in [Production Agents](../16-Production-Agents/INDEX.mdx).
+
+## Review
+
+- [Concept Review: Agents](../Interview-Questions/09-Agents.mdx)
+
+---
+
+## Next Topic
+
+Previous: [11 - RAG](../11-RAG/INDEX.mdx) · Next: [13 - MCP & A2A](../13-MCP-and-A2A/INDEX.mdx)
