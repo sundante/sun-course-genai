@@ -1,6 +1,6 @@
 # Q&A Review Bank - Serving & Inference
 
-15 Q&A pairs spanning vLLM/Paged Attention, quantized inference, batching/concurrency/latency, and streaming/TTFT. Use this as a final drill after working through the [Notes](02-vLLM-and-Paged-Attention.mdx) - each question links back to the file with the full explanation.
+22 Q&A pairs spanning vLLM/Paged Attention, quantized inference, batching/concurrency/latency, streaming/TTFT, and the modern serving stack. Use this as a final drill after working through the [Notes](02-vLLM-and-Paged-Attention.mdx) - each question links back to the file with the full explanation.
 
 ---
 
@@ -42,7 +42,7 @@ A: Fine-tune with QLoRA (NF4 training-time quantization), merge the LoRA adapter
 A: Under continuous batching, requests rotate through batch slots as earlier sequences finish - concurrency counts every in-flight request (queued, prefilling, decoding), while `max_num_seqs` only bounds the instantaneous batch occupancy at any single scheduling step. See [Batching, Concurrency & Latency](04-Batching-Concurrency-and-Latency.mdx#batch-size-vs-concurrency).
 
 **Q: Why does aggregate throughput keep increasing past the point where per-request throughput has already degraded noticeably?**
-A: At small batch sizes the GPU has spare compute/memory-bandwidth, so aggregate throughput scales close to linearly with batch size while per-request latency barely moves. Past a hardware-dependent saturation point, per-step decode latency starts increasing with batch size - per-request throughput drops measurably, but aggregate throughput keeps climbing (just more slowly) because more sequences are still sharing each step. See [Batching, Concurrency & Latency](04-Batching-Concurrency-and-Latency.mdx#tokens-sec-vs-latency-per-request).
+A: At small batch sizes the GPU has spare compute/memory-bandwidth, so aggregate throughput scales close to linearly with batch size while per-request latency barely moves. Past a hardware-dependent saturation point, per-step decode latency starts increasing with batch size - per-request throughput drops measurably, but aggregate throughput keeps climbing (just more slowly) because more sequences are still sharing each step. See [Batching, Concurrency & Latency](04-Batching-Concurrency-and-Latency.mdx#tokenssec-vs-latency-per-request).
 
 **Q: What's the correct basis for deciding how many concurrent users one GPU can serve?**
 A: Define an SLO (e.g. p95 per-request throughput or p95 latency), load test at increasing concurrency, and find the concurrency level where that SLO is last satisfied - with a safety margin. Sizing capacity off aggregate throughput alone hides individual users experiencing degraded latency. See [Batching, Concurrency & Latency](04-Batching-Concurrency-and-Latency.mdx#capacity-planning-basics).
@@ -62,3 +62,27 @@ A: TTFT = queue wait + prefill time, and prefill time scales with input prompt l
 
 **Q: Why should TTFT be measured under concurrent load rather than assumed from a single-request benchmark?**
 A: Chunked prefill scheduling means a new request's prefill can be spread across multiple scheduling steps when the server is busy handling other in-flight decodes, increasing that request's TTFT under load - a single-request TTFT measurement with no contention understates what real users experience. See [Streaming & TTFT](05-Streaming-and-TTFT.mdx#how-streaming-interacts-with-batching).
+
+## The Modern Serving Stack
+
+**Q: What is goodput, and why optimize it instead of throughput?**
+A: Goodput is the rate of requests completed within their latency SLOs (e.g. TTFT and TPOT at p99). Throughput alone can be maximized by batching so aggressively that latency targets are missed; goodput measures the useful capacity users actually experience. See [The Modern Serving Stack](07-Modern-Serving-Stack.mdx#metrics-that-define-an-slo).
+
+**Q: Why does disaggregating prefill and decode help, and what does it cost?**
+A: Prefill is compute-bound and decode memory-bound; on shared GPUs a long prefill stalls every in-flight decode, spiking inter-token latency. Separate pools can each be sized and parallelized for their bottleneck. The cost is transferring the KV cache from prefill to decode workers (gigabytes for long prompts on large models) and running two pools, so chunked prefill on unified workers is often enough for small deployments. See [The Modern Serving Stack](07-Modern-Serving-Stack.mdx#prefill-vs-decode-chunking-and-disaggregation).
+
+**Q: What is KV-cache-aware routing?**
+A: A router that sends each request to the replica already holding the longest matching prefix in its KV cache, turning repeated prefixes (system prompts, tool definitions, conversation history) into cache hits instead of recomputation. It matters most for multi-turn and agent traffic. See [The Modern Serving Stack](07-Modern-Serving-Stack.mdx#kv-cache-aware-routing-and-offloading).
+
+**Q: On an H100 fleet, what quantization would you try first for serving, and why?**
+A: FP8 W8A8 - H100 tensor cores run FP8 natively, it roughly halves weight memory and speeds up both prefill and decode, and quality loss is usually negligible on large models. Add an FP8 KV cache to fit more concurrent sequences, and consider INT4/FP4 only if memory is still the constraint and evals show acceptable quality. See [Quantized Inference](03-Quantized-Inference.mdx#fp8-and-fp4-the-default-on-current-gpus).
+
+**Q: When does speculative decoding help least?**
+A: At high batch sizes, where decode approaches compute-bound and the extra verification work competes with useful work; also when the drafter's acceptance rate is low (very creative or unpredictable outputs). It helps most for latency-bound, low-concurrency serving and predictable outputs (code, editing, RAG). See [The Modern Serving Stack](07-Modern-Serving-Stack.mdx#speculative-decoding-in-practice).
+
+**Q: How are large mixture-of-experts models served across many GPUs?**
+A: With expert parallelism: experts are sharded across GPUs and tokens are dispatched and combined via all-to-all communication, usually with data-parallel attention, redundant copies of hot experts for load balance, and large NVLink domains (or optimized libraries such as DeepEP) to keep communication fast. See [The Modern Serving Stack](07-Modern-Serving-Stack.mdx#serving-mixture-of-experts-models).
+
+**Q: Why serve many LoRA adapters over one base model instead of merging each?**
+A: Multi-LoRA serving keeps one copy of the base weights in GPU memory and batches requests for different adapters together with specialized kernels, so hundreds of fine-tunes can share a GPU. Merging each adapter would require a separate full model per fine-tune. See [The Modern Serving Stack](07-Modern-Serving-Stack.mdx#multi-lora-serving).
+

@@ -1,29 +1,13 @@
 # Production Deployment
 
-## Inference Serving Frameworks
+## Serving Engines and Batching
 
-### Concept
+This note is the production view - latency budgets, caching, context-window workarounds, cost and monitoring. The engine-level mechanics each have one home in this module:
 
-Running an LLM in production is fundamentally different from running inference in a notebook. Production requires: high throughput, low latency, batching, model management, and hardware efficiency. Specialized serving frameworks exist for this.
-
-**Framework overview:**
-
-| Framework | Primary strengths | Best for |
-|-----------|------------------|---------|
-| **vLLM** | Paged Attention, highest throughput, OpenAI-compatible API | High-throughput self-hosted serving |
-| **TGI (Text Generation Inference)** | HuggingFace integration, Flash Attention, streaming | HuggingFace models, easy deployment |
-| **Triton Inference Server** | NVIDIA, supports any model format, enterprise features | NVIDIA-heavy production, non-LLM workloads too |
-| **Ollama** | Dead-simple local deployment, GGUF quantized models | Developer machines, prototyping |
-| **LMDeploy (turbomind)** | High speed, GQA support, quantization | High throughput on Ascend/NVIDIA |
-| **SGLang** | Structured generation, RadixAttention for caching | Complex generation pipelines, structured output |
-
-**vLLM** is the most commonly used in production open-source deployments as of 2024. It implements:
-- Paged Attention (see [KV Cache](01-KV-Cache-and-Inference-Optimization.mdx))
-- Continuous batching
-- OpenAI-compatible API (drop-in replacement for OpenAI SDK calls)
-- Tensor parallelism for multi-GPU
-
-> For hands-on depth on this stack - Paged Attention internals, GPTQ/AWQ serving-time quantization, batching/concurrency capacity planning, streaming and TTFT, and a real FastAPI + vLLM code lab with a load test - see [Inference & Serving module](../INDEX.mdx). This file stays at the conceptual overview level; that module doesn't re-derive what's here.
+- **Serving engines compared** (vLLM, SGLang, TensorRT-LLM and others) → [vLLM & Paged Attention](02-vLLM-and-Paged-Attention.mdx#serving-framework-comparison)
+- **PagedAttention, prefix caching, continuous batching** → [KV Cache & Inference](01-KV-Cache-and-Inference-Optimization.mdx) (concepts) and [vLLM & Paged Attention](02-vLLM-and-Paged-Attention.mdx) (how vLLM implements them)
+- **Batch size vs concurrency, capacity planning** → [Batching, Concurrency & Latency](04-Batching-Concurrency-and-Latency.mdx)
+- **Disaggregated prefill/decode, KV-aware routing, FP8/FP4, speculative decoding in practice, MoE serving** → [The Modern Serving Stack](07-Modern-Serving-Stack.mdx)
 
 ---
 
@@ -61,42 +45,6 @@ Tokens-per-second (TPS)    = 1 / per-token-decode-time
 - User-facing chat: TTFT < 500ms, TPS > 15 tokens/second (below this feels slow)
 - Batch processing: throughput matters, latency is secondary
 - Streaming: TTFT is paramount - users see first token immediately
-
----
-
-## Batching Strategies
-
-### Concept
-
-**Static batching:** Wait for N requests, process all together, return all results.
-- Pro: simple, maximum GPU utilization per batch
-- Con: short sequences wait for long ones; any finished sequence wastes its slot
-
-**Continuous batching (in-flight batching):** Fill the batch dynamically:
-- After each decode step, evict any finished sequences
-- Immediately insert the next waiting request
-- GPU always runs at full batch capacity
-
-```mermaid
-sequenceDiagram
-    participant St as Static Batch Slots
-    participant Ct as Continuous Batch Slots
-
-    rect rgb(248, 215, 218)
-    St->>St: Steps 1-3 [A B C D] - A, B finish
-    St->>St: Steps 4-10 [_ _ C D] - 2 empty slots wasted
-    end
-
-    rect rgb(212, 237, 218)
-    Ct->>Ct: Steps 1-3 [A B C D] - A, B finish
-    Ct->>Ct: Step 4 [E F C D] - E, F fill immediately
-    Ct->>Ct: Steps 5-8 [E F C D] - full batch throughout
-    end
-```
-
-**Dynamic batching:** Group incoming requests by similar sequence length to minimize padding waste.
-
-**Chunked prefill:** For very long prompts, process the prefill in chunks to avoid monopolizing GPU during prefill (which would delay other decode steps in the continuous batch).
 
 ---
 

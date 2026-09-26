@@ -1,6 +1,6 @@
 # Code Lab 01 - FastAPI + vLLM Endpoint
 
-A real FastAPI endpoint backed by a vLLM `AsyncLLMEngine`, serving a small open instruction model with both streaming (SSE) and non-streaming responses - plus a concurrent load-testing client that measures tokens/sec, p50/p95 latency, and time-to-first-token under load.
+A real FastAPI endpoint backed by a vLLM V1 `AsyncLLM`, serving a small open instruction model with both streaming (SSE) and non-streaming responses - plus a concurrent load-testing client that measures tokens/sec, p50/p95 latency, and time-to-first-token under load.
 
 ← **Back to Overview:** [Serving & Inference](../INDEX.mdx) · **Back to Concepts:** [vLLM & Paged Attention](../Notes/02-vLLM-and-Paged-Attention.mdx) · [Batching, Concurrency & Latency](../Notes/04-Batching-Concurrency-and-Latency.mdx) · [Streaming & TTFT](../Notes/05-Streaming-and-TTFT.mdx)
 
@@ -11,8 +11,10 @@ A real FastAPI endpoint backed by a vLLM `AsyncLLMEngine`, serving a small open 
 | Property | Detail |
 |---|---|
 | Task | Serve a small open instruction model behind a production-shaped HTTP endpoint |
-| Base model | A small open ~1-2B instruction model (default: `Qwen/Qwen2.5-1.5B-Instruct`) - the same class of model used in [Fine-Tuning Lab](../../05-Fine-Tuning-Lab/CodeLabs/01-QLoRA-Fine-Tune.mdx); a QLoRA-merged model from that lab works equally well as a drop-in `--model` swap |
-| Serving engine | vLLM `AsyncLLMEngine` (Paged Attention + continuous batching) |
+| Base model | A small open instruction model (default: `Qwen/Qwen3-1.7B`) - the same class of model used in [Fine-Tuning Lab](../../05-Fine-Tuning-Lab/CodeLabs/01-QLoRA-Fine-Tune.mdx); a QLoRA-merged model from that lab works equally well as a drop-in `--model` swap |
+| Serving engine | vLLM V1 `AsyncLLM` (Paged Attention + continuous batching) |
+| Verified | `serve.py` compiles and its vLLM imports and calls (`AsyncEngineArgs`, `AsyncLLM.from_engine_args`, `generate`, `shutdown`) were checked against vLLM's source and API docs in September 2026 (vLLM ≥ 0.11, V1 engine only). It has not been run on a GPU as part of this review. |
+| Requests | `{"prompt": "..."}` for raw text, or `{"messages": [...]}` to apply the model's chat template (use this for instruct models) |
 | API layer | FastAPI, `/generate` endpoint supporting `stream=true` (SSE) and `stream=false` (single JSON response) |
 | Load test | Concurrent async client measuring tokens/sec, p50/p95 latency, and TTFT at configurable concurrency |
 | Complexity | Intermediate-Advanced |
@@ -24,7 +26,7 @@ A real FastAPI endpoint backed by a vLLM `AsyncLLMEngine`, serving a small open 
 flowchart TD
     subgraph Serve["serve.py"]
         direction LR
-        Engine["AsyncLLMEngine\n(vLLM, Paged Attention +\ncontinuous batching)"] --> API["FastAPI /generate\nstream=true/false"]
+        Engine["AsyncLLM (V1)\n(vLLM, Paged Attention +\ncontinuous batching)"] --> API["FastAPI /generate\nstream=true/false"]
         API --> SSE["StreamingResponse\n(SSE token-by-token)"]
         API --> JSON["Single JSON response\n(non-streaming)"]
     end
@@ -53,7 +55,7 @@ cd 07-Serving-and-Inference/CodeLabs/01-FastAPI-vLLM-Endpoint
 pip install -r requirements.txt
 
 # Terminal 1: start the server
-python serve.py --model Qwen/Qwen2.5-1.5B-Instruct --port 8000
+python serve.py --model Qwen/Qwen3-1.7B --port 8000
 
 # Terminal 2: run the load test against it
 python load_test.py --url http://localhost:8000/generate --concurrency 16 --requests 64

@@ -1,6 +1,6 @@
 # FastAPI + vLLM Endpoint
 
-A small open instruction model, served behind a real FastAPI endpoint backed by vLLM's `AsyncLLMEngine` - the hands-on counterpart to the [Notes](../../Notes) files. Every concept (Paged Attention + continuous batching under the hood, streaming vs non-streaming responses, TTFT measurement, concurrent load testing) appears here as real, runnable code.
+A small open instruction model, served behind a real FastAPI endpoint backed by vLLM's V1 `AsyncLLM` - the hands-on counterpart to the [Notes](../../Notes) files. Every concept (Paged Attention + continuous batching under the hood, streaming vs non-streaming responses, TTFT measurement, concurrent load testing) appears here as real, runnable code.
 
 ## Architecture
 
@@ -8,7 +8,7 @@ A small open instruction model, served behind a real FastAPI endpoint backed by 
 flowchart TD
     subgraph Server["serve.py"]
         direction LR
-        CLI["--model, --max-num-seqs,\n--gpu-memory-utilization"] --> Engine["AsyncLLMEngine.from_engine_args\n(Paged Attention + continuous batching)"]
+        CLI["--model, --max-num-seqs,\n--gpu-memory-utilization"] --> Engine["AsyncLLM.from_engine_args\n(Paged Attention + continuous batching)"]
         Engine --> App["FastAPI app\n/generate, /health"]
         App --> Stream["stream=true:\nStreamingResponse (SSE)"]
         App --> Single["stream=false:\nsingle JSON response"]
@@ -36,7 +36,7 @@ flowchart TD
 
 ## What This Demonstrates
 
-1. **A real vLLM `AsyncLLMEngine`** - `AsyncEngineArgs(model=..., gpu_memory_utilization=0.85, max_num_seqs=32, enable_prefix_caching=True)` loads the model with Paged Attention and continuous batching active, the same mechanics covered in [vLLM & Paged Attention](../../Notes/02-vLLM-and-Paged-Attention.mdx)
+1. **A real vLLM V1 `AsyncLLM`** - `AsyncEngineArgs(model=..., gpu_memory_utilization=0.85, max_num_seqs=32, enable_prefix_caching=True)` loads the model with Paged Attention and continuous batching active, the same mechanics covered in [vLLM & Paged Attention](../../Notes/02-vLLM-and-Paged-Attention.mdx)
 2. **Streaming via Server-Sent Events** - `/generate` with `stream=true` returns a `StreamingResponse` that yields `data: {...}\n\n` chunks token-by-token, including a `ttft_ms` field on the first chunk, matching the pattern in [Streaming & TTFT](../../Notes/05-Streaming-and-TTFT.mdx#implementing-streaming---sse-and-chunked-responses)
 3. **Non-streaming responses** - `/generate` with `stream=false` consumes the full generator server-side and returns one JSON response, for callers that don't need incremental delivery
 4. **A concurrent load test, not a single-request benchmark** - `load_test.py` fires `--requests` total requests bounded by an `asyncio.Semaphore(--concurrency)`, matching the capacity-planning methodology in [Batching, Concurrency & Latency](../../Notes/04-Batching-Concurrency-and-Latency.mdx#capacity-planning-basics)
@@ -47,7 +47,7 @@ flowchart TD
 
 | File | Purpose |
 |---|---|
-| `serve.py` | Loads a model into a vLLM `AsyncLLMEngine`, exposes a FastAPI `/generate` endpoint with streaming (SSE) and non-streaming modes, plus a `/health` check |
+| `serve.py` | Loads a model into a vLLM V1 `AsyncLLM`, exposes a FastAPI `/generate` endpoint with streaming (SSE) and non-streaming modes, plus a `/health` check |
 | `load_test.py` | Fires concurrent async requests against a running `serve.py` instance, reports tokens/sec, p50/p95 latency, and TTFT |
 | `requirements.txt` | `vllm`, `fastapi`, `uvicorn`, `pydantic`, `httpx` |
 
@@ -57,7 +57,7 @@ flowchart TD
 pip install -r requirements.txt
 
 # Terminal 1: start the server (requires a CUDA GPU)
-python serve.py --model Qwen/Qwen2.5-1.5B-Instruct --port 8000
+python serve.py --model Qwen/Qwen3-1.7B --port 8000
 
 # Or serve a QLoRA-merged model from the Fine-Tuning Lab (module 05) instead of the base model:
 python serve.py --model ./qwen2.5-1.5b-support-bot-merged --port 8000
@@ -71,7 +71,7 @@ curl -X POST http://localhost:8000/generate \
 python load_test.py --url http://localhost:8000/generate --concurrency 16 --requests 64
 ```
 
-vLLM's `AsyncLLMEngine` requires a CUDA GPU - this script is not runnable on CPU-only machines. The default base model (`Qwen/Qwen2.5-1.5B-Instruct`) fits comfortably within a single free-tier T4 GPU (16 GB).
+vLLM's V1 `AsyncLLM` requires a CUDA GPU - this script is not runnable on CPU-only machines. The default base model (`Qwen/Qwen3-1.7B`) fits comfortably within a single free-tier T4 GPU (16 GB).
 
 Expected shape of a `load_test.py` run at moderate concurrency:
 

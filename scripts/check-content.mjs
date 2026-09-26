@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Content integrity checks for src/content. Exits non-zero on any error.
-//   - internal .md/.mdx links resolve to a page listed in nav.yml
+//   - internal .md/.mdx links resolve to a page listed in nav.yml, and #anchors to a heading on that page
 //   - no em dashes in content or site source (house style)
 //   - numeric filename prefixes have no gaps within a directory
 //   - every .mdx file under src/content is reachable from nav.yml (lab README.mdx files excepted)
@@ -8,6 +8,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import yaml from "js-yaml";
+import GithubSlugger from "github-slugger";
 
 const ROOT = process.cwd();
 const CONTENT = path.join(ROOT, "src/content");
@@ -45,6 +46,22 @@ collect(yaml.load(fs.readFileSync(path.join(CONTENT, "nav.yml"), "utf-8")).nav);
 
 const mdxFiles = walk(CONTENT, [".mdx"]);
 
+// Heading ids per page, generated the way rehype-slug does (github-slugger, fences skipped)
+const anchorCache = new Map();
+function anchorsOf(rel) {
+  if (anchorCache.has(rel)) return anchorCache.get(rel);
+  const slugger = new GithubSlugger();
+  const ids = new Set();
+  let inFence = false;
+  for (const line of fs.readFileSync(path.join(CONTENT, rel), "utf-8").split("\n")) {
+    if (/^```/.test(line.trim())) { inFence = !inFence; continue; }
+    const m = !inFence && line.match(/^#{1,6}\s+(.+)/);
+    if (m) ids.add(slugger.slug(m[1].replace(/[*_`]/g, "").trim()));
+  }
+  anchorCache.set(rel, ids);
+  return ids;
+}
+
 // Strip fenced code blocks, returning prose-only text plus the fences themselves
 function splitFences(text) {
   const fences = [];
@@ -69,11 +86,13 @@ for (const file of mdxFiles) {
   for (const m of prose.matchAll(/\]\(([^)\s]+)\)/g)) {
     const url = m[1];
     if (/^[a-z]+:/i.test(url) || url.startsWith("#")) continue;
-    const target = url.split("#")[0];
+    const [target, anchor] = url.split("#");
     if (!target.endsWith(".md") && !target.endsWith(".mdx")) continue;
     const resolved = path.normalize(path.join(path.dirname(rel), target)).replace(/\\/g, "/");
     const candidates = resolved.endsWith(".md") ? [resolved, `${resolved}x`] : [resolved];
-    if (!candidates.some((c) => navPaths.has(c))) errors.push(`broken link in ${rel}: ${url}`);
+    const page = candidates.find((c) => navPaths.has(c));
+    if (!page) errors.push(`broken link in ${rel}: ${url}`);
+    else if (anchor && !anchorsOf(page).has(anchor)) errors.push(`broken anchor in ${rel}: ${url}`);
   }
 
   for (const { lang, body } of fences) {

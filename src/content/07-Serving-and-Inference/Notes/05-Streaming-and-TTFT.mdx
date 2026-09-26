@@ -84,7 +84,7 @@ from fastapi.responses import StreamingResponse
 app = FastAPI()
 
 async def token_stream(prompt: str):
-    async for token in generate_tokens(prompt):  # vLLM AsyncLLMEngine generator
+    async for token in generate_tokens(prompt):  # vLLM AsyncLLM generator
         yield f"data: {json.dumps({'token': token})}\n\n"
     yield "data: [DONE]\n\n"
 
@@ -97,7 +97,7 @@ async def generate(prompt: str, stream: bool = True):
     return {"text": full_text}
 ```
 
-The full working version of this pattern, backed by a real vLLM `AsyncLLMEngine`, is in the [FastAPI + vLLM Endpoint Code Lab](../CodeLabs/01-FastAPI-vLLM-Endpoint.mdx).
+The full working version of this pattern, backed by a real vLLM V1 `AsyncLLM`, is in the [FastAPI + vLLM Endpoint Code Lab](../CodeLabs/01-FastAPI-vLLM-Endpoint.mdx).
 
 ### Measuring TTFT Correctly (Client Side)
 

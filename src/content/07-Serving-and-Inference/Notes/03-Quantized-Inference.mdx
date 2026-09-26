@@ -6,13 +6,13 @@ Inference-time quantization (GPTQ, AWQ) and training-time quantization (NF4/`bit
 
 <div class="audience-biz" markdown="1">
 
-If module 08 taught you to quantize a model so you could afford to fine-tune it on a single GPU, this page is about a related but distinct decision: quantizing an already-trained model purely to make it cheaper and faster to run for everyone who calls it in production. The tools and priorities are different even though the underlying idea - "use fewer bits per weight" - sounds the same.
+If the Fine-Tuning Lab (module 05) taught you to quantize a model so you could afford to fine-tune it on a single GPU, this page is about a related but distinct decision: quantizing an already-trained model purely to make it cheaper and faster to run for everyone who calls it in production. The tools and priorities are different even though the underlying idea - "use fewer bits per weight" - sounds the same.
 
 </div>
 
 <div class="audience-tech" markdown="1">
 
-This page assumes the quantization fundamentals (NF4 bin placement, VRAM formulas, INT8/INT4 tradeoffs) from [Pretraining: GPU & Hardware](../../03-Pretraining/Notes/02-GPU-and-Hardware.mdx) and the QLoRA training-time setup from [Fine-Tuning Lab: LoRA & QLoRA Hands-On](../../05-Fine-Tuning-Lab/Notes/02-LoRA-and-QLoRA-Hands-On.mdx). It is specifically about the serving-side quantization formats (GPTQ, AWQ) and when to reach for them.
+This page assumes the quantization fundamentals (NF4 bin placement, VRAM formulas, INT8/INT4 tradeoffs) from [Pretraining: GPU & Hardware](../../03-Pretraining/Notes/02-GPU-and-Hardware.mdx) and the QLoRA training-time setup from [Fine-Tuning Lab: LoRA & QLoRA Hands-On](../../05-Fine-Tuning-Lab/Notes/02-LoRA-and-QLoRA-Hands-On.mdx). It is specifically about serving-side quantization - FP8 and FP4 on current GPUs, and INT4 weight-only formats (GPTQ, AWQ) - and when to reach for each.
 
 </div>
 
@@ -20,9 +20,9 @@ This page assumes the quantization fundamentals (NF4 bin placement, VRAM formula
 flowchart LR
     FP["🎯 Full-precision\nfine-tuned model"]
     Cal["📊 Calibration set\n(few hundred samples)"]
-    GA["🔢 GPTQ / AWQ\nquantize weights offline"]
-    Art["📦 Quantized artifact\n(INT4, e.g. 25% of BF16 size)"]
-    Serve["🚀 vLLM / TGI serve\nwith quantized kernel"]
+    GA["🔢 llm-compressor\nFP8 / AWQ / GPTQ / NVFP4\nquantize offline"]
+    Art["📦 Quantized checkpoint\n(FP8 ≈ 50%, INT4/FP4 ≈ 25-30%\nof BF16 size)"]
+    Serve["🚀 vLLM / SGLang serve\nwith quantized kernels"]
 
     FP --> Cal --> GA --> Art --> Serve
 
@@ -61,36 +61,51 @@ The distinction is about optimization target and when the quantization decision 
 
 </div>
 
-### Code - Loading a Pre-Quantized AWQ Model in vLLM
+### FP8 and FP4: The Default on Current GPUs
+
+INT4 weight-only formats (GPTQ, AWQ) were the main serving option on A100-era GPUs. On Hopper (H100/H200) and Blackwell (B200/GB200) the tensor cores run FP8 - and on Blackwell FP4 - natively, which changes the default:
+
+| Format | What is quantized | Why use it |
+|---|---|---|
+| **FP8 W8A8** (e.g. `FP8_DYNAMIC`, `FP8_BLOCK`) | Weights and activations to FP8 | ~Half the memory, faster prefill *and* decode on H100+, usually negligible quality loss - the default "safe" choice |
+| **INT4 weight-only (W4A16)** via AWQ or GPTQ | Weights only | Smallest weights on any GPU; decode speed-up (memory-bound); activations stay 16-bit |
+| **NVFP4 / MXFP4** | Weights (and optionally activations) to 4-bit floats with block scales | Blackwell-native 4-bit; gpt-oss ships its MoE weights in MXFP4 |
+| **FP8 KV cache** | The KV cache | Halves KV memory → more concurrent sequences or longer context |
+
+Offline quantization tooling has consolidated around **llm-compressor** (from the vLLM project), which implements FP8, GPTQ, AWQ, SmoothQuant and FP4 recipes and writes checkpoints vLLM loads directly. The older AutoAWQ package is no longer maintained; its functionality now lives in llm-compressor.
+
+### Code - Quantizing Your Own Fine-Tuned Model with llm-compressor
 
 ```python
-from vllm import LLM
-
-# A model already quantized and published in AWQ format (e.g. via AutoAWQ)
-llm = LLM(
-    model="TheBloke/Mistral-7B-Instruct-v0.2-AWQ",
-    quantization="awq",
-    dtype="float16",
-)
-```
-
-### Code - Quantizing Your Own Fine-Tuned Model with AutoAWQ
-
-```python
-from awq import AutoAWQForCausalLM
-from transformers import AutoTokenizer
+from llmcompressor import oneshot
+from llmcompressor.modifiers.quantization import QuantizationModifier
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 model_path = "./my-merged-finetuned-model"
-quant_path = "./my-model-awq"
-
-model = AutoAWQForCausalLM.from_pretrained(model_path)
+model = AutoModelForCausalLM.from_pretrained(model_path, dtype="auto")
 tokenizer = AutoTokenizer.from_pretrained(model_path)
 
-quant_config = {"zero_point": True, "q_group_size": 128, "w_bit": 4, "version": "GEMM"}
-model.quantize(tokenizer, quant_config=quant_config)  # runs calibration internally
+# FP8 weights + dynamic per-token FP8 activations: no calibration data needed
+recipe = QuantizationModifier(targets="Linear", scheme="FP8_DYNAMIC", ignore=["lm_head"])
+oneshot(model=model, recipe=recipe)
 
-model.save_quantized(quant_path)
-tokenizer.save_pretrained(quant_path)
+model.save_pretrained("./my-model-fp8")
+tokenizer.save_pretrained("./my-model-fp8")
+```
+
+For INT4 weight-only, swap the recipe for an AWQ or GPTQ modifier (scheme `W4A16`) and pass a calibration dataset of a few hundred representative samples to `oneshot`.
+
+### Code - Serving the Quantized Checkpoint in vLLM
+
+```python
+from vllm import LLM, SamplingParams
+
+# vLLM reads the quantization format from the checkpoint's config - no flag needed
+llm = LLM(model="./my-model-fp8", kv_cache_dtype="fp8")
+print(llm.generate(["Explain KV caching in one sentence."], SamplingParams(max_tokens=64))[0].outputs[0].text)
+
+# Or quantize a BF16 checkpoint to FP8 on the fly at load time (Hopper or newer):
+# llm = LLM(model="Qwen/Qwen3-8B", quantization="fp8")
 ```
 
 ---
@@ -110,8 +125,10 @@ Rough, workload-dependent ranges (validate against your own eval set before ship
 | Precision | Memory vs BF16 | Typical latency change | Typical quality delta |
 |---|---|---|---|
 | BF16/FP16 (baseline) | 1x | Baseline | Baseline |
-| INT8 (GPTQ/AWQ) | ~50% | ~1.3-1.5x faster | Usually negligible |
-| INT4 (GPTQ/AWQ) | ~25% | ~2-3x faster (with optimized kernels) | Small, task-dependent - often 1-3% on standard benchmarks, more on tasks sensitive to precise numeric/reasoning output |
+| FP8 W8A8 (H100+) | ~50% | Faster prefill and decode | Usually negligible on large models |
+| INT8 (W8A8 or weight-only) | ~50% | ~1.3-1.5x faster | Usually negligible |
+| INT4 weight-only (AWQ/GPTQ) | ~25-30% | Faster decode (memory-bound); little prefill gain | Small, task-dependent - often 1-3% on standard benchmarks, more on precise numeric/reasoning output and on small models |
+| FP4 (NVFP4/MXFP4, Blackwell) | ~25-30% | Fastest on Blackwell tensor cores | Small with good block scaling and calibration; validate on your tasks |
 
 </div>
 
@@ -137,7 +154,7 @@ Quantize for serving when GPU cost or throughput is the binding constraint and y
 - You're still iterating on the model (frequent re-quantization calibration cost outweighs the benefit)
 - Serving volume is low enough that the memory/throughput win doesn't offset the quality risk and operational overhead of maintaining a quantized artifact alongside the full-precision one
 
-**A common production pattern:** merge a LoRA/QLoRA fine-tune (see [LoRA & QLoRA Hands-On](../../05-Fine-Tuning-Lab/Notes/02-LoRA-and-QLoRA-Hands-On.mdx#merging-adapters-vs-serving-separately)) into a full-precision dense model first, then separately AWQ/GPTQ-quantize that merged model for serving - training-time and serving-time quantization decisions are made independently, at different stages of the pipeline.
+**A common production pattern:** merge a LoRA/QLoRA fine-tune (see [LoRA & QLoRA Hands-On](../../05-Fine-Tuning-Lab/Notes/02-LoRA-and-QLoRA-Hands-On.mdx#merging-adapters-vs-serving-separately)) into a full-precision dense model first, then separately quantize that merged model for serving (FP8, AWQ or GPTQ via llm-compressor) - training-time and serving-time quantization decisions are made independently, at different stages of the pipeline.
 
 </div>
 
@@ -152,10 +169,20 @@ NF4/`bitsandbytes` quantization is optimized for training-time memory reduction 
 - NF4/`bitsandbytes` (training-time) and GPTQ/AWQ (serving-time) both quantize to low bit-width but optimize for different goals and use different kernels
 - GPTQ minimizes per-layer reconstruction error via calibration; AWQ preserves activation-important weight channels via per-channel scaling - AWQ often retains accuracy better at equal bit-width
 - INT4 quantization typically costs ~25% of BF16 memory and 2-3x's throughput with optimized kernels, at a small task-dependent quality cost
-- Quantize aggressively for cost-sensitive, quality-tolerant tasks; use INT8 or skip quantization for precision-sensitive tasks (code, math, structured extraction)
+- On H100-class GPUs, FP8 W8A8 (plus an FP8 KV cache) is the default safe serving quantization; FP4 (NVFP4/MXFP4) is the Blackwell-native 4-bit option
+- llm-compressor is the current tool for producing FP8, AWQ, GPTQ and FP4 checkpoints for vLLM (AutoAWQ is no longer maintained)
+- Quantize aggressively for cost-sensitive, quality-tolerant tasks; use FP8/INT8 or skip quantization for precision-sensitive tasks (code, math, structured extraction)
 - A common production pipeline: merge LoRA adapter into a full-precision model, then separately AWQ/GPTQ-quantize the merged model for serving
 
 **Quick recall Q&A:**
 - *Why can't you just serve a `bitsandbytes` NF4-quantized model the same way you'd serve a GPTQ/AWQ model?* You can load it, but it won't get the throughput benefit of the specialized INT4 serving kernels GPTQ/AWQ artifacts are built for - `bitsandbytes` optimizes for training-time memory fit, not serving-time latency.
 - *What does AWQ preserve that plain uniform quantization doesn't?* A small fraction of weight channels identified as disproportionately important based on activation magnitude, kept at effectively higher precision via per-channel scaling before the rest is quantized to INT4.
 - *When would INT8 be the better choice over INT4 for a production deployment?* When the task is precision-sensitive enough that INT4's larger quality delta is unacceptable, but the memory/throughput win of some quantization is still wanted.
+
+## References
+
+- Frantar et al., [GPTQ](https://arxiv.org/abs/2210.17323) (2022); Lin et al., [AWQ](https://arxiv.org/abs/2306.00978) (2023); Xiao et al., [SmoothQuant](https://arxiv.org/abs/2211.10438) (2022)
+- Micikevicius et al., [FP8 Formats for Deep Learning](https://arxiv.org/abs/2209.05433) (2022)
+- vLLM project, [llm-compressor](https://github.com/vllm-project/llm-compressor) and vLLM's [quantization docs](https://docs.vllm.ai/en/latest/features/quantization/)
+
+*Last reviewed: 2026-09*

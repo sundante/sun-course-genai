@@ -17,13 +17,14 @@
 |---|------|-------|-----------|
 | 1 | [KV Cache & Inference](Notes/01-KV-Cache-and-Inference-Optimization.mdx) | KV-cache memory math, MQA/GQA, PagedAttention, prefix caching, speculative decoding, continuous batching | Advanced |
 | 2 | [vLLM & Paged Attention](Notes/02-vLLM-and-Paged-Attention.mdx) | Why vLLM exists, PagedAttention KV-cache memory management, continuous vs static batching | Intermediate |
-| 3 | [Quantized Inference](Notes/03-Quantized-Inference.mdx) | GPTQ/AWQ for serving vs NF4/bitsandbytes for training, accuracy/speed tradeoffs, when to quantize | Intermediate |
+| 3 | [Quantized Inference](Notes/03-Quantized-Inference.mdx) | FP8 and FP4 on current GPUs, AWQ/GPTQ INT4, llm-compressor, NF4 for training vs serving formats, when to quantize | Intermediate |
 | 4 | [Batching, Concurrency & Latency](Notes/04-Batching-Concurrency-and-Latency.mdx) | Batch size vs concurrency, tokens/sec vs per-request latency, capacity planning basics | Intermediate |
 | 5 | [Streaming & TTFT](Notes/05-Streaming-and-TTFT.mdx) | SSE/chunked streaming, TTFT vs total generation time, streaming's interaction with batching | Intermediate |
-| 6 | [Production Deployment](Notes/06-Production-Deployment.mdx) | Serving frameworks, latency budgets, caching hierarchy, cost, monitoring | Advanced |
-| 7 | [Q&A Review Bank](Notes/07-Interview-QA-Bank.mdx) | 15 Q&A pairs across all topics in this module | All levels |
+| 6 | [Production Deployment](Notes/06-Production-Deployment.mdx) | Latency budgets, caching hierarchy, context-window workarounds, cost, monitoring | Advanced |
+| 7 | [The Modern Serving Stack](Notes/07-Modern-Serving-Stack.mdx) | Goodput and SLOs, chunked prefill, prefill/decode disaggregation, KV-aware routing and offloading, FP8/FP4, speculative decoding, MoE and multi-LoRA serving, Dynamo / llm-d | Advanced |
+| 8 | [Q&A Review Bank](Notes/08-Interview-QA-Bank.mdx) | 22 Q&A pairs across all topics in this module | All levels |
 
-> Notes 1 and 6 moved here from the old LLM Models module, so batching and caching are currently explained in more than one note. The LLM-track content pass merges them into one canonical treatment and adds disaggregated prefill/decode, FP8/FP4 serving, EAGLE-style speculative decoding and a vLLM V1 lab.
+> **One home per concept:** KV-cache math, GQA and speculative-decoding theory live in note 1; PagedAttention, prefix caching and the engine comparison in note 2; capacity planning in note 4; the multi-node stack in note 7. Note 6 is the production view and links to the others rather than repeating them.
 
 ## Recommended Learning Paths
 
@@ -38,7 +39,7 @@
 1. [vLLM & Paged Attention](Notes/02-vLLM-and-Paged-Attention.mdx) - PagedAttention and continuous batching are asked constantly
 2. [Batching, Concurrency & Latency](Notes/04-Batching-Concurrency-and-Latency.mdx) - capacity planning math comes up in system design rounds
 3. [Streaming & TTFT](Notes/05-Streaming-and-TTFT.mdx) - TTFT vs throughput is a favorite follow-up
-4. [Q&A Review Bank](Notes/07-Interview-QA-Bank.mdx) - drill all 15 questions
+4. [Q&A Review Bank](Notes/08-Interview-QA-Bank.mdx) - drill all 22 questions
 
 ### Path C: Cost & Capacity Engineering (Advanced)
 1. [Quantized Inference](Notes/03-Quantized-Inference.mdx) - GPTQ/AWQ tradeoffs for shrinking GPU footprint
@@ -47,7 +48,7 @@
 
 ## Resources
 
-- [Q&A Review Bank](Notes/07-Interview-QA-Bank.mdx) - 15 Q&A pairs in this module
+- [Q&A Review Bank](Notes/08-Interview-QA-Bank.mdx) - 22 Q&A pairs in this module
 - [Cross-topic Interview Questions](../Interview-Questions/04-Serving-and-Inference.mdx)
 - [FastAPI + vLLM Endpoint Code Lab](CodeLabs/01-FastAPI-vLLM-Endpoint.mdx) - hands-on streaming/non-streaming vLLM endpoint with a concurrent load test
 

@@ -58,7 +58,7 @@ Research rule (Phases 2-4): every new claim about a model, spec, API, or version
 - [x] 04 Post-training & Reasoning (new) - 3 new chapters (preference optimization, RL for LLMs, reasoning models & test-time compute) + 20-question bank; arXiv IDs spot-checked
 - [x] 05 Fine-Tuning Lab (Qwen3, TRL SFT/DPO/GRPO) - Lab 01 moved to Qwen3-1.7B, all-linear LoRA, `--no-quantize` CPU path (train + benchmark smoke-tested on CPU with transformers 5.17 / peft 0.21); new Lab 02 SFT -> DPO -> GRPO with TRL 1.14 (all three stages smoke-tested on CPU, reward functions unit-tested); HF ecosystem note gains the post-training stack. Full-size runs not GPU-verified
 - [x] 06 Evaluation & Benchmarks (new) - 4 chapters (benchmarks, contamination & leaderboards, LLM-as-judge, building your own evals) + 16-question bank + Eval Harness lab (lm-eval 0.4.13 CLI and paired-bootstrap compare.py smoke-tested on CPU)
-- [ ] 07 Inference & Serving (deduped, vLLM V1 lab)
+- [x] 07 Inference & Serving (deduped, vLLM V1 lab) - new Modern Serving Stack note (goodput, chunked prefill, P/D disaggregation, KV-aware routing/offload, FP8/FP4, speculative decoding, MoE and multi-LoRA serving, Dynamo/llm-d); Quantized Inference rewritten around FP8/FP4 + llm-compressor (AutoAWQ archived May 2025); third copies of engine table/batching removed from Production Deployment; lab moved to V1 `AsyncLLM` (vLLM >= 0.11, API checked against source; not GPU-run) with chat-template requests; QA bank 15 -> 22; `check:content` now validates #anchors
 - [ ] 08 Production Engineering
 - [ ] 09 Cloud Platforms
 
