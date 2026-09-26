@@ -1,6 +1,6 @@
 # Concept Review - Prompt Engineering
 
-Quick-reference Q&A for interview preparation. For in-depth treatment, see the [Q&A Review Bank](../10-Prompt-Engineering/Notes/07-Interview-QA-Bank.mdx).
+Quick-reference Q&A for interview preparation. For in-depth treatment, see the [Q&A Review Bank](../10-Prompt-Engineering/Notes/10-Interview-QA-Bank.mdx).
 
 ---
 
@@ -19,7 +19,7 @@ System prompt: developer-controlled, establishes persona, constraints, and forma
 Not through the API role mechanism, but through adversarial prompting. Role hierarchy is trained via RLHF, not enforced architecturally. Sufficiently crafted user input can cause the model to ignore system instructions - the basis of jailbreaking and prompt injection.
 
 **Q: What is assistant prefill?**  
-Injecting a partial assistant message before generation begins, forcing the model to continue from that starting point. Used to prevent preamble text, force JSON output (start with `{`), or enforce a specific structure.
+Ending the messages with a partial assistant turn (e.g. `{`) so the model continues from it - historically used to force JSON or skip preambles. Several hosted reasoning models now reject prefilled final turns; native structured outputs are the replacement. It still works with open models where you control the chat template.
 
 **Q: What is tokenization and why does it matter for prompting?**  
 Tokenization converts text into subword units (tokens) - what the model actually processes. Numbers, code, and special characters split across token boundaries in non-obvious ways. Context windows are token-counted. Character-level tasks (count letters, reverse strings) fail because the model reasons over tokens, not characters.
@@ -40,8 +40,8 @@ Including 1–N input→output examples before the query. The model learns the t
 **Q: What is label sensitivity in few-shot prompting?**  
 Model performance changes when example labels change, even with equally valid examples. Related: recency bias - the last few examples disproportionately influence the output. Shuffle example order and balance classes to mitigate.
 
-**Q: Research shows few-shot works even with wrong labels. What does this mean?**  
-Few-shot is primarily a format/distribution signal, not knowledge injection (Min et al., 2022). Models learn task structure from examples, not correct label semantics. Format consistency and example diversity matter more than label accuracy.
+**Q: Does few-shot prompting work even with wrong labels?**  
+For smaller models, largely yes: Min et al. (2022) found format and label space mattered more than label correctness. But larger models do learn the input-label mapping - with flipped labels they follow the flips (Wei et al., 2023). With frontier models, wrong labels in examples get copied, so label examples carefully.
 
 **Q: What is Chain-of-Thought prompting?**  
 Instructing the model to produce intermediate reasoning steps before the final answer. Intermediate tokens serve as working memory - each step is written into context and available for subsequent reasoning, extending the model's ability to track state across multi-step problems.
@@ -56,7 +56,7 @@ Thought → Action → Observation loop. The model generates a Thought (internal
 "You are an expert X" shifts response vocabulary, depth, tone, and assumed audience - not the model's actual knowledge. Personas don't inject new knowledge; they shift the response distribution.
 
 **Q: Why is negative prompting less reliable than positive framing?**  
-"Don't do X" requires the model to represent X to negate it - potentially priming the behavior. "Do Y instead" gives a direct positive target. Use negative framing only for prohibitions with no clean positive alternative.
+"Do Y" gives the model a direct target, and vendor prompting guides report positive instructions are followed more reliably than bare prohibitions. Keep "never do X" for genuine hard constraints and pair it with the behaviour you want instead.
 
 ---
 
@@ -66,7 +66,7 @@ Thought → Action → Observation loop. The model generates a Thought (internal
 Extends CoT from a single linear chain to a tree search. Generates multiple candidate reasoning steps at each level, scores them, and explores the best branches - backtracking on dead ends. Cost: O(breadth × depth) LLM calls. Use when CoT consistently fails and the problem has well-defined evaluation criteria.
 
 **Q: What is self-consistency?**  
-Generate N diverse CoT chains (high temperature), take a majority vote on the final answer. Improves accuracy by averaging out errors across chains. Works only for tasks with verifiable, convergent answers. Cost: N× base cost.
+Generate N diverse CoT chains (sampling at temperature > 0), take a majority vote on the final answer. Improves accuracy by averaging out errors across chains. Works only for tasks with verifiable, convergent answers. Cost: N× base cost.
 
 **Q: What is prompt chaining?**  
 Decomposing a complex task into a pipeline of focused prompts, where output of step N feeds step N+1. Benefits: debuggable, composable, parallelizable. Risk: error propagation - validate intermediate outputs.
@@ -119,7 +119,7 @@ Iterative prompt optimization. Maintains a history of (prompt, score) pairs; an 
 A framework where you write programs using LM calls as primitives; DSPy compiles those programs into optimized prompts automatically. Requires a metric function and training data. The prompt is an implementation detail managed by the compiler, not hand-written.
 
 **Q: How do reasoning models change prompting?**  
-Models like o1, o3, Claude extended thinking, and DeepSeek R1 perform internal CoT - explicit CoT instructions and demonstrations are no longer necessary (and can be counterproductive). Prompting shifts to: clear task framing, output format, constraints, and context quality. Prompt engineering evolves rather than disappears.
+Reasoning models think before answering, so "think step by step" and reasoning demonstrations are redundant and prescribing steps often hurts. Prompts shift to goals, constraints, context and output contracts; temperature gives way to a reasoning-effort setting; and reasoning state must be carried through tool loops. See [Prompting Reasoning Models](../10-Prompt-Engineering/Notes/05-Prompting-Reasoning-Models.mdx).
 
 **Q: What is LLM-as-Judge?**  
 Using a strong LLM to evaluate outputs at scale for tasks where "correct" is not binary. Modes: criteria-based (score against a rubric), pairwise (which is better?), reference-based (compare to gold answer). Reliable for relative comparisons; less reliable for absolute scores.

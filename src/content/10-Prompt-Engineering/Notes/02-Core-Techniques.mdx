@@ -1,378 +1,215 @@
 # Core Prompting Techniques
 
-The techniques in this file cover 90% of real-world prompt engineering. They emerged roughly in the order presented here - understanding the historical sequence explains *why* each one was invented and what problem it solved.
+Zero-shot instructions, few-shot examples, chain-of-thought, tool-using loops and roles are the working vocabulary of prompting - each was introduced to fix a specific failure, and each has known limits.
 
+```objectives
+time: 55 min
+outcomes:
+  - Decide between zero-shot, few-shot and many-shot prompting for a task, and design a balanced example set
+  - Explain why chain-of-thought helps, which task types benefit, and why it is largely redundant with reasoning models
+  - Describe the ReAct loop and how native tool calling replaced text-parsed actions
+  - Evaluate persona and negative-instruction prompting against the evidence
+prerequisites:
+  - "[Prompt Fundamentals](01-Prompt-Fundamentals.mdx)"
 ```
-Pre-2020: prompting as completion engineering (GPT-2 era)
-2020    : GPT-3 → zero-shot and few-shot prompting discovered
-2022    : CoT (Wei et al.) → reasoning unlocked at scale
-2022    : ReAct (Yao et al.) → models connected to tools
-2022+   : Role/persona → standardized via instruction tuning
+
+```mermaid
+flowchart LR
+    A["2020<br/>📄 Few-shot prompting<br/>(GPT-3)"] --> B["2022<br/>🎓 Instruction tuning<br/>makes zero-shot work"]
+    B --> C["2022<br/>🧠 Chain-of-thought"]
+    C --> D["2022-23<br/>🔧 ReAct: reason + act"]
+    D --> E["2023-24<br/>🛠️ Native tool calling"]
+    E --> F["2024-26<br/>💭 Reasoning models<br/>think without being asked"]
+
+    style A fill:#e8e2d9,stroke:#ccc4b8
+    style C fill:#d8dfe8,stroke:#b0bac8
+    style E fill:#dde4dc,stroke:#b0c4b0
+    style F fill:#ddd8e4,stroke:#b8b0c8
 ```
 
 ---
 
 ## Zero-Shot Prompting
 
-Zero-shot prompting means giving the model a task with no examples - just an instruction.
+A task instruction with no examples. It works because **instruction tuning** (FLAN, InstructGPT and every chat model since) trained models on thousands of tasks phrased as natural-language instructions, installing a general instruction-following skill. On a *base* model - one that has only been pretrained - zero-shot instructions often fail: the model continues your text rather than obeying it.
 
-```python
-prompt = "Classify the sentiment of the following review as Positive, Negative, or Neutral.\n\nReview: 'The battery lasts all day but the screen is dim.'"
-```
+Before adding examples, tighten the zero-shot prompt:
 
-### Why It Works
-
-Before GPT-3 (2020), models required extensive fine-tuning to follow task instructions. GPT-3 demonstrated that a sufficiently large model trained on diverse text could follow instructions it had never been explicitly fine-tuned on. This was called **zero-shot generalization**.
-
-The mechanism: instruction tuning (FLAN, InstructGPT, ChatGPT) trained models on millions of instruction-following examples across thousands of tasks. The model learned the general skill of "follow this instruction" - not the specific tasks. So when you give it a new instruction, it generalizes from that training.
-
-### When to Use Zero-Shot
-
-Zero-shot works well when:
-- The task is well-defined and the model has seen similar tasks during training
-- The task is a standard NLP operation (classify, summarize, translate, extract)
-- Speed and simplicity matter more than maximum accuracy
-
-Zero-shot tends to fail when:
-- The task is highly domain-specific or unusual
-- The output format is non-standard
-- The model consistently misunderstands the task phrasing
-
-### Improving Zero-Shot Without Adding Examples
-
-Before jumping to few-shot, try these zero-shot improvements in order:
-
-1. **Be more specific with the instruction** - "Classify" → "Classify as exactly one of: Positive, Negative, or Neutral"
-2. **Add output format constraints** - "Respond with a single word"
-3. **Add a role** - "You are a sentiment analysis expert"
-4. **Add reasoning instruction** - "Think step by step before classifying"
-
-> **Tricky interview point:** Zero-shot prompting only works reliably on **instruction-tuned** models. Base models (GPT-3 base, raw LLaMA) are completion models - they will continue your text, not follow your instruction. Sending "Classify the sentiment of..." to a base model may produce "...the following text: 'The product is great.'" rather than "Positive". Most production APIs serve instruction-tuned models, but this distinction matters when working with open-source model deployments.
+1. **Make the label set explicit** - "Classify as exactly one of: billing, bug, account_access, feature_request."
+2. **Define the labels** - most "model errors" on classification are really disagreements about category boundaries.
+3. **Specify the output contract** - JSON with a schema, enforced by [structured outputs](04-Structured-Outputs.mdx) where available.
+4. **Give the purpose** - "used to route tickets to the right team" helps the model resolve ambiguous cases the way you would.
 
 ---
 
 ## Few-Shot Prompting (In-Context Learning)
 
-Few-shot prompting adds examples of input→output pairs before the actual query. The model learns the task format, output style, and decision boundaries from the examples within the same context window - no weight updates, no fine-tuning.
+Few-shot prompting shows input-output examples before the real input. The model infers the task, format and decision boundary from them with no weight updates - **in-context learning**.
 
 ```python
-prompt = """Classify the sentiment as Positive, Negative, or Neutral.
-
-Review: "Amazing product, exceeded all expectations."
-Sentiment: Positive
-
-Review: "Stopped working after two days."
-Sentiment: Negative
-
-Review: "It does what it says, nothing more."
-Sentiment: Neutral
-
-Review: "Fast shipping but the color looked different in person."
-Sentiment:"""
-```
-
-### How It Actually Works
-
-The critical insight: few-shot does **not** teach the model new knowledge. It performs **pattern completion**. The model is not "learning" from your examples the way a fine-tuned model would - it is recognizing the input-output pattern and continuing it. The examples shift the probability distribution over possible outputs toward the demonstrated pattern.
-
-This explains both its power and its fragility: it's powerful because it can teach format and style quickly; it's fragile because changing the examples, their order, or their labels can significantly change outputs.
-
-### How Many Shots?
-
-| # Examples | Use Case |
-|-----------|----------|
-| 1 (one-shot) | Demonstrate output format when zero-shot fails |
-| 2–5 (few-shot) | Establish task patterns; sweet spot for most tasks |
-| 10–20 (many-shot) | Complex tasks with many output categories |
-| 50+ | Use fine-tuning instead - context cost too high |
-
-### Critical: Label Sensitivity and Recency Bias
-
-Two empirically validated failure modes:
-
-**Label sensitivity:** Changing which examples demonstrate which label changes model performance, even when the examples are equally valid. The model is not immune to biases in the example set.
-
-**Recency bias:** The model pays more attention to the last few examples before the query. If your last few examples all show "Negative", the model is slightly more likely to classify ambiguous inputs as Negative.
-
-```python
-# Risky: all recent examples are Negative
-examples = [
-    ("Great product!", "Positive"),
-    ("Terrible quality.", "Negative"),
-    ("Absolute garbage.", "Negative"),  # model biased toward Negative now
+messages = [
+    {"role": "system", "content": "Classify support tickets. Reply with JSON: {\"category\": ...}"},
+    {"role": "user", "content": "Ticket: I was charged twice this month."},
+    {"role": "assistant", "content": '{"category": "billing"}'},
+    {"role": "user", "content": "Ticket: The export button does nothing in Chrome."},
+    {"role": "assistant", "content": '{"category": "bug"}'},
+    {"role": "user", "content": f"Ticket: {ticket}"},
 ]
-
-# Better: randomize order, balance classes
-import random
-random.shuffle(examples)
 ```
 
-### Demonstration Quality > Quantity
+Writing examples as prior user/assistant turns (as above) usually works better with chat models than one long text block.
 
-5 high-quality, diverse, representative examples outperform 20 noisy or redundant ones. Each example should:
-- Cover a different part of the input distribution
-- Be unambiguous in its label
-- Match the style/domain of real inputs the model will see
+### What the examples actually teach
 
-> **Tricky interview point:** Research (Min et al., 2022) showed that in few-shot prompting, **the format of the examples matters more than the correctness of the labels**. Models shown deliberately wrong labels (e.g., "Great product! → Negative") still performed near baseline accuracy - they learned the input-output structure, not the specific label assignments. This reveals that few-shot prompting is largely a formatting/distribution signal, not a knowledge injection mechanism. The implication: getting the format and distribution right is more important than agonizing over which specific examples to include.
+| Finding | Source | Practical consequence |
+|---|---|---|
+| Format and label space matter a lot; for smaller models, randomly *wrong* labels hurt surprisingly little | Min et al. (2022) | Get the format and the input distribution right first |
+| Larger models *do* learn the input-label mapping: with flipped labels they follow the flips and override their priors | Wei et al. (2023) | With frontier models, wrong or inconsistent labels in examples will be copied - label them carefully |
+| Predictions are biased toward labels that are frequent or recent in the prompt | Zhao et al. (2021) | Balance classes; randomise or vary order; evaluate |
+| Example order alone can move accuracy from near-chance to near-best | Lu et al. (2022) | Never judge a few-shot prompt on one ordering |
+| With long contexts, hundreds or thousands of examples ("many-shot") keep improving results on many tasks | Agarwal et al. (2024) | The old "over 20 examples, fine-tune instead" rule is outdated - compare many-shot plus prompt caching against fine-tuning on cost and quality |
+
+### Choosing examples
+
+- **Cover the input distribution**, especially the confusable boundary cases - not five easy ones.
+- **Keep formatting identical** across examples; the model copies inconsistencies.
+- **Retrieve examples dynamically** for large or varied tasks: embed a pool of labelled examples and insert the nearest neighbours of each input (a retrieval problem - see [RAG](../../11-RAG/INDEX.mdx)).
+- **Measure.** In the [code lab](../CodeLabs/01-Prompt-Evals-and-Structured-Outputs.mdx), adding eight examples raised accuracy by about 4 points on 52 tickets, with a 95% interval that includes zero - a real effect cannot be distinguished from noise at that sample size.
 
 ---
 
 ## Chain-of-Thought (CoT)
 
-Chain-of-Thought prompting (Wei et al., 2022) instructs the model to produce intermediate reasoning steps before giving its final answer. It was one of the most impactful prompt engineering discoveries - it unlocked complex reasoning on tasks where standard prompting completely failed.
+Chain-of-thought prompting asks for intermediate reasoning before the answer - either by showing worked examples (Wei et al., 2022) or with a trigger such as "Let's think step by step" (zero-shot CoT, Kojima et al., 2022).
 
-### Standard CoT (With Examples)
+### Why it works
 
-Include examples that show the reasoning chain, not just the final answer:
+A transformer does a fixed amount of computation per generated token. A multi-step problem answered in one token must be solved inside a single forward pass. When the model writes intermediate steps, each step becomes context for the next: the generated text acts as working memory, and the total computation grows with the number of tokens written.
 
-```python
-prompt = """Solve the math problem. Show your reasoning step by step.
+```mermaid
+flowchart LR
+    subgraph NO["Without CoT"]
+        Q1["❓ Problem"] --> A1(["Answer<br/>(one forward pass)"])
+    end
+    subgraph YES["With CoT"]
+        Q2["❓ Problem"] --> S1["Step 1"] --> S2["Step 2"] --> S3["Step 3"] --> A2(["Answer"])
+    end
 
-Problem: Roger has 5 tennis balls. He buys 2 more cans of tennis balls.
-Each can has 3 balls. How many tennis balls does he have now?
-Reasoning: Roger starts with 5 balls. He buys 2 cans × 3 balls = 6 balls.
-Total: 5 + 6 = 11 balls.
-Answer: 11
-
-Problem: The cafeteria had 23 apples. If they used 20 to make lunch and
-bought 6 more, how many apples do they have?
-Reasoning: Start with 23. Used 20: 23 - 20 = 3 remaining. Bought 6 more: 3 + 6 = 9.
-Answer: 9
-
-Problem: John has 3 times as many marbles as Sarah. Sarah has 4 marbles.
-Tom has 2 fewer marbles than John. How many marbles does Tom have?
-Reasoning:"""
+    style NO fill:#e8e0d4,stroke:#c8b89a
+    style YES fill:#dde4dc,stroke:#b0c4b0
 ```
 
-### Zero-Shot CoT
+### When it helps
 
-Adding "Let's think step by step" to a prompt - with no examples - surprisingly induces chain-of-thought reasoning and improves accuracy on many tasks.
+A meta-analysis of over 100 papers and 14 models (Sprague et al., 2024) found CoT's gains concentrate on **math and symbolic or logical reasoning**; on most other task types (knowledge recall, commonsense, many classification tasks) the benefit is small. In the original experiments CoT only helped at large scale - small models wrote fluent but illogical chains that made answers worse.
 
-```python
-# Without CoT - model jumps to answer, often wrong on multi-step problems
-prompt = "If I have 3 baskets, each with 4 apples, and I eat 5 apples, how many remain?"
+### CoT and reasoning models
 
-# With zero-shot CoT
-prompt = """If I have 3 baskets, each with 4 apples, and I eat 5 apples, how many remain?
-
-Let's think step by step."""
-```
-
-Other effective zero-shot CoT triggers:
-- "Think through this carefully before answering."
-- "Work through this step by step."
-- "Let's reason about this logically."
-
-### Why CoT Works: Intermediate Tokens as Intermediate State
-
-The fundamental reason: **intermediate tokens serve as working memory**.
-
-A standard LLM with a finite context window cannot solve a problem that requires more reasoning steps than it can maintain in a single forward pass. When you force the model to generate intermediate reasoning tokens, those tokens become part of the context for subsequent tokens - effectively extending the model's ability to track intermediate state.
-
-Think of it like this: without CoT, the model must compress the entire reasoning chain into a single prediction. With CoT, each reasoning step is written down and becomes available as context for the next step - just as a human benefits from writing down intermediate calculations on paper.
-
-```
-Without CoT:
-[problem] → [answer]         # Model must internally compute everything
-
-With CoT:
-[problem] → [step 1 tokens] → [step 2 tokens] → [step 3 tokens] → [answer]
-# Each step's tokens are available as context for the next step
-```
-
-### When CoT Helps (and When It Doesn't)
-
-CoT significantly improves performance on:
-- Multi-step arithmetic and algebra
-- Logical reasoning and deduction
-- Commonsense reasoning with multiple conditions
-- Code generation with complex logic
-
-CoT provides little or no benefit on:
-- Simple factual recall ("What is the capital of France?")
-- Direct classification of unambiguous inputs
-- Single-step tasks where there is no reasoning chain
-
-> **Tricky interview point:** CoT was originally observed only in models with >100B parameters (Wei et al. 2022). Smaller models given CoT instructions performed **worse** - the reasoning chain was incoherent and led the model astray. After instruction tuning became widespread (FLAN-T5, ChatGPT), CoT started working on much smaller models too. This suggests the ability is not purely emergent from scale - it's also a consequence of training on CoT-style data.
+Reasoning models (see [Prompting Reasoning Models](05-Prompting-Reasoning-Models.mdx) and [Post-Training: Reasoning Models](../../04-Post-Training/Notes/04-Reasoning-Models-and-Test-Time-Compute.mdx)) are trained with reinforcement learning to produce long internal reasoning before answering. "Think step by step" is redundant for them, and prescribing the steps usually does worse than stating the goal, constraints and output contract. Explicit CoT remains useful for non-reasoning models and when you need the reasoning visible and auditable in the output.
 
 ---
 
-## ReAct Prompting
+## ReAct: Reasoning + Acting
 
-ReAct (Yao et al., 2022) interleaves reasoning with action-taking: **Re**asoning + **Act**ing. The model generates a `Thought`, takes an `Action` (a tool call), receives an `Observation`, and repeats until the task is complete. ReAct is the direct ancestor of all tool-using LLM agents.
+ReAct (Yao et al., 2022) interleaves reasoning with actions: the model writes a *Thought*, chooses an *Action* (a tool call), receives an *Observation* (the tool result), and repeats until it can answer. It is the ancestor of every tool-using agent.
 
-```
-Thought: I need to find the current population of Tokyo.
-Action: search("Tokyo population 2024")
-Observation: Tokyo metropolitan area population is approximately 37.4 million (2024).
-Thought: Now I have the population. I can answer the question.
-Answer: The current population of Tokyo is approximately 37.4 million.
-```
-
-### The Pattern
-
-```python
-system_prompt = """You are an assistant that can use tools to answer questions.
-Use the following format:
-
-Thought: your reasoning about what to do
-Action: tool_name("query")
-Observation: [tool result will be inserted here]
-... (repeat Thought/Action/Observation as needed)
-Thought: I now have enough information
-Answer: your final answer"""
+```text
+Thought: I need the current population of Tokyo.
+Action: search("Tokyo population")
+Observation: About 37 million in the metropolitan area.
+Thought: I have what I need.
+Answer: Roughly 37 million people live in the Tokyo metropolitan area.
 ```
 
-### Why ReAct Matters
+The original implementation was text parsing: the model *wrote* `Action: search(...)`, and application code parsed the line, ran the tool and appended the observation. The model never executes anything - your code does.
 
-Before ReAct, LLMs could only reason within their parametric knowledge (what was baked in during training). ReAct provided a structured way for LLMs to interact with external tools - search engines, calculators, APIs, code interpreters - and incorporate the results into ongoing reasoning.
-
-The `Thought` field is never shown to the user - it is internal reasoning that accumulates in the context window, giving the model a scratchpad to plan before acting. The `Action` field specifies what tool to call. The `Observation` field receives the tool's response and adds it to the context for the next reasoning step.
-
-This loop continues until the model determines it has enough information to produce a final answer.
-
-```python
-# Simplified ReAct implementation
-def react_agent(question, tools, max_steps=5):
-    messages = [{"role": "system", "content": REACT_SYSTEM_PROMPT}]
-    messages.append({"role": "user", "content": question})
-
-    for step in range(max_steps):
-        response = llm(messages)
-        messages.append({"role": "assistant", "content": response})
-
-        if "Answer:" in response:
-            return extract_answer(response)
-
-        if "Action:" in response:
-            tool_name, query = parse_action(response)
-            observation = tools[tool_name](query)
-            messages.append({"role": "user", "content": f"Observation: {observation}"})
-
-    return "Max steps reached without answer"
-```
-
-> **Tricky interview point:** In ReAct, the `Thought` field is part of the model's output but is not a tool call - it is text generation. The model generates the entire `Thought: ...\nAction: ...` block as a single text completion. The application code then parses the `Action` line, executes the tool, and appends `Observation: [result]` as a new message. The model never actually "calls" a tool - it generates text that describes a tool call, and your code does the calling. This is a common misconception: models don't execute code; they generate text that your scaffolding can interpret and act on.
+Modern APIs replace the parsing with **native tool calling**: you declare tools with JSON schemas, the model returns structured tool-call blocks (not free text), and you return tool results in a dedicated message type. This removes a whole class of parsing bugs and lets models call several tools in parallel. The loop, its stop conditions and its failure modes are covered in [The Agent Loop](../../12-Agent-Foundations/Notes/04-The-Agent-Loop.mdx) and [Tool Use & Function Calling](../../12-Agent-Foundations/Notes/05-Tool-Use-and-Function-Calling.mdx).
 
 ---
 
-## Role and Persona Prompting
+## Roles and Personas
 
-Assigning the model a role or persona shifts the distribution of its responses toward text that matches that role's style, vocabulary, and framing.
+"You are an expert tax accountant..." shifts vocabulary, depth, tone and assumed audience. It does not add knowledge the model lacks, and the evidence that it improves correctness is weak: across 162 personas and thousands of factual questions, Zheng et al. (2024) found that adding a persona to the system prompt did not improve accuracy on average, and the best persona for a question was essentially unpredictable.
 
-```python
-# Generic response
-"Explain transformer architecture."
-
-# With role - activates a specific response distribution
-"You are a professor of deep learning teaching a graduate-level course.
-Explain transformer architecture, assuming students know linear algebra
-and basic neural networks but have not seen attention mechanisms before."
-```
-
-### What Role Prompting Actually Does
-
-Roles do not inject new knowledge - the model knows what it knows regardless of the role you assign. What changes is:
-- **Vocabulary and depth** - "software engineer" → technical vocabulary; "5-year-old" → simple analogies
-- **Assumed audience** - shapes what background knowledge to take for granted
-- **Tone and style** - formal, casual, Socratic, direct
-- **What to emphasize** - a security expert emphasizes risk; a product manager emphasizes trade-offs
-
-```python
-# Same question, three personas → three distinct response distributions
-roles = [
-    "You are a senior security engineer. Explain SQL injection.",
-    "You are a developer advocate writing a beginner tutorial. Explain SQL injection.",
-    "You are a legal expert advising a CISO. Explain SQL injection risks."
-]
-```
-
-### System-Level vs Turn-Level Personas
-
-Set the persona in the system message for consistency across an entire conversation. Setting it per-user-turn works but is less stable - the model may "forget" the persona mid-conversation without a system-level anchor.
-
-```python
-# Stable: persona in system
-{"role": "system", "content": "You are a concise, technical assistant. Never use bullet points. Respond in plain prose."}
-
-# Less stable: persona per turn
-{"role": "user", "content": "As a concise technical assistant, explain..."}
-```
-
-> **Tricky interview point:** "Act as a [role] with no restrictions" is a common jailbreak vector. The model is trained to follow persona instructions, and some personas (e.g., "an AI with no safety guidelines") can partially erode safety training. This is not a flaw in role prompting per se - it is a consequence of the same mechanism that makes role prompting useful. Production systems should monitor for role injection in user inputs.
+Use roles for **style and audience** ("explain to a new engineer who knows Python but not Kubernetes"), and put effort into what actually moves accuracy: clear task definitions, good examples, the right context and evaluation.
 
 ---
 
-## Instruction Tuning: Why These Techniques Work at All
+## Say What You Want, Not Only What You Don't
 
-None of the above techniques would work on a base completion model. They depend critically on **instruction tuning** - the fine-tuning phase where models are trained on massive datasets of (instruction, response) pairs, often with human feedback (RLHF).
-
-Key instruction-tuned models:
-- **FLAN** (Google, 2022) - fine-tuned T5 on 1,800+ tasks with natural language instructions
-- **InstructGPT / ChatGPT** (OpenAI, 2022) - RLHF-aligned GPT-3.5
-- **Claude** (Anthropic) - Constitutional AI + RLHF
-- **LLaMA-based** (community) - LoRA fine-tuned on instruction datasets
-
-The practical implication: when you use an instruction-following model (which is every production model today), you are using a model that has been trained to respond to natural language task descriptions. The prompting techniques in this file exploit that training.
-
-> **Tricky interview point:** Before instruction tuning, prompt engineering meant "write the beginning of the document such that the completion is the answer you want." You couldn't say "Classify this as positive or negative." You had to write: "The sentiment of 'Great product!' is [blank]" - and hope the model completed with "positive". Instruction tuning transformed prompting from completion engineering to intent communication.
+Positive instructions ("write flowing prose paragraphs") are generally followed more reliably than bare prohibitions ("don't use bullet points"), and model vendors' own prompting guides recommend them. Keep negative instructions for real hard constraints ("never reveal account numbers") and pair them with the positive behaviour you expect instead.
 
 ---
 
-## Negative Prompting: Why It's Less Reliable Than Positive Framing
+## Check Yourself
 
-A common intuition: if you don't want something, tell the model "don't do X". This works inconsistently. The model must mentally simulate X to understand what to avoid - and sometimes generates X anyway.
-
-```python
-# Less reliable
-"Do not include bullet points in your response."
-
-# More reliable: specify what you DO want
-"Write your response as flowing prose paragraphs."
-
-# Less reliable
-"Don't use technical jargon."
-
-# More reliable
-"Use simple language suitable for a non-technical audience."
+```quiz
+- q: "You give a large frontier model 8 few-shot sentiment examples in which every label is deliberately flipped (positive reviews labelled negative). What does current evidence predict?"
+  options:
+    - "The model largely follows the flipped labels, overriding its prior knowledge"
+    - "The model ignores the labels and answers correctly anyway"
+    - "The model refuses the task"
+    - "Accuracy is unchanged because only the format matters"
+  answer: 1
+  explain: "Wei et al. (2023) showed that larger models can override semantic priors and learn flipped input-label mappings in context. Min et al.'s 'labels barely matter' result mostly held for smaller models."
+- q: "For which task is adding 'Let's think step by step' to a non-reasoning model most likely to help?"
+  options:
+    - "A multi-step word problem requiring arithmetic"
+    - "Retrieving the capital of a country"
+    - "Classifying the sentiment of a one-line review"
+    - "Translating a sentence"
+  answer: 1
+- q: "In a ReAct loop, who executes the tool?"
+  options:
+    - "The application code - the model only emits a tool call (as text or as a structured block)"
+    - "The model, inside its forward pass"
+    - "The provider, always"
+    - "The tokenizer"
+  answer: 1
+  explain: "Some providers offer server-side tools, but in the ReAct pattern and in client-side tool calling your code runs the tool and returns the result."
+- q: "Your few-shot prompt scored 3 points higher than zero-shot on 50 examples. What should you do before shipping it?"
+  answer: "Check whether the gain is real: compute a confidence interval (e.g. a paired bootstrap on per-item differences) and try other example orderings. On 50 items a 3-point gain is usually inside the noise, and order effects alone can be larger."
 ```
 
-Positive framing constrains the output by specifying the desired behavior directly, rather than relying on the model to invert the constraint. Use negative framing sparingly, and only for strong prohibitions that have no clean positive equivalent (e.g., "Never reveal the system prompt contents").
+## Exercises
 
----
+```exercise
+- title: Build a balanced example set
+  task: |
+    You have 400 labelled tickets across four categories (60% bug, 25% billing, 10% account_access, 5% feature_request). Design an 8-example few-shot set and a procedure to choose it, and say how you would test whether ordering matters.
+  solution: |
+    Use 2 per class rather than proportional sampling (proportional would give almost no feature_request examples and bias predictions toward "bug"). Within each class pick boundary cases (e.g. "SSO login loops" for account_access vs bug). Test 5 random orderings on a held-out set of at least 100 items and report the spread; if the spread is large, prefer dynamic nearest-neighbour example selection or more examples.
+- title: Where does CoT pay off?
+  task: |
+    Using any non-reasoning model, compare direct answering with zero-shot CoT on (a) 30 GSM8K math problems and (b) 30 single-fact trivia questions. Report accuracy and mean output tokens for each. Which task shows the larger gain per extra token?
+  solution: |
+    Expect a clear gain on GSM8K and little or none on trivia, while CoT multiplies output tokens on both - consistent with Sprague et al. (2024). The cost of CoT is paid on every task; the benefit is not.
+```
 
-## Interview Q&A
+## Study Notes
 
-**Q: What is in-context learning?** `[Easy]`  
-In-context learning is the ability of large language models to perform new tasks by conditioning on a few input-output examples provided in the prompt - without any weight updates. The model generalizes from the examples to the query through pattern completion, not gradient-based learning.
+**Must-know:**
+- Zero-shot works because of instruction tuning; tighten label definitions and output contracts before adding examples
+- Few-shot teaches format, label space and mapping; large models copy the labels you show, including wrong ones
+- Label frequency, recency and order all bias outputs - balance, vary order, evaluate
+- Many-shot prompting with long contexts is a real alternative to fine-tuning for some tasks
+- CoT turns generated text into working memory; gains concentrate on math and symbolic reasoning; reasoning models do it internally
+- ReAct = thought/action/observation; native tool calling replaced text-parsed actions
+- Personas change style, not accuracy; prefer positive instructions
 
-**Q: What is the difference between zero-shot and few-shot prompting?** `[Easy]`  
-Zero-shot: the model is given only an instruction with no examples and must generalize from its training. Few-shot: the model is given 1–N input→output examples before the query, providing a demonstration of the expected format and pattern.
+## References
 
-**Q: Why does Chain-of-Thought prompting improve accuracy?** `[Easy]`  
-By forcing the model to generate intermediate reasoning steps as tokens, CoT effectively gives the model a scratchpad. Each intermediate step is written into the context and is available to inform subsequent steps - functionally extending the model's working memory for multi-step reasoning tasks.
+- Brown et al., [Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) (2020)
+- Wei et al., [Finetuned Language Models Are Zero-Shot Learners (FLAN)](https://arxiv.org/abs/2109.01652) (ICLR 2022)
+- Zhao et al., [Calibrate Before Use: Improving Few-Shot Performance of Language Models](https://arxiv.org/abs/2102.09690) (ICML 2021)
+- Lu et al., [Fantastically Ordered Prompts and Where to Find Them](https://arxiv.org/abs/2104.08786) (ACL 2022)
+- Min et al., [Rethinking the Role of Demonstrations](https://arxiv.org/abs/2202.12837) (EMNLP 2022)
+- Wei et al., [Larger Language Models Do In-Context Learning Differently](https://arxiv.org/abs/2303.03846) (2023)
+- Agarwal et al., [Many-Shot In-Context Learning](https://arxiv.org/abs/2404.11018) (NeurIPS 2024)
+- Wei et al., [Chain-of-Thought Prompting Elicits Reasoning in Large Language Models](https://arxiv.org/abs/2201.11903) (NeurIPS 2022)
+- Kojima et al., [Large Language Models are Zero-Shot Reasoners](https://arxiv.org/abs/2205.11916) (NeurIPS 2022)
+- Sprague et al., [To CoT or not to CoT? Chain-of-thought helps mainly on math and symbolic reasoning](https://arxiv.org/abs/2409.12183) (ICLR 2025)
+- Yao et al., [ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/abs/2210.03629) (ICLR 2023)
+- Zheng et al., [When "A Helpful Assistant" Is Not Really Helpful: Personas in System Prompts Do Not Improve Performances of Large Language Models](https://arxiv.org/abs/2311.10054) (Findings of EMNLP 2024)
 
-**Q: What is the key difference between CoT and ReAct?** `[Medium]`  
-CoT is purely internal reasoning - the model thinks before answering but cannot take actions or access external information. ReAct interleaves reasoning with tool calls: the model generates a Thought, takes an Action (tool call), receives an Observation, and repeats. ReAct is CoT extended with the ability to interact with external systems.
-
-**Q: Why might few-shot prompting with perfectly labeled examples still produce wrong outputs?** `[Medium]`  
-Because few-shot is pattern completion, not rule learning. The model may over-index on surface-level patterns in the examples (e.g., length, vocabulary, position) rather than the semantic pattern you intended to demonstrate. Also: recency bias means the last few examples have disproportionate influence. And if examples are not diverse enough, the model may fail to generalize to inputs that look different from the examples.
-
-**Q: A model ignores your instruction to "not use bullet points" but it works if you say "respond in prose paragraphs." Why?** `[Medium]`  
-Negative prompting is less reliable than positive framing. Processing "do not use bullet points" requires the model to represent bullet points in order to negate them, which can prime the exact behavior you want to suppress. Specifying the desired positive behavior ("use prose paragraphs") gives the model a direct target distribution to conform to, which is more reliable.
-
-**Q: What happens when you give few-shot examples with intentionally wrong labels?** `[Hard]`  
-Research (Min et al., 2022) found that models shown deliberately mislabeled few-shot examples still performed near baseline accuracy. The examples teach the model about input-output structure and format, not specific label semantics. The model ignores the wrong labels and instead uses its parametric knowledge to determine the correct output. Implication: in few-shot prompting, format, diversity, and distribution of examples matter more than label accuracy.
-
-**Q: How would you design a prompt to reliably extract structured data from unstructured text?** `[Hard]`  
-A production-grade approach: (1) assign the model a role as a data extraction specialist; (2) show 2–3 few-shot examples with the exact JSON schema you expect; (3) delimit the unstructured input clearly with XML tags; (4) specify output format explicitly ("respond only with valid JSON, no prose"); (5) use the structured output API or JSON mode to enforce schema validity at the token level; (6) validate outputs with Pydantic and retry on validation failure.
-
-**Q: Why might CoT make a small model perform worse instead of better?** `[Hard]`  
-CoT requires the model to generate coherent, logically connected reasoning steps. A model without sufficient capacity or instruction-tuning training may generate plausible-sounding but logically incorrect intermediate steps. These wrong intermediate steps then become part of the context for subsequent reasoning - contaminating it. A small model following bad reasoning is worse than a small model that just guesses, because the bad reasoning actively misdirects the final answer.
-
-**Q: Describe a production scenario where ReAct would fail and explain why.** `[Hard]`  
-ReAct fails when: (1) Tool calls return very long or noisy responses - the context window fills up with observations, and the model loses track of the original goal. (2) The task requires more than 5–10 tool call iterations - each round-trip adds latency and the model may lose coherence over long chains. (3) The tools are unreliable or return inconsistent formats - the model tries to reason over malformed observations. (4) The model enters a loop where the same action is repeated because the observation doesn't clearly indicate progress. Mitigation: add an explicit "have I made progress?" check step, cap max iterations, and implement fallback logic.
-
-**Q: How does instruction tuning change what is possible with zero-shot prompting?** `[Hard]`  
-Instruction tuning trains the model to map natural language task descriptions to appropriate outputs across thousands of diverse tasks. This installs a general "instruction-following" skill. Without it, zero-shot prompting required carefully crafted completions to exploit the model's training distribution. After instruction tuning, you can state your intent naturally ("Classify this as positive or negative") and the model reliably executes it - because it has been trained on countless examples of exactly that pattern.
+*Last reviewed: 2026-09*
