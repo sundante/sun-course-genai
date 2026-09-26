@@ -4,12 +4,13 @@ Every later module - training, serving, prompting, retrieval, agents - rests on 
 
 ```objectives
 scope: module
-time: 6-8 hours
+time: 8-10 hours
 outcomes:
   - Explain tokenization, next-token prediction and sampling (temperature, top-p) and how they shape model output
   - Draw a decoder-only transformer block - embeddings, positional encoding (RoPE), attention, normalization, feed-forward, residuals - and say what each part does
   - Compute attention by hand and explain multi-head, grouped-query and FlashAttention
   - Compare encoder-only, decoder-only, encoder-decoder and mixture-of-experts models and choose one for a task
+  - Read a current model card - MLA, fine-grained MoE, local-global attention, hybrid layers - and place a model on the landscape
   - Recognize the classic failure modes - hallucination, lost in the middle, sycophancy, repetition - and their mitigations
 prerequisites:
   - Python and basic linear algebra (matrix multiplication, dot products, softmax)
@@ -23,10 +24,10 @@ prerequisites:
 | 2 | [Transformer Architecture](Notes/02-Architecture.mdx) | Embeddings, positional encoding, Pre-LN and RMSNorm, residuals, SwiGLU | Intermediate |
 | 3 | [Attention Mechanisms](Notes/03-Attention-Mechanisms.mdx) | Q/K/V math, multi-head, causal masking, FlashAttention, GQA | Intermediate |
 | 4 | [Model Architecture Types](Notes/04-Model-Architecture-Types.mdx) | Encoder, decoder, encoder-decoder, mixture of experts, model families | Intermediate |
-| 5 | [Failure Modes & Tricky Issues](Notes/05-Failure-Modes-and-Tricky-Issues.mdx) | Forgetting, lost in the middle, hallucination, sycophancy, repetition | Advanced |
-| 6 | [Q&A Review Bank](Notes/06-Interview-QA-Bank.mdx) | 68 questions tagged Easy / Medium / Hard (also covers pretraining, post-training and serving) | All levels |
-
-> **Planned additions (LLM-track content pass):** a *Model Landscape* page (the one place that tracks current model families), and deeper architecture coverage - multi-head latent attention, fine-grained mixture of experts, state-space and hybrid models, and native multimodal models.
+| 5 | [Modern Architectures](Notes/05-Modern-Architectures.mdx) | MLA, fine-grained MoE, local-global attention, attention sinks, SSM hybrids, native multimodality | Advanced |
+| 6 | [Failure Modes & Tricky Issues](Notes/06-Failure-Modes-and-Tricky-Issues.mdx) | Forgetting, lost in the middle, hallucination, sycophancy, repetition | Advanced |
+| 7 | [Model Landscape](Notes/07-Model-Landscape.mdx) | How to read and choose among current models; dated snapshot of the major families | Beginner |
+| 8 | [Q&A Review Bank](Notes/08-Interview-QA-Bank.mdx) | 68 questions tagged Easy / Medium / Hard (also covers pretraining, post-training and serving) | All levels |
 
 ## Where the Rest of the Old "LLM Models" Module Went
 

@@ -72,13 +72,14 @@ flowchart LR
 |-------|--------|---------|----------------|
 | GPT-2 | 1.5B | 1024 | First large-scale CLM demo |
 | GPT-3 | 175B | 2048 | In-context learning at scale |
-| GPT-4 / GPT-4o | ~1.8T (MoE, est.) | 128K | Multimodal, top-tier reasoning |
+| GPT-4 (2023) | Undisclosed | 8K / 32K | Multimodal input, top-tier reasoning at release |
 | LLaMA-2 | 7B–70B | 4K | Open weights, commercial license |
 | LLaMA-3.1 | 8B–405B | 128K | GQA, strong open weights |
 | Gemma 2 | 2B–27B | 8K | Google open, KV-cache sliding window |
 | Mistral 7B | 7B | 32K | GQA + sliding window attention |
 | Phi-3-mini | 3.8B | 128K | High quality from small size |
 | Falcon | 7B–180B | 2K–8K | Multi-Query Attention |
+| DeepSeek-V3 | 671B MoE (37B active) | 128K | MLA, fine-grained MoE, FP8 training |
 
 ---
 
@@ -180,7 +181,7 @@ flowchart LR
 
 **Models:**
 - Mixtral-8x7B: 8 experts, top-2 routing, 47B total / 13B active
-- GPT-4: estimated to be a large MoE (not officially confirmed)
+- DeepSeek-V3, Qwen3-235B-A22B, Llama 4, gpt-oss, Kimi K2: fine-grained MoE with many small experts - see [Modern Architectures](05-Modern-Architectures.mdx)
 - Switch Transformer (Google): pioneered MoE at scale with top-1 routing
 
 ---
@@ -189,26 +190,28 @@ flowchart LR
 
 ### Concept
 
-A reference table for major model families you'll encounter in interviews and production:
+A reference table of influential model families and the architectural idea each is known for. It is deliberately historical - for the current lineup see the [Model Landscape](07-Model-Landscape.mdx). Closed-model internals are listed as undisclosed unless the vendor published them.
 
 | Model Family | Org | Type | Context | Architecture innovations |
 |-------------|-----|------|---------|--------------------------|
 | GPT-2 | OpenAI | Decoder | 1K | First demo of large CLM |
 | GPT-3 | OpenAI | Decoder | 2K | 175B in-context learning |
-| GPT-4 / 4o | OpenAI | Decoder (MoE est.) | 128K | Multimodal, top-tier |
-| GPT-4.1 | OpenAI | Multimodal Transformer | 1M | Extended context, code + general |
+| GPT-4 / 4o | OpenAI | Undisclosed | 128K | Multimodal, top-tier at release |
+| GPT-4.1 | OpenAI | Undisclosed | 1M | Extended context, code + general |
 | LLaMA-2 | Meta | Decoder | 4K | Open weights, GQA (70B) |
 | LLaMA-3 / 3.1 | Meta | Decoder | 8K / 128K | GQA all sizes, 405B |
 | LLaMA-4 Scout | Meta | MoE Transformer | 10M | Ultra-long context, open source |
 | LLaMA-4 Maverick | Meta | MoE Transformer | 1M | Balanced capability/cost |
 | Gemma | Google | Decoder | 8K | Multi-query attention |
 | Gemma 2 | Google | Decoder | 8K | GQA + local+global attn |
-| Gemini 2.5 Pro | Google DeepMind | Multimodal Transformer | 1M | Complex reasoning, multimodal |
+| Gemini 2.5 Pro | Google DeepMind | Undisclosed | 1M | Complex reasoning, multimodal |
+| Gemma 3 | Google | Decoder | 128K | 5:1 local:global attention, QK-norm |
 | Mistral 7B | Mistral | Decoder | 32K | GQA + sliding window |
 | Mixtral 8x7B | Mistral | Decoder (MoE) | 32K | Top-2 MoE, 47B/13B active |
-| Mistral Magistral | Mistral | Dense/Sparse variants | 128K–256K | Cost-efficient reasoning |
 | Phi-3-mini | Microsoft | Decoder | 128K | 3.8B, textbook-quality data |
-| Qwen 3 | Alibaba Cloud | Hybrid sparse MoE | 262K–1M | Multilingual, Asian-language |
+| Qwen3 | Alibaba Cloud | Dense + MoE | 32K native (128K with YaRN) | Hybrid thinking mode, Apache-2.0 |
+| DeepSeek-V3 / R1 | DeepSeek | MoE (671B / 37B active) | 128K | MLA, aux-loss-free balancing, open reasoning (R1) |
+| gpt-oss | OpenAI | MoE (117B / 5.1B active) | 128K | Open weights, MXFP4 experts, banded attention |
 | Command A | Cohere | Retrieval-optimized | 256K | RAG systems, enterprise search |
 | BERT-base | Google | Encoder | 512 | MLM + NSP, bidirectional |
 | RoBERTa | Meta | Encoder | 512 | Better BERT training |
@@ -273,7 +276,7 @@ Beyond architecture type, LLMs are also categorized by the **modalities they han
 - You have limited compute - smaller fine-tuned encoder-decoder can beat large decoder-only for specific structured tasks
 - Translation or summarization at scale where encoder-decoder efficiency matters
 
-**Practical rule of thumb (2024):** Default to decoder-only for new projects. Switch to encoder-only if you need embeddings or fast token classification. Encoder-decoder is a niche choice for legacy systems or very specific seq2seq workloads.
+**Practical rule of thumb:** Default to decoder-only for new projects. Switch to encoder-only if you need embeddings or fast token classification. Encoder-decoder is a niche choice for legacy systems or very specific seq2seq workloads.
 
 ### Code
 
@@ -338,7 +341,7 @@ Beyond the classic encoder/decoder taxonomy, modern AI agent systems draw from a
 | Type | Full Name | What It Is | Key Examples | Primary Use in Agents |
 |------|-----------|-----------|-------------|----------------------|
 | **GPT** | Generative Pretrained Transformer | Standard autoregressive decoder-only LLM | GPT-4, LLaMA, Gemma | General reasoning, planning, text generation |
-| **MoE** | Mixture of Experts | Sparse routing - only top-K expert FFNs fire per token | Mixtral-8x7B, GPT-4 (est.), LLaMA 4 | Scale capacity without proportional compute cost |
+| **MoE** | Mixture of Experts | Sparse routing - only top-K expert FFNs fire per token | Mixtral-8x7B, DeepSeek-V3, Qwen3-235B-A22B, Llama 4 | Scale capacity without proportional compute cost |
 | **LRM** | Large Reasoning Model | LLM fine-tuned (via GRPO/RL) to produce long chain-of-thought reasoning traces before answering | DeepSeek-R1, OpenAI o1/o3, QwQ | Complex math, coding, multi-step logical deduction |
 | **VLM** | Vision-Language Model | Multi-stage model combining a vision encoder (ViT) with a language model; trained on image-text pairs | GPT-4o, Gemini, LLaVA, Qwen-VL | Document parsing, image Q&A, multimodal agent perception |
 | **SLM** | Small Language Model | Compact decoder-only model (1B–7B params) with GQA and efficient attention, deployable on edge/local | Phi-3-mini (3.8B), Gemma 2B, TinyLLaMA | On-device inference, latency-critical agent sub-tasks |
@@ -363,7 +366,7 @@ Beyond the classic encoder/decoder taxonomy, modern AI agent systems draw from a
 - BERT uses bidirectional attention - cannot generate; best for embeddings and classification
 - MoE: sparse routing selects top-K experts per token → large total params, small active params
 - LLaMA-3, Gemma, Mistral all use GQA for efficient KV caching
-- When in doubt in 2024: reach for decoder-only (LLaMA-3, Gemma)
+- When in doubt: reach for a decoder-only model (e.g. Llama, Qwen, Gemma)
 
 **Quick recall Q&A:**
 - *Why can BERT not generate text?* BERT was trained with MLM (predict masked tokens), not CLM (predict next token) - it has no autoregressive generation mechanism.

@@ -52,8 +52,8 @@ Research rule (Phases 2-4): every new claim about a model, spec, API, or version
 - Deferred to Phase 5: `/quiz/[module]` pages stay stubs until quizzes exist across the course
 
 ## Phase 2 - LLM track (modules 01-09)
-- [ ] 01 LLM Foundations + Model Landscape 2026 page
-- [ ] 02 PyTorch for LLMs + GPT-from-scratch lab
+- [x] 01 LLM Foundations + Model Landscape 2026 page - new Modern Architectures (MLA, fine-grained MoE, local-global attention, sinks, hybrids, native multimodality) and Model Landscape notes (vendor pages checked 2026-09-26); stale current-model tables in notes 01/04 replaced with historical or family-level tables
+- [x] 02 PyTorch for LLMs + GPT-from-scratch lab - new PyTorch for LLMs note (APIs checked against torch 2.14); GPT lab run on CPU (tiny preset: loss 5.57 -> 1.85 in 400 steps; --compile path verified); default preset not GPU-verified
 - [ ] 03 Pretraining at Scale (new)
 - [ ] 04 Post-training & Reasoning (new)
 - [ ] 05 Fine-Tuning Lab (Qwen3, TRL SFT/DPO/GRPO)

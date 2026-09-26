@@ -6,8 +6,10 @@
 - Why gradients accumulate by default and when to call `optimizer.zero_grad()`
 - Writing a custom `Dataset` (`__len__` / `__getitem__`) and configuring a `DataLoader` for batching, shuffling, and parallel loading
 - The canonical hand-written training loop: forward pass, loss, `backward()`, `optimizer.step()`, and the train/eval mode switch
-- Checkpointing model and optimizer state, resuming training, and using mixed precision (`autocast` + `GradScaler`) to save VRAM and speed up training
+- Checkpointing model and optimizer state, resuming training, and using mixed precision (`torch.amp.autocast`, bf16, and `GradScaler` for fp16) to save VRAM and speed up training
 - Moving tensors between CPU/GPU, reading CUDA OOM errors, and debugging shape mismatches
+- The LLM toolkit: fused attention (SDPA, FlexAttention), `torch.compile`, bf16, `torchrun` with DDP and FSDP2, and safe/sharded checkpoints
+- Building and training a small modern GPT (RMSNorm, RoPE, GQA, SwiGLU) from scratch
 - Interview-ready answers on all PyTorch fundamentals topics with a dedicated Q&A bank
 
 ## Chapter Map
@@ -19,7 +21,15 @@
 | 3 | [Training Loop From Scratch](Notes/03-Training-Loop-From-Scratch.mdx) | Hand-written epoch/batch loop, `model.train()`/`model.eval()`, validation loop | Intermediate |
 | 4 | [Checkpointing & Mixed Precision](Notes/04-Checkpointing-and-Mixed-Precision.mdx) | `state_dict()` save/load, resuming training, `autocast`, `GradScaler` | Intermediate |
 | 5 | [Debugging & GPU Memory](Notes/05-Debugging-and-GPU-Memory.mdx) | `.to(device)`, CUDA OOM errors, shape-mismatch debugging, `torch.cuda.memory_summary()` | Intermediate |
-| 6 | [Q&A Review Bank](Notes/06-Interview-QA-Bank.mdx) | 18 Q&A pairs across all topics | All levels |
+| 6 | [PyTorch for LLMs](Notes/06-PyTorch-for-LLMs.mdx) | SDPA/FlexAttention, `torch.compile`, bf16, torchrun, DDP vs FSDP2, safetensors and distributed checkpoints, profiling and MFU | Advanced |
+| 7 | [Q&A Review Bank](Notes/07-Interview-QA-Bank.mdx) | 18 Q&A pairs across all topics | All levels |
+
+## Code Labs
+
+| Lab | What you build |
+|-----|----------------|
+| [Raw PyTorch Classifier](CodeLabs/01-Raw-PyTorch-Classifier.mdx) | An MNIST CNN with the hand-written loop, checkpointing and AMP - the warm-up |
+| [GPT From Scratch](CodeLabs/02-GPT-From-Scratch.mdx) | A ~9.5M-parameter modern decoder trained on Tiny Shakespeare - the bridge to Pretraining at Scale |
 
 ## Recommended Learning Paths
 
@@ -33,16 +43,21 @@
 1. [Tensors & Autograd](Notes/01-Tensors-and-Autograd.mdx) - gradient accumulation and `.backward()` questions are very common
 2. [Training Loop From Scratch](Notes/03-Training-Loop-From-Scratch.mdx) - train/eval mode, why `zero_grad()` matters
 3. [Checkpointing & Mixed Precision](Notes/04-Checkpointing-and-Mixed-Precision.mdx) - AMP questions come up in production-focused interviews
-4. [Q&A Review Bank](Notes/06-Interview-QA-Bank.mdx) - drill all 18 questions
+4. [Q&A Review Bank](Notes/07-Interview-QA-Bank.mdx) - drill all 18 questions
 
 ### Path C: Production/Debugging Focus (Advanced)
 1. [Debugging & GPU Memory](Notes/05-Debugging-and-GPU-Memory.mdx) - CUDA OOM triage and shape-mismatch fixes
 2. [Checkpointing & Mixed Precision](Notes/04-Checkpointing-and-Mixed-Precision.mdx) - resuming long-running training jobs
 3. [Raw PyTorch Classifier](CodeLabs/01-Raw-PyTorch-Classifier.mdx) - a complete, checkpointed, AMP-enabled training run
 
+### Path D: Toward LLM Training (Advanced)
+1. [PyTorch for LLMs](Notes/06-PyTorch-for-LLMs.mdx) - fused attention, compile, bf16, FSDP2, checkpoints
+2. [GPT From Scratch](CodeLabs/02-GPT-From-Scratch.mdx) - build and train a modern decoder end to end
+3. Continue to [Pretraining at Scale](../../03-Pretraining/INDEX.mdx)
+
 ## Resources
 
-- [Q&A Review Bank](Notes/06-Interview-QA-Bank.mdx) - 18 Q&A pairs in this module
+- [Q&A Review Bank](Notes/07-Interview-QA-Bank.mdx) - 18 Q&A pairs in this module
 - [Cross-topic Interview Questions](../../Interview-Questions/02-PyTorch-Fundamentals.mdx)
 - [Raw PyTorch Classifier Code Lab](CodeLabs/01-Raw-PyTorch-Classifier.mdx) - hands-on CNN trained end-to-end
 

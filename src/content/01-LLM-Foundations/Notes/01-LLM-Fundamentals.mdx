@@ -139,7 +139,7 @@ Every AI model has a working memory limit called the **context window**. Think o
 - **Cost scales with size.** The AI has to compare every piece of information against every other piece - so a larger context window costs significantly more to run. This is why large-context API calls are priced higher.
 - **Memory doesn't persist between sessions.** Each new conversation starts blank. The AI has no memory of past conversations unless you explicitly provide them in the prompt.
 
-Context window sizes vary widely - from a few thousand words (small chatbots) to over a million words (Gemini 2.5 Pro). Bigger isn't always better; very long contexts can cause the model to lose focus on information buried in the middle.
+Context window sizes vary widely - from a few thousand words (small chatbots) to around a million tokens (current frontier models - see the [Model Landscape](07-Model-Landscape.mdx)). Bigger isn't always better; very long contexts can cause the model to lose focus on information buried in the middle.
 
 </div>
 
@@ -154,19 +154,16 @@ The context window is the maximum number of tokens an LLM can process in a singl
 - A 128K-token context requires 128K × 128K = 16.4 billion attention weight computations per layer
 - This is why extending context is expensive; Flash Attention and architectural tricks mitigate but don't eliminate this
 
-**Context window sizes (representative, 2024):**
+**How context windows grew (for current numbers see the [Model Landscape](07-Model-Landscape.mdx)):**
 
-| Model | Context Window |
-|-------|---------------|
-| GPT-3.5-turbo | 16K |
-| GPT-4 Turbo / GPT-4o | 128K |
-| Claude 3.5 Sonnet | 200K |
-| LLaMA-3.1 8B/70B | 128K |
-| Gemini 1.5 Pro | 1M |
-| Gemma 2 | 8K |
-| Mistral 7B | 32K |
+| Era | Representative models | Context window |
+|-----|----------------------|----------------|
+| 2020 | GPT-3 | 2K |
+| 2023 | GPT-4 (8K/32K), Llama 2 (4K), Claude 2 (100K) | 4K-100K |
+| 2024 | Llama 3.1 (128K), GPT-4o (128K), Gemini 1.5 Pro (1M) | 128K-1M |
+| 2025-2026 | Frontier closed models; Llama 4 Scout (10M advertised) | ~1M standard at the frontier |
 
-**The dirty secret:** A large context window ≠ uniform retrieval quality. The "lost in the middle" problem (see [Failure Modes](05-Failure-Modes-and-Tricky-Issues.mdx)) means models attend poorly to tokens buried in the middle of very long contexts. Putting the most important information at the beginning or end of the context is a practical mitigation.
+**The dirty secret:** A large context window ≠ uniform retrieval quality. The "lost in the middle" problem (see [Failure Modes](06-Failure-Modes-and-Tricky-Issues.mdx)) means models attend poorly to tokens buried in the middle of very long contexts. Putting the most important information at the beginning or end of the context is a practical mitigation.
 
 **Context is shared between input and output.** A 128K window with a 100K-token prompt leaves only 28K tokens for the response.
 
@@ -309,7 +306,7 @@ The emerging pattern is **Mixture of Experts (MoE)** - a way to make very large 
 
 ### Concept
 
-LLMs are categorized by their training architecture and objective. Three core types exist, with a clear market winner in 2024.
+LLMs are categorized by their training architecture and objective. Three core types exist; decoder-only has been the dominant design for generative models since GPT-3.
 
 **1. Decoder-Only (Causal LM)**
 - Architecture: transformer with causal (left-to-right) attention masking
@@ -349,12 +346,12 @@ Full architecture deep dive: see [Transformer Architecture](02-Architecture.mdx)
 
 ## Open Source vs Proprietary
 
-| Dimension | Open Source (LLaMA-3, Gemma, Mistral) | Proprietary (GPT-4o, Claude 3.5, Gemini 1.5) |
+| Dimension | Open weights (e.g. Llama, Qwen, DeepSeek, gpt-oss) | Closed API (e.g. GPT, Claude, Gemini) |
 |-----------|---------------------------------------|-----------------------------------------------|
 | **Per-token cost at scale** | Infrastructure cost only | Provider billing (can be high at volume) |
 | **Data privacy** | Runs on your infra; no data leaves | Data sent to provider API |
 | **Customization** | Full fine-tuning, quantization, architecture changes | Limited fine-tuning API at extra cost |
-| **Frontier capability** | Lags by ~6–12 months | Cutting-edge models |
+| **Frontier capability** | Often within months of closed models on public benchmarks | Usually still leads at the very top |
 | **Ops burden** | You manage GPUs, scaling, updates, failures | Zero ops - just call an API |
 | **Latency control** | Full control; can optimize aggressively | Variable, dependent on provider load |
 | **Compliance/audit** | Can inspect weights and pipeline | Black box; trust provider's policies |
