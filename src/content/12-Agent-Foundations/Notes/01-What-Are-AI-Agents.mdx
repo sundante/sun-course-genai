@@ -1,343 +1,211 @@
 # What Are AI Agents
 
-## The One-Line Definition
+An AI agent is a system in which a language model **directs its own process** - choosing which tools to call, reading the results and deciding what to do next - in a loop, until a goal is met or it stops. This chapter pins down that definition, places agents on the spectrum from a single model call to fully autonomous systems, and gives a test for when an agent is the right design and when it isn't.
 
-An AI Agent is a software system that **perceives its environment, reasons about a goal, plans a sequence of actions, and executes those actions autonomously** - repeating this loop until the goal is achieved or it decides to stop.
+```objectives
+time: 40 min
+outcomes:
+  - Define an agent and distinguish it from a single LLM call, a chain and a workflow by who controls the sequence of steps
+  - Place a product on the autonomy spectrum and name the human's role at each level
+  - Explain why agents became practical in 2025-26, citing measured trends rather than anecdotes
+  - Decide, with reasons, whether a given task should be built as a workflow or an agent
+prerequisites:
+  - "[Prompt & Context Engineering](../../10-Prompt-Engineering/INDEX.mdx) - how models use context"
+  - "[RAG Fundamentals](../../11-RAG/Notes/01-RAG-Fundamentals.mdx) - retrieval as a building block"
+```
+
+## The Definition That Matters: Who Controls the Next Step?
+
+Anthropic's widely used framing (*Building Effective Agents*, 2024) draws the line at control flow:
+
+- **Workflows** are systems where LLMs and tools are orchestrated through **predefined code paths**.
+- **Agents** are systems where LLMs **dynamically direct their own processes and tool usage**.
+
+Both are *agentic systems*; the difference is whether your code or the model decides the next step. OpenAI's guide says the same thing from the user's side: an agent is a system that independently accomplishes a task on your behalf, using a model to manage the workflow, choose tools and recognise when it is done.
 
 <div class="audience-biz" markdown="1">
 
-Think of it like hiring a contractor instead of asking a question. A chatbot answers. An AI Agent *gets things done* - it figures out the steps, uses the right tools, checks its own work, and keeps going until the job is finished. You give it a goal; it drives to the outcome.
+A chatbot answers a question. A workflow runs the same steps every time, like a recipe. An agent is given a goal and works out the steps itself - looking things up, taking actions, checking results and changing course - which makes it far more flexible and also harder to predict, test and govern.
 
 </div>
 
 <div class="audience-tech" markdown="1">
 
-Unlike a single LLM call (RAG, chains, or a function), an agent owns its control loop. It decides what to do next at each step - which tool to call, whether to re-plan, and when the task is complete. The LLM is not writing text; it is making decisions that have real-world effects.
+Mechanically, an agent is **a model using tools in a loop**: call the model, execute any tool calls it emits, append the results to the context, call it again. The loop ends when the model answers without calling a tool, or when a bound (steps, tokens, time, cost) stops it. Everything else - memory, planning, multi-agent orchestration - is built on that loop ([The Agent Loop](03-The-Agent-Loop.mdx)).
 
 </div>
 
 ```mermaid
 flowchart LR
-    subgraph CB["💬 Chatbot"]
-        direction LR
-        U1["User Prompt"] --> L1["Single LLM Call"] --> T1["Text Response"]
+    subgraph L1["💬 Single call"]
+        A1["Prompt"] --> A2["🧠 LLM"] --> A3["Answer"]
     end
-    subgraph AG["🤖 AI Agent"]
-        direction LR
-        G["Goal"] --> P["Perceive"] --> R["Reason"] --> A["Act"]
-        A -->|result feeds back| P
-        A -.->|done| D["✅ Task Complete"]
+    subgraph L2["🔗 Workflow"]
+        B1["Input"] --> B2["🧠 Step 1"] --> B3["🔧 Tool"] --> B4["🧠 Step 2"] --> B5["Output"]
     end
-    CB ~~~ AG
+    subgraph L3["🤖 Agent"]
+        C1["Goal"] --> C2["🧠 LLM decides"]
+        C2 -->|"tool call"| C3["🔧 Execute"]
+        C3 -->|"result"| C2
+        C2 -->|"done"| C4["✅ Answer"]
+    end
+    L1 ~~~ L2 ~~~ L3
+
+    style L1 fill:#e8e2d9,stroke:#ccc4b8
+    style L2 fill:#d8dfe8,stroke:#b0bac8
+    style L3 fill:#dde4dc,stroke:#b0c4b0
 ```
 
----
-
-## Chatbot vs Automation vs AI Agent
-
-<div class="audience-biz" markdown="1">
-
-There are three generations of software that do "smart" things. Most tools you've used are in the first two categories. AI Agents are the third - and the differences are meaningful when you're deciding what to buy or build.
-
-</div>
-
-<div class="audience-tech" markdown="1">
-
-The critical distinction is who owns the control flow. In a chatbot, the user drives every turn. In automation, a script drives a fixed sequence. In an agent, the LLM drives dynamically - selecting tools, re-planning on failure, and deciding when the goal is met.
-
-</div>
-
-| | Chatbot | RPA / Automation Script | AI Agent |
+| | Single LLM call | Workflow (chain / pipeline) | Agent |
 |---|---|---|---|
-| **Input** | Natural language prompt | Predefined trigger / schedule | Natural language goal |
-| **Reasoning** | Single LLM call | Hardcoded logic | Multi-step LLM reasoning |
-| **Actions** | Text response only | Fixed sequence of steps | Dynamic tool selection |
-| **Adaptability** | None - reruns from scratch | None - breaks on unexpected input | High - replans on failure |
-| **Memory** | Context window only | None (stateless) or DB | Short-term + optional long-term |
-| **Example** | "Summarize this email" | "Every day at 9am, send report" | "Research competitors and draft a report, then email it to the team" |
+| **Who picks the next step** | Nobody - one step | Your code, fixed in advance | The model, at run time |
+| **Number of steps** | 1 | Fixed (possibly branching) | Variable, unknown in advance |
+| **Handles surprises** | No | Only the branches you wrote | Yes - it can re-plan |
+| **Cost and latency** | Lowest, predictable | Predictable | Higher, variable |
+| **Testability** | Easy | Easy - each step testable | Hard - many possible trajectories |
+| **Example** | "Classify this ticket" | "Extract fields → validate → write to CRM" | "Resolve this customer's billing problem" |
 
----
+### Vocabulary used throughout the agents track
 
-## The Four Pillars of an AI Agent
-
-### 1. Perceive
-
-<div class="audience-biz" markdown="1">
-
-The agent reads the room. Before it does anything, it takes in everything relevant - your request, what tools have already returned, what it remembers from earlier, and what state the world is in. This is its raw picture of the situation.
-
-</div>
-
-<div class="audience-tech" markdown="1">
-
-The perception layer assembles the context window for the next LLM forward pass: user message, prior tool results, memory retrievals, system prompt, and environment state. Everything the model will reason over comes from here.
-
-</div>
-
-### 2. Reason
-
-<div class="audience-biz" markdown="1">
-
-This is where the agent thinks. It looks at what it knows, considers the goal, and decides what to do next - whether that's asking a question, using a tool, or delivering a result. This is what makes it feel intelligent: it's not following a script, it's thinking through the situation.
-
-</div>
-
-<div class="audience-tech" markdown="1">
-
-The LLM processes the full context window and outputs a decision: a tool call (structured JSON), a final answer, or an intermediate reasoning step. Strategies like ReAct (Reason + Act interleaved), chain-of-thought prompting, or scratchpad reasoning all happen in this step.
-
-</div>
-
-### 3. Plan
-
-<div class="audience-biz" markdown="1">
-
-For complex goals, the agent doesn't just wing it - it breaks the work into steps. Some agents map out the whole plan upfront, others figure it out one step at a time, adapting as new information comes in.
-
-</div>
-
-<div class="audience-tech" markdown="1">
-
-Planning strategies range from Plan-and-Execute (full upfront decomposition, a separate planner LLM) to ReAct (one step at a time, plan embedded in the reasoning trace) to Reflexion (retry with lessons learned from failures). The right strategy depends on task uncertainty.
-
-</div>
-
-### 4. Act
-
-<div class="audience-biz" markdown="1">
-
-This is where the agent actually does something in the world: runs a search, writes a file, sends an email, calls an API. The result of that action comes back and the loop starts again - the agent checks the result and decides what to do next.
-
-</div>
-
-<div class="audience-tech" markdown="1">
-
-The agent emits a tool call; the orchestration runtime executes it in a sandboxed environment and returns the result as a `tool_result` message. The result is appended to the context window and becomes input to the next Perceive step.
-
-</div>
-
-This **Perceive → Reason → Plan → Act** loop runs until the task is complete.
-
-```mermaid
-flowchart LR
-    P(["👁️ Perceive\nTake in context\nand inputs"])
-    R(["🧠 Reason\nInterpret &\ndecide next step"])
-    Pl(["📋 Plan\nSequence the\nsub-tasks"])
-    A(["🚀 Act\nCall a tool,\nsend a request"])
-
-    P --> R --> Pl --> A --> |"result feeds back"| P
-
-    style P fill:#d8dfe8,stroke:#b0bac8
-    style R fill:#e8e0d4,stroke:#c8b89a
-    style Pl fill:#dde4dc,stroke:#b0c4b0
-    style A fill:#ddd8e4,stroke:#b8b0c8
-```
-
----
-
-## Why an LLM + a Database Is Not an Agent
-
-<div class="audience-biz" markdown="1">
-
-Connecting an AI to a knowledge base gives it access to your information - but it still can't *do* anything with it. A knowledgeable assistant who can't make phone calls, run calculations, or send emails isn't very useful for getting work done. An AI Agent needs all four working together: a reasoning engine, live data access, the ability to run actions, and specialized capabilities for specific tasks.
-
-</div>
-
-<div class="audience-tech" markdown="1">
-
-A common architecture mistake: LLM + vector store = agent. It doesn't. The LLM can retrieve context, but it has no execution capability. A functioning agent requires all four layers orchestrated together - and swapping in a smarter model without the surrounding system produces a smarter chatbot, not an agent.
-
-</div>
-
-| Component | Role |
+| Term | Meaning |
 |---|---|
-| **AI Model** | Reasoning engine - interprets context and decides what to do |
-| **Data Layer** | Real-time access to live systems (databases, APIs, documents) |
-| **Code Execution** | Runs computations, calls APIs, performs actions |
-| **Specialized Models** | Handles domain-specific sub-tasks (vision, classification, scoring) |
-
----
-
-## The Four Characteristics of an AI Agent
-
-### Reflective
-
-<div class="audience-biz" markdown="1">
-
-An AI Agent watches its own performance and adjusts course when something isn't working - without you having to tell it. If the approach isn't landing, it tries a different one.
-
-</div>
-
-<div class="audience-tech" markdown="1">
-
-The agent monitors output quality against its success criteria and can trigger a re-plan. This is distinct from Reflexion (explicit retry with memory of failure) - reflection can be built into the reasoning prompt or implemented as an evaluation step before committing an action.
-
-</div>
-
-### Interactive
-
-<div class="audience-biz" markdown="1">
-
-An AI Agent can communicate with multiple parties at once - you, other AI systems, external tools - and adapts how it talks depending on who it's talking to. It doesn't get confused when the conversation involves several moving parts.
-
-</div>
-
-<div class="audience-tech" markdown="1">
-
-Multi-party interaction includes human-agent turns, agent-agent messaging (in multi-agent systems), and tool call/result cycles. The agent manages context state across all of these simultaneously within its context window.
-
-</div>
-
-### Reactive and Proactive
-
-<div class="audience-biz" markdown="1">
-
-A reactive agent responds to what you ask. A proactive agent spots a problem coming and handles it before you even notice. The best production agents do both - they answer your questions *and* flag issues you didn't think to ask about.
-
-</div>
-
-<div class="audience-tech" markdown="1">
-
-Reactive behavior: the agent responds to user input or tool results. Proactive behavior: the agent detects a missing precondition mid-task and resolves it autonomously rather than failing (e.g., requesting a missing credential before a tool call would fail). Both require state tracking across the task loop.
-
-</div>
-
-### Autonomous
-
-<div class="audience-biz" markdown="1">
-
-Once you give it a goal, the agent figures out the middle steps itself. You don't need to hold its hand through each decision. Most production systems are *semi-autonomous* - the agent handles the routine steps and checks in on the important ones.
-
-</div>
-
-<div class="audience-tech" markdown="1">
-
-Autonomy level determines the interrupt frequency: Copilot (every step requires human acceptance), Assistant (interrupt at pre-defined decision gates), Autonomous (interrupt only at task start/end or on error). The orchestration layer implements the interrupt conditions.
-
-</div>
-
----
-
-## The Perception Component
-
-<div class="audience-biz" markdown="1">
-
-The richer the agent's senses, the fuller its picture of the situation. A well-designed agent doesn't just read your text message - it can also look at images you attach, listen to audio, and read structured data like spreadsheets. All of this gets processed together before it decides what to do.
-
-**Example:** A health monitoring agent takes in your text question, a photo of your meal, and your activity data - processes all of it - and gives advice that considers the full picture, not just what you typed.
-
-</div>
-
-<div class="audience-tech" markdown="1">
-
-The perception layer normalizes multiple input modalities into a unified context representation:
-- **Text** → tokenization → token embeddings
-- **Images** → vision encoder → patch embeddings appended to context
-- **Audio** → spectrogram encoder → sequence embeddings
-- **Structured data** → schema-aware serialization → text representation
-
-All modalities converge into the context window before the LLM forward pass. The agent's "state" is the assembled context at the start of each loop iteration.
-
-</div>
-
-**Perception cycle:**
-
-```mermaid
-flowchart LR
-    S["📡 Sensors\nText · Audio\nImages · Data"]
-    Pr["⚙️ Processing\nNormalize &\nExtract"]
-    Su["🔄 State Update\nAgent context\nrefreshed"]
-    LLM["🧠 LLM\nReady to reason"]
-
-    S --> Pr --> Su --> LLM
-
-    style S fill:#dde4dc,stroke:#b0c4b0
-    style Pr fill:#e8e0d4,stroke:#c8b89a
-    style Su fill:#d8dfe8,stroke:#b0bac8
-    style LLM fill:#e8e2d9,stroke:#ccc4b8
-```
-
----
-
-## Anatomy of an AI Agent
-
-An AI agent is a system of six coordinated components - Brain, Planning, Tools, Memory, Perception, and Governance - working together in a continuous loop.
-
-→ See [Anatomy of an AI Agent](03-Anatomy-of-an-AI-Agent.mdx) for a deep dive into each component with diagrams and examples.
+| **Tool** | A function the model can ask your code to run, described by a name, description and JSON Schema |
+| **Harness** (or scaffold) | The code around the model: the loop, tool execution, context management, bounds, guardrails |
+| **Trajectory** | The full sequence of model outputs, tool calls and results in one run |
+| **Episode** | One run of an agent on one task, from goal to termination |
+| **Environment** | Everything the agent acts on through tools - APIs, files, a browser, a database |
+| **Augmented LLM** | A model with retrieval, tools and memory available - the building block of both workflows and agents |
+| **Compound AI system** | Any system combining several model calls, retrievers and tools (Zaharia et al., BAIR 2024) |
 
 ---
 
 ## The Autonomy Spectrum
 
-Not all AI systems are fully autonomous agents. Think of it as a dial:
+Autonomy is a design decision, separate from capability: a highly capable agent can still be deployed with a human approving every action. Feng, McDonald and Zhang (2025) define five levels by **the role the user plays**:
+
+| Level | User role | What the agent does | Example |
+|---|---|---|---|
+| 1 | **Operator** | Acts only when the user directs each step | Inline code completion |
+| 2 | **Collaborator** | Works alongside the user; either can take the lead | Pair-programming in an IDE chat |
+| 3 | **Consultant** | Leads the work and asks the user for input and preferences | A research agent that checks scope with you |
+| 4 | **Approver** | Works independently; the user approves high-risk actions | A support agent that needs sign-off before issuing refunds |
+| 5 | **Observer** | Acts fully autonomously; the user can monitor and stop it | A nightly dependency-upgrade agent opening pull requests |
 
 ```mermaid
 flowchart LR
-    C["🤝 Copilot\n─────────────\nHuman drives\nevery step\n─────────────\nGitHub Copilot\nCode suggestions"]
-    As["👤 Assistant\n─────────────\nHuman confirms\nkey decisions\n─────────────\nChatGPT plugins\nSingle tool call"]
-    Au["🤖 Autonomous Agent\n─────────────\nAgent decides\nend-to-end\n─────────────\nCrewAI · AutoGPT\nFull research loop"]
+    O["🕹️ Operator"] --> C["🤝 Collaborator"] --> Co["💡 Consultant"] --> A["✅ Approver"] --> Ob["👀 Observer"]
 
-    C -->|"more autonomy →"| As -->|"more autonomy →"| Au
-
-    style C fill:#dde4dc,stroke:#b0c4b0
-    style As fill:#e8e0d4,stroke:#c8b89a
-    style Au fill:#ddd8e4,stroke:#b8b0c8
+    style O fill:#e8e2d9,stroke:#ccc4b8
+    style C fill:#d8dfe8,stroke:#b0bac8
+    style Co fill:#dde4dc,stroke:#b0c4b0
+    style A fill:#e8e0d4,stroke:#c8b89a
+    style Ob fill:#ddd8e4,stroke:#b8b0c8
 ```
 
-<div class="audience-biz" markdown="1">
+Most production agents that take consequential actions sit at **Approver**: they do the work, and a person confirms the irreversible steps (payments, deletions, external messages). Move right only as your evaluation evidence and guardrails justify it ([Agents in Practice](07-Agents-in-Practice.mdx)).
 
-When evaluating AI products, the autonomy level tells you how much oversight you need. **Copilot** tools make you faster - you still drive every decision. **Assistant** tools handle the routine steps and bring you in on the important calls. **Autonomous** tools run end-to-end with minimal check-ins. Most enterprise deployments start at Assistant level - high value, manageable risk.
+---
 
-</div>
+## Why Agents Became Practical
 
-<div class="audience-tech" markdown="1">
+Agents built on 2023 models (AutoGPT, BabyAGI) were famous for looping, losing the goal and hallucinating actions. Three things changed:
 
-Autonomy level determines the system's error recovery strategy and oversight requirements. Copilot: human-in-the-loop at every step (zero autonomous actions). Assistant: interrupt conditions defined at design time (e.g., "pause before sending any external communication"). Autonomous: interrupt only on unrecoverable error or task completion - requires robust guardrails, sandboxing, and output validation at every step.
+1. **Models trained for tool use and long horizons.** Frontier models are now post-trained with reinforcement learning on multi-step agentic tasks (coding, browsing, tool use), not just on single responses - see [Post-training & Reasoning](../../04-Post-Training/INDEX.mdx).
+2. **Reasoning between actions.** Reasoning models think before each tool call and can interleave thinking with tool results, which makes planning and error recovery native rather than prompted ([Planning & Reasoning](06-Planning-and-Reasoning.mdx)).
+3. **Measured, steady progress on long tasks.** METR measured the length of software tasks (in human time) that models complete with 50% reliability: it has doubled roughly every seven months since 2019, reaching about 50 minutes for early-2025 frontier models (Kwa et al., 2025).
 
-</div>
+Two cautions follow from the same evidence. The 50% horizon is a *coin-flip* reliability level - production needs far higher. And reliability over repeated attempts is much lower than single-attempt success: on τ-bench, agents that solved a task once often failed it on a rerun ([Agent Evaluation Basics](08-Agent-Evaluation-Basics.mdx)).
 
-| Level | Human Role | Best For |
+---
+
+## Workflow or Agent? A Decision Test
+
+The best first design is usually the simplest one that works. Anthropic's advice: start with a single well-prompted call with retrieval; add a workflow when the steps are known; use an agent only when the steps genuinely can't be predicted.
+
+```mermaid
+flowchart TD
+    Q1{"Can one well-prompted call<br/>(with retrieval) do it?"} -->|"yes"| S["💬 Single call"]
+    Q1 -->|"no"| Q2{"Can you write down the steps<br/>in advance?"}
+    Q2 -->|"yes"| W["🔗 Workflow<br/>(chain, router, parallel)"]
+    Q2 -->|"no"| Q3{"Is the value worth the extra<br/>cost, latency and risk?"}
+    Q3 -->|"no"| W2["🔗 Workflow + human<br/>for the hard cases"]
+    Q3 -->|"yes"| Q4{"Can you verify outcomes and<br/>bound the damage of mistakes?"}
+    Q4 -->|"no"| H["🙋 Keep a human in the loop<br/>(Approver level)"]
+    Q4 -->|"yes"| A["🤖 Agent"]
+
+    style S fill:#e8e2d9,stroke:#ccc4b8
+    style W fill:#d8dfe8,stroke:#b0bac8
+    style W2 fill:#d8dfe8,stroke:#b0bac8
+    style H fill:#e8e0d4,stroke:#c8b89a
+    style A fill:#dde4dc,stroke:#b0c4b0
+```
+
+| Signal | Points to a workflow | Points to an agent |
 |---|---|---|
-| **Copilot** | Reviews and accepts every suggestion | Code completion, writing assistance |
-| **Assistant** | Approves key decisions, reviews output | Customer support, data lookup |
-| **Autonomous** | Sets goal and reviews final result | Complex research, multi-step pipelines |
+| Path through the task | Same every time | Depends on what you find along the way |
+| Inputs | Structured, well-defined | Open-ended requests |
+| Cost of a wrong step | High and irreversible | Recoverable, or gated by approval |
+| Volume and latency needs | High volume, tight latency | Lower volume, minutes are acceptable |
+| How you know it worked | Per-step checks | An outcome check (tests pass, ticket resolved) |
 
-Most production systems sit at **Assistant** level - agents that can do significant work but check in at decision points.
-
----
-
-## What Makes an AI Agent "Intelligent"
-
-<div class="audience-biz" markdown="1">
-
-The intelligence isn't in any single feature - it's in how these five capabilities work together:
-
-1. **Tool use** - It can look things up, run calculations, and take actions instead of guessing. It knows what it doesn't know.
-2. **Multi-step reasoning** - It can tackle a goal that requires ten steps, not just one. It doesn't forget the goal halfway through.
-3. **Self-correction** - When something goes wrong, it notices and tries a different approach - without you telling it to.
-4. **Memory** - It remembers what it did five steps ago and connects the dots across a long task.
-5. **Goal orientation** - It stays focused on *your* objective, even when the path to get there turns out to be more complex than expected.
-
-</div>
-
-<div class="audience-tech" markdown="1">
-
-The intelligence emerges from composing five mechanisms:
-
-1. **Tool use** - Grounding via external function calls prevents hallucination on factual queries; the model knows the boundary of its parametric knowledge.
-2. **Multi-step reasoning** - The agent decomposes complex goals into a sequence of tool calls and reasoning steps, maintaining task state across the entire sequence.
-3. **Self-correction** - Output validation (schema checks, semantic evaluation) can trigger re-planning; Reflexion explicitly stores failure observations and conditions the retry.
-4. **Memory** - In-context window for working state; external vector/KV stores for facts and episode recall that exceed the context limit.
-5. **Goal orientation** - The system prompt and task description anchor every reasoning step; the agent re-checks against the original goal before committing to each action.
-
-</div>
+Coding is the canonical agent use case for exactly these reasons: the path is unpredictable, but the outcome is verifiable (tests, type checks) and changes are reversible (version control). The workflow patterns themselves - chaining, routing, parallelization, orchestrator-workers, evaluator-optimizer - are covered in [Agent Patterns](../../14-Agent-Patterns/INDEX.mdx).
 
 ---
+
+## Check Yourself
+
+```quiz
+- q: "What distinguishes an agent from a workflow in Anthropic's definition?"
+  options:
+    - "In an agent the model decides the next step at run time; in a workflow the code path is predefined"
+    - "Agents use tools and workflows don't"
+    - "Agents use larger models"
+    - "Workflows can't call more than one model"
+  answer: 1
+  explain: "Both can call tools and several models. The difference is control flow: predefined code paths versus the model directing its own process."
+- q: "A support agent drafts refunds and a human must confirm each one before it is issued. Which autonomy level is this?"
+  options: ["Operator", "Consultant", "Approver", "Observer"]
+  answer: 3
+  explain: "The agent works independently and the user approves high-risk actions."
+- q: "METR's time-horizon measure reports the task length models complete with what reliability?"
+  options: ["50%", "80%", "95%", "99%"]
+  answer: 1
+  explain: "It is the 50% horizon - a useful trend line, but well below production reliability."
+- q: "A team wants an 'agent' that extracts five fields from invoices and writes them to an ERP. What would you build first, and why?"
+  answer: "A workflow: the steps are known and identical every time (extract with structured output → validate → write). It is cheaper, faster and testable per step. Add an agentic fallback, or a human, only for invoices that fail validation."
+```
+
+## Exercises
+
+```exercise
+- title: Classify five systems
+  task: |
+    For each system, say whether it is a single call, a workflow or an agent, and give its autonomy level: (a) a spam filter; (b) a pipeline that transcribes a call, summarises it and files the summary in the CRM; (c) an IDE assistant that edits several files to fix a failing test and asks before running shell commands; (d) a bot that answers HR questions from a policy index; (e) a nightly job where a model reads error logs, decides which service to investigate and opens a ticket with its findings.
+  solution: |
+    (a) Single call, no user role in the loop. (b) Workflow - fixed three steps. (c) Agent; Approver level for shell commands, Collaborator overall. (d) Single call with retrieval (RAG), or a small workflow; not an agent unless it decides among tools. (e) Agent - it chooses what to investigate - at Observer level, which is acceptable because its only side effect is opening a ticket.
+- title: Argue the design
+  task: |
+    Pick a task from your own work that someone has proposed "building an agent" for. Walk it through the decision test in this chapter and write half a page recommending single call, workflow or agent, including the autonomy level and what would have to be true to move one level to the right.
+  solution: |
+    A good answer names the steps (or explains why they can't be named), estimates the cost of a wrong action, identifies an outcome check, and states the evidence needed to raise autonomy - for example "pass^4 above 95% on 200 representative tasks and no policy violations in a four-week shadow deployment".
+```
 
 ## Study Notes
 
-- An agent is defined by its **autonomy** - it decides what to do next, not just responds
-- The core loop is always **Perceive → Reason → Plan → Act → repeat**
-- The LLM is the **brain**, tools are the **hands**, memory is the **notepad**
-- Autonomy exists on a **spectrum** - most production agents are semi-autonomous (human confirms key decisions)
-- The difference between an agent and a chain: a **chain** has a fixed sequence, an **agent** decides the sequence dynamically
+- Agent = a model directing its own process: tools in a loop, deciding the next step itself
+- Workflow = predefined code paths around model calls; both are "agentic systems"
+- The difference is who controls the sequence of steps - not whether tools or multiple models are used
+- Autonomy levels by user role: operator, collaborator, consultant, approver, observer; consequential agents usually start at approver
+- Agents became practical through RL post-training on agentic tasks, reasoning between actions, and a steady rise in task horizon (≈7-month doubling, METR)
+- Start with the simplest design; use an agent when steps can't be predicted, outcomes can be verified, and mistakes can be bounded
+
+## References
+
+- Anthropic, [Building Effective Agents](https://www.anthropic.com/engineering/building-effective-agents) (Dec 2024)
+- OpenAI, [A Practical Guide to Building Agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf) (2025)
+- Zaharia et al., [The Shift from Models to Compound AI Systems](https://bair.berkeley.edu/blog/2024/02/18/compound-ai-systems/) (BAIR, 2024)
+- Feng, McDonald and Zhang, [Levels of Autonomy for AI Agents](https://arxiv.org/abs/2506.12469) (2025)
+- Kwa et al., [Measuring AI Ability to Complete Long Software Tasks](https://arxiv.org/abs/2503.14499) (METR, 2025)
+- Yao et al., [τ-bench: A Benchmark for Tool-Agent-User Interaction in Real-World Domains](https://arxiv.org/abs/2406.12045) (2024)
+
+*Last reviewed: 2026-09*

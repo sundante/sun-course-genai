@@ -135,7 +135,7 @@ Long-running tasks need more than one continuous conversation - they need checkp
 
 <div class="audience-tech" markdown="1">
 
-**Generator-evaluator separation.** Don't rely on an agent to grade its own output - generators exhibit self-bias, rating their own work more favorably than an independent judge would. A dedicated evaluator agent, calibrated for skepticism and given explicit grading criteria, catches what self-review misses. This is the same principle behind [Design Patterns: Reflexion](../../14-Agent-Patterns/Notes/02-Design-Patterns.mdx) in Agentic AI, applied at the harness level rather than the prompt level.
+**Generator-evaluator separation.** Don't rely on an agent to grade its own output - generators exhibit self-bias, rating their own work more favorably than an independent judge would. A dedicated evaluator agent, calibrated for skepticism and given explicit grading criteria, catches what self-review misses. This is the same principle behind [Design Patterns: Reflexion](../../14-Agent-Patterns/Notes/02-Single-Agent-Patterns.mdx) in Agentic AI, applied at the harness level rather than the prompt level.
 
 **Context resets with structured handoffs.** Rather than letting one session run until it degrades, clear the context window entirely at a phase boundary and start a fresh agent - passing state through a structured handoff (a file, a summary, a task ledger) instead of raw conversation history. This addresses the coherence loss that comes from a context window stretched too thin.
 

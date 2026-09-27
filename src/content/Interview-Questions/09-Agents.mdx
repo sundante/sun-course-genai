@@ -29,10 +29,10 @@ Tool use (function calling) is a mechanism - the LLM outputs a function signatur
 ## Framework-Specific Questions
 
 **Q: What is the ReAct pattern?**
-Reasoning + Acting interleaved. The agent generates a Thought (internal reasoning about what to do), then an Action (tool call), then receives an Observation (tool result), then reasons again. This cycle continues until a Final Answer is reached. Compared to pure CoT, ReAct has access to real-world information via tools, making it far more capable for information-retrieval and multi-step tasks.
+Reasoning + Acting interleaved. The agent generates a Thought (internal reasoning about what to do), then an Action (tool call), then receives an Observation (tool result), then reasons again. This cycle continues until a Final Answer is reached. Compared to pure CoT, ReAct has access to real-world information via tools. With reasoning models the "Thought" happens in the model's own reasoning between tool calls, so you no longer prompt for visible thought lines.
 
 **Q: When would you choose LangGraph over LangChain?**
-Use LangGraph when: (1) your agent needs cycles - revisiting earlier steps, retrying, looping; (2) you need persistent, checkpointed state across a long conversation; (3) you want explicit control over agent flow with branching logic; (4) you're building multi-agent systems with defined coordination. LangChain is sufficient for linear pipelines. LangGraph is built on top of LangChain - it's an extension, not a replacement.
+They are layers of one stack. LangGraph is the low-level runtime: explicit graphs of nodes and edges with cycles, checkpointed state, interrupts for human approval and durable resumption. LangChain 1.x's `create_agent` is a higher-level agent built *on* LangGraph, with middleware for common needs. Start with `create_agent` for a standard tool-calling agent; drop to LangGraph when you need custom control flow, multi-agent graphs or fine-grained state. See [Agent Frameworks](../15-Agent-Frameworks/INDEX.mdx).
 
 **Q: What is CrewAI's role-based model and when is it useful?**
 In CrewAI, each agent has a defined Role, Goal, and Backstory - this primes the LLM to behave like a specific persona (researcher, writer, critic). Agents are assigned Tasks and can delegate to each other. This model shines when a problem naturally decomposes into distinct professional roles. It's more intuitive to design than explicit graph-based flows but offers less low-level control.
@@ -42,7 +42,7 @@ In CrewAI, each agent has a defined Role, Goal, and Backstory - this primes the 
 ## Architecture and Design Questions
 
 **Q: How do agents maintain state and memory?**
-Four types: (1) In-context - information in the current prompt window (short-lived). (2) External storage - key-value stores, databases, vector stores (persistent). (3) Episodic memory - past conversation summaries retrieved at the start of new sessions. (4) Semantic memory - a knowledge base the agent can query. Most production systems combine all four.
+By scope: working memory (the current context window), task state (plan and progress for one thread, checkpointed so the agent can resume), and long-term memory across sessions. Long-term memory comes in three kinds: semantic (facts and preferences), episodic (records of past episodes) and procedural (instructions and skills). Long-term memories are written on the hot path by the agent's own memory tools or in the background by an extraction process. See [Agent Memory](../12-Agent-Foundations/Notes/05-Agent-Memory.mdx).
 
 **Q: What are the main failure modes of LLM agents?**
 (1) Tool call loops - agent keeps calling the same tool without progress. (2) Hallucinated tool arguments - LLM generates invalid parameters. (3) Context overflow - accumulated observations exceed the context window. (4) Overconfident stopping - agent decides it's done before the task is complete. (5) Cascading errors - early tool call failure derails the entire plan. Mitigation: max-step limits, result validation, structured error handling, human-in-the-loop checkpoints.

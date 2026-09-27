@@ -3,13 +3,13 @@
 ## Conceptual Questions
 
 **Q: What exactly is the Model Context Protocol?**
-MCP is an open standard (originally from Anthropic) that defines a universal interface between LLM applications (hosts) and external data/tool providers (servers). Think of it as "USB-C for AI integrations" - instead of every AI application building custom connectors for every tool, both sides implement MCP once and interoperate. The protocol covers tool invocation, resource access, prompts, and sampling.
+MCP is an open standard (originally from Anthropic) that defines a universal interface between LLM applications (hosts) and external data/tool providers (servers). Think of it as "USB-C for AI integrations" - instead of every AI application building custom connectors for every tool, both sides implement MCP once and interoperate. The protocol covers tools, resources, prompts, elicitation, notifications and OAuth-based authorization. It is governed by the Agentic AI Foundation (Linux Foundation); the current revision is 2026-07-28.
 
 **Q: What problem does MCP solve?**
 The N×M integration problem. Without MCP, connecting N AI applications to M data sources requires N×M custom integrations. With MCP, each data source builds one MCP server, each AI application builds one MCP host client - reducing to N+M integrations. It also standardizes the interface so servers built for one LLM host work with any other.
 
 **Q: How is MCP different from function calling?**
-Function calling is a model-level mechanism - the LLM outputs a structured JSON call, your application executes it. It's one-directional and requires you to write custom integration logic for every tool. MCP is a full bidirectional protocol with: defined message formats, capability negotiation, resource streaming, built-in lifecycle management, and a server ecosystem. MCP uses function calling internally but adds the protocol layer on top.
+Function calling is a model-level mechanism - the LLM outputs a structured JSON call, your application executes it. It's one-directional and requires you to write custom integration logic for every tool. MCP is a protocol between applications and tool/data servers: defined message formats (JSON-RPC), discovery (`tools/list`), capability and version negotiation, standard transports, elicitation, authorization and a server ecosystem. The host converts MCP tool definitions into its model's function-calling format; the model still emits function calls, and the host executes them on the MCP server.
 
 **Q: Who implements MCP servers vs hosts?**
 Servers: developers who own data sources or tools (e.g., a company exposing its database, a SaaS product exposing its API). Servers are published once and reused. Hosts: LLM application developers (e.g., Claude Desktop, IDEs, custom chat UIs). Hosts discover and connect to servers. End users benefit without needing to understand the protocol.
@@ -22,20 +22,20 @@ Servers: developers who own data sources or tools (e.g., a company exposing its 
 (1) **Tools**: functions the LLM can invoke - e.g., run a database query, call an API. (2) **Resources**: data sources the server exposes for the LLM to read - e.g., file contents, database records. Resources are URI-addressable. (3) **Prompts**: reusable prompt templates the server can provide - e.g., a standard code review prompt. Together these cover actions, data, and guidance.
 
 **Q: How does the MCP client-server architecture work?**
-The host application runs an MCP client. When the user makes a request that needs external data or tools, the LLM decides which MCP server to contact. The client sends JSON-RPC messages to the server (over stdio, HTTP, or WebSocket). The server processes the request and returns results. The LLM incorporates the results into its response. The host manages the lifecycle of server connections.
+The host application runs an MCP client. When the user makes a request that needs external data or tools, the LLM decides which MCP server to contact. The client sends JSON-RPC messages to the server (over stdio or Streamable HTTP). The server processes the request and returns results. The LLM incorporates the results into its response. Since the 2026-07-28 revision the protocol is stateless - each request carries its version and capabilities, with no handshake or session - so remote servers scale like ordinary web services.
 
 **Q: What transport protocols does MCP use?**
-MCP uses JSON-RPC 2.0 as the message format over three transport options: (1) stdio - for local servers running as child processes; (2) HTTP with SSE (Server-Sent Events) - for remote servers; (3) WebSocket - for bidirectional streaming. The transport is abstracted from the application logic.
+MCP uses JSON-RPC 2.0 over two standard transports: (1) stdio - the host launches a local server as a subprocess; (2) Streamable HTTP - one POST endpoint per server, answering each request with JSON or a per-request SSE stream. The older HTTP+SSE transport (2024-11-05) is deprecated; WebSocket was never a standard MCP transport. See [Architecture & Protocol](../13-MCP-and-A2A/Notes/02-Architecture-and-Protocol.mdx).
 
 ---
 
 ## Implementation Questions
 
 **Q: What are the steps to build an MCP server?**
-(1) Choose SDK (official SDKs for Python, TypeScript). (2) Define your tools: name, description, input schema (JSON Schema). (3) Implement tool handlers - the actual logic that executes when the tool is called. (4) Define resources (optional): URIs, MIME types, and read handlers. (5) Register server and start transport. (6) Test with MCP Inspector or a compatible host.
+(1) Choose an SDK (Tier 1: TypeScript, Python, Go, C#; in Python v2 the high-level class is `MCPServer`, formerly `FastMCP`). (2) Define your tools: name, description, input schema (JSON Schema). (3) Implement tool handlers - the actual logic that executes when the tool is called. (4) Define resources (optional): URIs, MIME types, and read handlers. (5) Register server and start transport. (6) Test with MCP Inspector or a compatible host.
 
 **Q: What security considerations apply to MCP?**
-(1) Authentication - MCP servers should require credentials (API keys, OAuth tokens) passed by the host. (2) Authorization - servers should enforce least-privilege. (3) Input validation - tool arguments come from an LLM; validate them before executing. (4) Prompt injection via resources - malicious content in a returned resource could attempt to override LLM instructions. (5) Scope control - define which tools are available to which hosts/users.
+(1) Authentication - remote servers act as OAuth 2.1 resource servers and accept only tokens issued for them (no token passthrough); stdio servers take credentials from the environment. (2) Authorization - least-privilege scopes with step-up. (3) Input validation - tool arguments come from an LLM; validate them before executing. (4) Prompt injection via resources - malicious content in a returned resource could attempt to override LLM instructions. (5) Scope control - define which tools are available to which hosts/users. (6) Tool poisoning and rug pulls - hidden instructions in tool descriptions, or descriptions changed after approval; pin and review definitions. See [MCP Security](../13-MCP-and-A2A/Notes/06-MCP-Security.mdx).
 
 **Q: Can MCP be used with models other than Claude?**
 Yes. MCP is model-agnostic - it's a protocol between applications and data sources, not between a specific LLM and tools. Any LLM application that implements the MCP host interface can connect to any MCP server. This model-agnosticism is a key design goal.
@@ -45,7 +45,7 @@ Yes. MCP is model-agnostic - it's a protocol between applications and data sourc
 ## Scenario Questions
 
 **Q: How would you design an MCP server for an enterprise database?**
-Define tools for each operation: `query_database(sql)`, `list_tables()`, `describe_table(name)`. Implement authorization: only allow read operations for AI use, require a service account, enforce row-level security. Add resources: expose schema documentation as readable resources. Add rate limiting and connection pooling. Consider a query allow-list to prevent dangerous operations.
+Prefer task-shaped tools (`find_customer_orders(customer_id)`, `revenue_by_month(year)`) over a raw `query_database(sql)`, which is an injection and exfiltration risk; if free-form SQL is essential, run it read-only against a restricted view with a statement allow-list and row limits. Authenticate users with OAuth and enforce row-level security as the user, not a shared service account. Add resources: expose schema documentation as readable resources. Add rate limiting and connection pooling. Consider a query allow-list to prevent dangerous operations.
 
 **Q: When would you choose MCP over direct function calling?**
 Choose MCP when: (1) you want tools reusable across multiple AI applications; (2) you're building a tool/data ecosystem others will use; (3) you want standardized capability discovery and lifecycle management. Choose direct function calling for: simple app-specific tools that won't be shared, or when the MCP protocol overhead isn't justified.

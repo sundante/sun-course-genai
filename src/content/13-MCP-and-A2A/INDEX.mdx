@@ -1,100 +1,77 @@
 # 13 - MCP & A2A
-*The Model Context Protocol - a complete learning and reference guide. Agent-to-agent (A2A) coverage arrives in the agents-track content pass.*
 
----
+The two open protocols that connect agents to the world. The **Model Context Protocol (MCP)** standardises how AI applications discover and use tools, data and prompts from any provider; **Agent2Agent (A2A)** standardises how one agent delegates tasks to another. This module teaches both at their current versions - MCP **2026-07-28** (the stateless revision) and A2A **v1.0** - from the wire format to authorization, security and working code.
 
-## Welcome to Your MCP Masterclass
-
-You're about to embark on a comprehensive journey through the **Model Context Protocol (MCP)**-the open standard transforming how AI systems connect with data and tools.
-
-Whether you're a **developer** building AI applications, an **engineer** implementing integrations, or an **enthusiast** curious about the future of AI, this guide will take you from foundational concepts to practical implementation.
-
-### What You'll Learn
-
-- Understand the problem that MCP solves
-- Master the architecture and core components
-- Explore real-world capabilities and use cases
-- Grasp the strategic importance of MCP adoption
-- Build your first MCP server and integrations
-- Ace technical interviews with confidence
-
----
-
-## Your Learning Journey
-
-### Start Here - Choose Your Path
-
-#### Fundamentals
-Begin with the essentials
-
-1. [The Problem](Notes/01-The-Problem.mdx) - What does MCP solve?
-2. [Definition](Notes/02-Definition.mdx) - What is MCP exactly?
-3. [The Solution](Notes/03-The-Solution.mdx) - How it works
-
-#### Building Knowledge
-Deepen your expertise
-
-4. [Components](Notes/04-Components.mdx) - The architecture
-5. [Capabilities](Notes/05-Capabilities.mdx) - Real-world uses
-6. [Why It Matters](Notes/06-Why-MCP-Matters.mdx) - Strategic value
-
-#### Deep Dive & Practice
-
-7. [Architecture Deep-Dive](Notes/07-Architecture-Deep-Dive.mdx) - Technical internals
-8. [Getting Started](Notes/08-Getting-Started.mdx) - Your hands-on guide
-9. [Q&A Review Bank](Notes/09-QA-Review-Bank.mdx) - 60 curated Q&A pairs
-10. [Interview Q&A](../Interview-Questions/10-MCP.mdx) - Quick-reference questions
-
----
-
-## The Complete Chapter List
-
-| Chapter | Title | Focus |
-|---------|-------|-------|
-| 1 | [The Problem](Notes/01-The-Problem.mdx) | Problem identification |
-| 2 | [Definition](Notes/02-Definition.mdx) | Architecture & concepts |
-| 3 | [The Solution](Notes/03-The-Solution.mdx) | How MCP solves problems |
-| 4 | [Components](Notes/04-Components.mdx) | Technical components |
-| 5 | [Capabilities](Notes/05-Capabilities.mdx) | Use cases & applications |
-| 6 | [Why It Matters](Notes/06-Why-MCP-Matters.mdx) | Strategic importance |
-| 7 | [Architecture Deep-Dive](Notes/07-Architecture-Deep-Dive.mdx) | Technical internals |
-| 8 | [Getting Started](Notes/08-Getting-Started.mdx) | Learning path & projects |
-| 9 | [Q&A Review Bank](Notes/09-QA-Review-Bank.mdx) | 60 Q&A pairs, Easy → Hard |
-| 10 | [Interview Q&A](../Interview-Questions/10-MCP.mdx) | Quick-reference questions |
-
----
-
-## What You'll Master
-
-```
-THE COMPLETE MCP LEARNING ARC
-
-1. CONTEXT       → Understand the problem
-2. DEFINITION    → Learn what MCP is
-3. SOLUTION      → See how it solves problems
-4. COMPONENTS    → Master the architecture
-5. CAPABILITY    → Explore what's possible
-6. IMPACT        → Understand why it matters
-7. ARCHITECTURE  → Deep-dive the internals
-8. EXECUTION     → Build your first project
-9. Q&A BANK      → 48 curated review questions
-10. MASTERY      → Answer technical questions
+```objectives
+scope: module
+time: 8-10 hours (notes + lab)
+outcomes:
+  - Explain what MCP and A2A standardise, how they differ from function calling and from each other, and when each is the right tool
+  - Read and write MCP messages under the stateless 2026-07-28 protocol, including multi round-trip requests and elicitation
+  - Build, test and deploy an MCP server and connect its tools to an agent loop
+  - Secure MCP deployments - OAuth 2.1 resource servers, audience-bound tokens, least-privilege scopes - and defend against tool poisoning, rug pulls and prompt injection
+  - Publish an agent over A2A and follow its tasks from a client agent
+prerequisites:
+  - "[Agent Foundations](../12-Agent-Foundations/INDEX.mdx) - the agent loop and tool use"
+  - "Basic HTTP, JSON and OAuth concepts"
 ```
 
+## Where This Module Fits
+
+```mermaid
+flowchart LR
+    W["01 Why MCP"] --> A["02 Architecture<br/>& protocol"]
+    A --> F["03 Server<br/>features"]
+    A --> AU["04 Authorization"]
+    F --> B["05 Building servers<br/>& clients"]
+    AU --> S["06 Security"]
+    B --> S
+    W --> A2A["07 A2A"]
+    B -.-> LAB["🧪 Lab: MCP server,<br/>agent, poisoning, A2A"]
+    S -.-> LAB
+    A2A -.-> LAB
+
+    style W fill:#e8e2d9,stroke:#ccc4b8
+    style A fill:#d8dfe8,stroke:#b0bac8
+    style S fill:#e8e0d4,stroke:#c8b89a
+    style A2A fill:#ddd8e4,stroke:#b8b0c8
+    style LAB fill:#dde4dc,stroke:#b0c4b0
+```
+
+## Chapter Map
+
+| # | Chapter | You will learn | Time |
+|---|---|---|---|
+| 1 | [Why MCP](Notes/01-Why-MCP.mdx) | The M×N problem, hosts/clients/servers, tools/resources/prompts, MCP vs function calling vs A2A, governance and versions | 35 min |
+| 2 | [Architecture & Protocol](Notes/02-Architecture-and-Protocol.mdx) | JSON-RPC, the stateless 2026-07-28 core, stdio and Streamable HTTP, multi round-trip requests, caching, extensions, compatibility | 60 min |
+| 3 | [Server Features](Notes/03-Server-Features.mdx) | Tools, annotations, structured output, handles, resources, prompts, elicitation; deprecated roots/sampling/logging | 55 min |
+| 4 | [Authorization](Notes/04-Authorization.mdx) | OAuth 2.1 flow, RFC 9728/8707/9207, Client ID Metadata Documents, scopes and step-up, no token passthrough | 50 min |
+| 5 | [Building Servers & Clients](Notes/05-Building-Servers-and-Clients.mdx) | Python SDK v2, FastMCP, Inspector, connecting tools to agents, hosted connectors, deployment | 55 min |
+| 6 | [MCP Security](Notes/06-MCP-Security.mdx) | Tool poisoning, rug pulls, shadowing, prompt injection, the lethal trifecta, supply chain, defences | 50 min |
+| 7 | [The A2A Protocol](Notes/07-A2A-Protocol.mdx) | Agent Cards, tasks and states, update delivery, bindings, security, A2A in code | 45 min |
+| 8 | [Q&A Review Bank](Notes/08-Interview-QA-Bank.mdx) | 40 questions across the module | 50 min |
+
+## Code Lab
+
+| Lab | What you build | Runs on |
+|---|---|---|
+| [MCP Server & Agent](CodeLabs/01-MCP-Server-and-Agent.mdx) | The Lab 12 shop as an MCP server (stdio and HTTP); a client tour of every feature; an agent using its tools; a measured tool-poisoning attack and a harness guard; the agent published over A2A | Laptop; a local OpenAI-compatible model (or any hosted API) for the agent parts |
+
+## Mini-Project
+
+Expose **a real system you use** (a ticket tracker, a wiki, a database) as an MCP server and put an agent on it:
+
+1. 4-8 task-shaped tools with strict schemas, honest annotations and structured output; one resource and one prompt.
+2. Elicitation (form mode) before every destructive action; URL mode if a secret or third-party authorization is needed.
+3. Streamable HTTP deployment with OAuth as a resource server (a local Keycloak or your identity provider), least-privilege scopes and a scope-filtered tool list.
+4. An evaluation of an agent using the server (20+ tasks, state-based checks) and a security test: a poisoned description and an injected instruction inside data the tools return - with your defence and before/after attack success rates.
+5. A short threat model covering the lethal trifecta for your server.
+
+## Review
+
+- [Q&A Review Bank](Notes/08-Interview-QA-Bank.mdx) - consolidated questions for this module
+- [Knowledge Check: MCP](../Interview-Questions/10-MCP.mdx) - short-form review
+
 ---
-
-## Other Resources
-
-- [Implementation Examples](Implementation/) - Working code samples
-
----
-
-**Format:** Modular, expandable Markdown guide
-**Learning Style:** Progressive, structured, practical
-**Status:** Active & Growing
-
----
-
-## Next Topic
 
 Previous: [12 - Agent Foundations](../12-Agent-Foundations/INDEX.mdx) · Next: [14 - Agent Patterns & Multi-Agent](../14-Agent-Patterns/INDEX.mdx)

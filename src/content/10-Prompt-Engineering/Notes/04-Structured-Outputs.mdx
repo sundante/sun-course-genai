@@ -121,7 +121,7 @@ Things to know:
 - **Refusals don't match your schema.** If the model declines on safety grounds the response carries a refusal (a `refusal` item or stop reason) instead of your JSON - handle it before parsing.
 - **Truncation breaks the guarantee.** If generation hits the output-token limit mid-object, you get invalid JSON. Check the stop reason and size `max_tokens` generously - for reasoning models the limit also covers thinking.
 - **Structured outputs replace prefill.** On models that no longer accept a prefilled assistant turn, schema-constrained output is the supported way to force a format (see [Prompt Fundamentals](01-Prompt-Fundamentals.mdx)).
-- **Strict tool calling** applies the same guarantee to tool arguments (`strict: true` on the tool definition). See [Tool Use & Function Calling](../../12-Agent-Foundations/Notes/05-Tool-Use-and-Function-Calling.mdx).
+- **Strict tool calling** applies the same guarantee to tool arguments (`strict: true` on the tool definition). See [Tool Use & Function Calling](../../12-Agent-Foundations/Notes/04-Tool-Use-and-Function-Calling.mdx).
 
 ---
 

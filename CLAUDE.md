@@ -83,7 +83,7 @@ Reference implementation: `src/content/07-Serving-and-Inference/Notes/01-KV-Cach
 
 - For architecture, pipeline, flow, state-machine, lifecycle, or comparison content, prefer a **Mermaid diagram** over prose-only explanations or ASCII-art box diagrams - not just black markdown windows with text content
 - Mermaid already works with **zero setup** - ` ```mermaid ` fenced code blocks in any `.mdx` file are auto-rendered by `MermaidDiagram.tsx` via `MdxComponents.tsx`; no new dependency or wiring is needed
-- **House style to imitate:** `src/content/12-Agent-Foundations/Notes/01-What-Are-AI-Agents.mdx`, `03-Anatomy-of-an-AI-Agent.mdx`, `06-Agent-Memory.mdx` - emoji-labeled nodes, explicit per-node `style X fill:#... stroke:#...` overrides layered on the base theme, one `mindmap` for a component taxonomy. Match this look and feel; don't invent a new visual style per page.
+- **House style to imitate:** `src/content/12-Agent-Foundations/Notes/01-What-Are-AI-Agents.mdx`, `02-Anatomy-of-an-AI-Agent.mdx`, `05-Agent-Memory.mdx` - emoji-labeled nodes, explicit per-node `style X fill:#... stroke:#...` overrides layered on the base theme, one `mindmap` for a component taxonomy. Match this look and feel; don't invent a new visual style per page.
 - Pick the diagram type to match the content, not habit:
   - `flowchart LR` / `flowchart TD` - pipelines, architectures, decision flows
   - `stateDiagram-v2` - lifecycles / state machines (e.g. connection states, session states)

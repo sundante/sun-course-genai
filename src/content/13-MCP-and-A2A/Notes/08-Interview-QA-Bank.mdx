@@ -1,0 +1,153 @@
+# MCP & A2A - Q&A Review Bank
+
+A consolidated review set for the module, grouped by chapter. Difficulty: `[Easy]` = recall, `[Medium]` = design decisions and trade-offs, `[Hard]` = system design, debugging and edge cases.
+
+---
+
+## Why MCP
+
+**Q1: What problem does MCP solve?** `[Easy]`
+The M×N integration problem: without a standard, every AI application needs a bespoke connector to every system. With MCP each application implements a client and each system a server, so M + N implementations interoperate, and a new server works with every MCP host immediately. See [Why MCP](01-Why-MCP.mdx).
+
+**Q2: Name MCP's participants.** `[Easy]`
+Host (the AI application, owning the model, UI and consent), client (a connector inside the host, one per server), server (exposes capabilities).
+
+**Q3: Name the three server primitives and who controls each.** `[Easy]`
+Tools (the model decides to call them), resources (the application decides what to attach), prompts (the user invokes them).
+
+**Q4: How do MCP, function calling and A2A differ?** `[Medium]`
+Function calling is a model-API feature for requesting a call. MCP is a protocol between an application and tool/data servers - discovery, schemas, transports, auth. A2A is a protocol between agents - delegating tasks with a lifecycle to an opaque agent. They compose: the host turns MCP tools into function calls; an A2A agent may use MCP internally.
+
+**Q5: Who governs MCP and what is the current version?** `[Easy]`
+The Agentic AI Foundation under the Linux Foundation (since December 2025). The current revision is 2026-07-28, the stateless revision.
+
+---
+
+## Architecture & Protocol
+
+**Q6: What changed architecturally in the 2026-07-28 revision?** `[Medium]`
+The core became stateless: no `initialize` handshake and no sessions; every request carries version, client info and capabilities in `_meta`; `server/discover` is mandatory for servers; server-initiated requests were replaced by multi round-trip requests; change notifications moved to `subscriptions/listen`; list results became cacheable (`ttlMs`, `cacheScope`); tasks moved to an extension; roots, sampling and logging were deprecated. See [Architecture & Protocol](02-Architecture-and-Protocol.mdx).
+
+**Q7: Why remove sessions?** `[Medium]`
+Sessions pinned clients to a server instance and required shared session storage behind load balancers. Stateless requests can go to any instance, so remote servers scale like ordinary web services. State that must persist becomes explicit, user-bound handles passed as tool arguments.
+
+**Q8: Compare stdio and Streamable HTTP.** `[Easy]`
+stdio: the host launches a local server as a subprocess; credentials from the environment; for local tools. Streamable HTTP: one POST endpoint; each request answered with JSON or a per-request SSE stream; OAuth; for remote and shared servers. HTTP+SSE is deprecated.
+
+**Q9: What security requirements apply to a local Streamable HTTP server?** `[Medium]`
+Validate the `Origin` header (403 if invalid) to prevent DNS rebinding, bind to 127.0.0.1 rather than 0.0.0.0, and authenticate connections.
+
+**Q10: Explain a multi round-trip request.** `[Medium]`
+When a server needs input mid-request, it returns an `InputRequiredResult` (`resultType: "input_required"`) with `inputRequests` (such as an elicitation) and an opaque `requestState`. The client gathers the answers and retries the original request with a new id, `inputResponses` and the unchanged `requestState`. The server completes with `resultType: "complete"`. Allowed on `tools/call`, `resources/read` and `prompts/get`.
+
+**Q11: Why must servers treat requestState as attacker-controlled, and how do they protect it?** `[Hard]`
+It round-trips through the client, which may modify or replay it. If it influences authorization or business logic, integrity-protect it (HMAC or AEAD) and bind the authenticated principal, a short expiry and the originating request (method plus a digest of arguments); enforce single use server-side where needed.
+
+**Q12: What are Mcp-Method and Mcp-Name headers for, and why must servers check them against the body?** `[Hard]`
+They mirror the method and tool/resource name into HTTP headers so gateways can route, rate-limit and log without parsing JSON. If a proxy routes on the header while the server executes the body, a mismatch could bypass policy - so servers reject mismatches with `HeaderMismatch` (-32020).
+
+**Q13: Why should tools/list return tools in a deterministic order?** `[Medium]`
+So clients can cache the list and the model's prompt prefix (which contains tool definitions) stays byte-identical across calls, preserving prompt-cache hits.
+
+**Q14: How do modern and legacy MCP peers interoperate?** `[Hard]`
+Dual-era clients probe - a modern request over HTTP, `server/discover` over stdio - and fall back to `initialize` if the error isn't a recognised modern one. Dual-era servers serve modern requests statelessly and answer `initialize` with legacy semantics. Modern-only and legacy-only peers can't talk.
+
+**Q15: What are MCP extensions? Name three official ones.** `[Medium]`
+Optional features negotiated through an `extensions` map in capabilities, with fallback to core behaviour when unsupported. Official: Tasks (long-running operations, polled with `tasks/get`), MCP Apps (interactive UI), enterprise-managed authorization.
+
+---
+
+## Server Features
+
+**Q16: What does a tool definition contain?** `[Easy]`
+`name` (1-128 chars of `A-Za-z0-9_-.`), optional `title`, `description`, `inputSchema` (JSON Schema, 2020-12 by default), optional `outputSchema`, `annotations` and `icons`. See [Server Features](03-Server-Features.mdx).
+
+**Q17: How are tool failures reported?** `[Medium]`
+Execution failures (bad input values, business rules, API errors) are normal results with `isError: true` and a message the model can act on. Protocol failures (unknown tool, malformed request) are JSON-RPC errors.
+
+**Q18: What are tool annotations, and can a client trust them?** `[Medium]`
+Hints about behaviour: `readOnlyHint` (default false), `destructiveHint` (default true), `idempotentHint` (default false), `openWorldHint` (default true). They drive UI such as confirmation prompts, but clients must treat them as untrusted unless the server is trusted.
+
+**Q19: What must a tool with an outputSchema return?** `[Easy]`
+`structuredContent` conforming to the schema, and for backwards compatibility the same JSON serialised in a text content block.
+
+**Q20: How do you keep state across calls without sessions?** `[Medium]`
+Return an explicit, opaque, unguessable handle from a creation tool (a cart id) and accept it as an argument later. Bind it to the authenticated user and check the binding on every call; state its lifetime in the description; return an actionable error when it expires.
+
+**Q21: Form-mode vs URL-mode elicitation?** `[Medium]`
+Form mode collects structured, non-sensitive input through the client (flat schemas of primitives and enums). URL mode sends the user to a URL for interactions that must not pass through the client - secrets, payments, third-party OAuth. Form mode must never request passwords, API keys, tokens or payment credentials.
+
+**Q22: What replaces the deprecated sampling, roots and logging features?** `[Medium]`
+Sampling → call a model provider API from the server. Roots → pass paths or URIs as tool parameters, resource URIs or configuration. Logging → stderr (stdio) or OpenTelemetry; per-request log level stays available through `_meta`.
+
+---
+
+## Authorization
+
+**Q23: Walk through MCP authorization from a 401.** `[Hard]`
+401 with `WWW-Authenticate: Bearer resource_metadata=…` → fetch Protected Resource Metadata (RFC 9728) → pick the authorization server → fetch its metadata (RFC 8414 or OIDC discovery; verify `issuer`) → identify the client (pre-registered, Client ID Metadata Document, or deprecated DCR) → authorization code flow with PKCE S256 and `resource` = the MCP server (RFC 8707) → validate `iss` in the response (RFC 9207) → token request with `code_verifier` and `resource` → Bearer token on every request. See [Authorization](04-Authorization.mdx).
+
+**Q24: What is a Client ID Metadata Document?** `[Medium]`
+A JSON document at an HTTPS URL that *is* the client's `client_id`, containing at least `client_id`, `client_name` and `redirect_uris`. The authorization server fetches and validates it, so clients and servers with no prior relationship can do OAuth without dynamic registration.
+
+**Q25: Why is token passthrough forbidden?** `[Medium]`
+Forwarding a client's token to downstream APIs breaks audience binding, bypasses the downstream service's controls, muddles audit trails and creates confused-deputy risks. MCP servers accept only tokens issued for them, and obtain their own credentials for third-party APIs.
+
+**Q26: How does step-up authorization work?** `[Medium]`
+The server returns 403 with `error="insufficient_scope"` and all scopes the operation needs; the client re-authorises with the union of its current and requested scopes, then retries a bounded number of times.
+
+**Q27: Does a stdio server use OAuth?** `[Easy]`
+No. It runs as the user's local process and takes credentials from its environment.
+
+---
+
+## Building Servers & Clients
+
+**Q28: What changed in the Python SDK v2?** `[Medium]`
+`FastMCP` became `mcp.server.mcpserver.MCPServer`; transport options moved to `run()`; model fields are snake_case; `Context` is injected explicitly; deprecated features emit warnings; the high-level `Client` handles era detection and MRTR retries. See [Building Servers & Clients](05-Building-Servers-and-Clients.mdx).
+
+**Q29: How does a host give MCP tools to a model?** `[Easy]`
+List the tools, convert each definition into the model's function-calling format (name, description, input schema), and route the model's calls back to `tools/call` on the right client - prefixing names when several servers are connected.
+
+**Q30: How do you test an MCP server?** `[Medium]`
+Unit-test tool functions; run in-process client tests (`Client(server)`) for schemas, errors and elicitation paths; explore with the MCP Inspector; then evaluate an agent using the server with state-based checks.
+
+**Q31: When would you use a provider's hosted MCP connector?** `[Medium]`
+For public remote servers when you want the provider to run the tool loop and sending tool traffic through the provider is acceptable. Use your own client for local or private servers, custom guardrails, or data that must not transit the provider.
+
+---
+
+## Security
+
+**Q32: What is tool poisoning?** `[Medium]`
+Hidden instructions in a tool's description (which the model reads but users rarely see) that steer the agent - to read secrets, call other tools or exfiltrate data. See [MCP Security](06-MCP-Security.mdx).
+
+**Q33: What is a rug pull, and how do you detect it?** `[Medium]`
+A server changes a tool's definition after the user approved it. Pin a hash of each tool's name, description and schema at approval and refuse (or re-prompt) when it changes; pin server versions.
+
+**Q34: What is the lethal trifecta?** `[Medium]`
+An agent with access to private data, exposure to untrusted content, and the ability to communicate externally. Together they let injected instructions exfiltrate data; the robust fix is to never combine all three in one context.
+
+**Q35: Describe the GitHub MCP exploit.** `[Hard]`
+An attacker filed an issue in a public repository containing instructions; an agent with a token covering public and private repositories read it, followed it, and wrote private data into a public pull request. It combined all three legs of the trifecta; the defences are narrowly scoped tokens (one repository per session), separating untrusted reading from privileged writing, and approval for public writes.
+
+**Q36: Why can't you rely on the model to ignore injected instructions?** `[Medium]`
+Models follow instructions in their context probabilistically; injection resistance improves but isn't guaranteed. Security must come from the harness: permissions, isolation, approval gates and policy checks enforced in code.
+
+**Q37: What supply-chain risks affect MCP servers?** `[Medium]`
+Malicious or compromised packages (for example the 2025 `postmark-mcp` npm package that secretly BCC'd every email to an attacker), typosquats and malicious launch commands. Use vetted sources and registries, pin versions, review updates, and sandbox local servers.
+
+---
+
+## A2A
+
+**Q38: When should two agents talk over A2A rather than as tool or sub-agent?** `[Medium]`
+When the other agent is separately built, deployed or owned, keeps its internals private, works for a long time, may need more input, and returns artifacts. For components inside one application, a function call or in-process sub-agent is simpler. See [The A2A Protocol](07-A2A-Protocol.mdx).
+
+**Q39: What is in an Agent Card and where is it published?** `[Easy]`
+Name, description, version, provider, skills, capabilities (streaming, push, extended card), interfaces (URL, binding, version), security schemes and requirements, optional signatures; typically at `/.well-known/agent-card.json`.
+
+**Q40: List the A2A task states and how a client follows a long task.** `[Medium]`
+SUBMITTED, WORKING, INPUT_REQUIRED, AUTH_REQUIRED (interrupted), COMPLETED, FAILED, CANCELED, REJECTED (terminal). Follow a task by polling `GetTask`, streaming (`SendStreamingMessage`, `SubscribeToTask`), or push notifications to a webhook for long or disconnected tasks.
+
+*Last reviewed: 2026-09*

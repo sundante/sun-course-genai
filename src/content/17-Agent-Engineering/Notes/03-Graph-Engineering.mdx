@@ -123,7 +123,7 @@ flowchart TD
 
 <div class="audience-tech" markdown="1">
 
-**Loop hazard: infinite loops.** The gravest risk isn't wasted compute - it's repeated external side effects (duplicate emails, duplicate charges) from a loop that never terminates. Four stopping conditions prevent this: maximum iterations, budget caps, wall-clock timeouts, and no-progress detection (the same tool call repeating with identical arguments). This mirrors the [Termination Conditions](../../12-Agent-Foundations/Notes/04-The-Agent-Loop.mdx#termination-conditions) already covered for the base agent loop - a graph doesn't remove the need for these, it just adds them per node instead of once.
+**Loop hazard: infinite loops.** The gravest risk isn't wasted compute - it's repeated external side effects (duplicate emails, duplicate charges) from a loop that never terminates. Four stopping conditions prevent this: maximum iterations, budget caps, wall-clock timeouts, and no-progress detection (the same tool call repeating with identical arguments). This mirrors the [Termination Conditions](../../12-Agent-Foundations/Notes/03-The-Agent-Loop.mdx#bounds-and-termination) already covered for the base agent loop - a graph doesn't remove the need for these, it just adds them per node instead of once.
 
 **Graph hazard: node idempotency and state drift.** A node may execute more than once (retries, restarts from a checkpoint), so it must be safe to run twice with the same input. State schema changes across graph versions complicate deployment - a node written against an old state shape can silently misbehave against a newer one.
 
