@@ -12,6 +12,17 @@ Bedrock is AWS's foundation-model access and orchestration layer: model hosting/
 
 </div>
 
+```objectives
+time: 30 min
+outcomes:
+  - Call any Bedrock model through the Converse API and explain what the unified schema buys you
+  - Describe what Knowledge Bases, Guardrails and AgentCore each manage, and their Google Cloud and Azure counterparts
+  - Pick cost and scale levers - batch, prompt caching, cross-Region inference, provisioned throughput - for a workload
+  - Choose between fine-tuning, distillation and Custom Model Import for customization
+prerequisites:
+  - "[RAG Fundamentals](../../11-RAG/Notes/01-RAG-Fundamentals.mdx) for the Knowledge Bases section"
+```
+
 ---
 
 ## Converse API and Model Access
@@ -40,7 +51,7 @@ Knowledge Bases is Bedrock's built-in RAG - point it at your documents in S3, an
 
 <div class="audience-tech" markdown="1">
 
-Knowledge Bases handles ingestion (chunking strategy, embedding model choice), vector storage (a managed OpenSearch Serverless collection, or bring-your-own Pinecone/Redis/Aurora), and retrieval, exposed either as a direct `Retrieve`/`RetrieveAndGenerate` API call or as a tool an agent can call. This maps to Vertex AI's RAG Engine - same problem (managed retrieval pipeline instead of hand-rolled chunking/embedding/indexing), different vendor plumbing. See [RAG Fundamentals](../../11-RAG/Notes/01-RAG-Fundamentals.mdx) for the underlying concepts this wraps.
+Knowledge Bases handles ingestion (chunking strategy, embedding model choice), vector storage (a quick-create OpenSearch Serverless collection, or your own store such as Aurora PostgreSQL, S3 Vectors, Pinecone or Redis), and retrieval, exposed either as a direct `Retrieve`/`RetrieveAndGenerate` API call or as a tool an agent can call. This maps to Vertex AI's RAG Engine - same problem (managed retrieval pipeline instead of hand-rolled chunking/embedding/indexing), different vendor plumbing. See [RAG Fundamentals](../../11-RAG/Notes/01-RAG-Fundamentals.mdx) for the underlying concepts this wraps.
 
 </div>
 
@@ -90,11 +101,40 @@ Guardrails filter what goes in and out of a model call - blocking denied topics,
 - Cost and scale levers: batch inference, prompt caching, cross-Region inference profiles, provisioned throughput
 - Customization: fine-tuning, distillation, and Custom Model Import for your own open-weight fine-tunes
 
-**Quick recall Q&A:**
-- *Why would a team choose Bedrock's Converse API over calling each model provider's native SDK directly?* One consistent request/response schema across providers means switching or A/B-testing models doesn't require rewriting the integration - only the model ID changes.
-- *What's the AWS-side equivalent of Vertex AI's RAG Engine?* Bedrock Knowledge Bases - managed ingestion, chunking, embedding, and retrieval, avoiding a hand-rolled vector database pipeline.
-- *Do you still need to request model access in Bedrock?* No - since September 2025 serverless models are enabled by default (Anthropic requires a one-time use-case form); control access with IAM and SCPs.
-- *Do Bedrock Guardrails apply per-model or account-wide?* Guardrails are configured as policies applied to a call regardless of the underlying model - the same guardrail config works whether you're calling Claude or Llama through Bedrock.
+## Check Yourself
+
+```quiz
+- q: "A nightly job summarizes 200,000 support tickets; results are needed by morning. Which Bedrock lever cuts cost most directly?"
+  options: ["Provisioned throughput", "Batch inference", "Cross-Region inference profiles", "Guardrails"]
+  answer: 2
+  explain: "Asynchronous batch jobs are billed at a discount to on-demand for supported models, and the latency tolerance is there."
+- q: "How is access to serverless Bedrock models controlled today?"
+  options: ["Per-model access requests in the console", "IAM policies and Service Control Policies - models are enabled by default (Anthropic needs a one-time use-case form)", "Only through AgentCore Identity", "It cannot be restricted"]
+  answer: 2
+- q: "Why would a team choose Bedrock's Converse API over calling each model provider's native SDK directly?"
+  answer: "One consistent request/response schema across providers means switching or A/B-testing models doesn't require rewriting the integration - only the model ID changes."
+- q: "What's the AWS-side equivalent of Vertex AI's RAG Engine?"
+  answer: "Bedrock Knowledge Bases - managed ingestion, chunking, embedding, and retrieval, avoiding a hand-rolled vector database pipeline."
+- q: "Do you still need to request model access in Bedrock?"
+  answer: "No - since September 2025 serverless models are enabled by default (Anthropic requires a one-time use-case form); control access with IAM and SCPs."
+- q: "Do Bedrock Guardrails apply per-model or account-wide?"
+  answer: "Guardrails are configured as policies applied to a call regardless of the underlying model - the same guardrail config works whether you're calling Claude or Llama through Bedrock."
+```
+
+## Exercises
+
+```exercise
+- title: "Map a GCP design to AWS"
+  task: |
+    An assistant on Google Cloud uses Gemini through Model Garden, RAG Engine over Cloud Storage documents, Model Armor for prompt screening, and an ADK agent on Agent Runtime. Name the AWS component for each, and one design decision that changes in the move.
+  solution: |
+    - Model access: Bedrock `Converse` / `ConverseStream` (Claude, Llama, Nova and others; Gemini is not on Bedrock, so the model changes and prompts need re-evaluation).
+    - RAG: Bedrock Knowledge Bases over S3, with a chosen vector store (OpenSearch Serverless, Aurora PostgreSQL, S3 Vectors).
+    - Prompt screening: Bedrock Guardrails (denied topics, content filters, PII, prompt-attack filter) applied to input and output.
+    - Agent runtime: AgentCore Runtime (framework-agnostic - the ADK agent can run there), with AgentCore Memory, Gateway and Identity.
+    
+    Design decisions that change: the model itself (re-run your eval suite), the vector-store choice and its cost model, and IAM - each component gets its own role with least privilege.
+```
 
 ## References
 

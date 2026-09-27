@@ -14,6 +14,16 @@ Microsoft Foundry (formerly Azure AI Foundry, and before that Azure AI Studio) i
 
 </div>
 
+```objectives
+time: 25 min
+outcomes:
+  - Trace the Azure AI Studio -> Azure AI Foundry -> Microsoft Foundry naming and map Foundry's pieces to Bedrock and Google's agent platform
+  - Explain what OneLake changes about Microsoft Fabric compared with BigQuery
+  - Choose between Azure SQL, Cosmos DB and Azure AI Search for a RAG workload
+prerequisites:
+  - "[AWS Bedrock](01-AWS-Bedrock.mdx) - the comparison point"
+```
+
 ---
 
 ## Model Catalog, Deployments, Evaluations
@@ -72,10 +82,32 @@ Two data stores come up constantly in Azure-stack roles: Azure SQL (a managed re
 - Azure SQL ≈ Cloud SQL (managed relational); Cosmos DB ≈ Firestore (globally distributed, multi-model NoSQL, tunable consistency)
 - Cosmos DB has native vector search, making it a viable RAG vector store on Azure without a separate vector database
 
-**Quick recall Q&A:**
-- *What is Microsoft Foundry's naming history?* Azure AI Studio → Azure AI Foundry (Ignite 2024) → Microsoft Foundry (Ignite 2025). The latest rename repositioned it around agents (Foundry Agent Service) as well as models.
-- *What's the single biggest architectural difference between Microsoft Fabric and BigQuery?* Fabric is built around OneLake, one logical storage layer shared by every workload (warehouse, lakehouse, BI); BigQuery's ecosystem is more storage-agnostic across its component services.
-- *Why might a team pick Cosmos DB as a vector store instead of a dedicated vector database?* It's already part of the Azure data stack, supports native vector search alongside its existing document/key-value capabilities, and avoids introducing a new managed service just for retrieval.
+## Check Yourself
+
+```quiz
+- q: "Which Google Cloud service is the closest match to Cosmos DB?"
+  options: ["Spanner", "Firestore", "BigQuery", "Cloud SQL"]
+  answer: 2
+  explain: "Cosmos DB is a globally distributed multi-model NoSQL store with tunable consistency; Spanner is a strongly consistent relational database."
+- q: "What is Microsoft Foundry's naming history?"
+  answer: "Azure AI Studio → Azure AI Foundry (Ignite 2024) → Microsoft Foundry (Ignite 2025). The latest rename repositioned it around agents (Foundry Agent Service) as well as models."
+- q: "What's the single biggest architectural difference between Microsoft Fabric and BigQuery?"
+  answer: "Fabric is built around OneLake, one logical storage layer shared by every workload (warehouse, lakehouse, BI); BigQuery's ecosystem is more storage-agnostic across its component services."
+- q: "Why might a team pick Cosmos DB as a vector store instead of a dedicated vector database?"
+  answer: "It's already part of the Azure data stack, supports native vector search alongside its existing document/key-value capabilities, and avoids introducing a new managed service just for retrieval."
+```
+
+## Exercises
+
+```exercise
+- title: "Pick the Azure vector store"
+  task: |
+    An Azure team's product catalog (2M items) lives in Cosmos DB; their policy documents (50k PDFs) sit in Blob Storage. They want RAG over both. Recommend where each index lives and why.
+  solution: |
+    - **Catalog:** Cosmos DB's native vector search, next to the operational data - no second copy to sync, and filters on item fields run in the same query.
+    - **Policy PDFs:** Azure AI Search - document cracking, chunking and hybrid (keyword + vector) retrieval with semantic ranking are built in, which suits long documents.
+    - An agent (Foundry Agent Service) can call both as tools. The alternative - one AI Search index over both - simplifies retrieval but adds a sync pipeline for fast-changing catalog data.
+```
 
 ## References
 

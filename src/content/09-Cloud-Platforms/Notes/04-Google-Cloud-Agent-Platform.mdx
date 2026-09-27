@@ -82,6 +82,17 @@ flowchart TD
   answer: "Amazon Bedrock AgentCore (Runtime, Memory, Gateway, Identity, Observability) and the Microsoft Foundry Agent Service."
 ```
 
+## Exercises
+
+```exercise
+- title: Managed or self-managed?
+  task: |
+    A team needs (a) a customer-facing agent built with ADK, with per-user memory, and (b) a fine-tuned 8B open model serving 50 requests per second with a strict p95 latency target. For each, choose the managed option or the build-your-own path on Google Cloud, and justify it.
+  solution: |
+    - **(a) Agent:** Agent Runtime with Memory Bank - ADK deploys to it directly, and sessions, memory, identity and tracing come managed. Cloud Run is the fallback if you need a custom container or runtime the platform doesn't support.
+    - **(b) Model:** vLLM or SGLang on GKE with GPUs - at a steady 50 requests per second with a latency SLO you want control of batching limits, quantization, prefix caching and autoscaling on queue depth ([LLM Serving on Kubernetes](../../08-Production-Engineering/Notes/05-LLM-Serving-on-Kubernetes.mdx)). Model Garden one-click deploy is a good start and a fine choice when the defaults already meet the SLO.
+```
+
 ## Study Notes
 
 **Must-know:**

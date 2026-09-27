@@ -12,6 +12,16 @@ Useful in two situations: converting existing GCP-stack experience into credible
 
 </div>
 
+```objectives
+time: 20 min
+outcomes:
+  - Map a capability (model access, managed RAG, guardrails, agent runtime, data platform, MLOps) across Google Cloud, AWS and Azure
+  - Name one architectural difference that matters for each mapping, not just the product names
+  - Explain where GPU clouds and inference providers fit next to the hyperscalers
+prerequisites:
+  - "The four platform notes in this module"
+```
+
 ---
 
 ## Model Access, RAG, and Guardrails
@@ -41,7 +51,7 @@ Useful in two situations: converting existing GCP-stack experience into credible
 
 | Capability | GCP | AWS | Azure |
 |---|---|---|---|
-| Model registry | Vertex AI Model Registry | SageMaker Model Registry (or MLflow on Databricks) | Azure ML Model Registry |
+| Model registry | Model Registry (Vertex AI, now Agent Platform) | SageMaker Model Registry (or MLflow on Databricks) | Azure ML Model Registry |
 | Experiment tracking | Vertex AI Experiments | SageMaker Experiments (or MLflow) | Azure ML / MLflow-native in Fabric |
 | Pipeline orchestration | Vertex AI Pipelines | SageMaker Pipelines | Azure ML Pipelines |
 
@@ -63,7 +73,7 @@ Don't just recite the table - use it to show you understand *why* the concepts m
 
 <div class="audience-tech" markdown="1">
 
-The strongest framing in a platform-breadth interview question is architectural, not lexical: name the capability first (e.g. "managed RAG"), then the products across clouds, then one concrete difference that actually matters (e.g. Bedrock Knowledge Bases defaults to a managed OpenSearch Serverless vector store while Vertex AI RAG Engine defaults to a different backing index - both are swappable, but the defaults differ). This demonstrates transferable understanding rather than memorized vocabulary.
+The strongest framing in a platform-breadth interview question is architectural, not lexical: name the capability first (e.g. "managed RAG"), then the products across clouds, then one concrete difference that actually matters (e.g. how much of the pipeline you own: Bedrock Knowledge Bases lets you choose the embedding model, chunking, parser and vector store, such as OpenSearch Serverless, Aurora PostgreSQL or S3 Vectors, while Google's RAG Engine manages its own index by default and can use an external store such as Vector Search instead). This demonstrates transferable understanding rather than memorized vocabulary.
 
 </div>
 
@@ -77,10 +87,33 @@ The strongest framing in a platform-breadth interview question is architectural,
 - Globally distributed relational with strong consistency: Spanner / Aurora DSQL; globally distributed NoSQL: Firestore / DynamoDB / Cosmos DB - several of these offer native vector search for RAG
 - The interview-winning move is naming the capability and one real architectural difference, not just reciting product names
 
-**Quick recall Q&A:**
-- *What's the AWS equivalent of Vertex AI's RAG Engine?* Bedrock Knowledge Bases - managed chunking, embedding, and retrieval.
-- *What's the Azure equivalent of BigQuery?* Microsoft Fabric's Warehouse, built on the OneLake unified storage layer - architecturally different from BigQuery in that all Fabric workload types share one logical storage layer.
-- *Which AWS service is the closest match to Google Spanner?* Aurora DSQL - a distributed, PostgreSQL-compatible SQL database with multi-Region strong consistency (GA May 2025). DynamoDB and Cosmos DB are NoSQL stores with different data models and consistency options, so they are not like-for-like.
+## Check Yourself
+
+```quiz
+- q: "What is the closest AWS counterpart to Google Spanner?"
+  options: ["DynamoDB global tables", "Aurora DSQL", "Redshift", "RDS for PostgreSQL"]
+  answer: 2
+  explain: "Aurora DSQL is a distributed SQL database with multi-Region strong consistency; DynamoDB is NoSQL."
+- q: "Why might a team run open-model inference on a provider like Together AI or Fireworks instead of a hyperscaler?"
+  options: ["Hyperscalers cannot serve open models", "Often better GPU availability and price for open models, at the cost of less integrated data, security and governance tooling", "They are required for fine-tuning", "They support the Converse API"]
+  answer: 2
+- q: "What's the AWS equivalent of Vertex AI's RAG Engine?"
+  answer: "Bedrock Knowledge Bases - managed chunking, embedding, and retrieval."
+- q: "What's the Azure equivalent of BigQuery?"
+  answer: "Microsoft Fabric's Warehouse, built on the OneLake unified storage layer - architecturally different from BigQuery in that all Fabric workload types share one logical storage layer."
+- q: "Which AWS service is the closest match to Google Spanner?"
+  answer: "Aurora DSQL - a distributed, PostgreSQL-compatible SQL database with multi-Region strong consistency (GA May 2025). DynamoDB and Cosmos DB are NoSQL stores with different data models and consistency options, so they are not like-for-like."
+```
+
+## Exercises
+
+```exercise
+- title: "Answer a platform-breadth question"
+  task: |
+    Write a 4-5 sentence answer to: "You've built agents on Google Cloud. How would you build the same thing on Azure?" Use the capability-first framing from this note.
+  solution: |
+    Example: "The capabilities are the same, so I'd map them one by one. Model access moves from Model Garden to Foundry model deployments, and the agent runtime from Agent Runtime to the Foundry Agent Service - my ADK or framework code could also run on Azure Container Apps. Retrieval moves from RAG Engine to Azure AI Search, which gives me hybrid search with semantic ranking. Safety screening goes from Model Armor to Azure AI Content Safety, and I'd re-run the agent's evaluation suite, because model and filter behaviour change. The real work is identity and data: Entra ID roles per component, and where the data already lives."
+```
 
 ## References
 
