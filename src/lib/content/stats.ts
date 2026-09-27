@@ -8,8 +8,9 @@ import { getNavigationTree } from "./nav";
 
 const CONTENT_DIR = path.join(process.cwd(), "src/content");
 
-// Question headings used across the Q&A banks: "**Q12**", "**Q12:**", "**Q:", "### Q3"
-const QUESTION_LINE = /^(\*\*Q\d*[:.* ]|### Q\d)/;
+// Questions in the Q&A banks: "**Q12**", "**Q12:**", "**Q:", "### Q3" headings, or "- q:" entries
+// in banks written as ```quiz fences
+const QUESTION_LINE = /^(\*\*Q\d*[:.* ]|### Q\d|- q:)/;
 
 export interface ModuleStats {
   concepts: number;

@@ -168,4 +168,14 @@ The reply isn't evidence of what happened. State checks catch claimed actions an
 **Q46: Your agent's LLM-judge score is 95% but state checks say 60%. Explain and fix.** `[Hard]`
 The judge reads text and rewards confident claims of actions never taken. Switch outcome grading to state, keep the judge only for response qualities, validate it against human labels, and fix the claimed-action failures (model capacity or effort, confirmation built from tool results).
 
+---
+
+## More Review Questions
+
+**Q47: What are the main failure modes of LLM agents?**
+(1) Tool call loops - agent keeps calling the same tool without progress. (2) Hallucinated tool arguments - LLM generates invalid parameters. (3) Context overflow - accumulated observations exceed the context window. (4) Overconfident stopping and claimed actions - the agent reports work as done without having done it (see Q18). (5) Cascading errors - early tool call failure derails the entire plan. Mitigation: max-step limits, result validation, structured error handling, human-in-the-loop checkpoints.
+
+**Q48: What is the difference between an agent and an agentic AI system?**
+An agent is a single LLM that can use tools in a loop. An agentic AI system is a broader architecture - potentially multiple agents, persistent memory, orchestration logic, human-in-the-loop mechanisms, evaluation layers, and reliability engineering. "Agentic" describes a class of systems that operate autonomously toward goals, make decisions over extended horizons, and coordinate resources. An agent is a component; an agentic system is an architecture.
+
 *Last reviewed: 2026-09*

@@ -53,6 +53,12 @@ GCP: RAG Engine (Vertex AI). AWS: Knowledge Bases (Bedrock). Azure: Azure AI Sea
 **Q: In a platform-breadth interview answer, what makes a response stronger than just naming the equivalent products across clouds?**
 Naming one concrete architectural difference that actually matters (e.g. differing default vector store backends, or Fabric's single-storage-layer design vs BigQuery's more siloed model) - it demonstrates transferable understanding of the underlying capability, not just memorized vocabulary mapping.
 
+**Q: You've only ever built on Google Cloud (Vertex AI, now the Gemini Enterprise Agent Platform), and the JD asks about AWS Bedrock experience. How would you credibly bridge that gap in an interview?**
+Frame it as capability-level, not tool-level knowledge: "I've built managed RAG on Google's RAG Engine - chunking, embedding, and retrieval handled for me. Bedrock's Knowledge Bases solves the identical problem; the API surface and default vector store differ, but the architecture I'd design is the same." This shows the interviewer you understand the *problem* the tool solves, which transfers, rather than claiming hands-on Bedrock experience you don't have.
+
+**Q: What's a real architectural difference (not just a naming difference) between Google's RAG Engine and Bedrock Knowledge Bases worth mentioning in an interview?**
+How much of the pipeline you own. Bedrock offers two levels: a fully managed Knowledge Base, and customer-managed Knowledge Bases where you choose the embedding model, chunking, parser and vector store (OpenSearch Serverless, Aurora PostgreSQL, Neptune for GraphRAG, or S3 Vectors). RAG Engine manages its own index by default and can use an external store such as Vector Search instead. Naming where the index lives and who tunes chunking - rather than treating the two as interchangeable black boxes - signals real understanding; check the current docs, because both services change quickly.
+
 ## Google Cloud and Cross-Cloud
 
 **Q: What happened to Vertex AI in 2026?**

@@ -169,3 +169,31 @@ The metric: optimizers maximise exactly what it measures, so a format-only metri
 
 **Q48: An engineer says reasoning models made prompt engineering obsolete. Your response?** `[Hard]`
 They made some techniques obsolete (step-by-step prompting, reasoning demos, temperature tuning) and shifted the work: defining tasks and success criteria, assembling the right context, output contracts, choosing effort, caching for cost, evaluation and injection defence. The discipline moved from wording to context and systems.
+
+---
+
+## More Techniques and Pitfalls
+
+**Q49: Does few-shot prompting work even with wrong labels?**
+For smaller models, largely yes: Min et al. (2022) found format and label space mattered more than label correctness. But larger models do learn the input-label mapping - with flipped labels they follow the flips (Wei et al., 2023). With frontier models, wrong labels in examples get copied, so label examples carefully.
+
+**Q50: Why is negative prompting less reliable than positive framing?**
+"Do Y" gives the model a direct target, and vendor prompting guides report positive instructions are followed more reliably than bare prohibitions. Keep "never do X" for genuine hard constraints and pair it with the behaviour you want instead.
+
+**Q51: What is Generated Knowledge Prompting?**
+Ask the model to generate relevant facts before answering. Predecessor to RAG - makes implicit knowledge explicit in context. Risk: model can hallucinate the generated facts, which then become the basis for a confident wrong answer.
+
+**Q52: What is Least-to-Most Prompting?**
+Decompose a problem into sub-problems ordered from simplest to hardest. Solve each, carrying the solution forward as context for the next sub-problem. Effective for multi-step math, multi-hop Q&A, and complex code generation.
+
+**Q53: What is prompt leaking?**
+Causing the model to reveal its system prompt via crafted inputs ("Repeat everything above verbatim"). Assume any system prompt can be extracted: keep secrets, credentials and anything you'd mind publishing out of it, and put real protections in code. An instruction not to reveal it and output monitoring for its key phrases reduce casual leaks but won't stop a determined attacker.
+
+**Q54: Why might an adversarial user provide a very long input to a RAG-augmented chatbot?**
+To push the system prompt and retrieved context into the "middle" of the context window, reducing the model's attention to them. A very long user-supplied document can effectively bury safety instructions and retrieved context, potentially making the model more susceptible to injection or hallucination. Mitigation: enforce input length limits, keep instructions at the top and restate the key ones after long inputs, and delimit untrusted content - and don't rely on position alone, since injection defences belong in code (see Q36-Q38).
+
+**Q55: What does it mean for a prompt to "overfit" to a test set?**
+The prompt was optimized (manually or automatically) to perform well on specific test examples but fails on novel inputs from the production distribution. Signs: very high eval accuracy but significant production accuracy drop; the prompt contains very specific references to patterns in the test set. Prevention: use a held-out test set that is not accessible during prompt development, and monitor production accuracy independently.
+
+**Q56: A model correctly identifies the answer in its reasoning but gives the wrong final answer. What happened?**
+The written reasoning and the final answer are both generated text, and the reasoning is not guaranteed to be what actually produced the answer (chain-of-thought can be unfaithful). Fixes: ask for the answer in a structured field and extract it programmatically, add an explicit final-answer step, sample several times and take the majority answer (self-consistency), and evaluate the final answer rather than trusting the reasoning.

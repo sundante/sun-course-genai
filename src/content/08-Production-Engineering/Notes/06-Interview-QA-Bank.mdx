@@ -40,6 +40,9 @@ It provides lineage and metadata tracking - training run, metrics, artifacts, pr
 **Q: Why should rollback criteria be defined before launch rather than during an incident?**
 Under incident pressure, teams either under-react (hoping a regression self-resolves) or over-react (rolling back noise). Pre-agreed, quantitative thresholds - error rate, p95 latency, eval score - turn the in-incident decision into a lookup instead of a judgment call made under stress.
 
+**Q: Two weeks after a model promotion, an eval metric quietly regresses but nobody notices until a customer complaint. What process gap does this reveal?**
+The rollback criteria (or ongoing monitoring against them) weren't wired to alert automatically - the team likely defined thresholds but didn't operationalize continuous checking against them post-launch. A release-readiness process should include an observation window with active alerting, not just a go/no-go decision at launch time.
+
 ---
 
 ## Security & Compliance
@@ -58,6 +61,9 @@ Who accessed the PHI, when, and for what reason - sufficient for a regulator's a
 
 **Q: What's the difference between SAST and dependency scanning in a CI pipeline?**
 SAST analyzes your own codebase for vulnerability patterns without executing it; dependency scanning checks third-party packages (including ML libraries like `transformers`/`torch`) against known-CVE databases. Both should block merge on high-severity findings.
+
+**Q: What's the practical difference between claiming "we're HIPAA compliant" and naming the specific safeguards you implemented?**
+"HIPAA compliant" is a vague self-assessment that invites follow-up questions in an interview or audit. Naming the actual technical safeguards - access control, audit controls, integrity controls, person or entity authentication, transmission security (45 CFR §164.312) - and pointing to how each is implemented (e.g. "audit controls: every PHI access logged with user ID and timestamp, retained 6 years") is verifiable and reads as far more credible.
 
 ## LLM Serving on Kubernetes, Supply Chain and Regulation
 

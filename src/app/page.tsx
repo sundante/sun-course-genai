@@ -6,7 +6,7 @@ import { getCourseStats } from "@/lib/content/stats";
 
 const LEARNING_PATHS = [
   { label: "A", title: "Conceptual",     desc: "New to GenAI - start with LLM Foundations, then Prompt & Context Engineering, RAG and Agent Foundations." },
-  { label: "B", title: "Interview Prep", desc: "Accelerated review through each module's Q&A bank and the Knowledge Check concept reviews." },
+  { label: "B", title: "Interview Prep", desc: "Accelerated review through each module's Q&A bank and its graded quiz." },
   { label: "C", title: "Hands-On",       desc: "Code labs from a raw PyTorch training loop to QLoRA fine-tuning, vLLM serving and multi-framework agents." },
   { label: "D", title: "Full Sequence",  desc: "Every module in order, from how an LLM works to building and operating production agents - the recommended path." },
 ];
@@ -32,7 +32,7 @@ export default function HomePage() {
 
   const FEATURES = [
     { icon: "01", title: `${stats.concepts} deep-dive notes`,   desc: "Zero fluff, dual-audience (business and technical) explanations for every concept." },
-    { icon: "02", title: `${stats.questions} review questions`, desc: "Interview-grade Q&A banks for every module, tagged by difficulty for targeted prep." },
+    { icon: "02", title: `${stats.questions} review questions`, desc: "Interview-grade Q&A banks for every module, plus graded quizzes built from each page's checks." },
     { icon: "03", title: `${stats.labs} hands-on code labs`,    desc: "PyTorch, QLoRA, vLLM, Helm, and agents in LangChain, LangGraph, CrewAI and Google ADK." },
     { icon: "04", title: "Real benchmarks",                     desc: "Base-vs-tuned comparisons and load tests with actual numbers, not just theory." },
   ];

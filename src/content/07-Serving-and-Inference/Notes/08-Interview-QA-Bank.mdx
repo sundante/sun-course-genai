@@ -18,6 +18,15 @@ A: Because blocks are content-addressed, identical prefixes across different req
 **Q: What's the difference between `max_num_seqs` and `max_num_batched_tokens` in vLLM's scheduler?**
 A: `max_num_seqs` caps how many sequences can be batched together in a single scheduling step. `max_num_batched_tokens` caps the total token budget per step, which prevents a long prompt's prefill from monopolizing a step and starving other in-flight sequences' decode steps (chunked prefill). See [vLLM & Paged Attention](02-vLLM-and-Paged-Attention.mdx#continuous-batching-in-practice).
 
+**Q: Your team is currently serving a fine-tuned 7B model with a plain `transformers.generate()` loop behind a Flask endpoint, and latency under load is unacceptable. What's the first architectural change you'd recommend, and why?**
+A: Move to a dedicated serving engine like vLLM before touching anything else. A hand-rolled `generate()` loop reserves KV-cache memory contiguously per request (the vLLM paper measured existing systems wasting 60-80% of KV-cache memory to fragmentation and over-reservation) and processes static batches that leave the GPU idle whenever any request finishes early - both of these are structural, not tunable-away, problems that a purpose-built engine with Paged Attention and continuous batching solves directly, the vLLM authors reported up to 24x the throughput of Hugging Face Transformers' generation, before any other optimization.
+
+**Q: A vLLM server's `gpu_memory_utilization` is set very conservatively at 0.5. What's the practical downside, and would you expect an OOM error to catch this misconfiguration?**
+A: No OOM error - the server will run fine, just with a much smaller KV-cache block pool than the GPU could actually support, meaning fewer concurrent sequences can be served before requests start queuing. This is a silent capacity ceiling, not a crash, which is exactly why it's worth explicitly checking rather than assuming a default is well-tuned for your hardware.
+
+**Q: How does vLLM's automatic prefix caching change the cost of a chatbot with a long, mostly-static system prompt?**
+A: Without prefix caching, every request re-runs the full prefill compute for the system prompt from scratch. With prefix caching, the KV-cache blocks for that shared prefix are computed once and reused (via content-addressed blocks with copy-on-write) across every request sharing it - for a 1000-token system prompt at high request volume, this can eliminate the large majority of that prefill cost and correspondingly reduce TTFT.
+
 ---
 
 ## Quantized Inference
@@ -33,6 +42,9 @@ A: When the task is precision-sensitive - code generation, numeric reasoning, st
 
 **Q: What's a typical production pipeline for combining fine-tuning and serving-time quantization?**
 A: Fine-tune with QLoRA (NF4 training-time quantization), merge the LoRA adapter into a full-precision dense model, then separately run GPTQ or AWQ calibration on that merged model to produce a serving-optimized quantized artifact - the two quantization decisions happen at different pipeline stages for different reasons. See [Quantized Inference](03-Quantized-Inference.mdx#when-to-quantize-for-serving---and-when-not-to).
+
+**Q: A product feature does structured JSON extraction from documents, and someone proposes INT4 quantization to cut GPU costs. What risk should be flagged before approving it?**
+A: Structured/precision-sensitive tasks are more likely to be affected by the accuracy delta INT4 quantization introduces than open-ended generation tasks are - a small per-token error rate can break strict JSON parsing or extraction correctness in ways that are more consequential than a slightly awkward sentence would be in a chat response. The recommendation is to benchmark INT4 specifically against this task's own eval set (not a generic benchmark) before approving, and consider FP8 (native on Hopper and Blackwell GPUs) or INT8 as a middle ground if INT4 shows meaningful degradation.
 
 ---
 
@@ -50,6 +62,9 @@ A: Define an SLO (e.g. p95 per-request throughput or p95 latency), load test at 
 **Q: Why might a GPU's real capacity be bound by compute/bandwidth rather than KV-cache memory, or vice versa?**
 A: A GPU might have enough KV-cache memory to hold state for far more concurrent sequences than its compute/bandwidth budget can decode at an acceptable per-request latency - or the reverse, where memory runs out before compute becomes the bottleneck. Whichever constraint is hit first at your SLO sets real capacity; both need to be checked, not just one. See [Batching, Concurrency & Latency](04-Batching-Concurrency-and-Latency.mdx#capacity-planning-basics).
 
+**Q: Given a fixed GPU budget, would you generally prefer scaling one server's batch size further or adding a second GPU replica, once you're past the point where a bigger batch starts degrading per-request latency?**
+A: Add a replica. Past a batch's saturation point, further increasing batch size on one GPU adds queuing/decode latency without proportional throughput gain - horizontal scaling (more replicas behind a load balancer) grows total capacity while keeping each replica's per-request latency within the SLO that made you stop increasing batch size in the first place.
+
 ---
 
 ## Streaming & TTFT
@@ -62,6 +77,12 @@ A: TTFT = queue wait + prefill time, and prefill time scales with input prompt l
 
 **Q: Why should TTFT be measured under concurrent load rather than assumed from a single-request benchmark?**
 A: Chunked prefill scheduling means a new request's prefill can be spread across multiple scheduling steps when the server is busy handling other in-flight decodes, increasing that request's TTFT under load - a single-request TTFT measurement with no contention understates what real users experience. See [Streaming & TTFT](05-Streaming-and-TTFT.mdx#how-streaming-interacts-with-batching).
+
+**Q: A monitoring dashboard tracks only average total response time, and it's well within SLO, yet users complain the app feels slow. What's most likely missing from the dashboard?**
+A: TTFT as its own tracked metric, and probably its p95/p99 tail rather than just an average. A request can have perfectly fine total generation time but a long delay before the first token appears, which is what drives the "feels slow" perception - and a small number of high-TTFT requests can be invisible in an average while still shaping user sentiment.
+
+**Q: How does a long, shared system prompt affect TTFT differently than it affects total generation time, and what's the standard mitigation?**
+A: It inflates TTFT directly, since TTFT includes prefill time and prefill time scales with prompt length - but it has no direct effect on total generation time beyond that same fixed prefill cost being paid once. The standard mitigation is prefix caching, which computes the shared prefix's KV cache once and reuses it across requests, removing that prefill cost from TTFT for every subsequent request sharing the prefix.
 
 ## The Modern Serving Stack
 
@@ -85,4 +106,26 @@ A: With expert parallelism: experts are sharded across GPUs and tokens are dispa
 
 **Q: Why serve many LoRA adapters over one base model instead of merging each?**
 A: Multi-LoRA serving keeps one copy of the base weights in GPU memory and batches requests for different adapters together with specialized kernels, so hundreds of fine-tunes can share a GPU. Merging each adapter would require a separate full model per fine-tune. See [The Modern Serving Stack](07-Modern-Serving-Stack.mdx#multi-lora-serving).
+
+**Q: How does speculative decoding achieve speedup?**
+A: A small draft model (e.g., 1B) proposes K tokens quickly. The large target model (e.g., 70B) verifies all K proposed tokens in one batch forward pass - a single pass validates K tokens simultaneously. If M tokens are accepted (M ≤ K), the model advances M positions for the cost of one large-model forward pass plus K small-model passes. Since K small-model passes are cheap compared to one large-model pass, and acceptance rates are often high (70–90% for predictable text), effective throughput increases 2–3×. Speedup is lower when acceptance rate is low (creative/diverse generation).
+
+**Q: Name 5 latency optimization techniques for LLM serving.**
+A: (1) **Quantization** (INT4/INT8): 2–4× throughput improvement from reduced memory bandwidth. (2) **Speculative decoding**: 2–3× decode speedup via draft+verify. (3) **Prefix caching**: 50–90% TTFT reduction for repeated system prompts. (4) **Flash Attention 2/3**: 2–4× attention speedup via SRAM tiling. (5) **Continuous batching**: 5–10× throughput vs static batching by eliminating wasted GPU slots.
+
+**Q: When would you use semantic caching vs prefix caching, and what are the failure modes of each?**
+A: **Prefix caching**: cache KV blocks for exact token-prefix matches. Use when: same system prompt is shared across many requests (chatbots, RAG pipelines with fixed context). Failure mode: any token change in the prefix (even 1 token) invalidates the cache. **Semantic caching**: cache full responses for semantically similar (near-duplicate) queries. Use when: high query repetition expected (FAQ, customer support). Failure mode: (1) Similar but not identical queries receive stale cached answers. (2) Queries asking different things with similar wording get wrong cached responses. (3) Cache becomes stale as underlying knowledge changes. Semantic caching is dangerous for factual tasks; best for stable, well-defined use cases.
+
+---
+
+## KV Cache and Capacity Sizing
+
+**Q: What is the KV cache and what does it avoid?**
+A: The KV cache stores Key and Value matrices for all past tokens in all layers. Without it, generating token n requires recomputing K and V for tokens 0..n-1 from scratch at every step - O(n²) total compute. With the cache, only K/V for the new token is computed at each step - O(n) total compute.
+
+**Q: Calculate the KV cache size for LLaMA-3 8B (n_layers=32, n_kv_heads=8, d_head=128) at 32K tokens in BF16.**
+A: `32 × 32768 × 2 × 8 × 128 × 2 bytes = 4,294,967,296 bytes = 4 GiB` per sequence (at batch size 1). Formula: `n_layers × seq_len × 2 (K+V) × n_kv_heads × d_head × bytes_per_element`.
+
+**Q: A 70B model in FP16 - minimum A100-80GB GPUs for inference?**
+A: 70B × 2 bytes = 140 GB → minimum **2× A100-80GB** (160 GB total, ~20 GB headroom). With INT4 AWQ quantization: 70B × 0.5 = 35 GB → **1× A100-80GB** with room for KV cache.
 

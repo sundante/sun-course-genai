@@ -127,4 +127,23 @@ Comparing `self_refine` (a review round with no new information) and `test_feedb
 **Q35: What does best-of-n with a visible-test selector measure?** `[Medium]`
 The value of sampling plus an external verifier: if any of n samples passes the visible tests, it is likely (not certainly) to pass the hidden ones. The gap between visible and hidden pass rates shows how well the visible tests cover the specification.
 
+---
+
+## More Review Questions
+
+**Q36: When would you choose Pipeline over Orchestrator-Subagent?**
+Pipeline when: the task decomposition is fixed and known upfront, stages have a clear sequential dependency (output of A is always input to B), and modularity is important (you want to swap stages independently). Orchestrator-Subagent when: the plan needs to be dynamic (the orchestrator decides what to do next based on intermediate results), some stages can run in parallel, or you need to handle failures by replanning rather than halting.
+
+**Q37: What are the tradeoffs of hierarchical vs flat orchestration?**
+Hierarchical: better isolation (a team-level failure doesn't propagate to the manager), natural for very large tasks, mirrors human organizational structure. But: more latency (each layer adds a round-trip), harder to debug (failures surface only after propagating up), and more complex to build. Flat (single orchestrator): simpler, faster, easier to debug. But: doesn't scale to many agents; the orchestrator becomes a bottleneck. Choose hierarchical only when task scale or isolation requirements justify the complexity.
+
+**Q38: What are hybrid patterns and give an example?**
+Real systems combine multiple patterns. Common example: Orchestrator-Subagent + Parallel - the orchestrator fans out to parallel subagents for independent subtasks, waits for all results, then synthesizes. Another: Pipeline + Reflexion - a pipeline where the writing stage includes an internal critique loop before passing to the next stage. Hybrid patterns are the rule, not the exception, in production systems.
+
+**Q39: You have a multi-agent task that's producing a wrong final answer. How do you debug it?**
+(1) Get the full trajectory: pull the complete trace from your observability tool. (2) Find the first wrong step - don't start from the error, start from the beginning. (3) Check tool call arguments at that step: were they grounded in context or hallucinated? (4) Check whether the tool result was correctly interpreted. (5) If the issue is in an LLM reasoning step, inspect the full context that was provided at that step. (6) Replay from checkpoint: use the framework's checkpointing (with the recorded model responses, since sampling varies) to reproduce the failure. (7) Fix the root cause - improved tool description, better prompt, input validation - and verify the fix by replaying.
+
+**Q40: What are the most common failure modes in production agentic systems?**
+(1) Cascading failure: agent A produces bad output → agent B uses it → errors compound silently. Fix: validate outputs between agents. (2) Infinite loops: reflection/retry cycle with no termination. Fix: always set max_iterations. (3) Context drift: agent loses track of the original goal as context accumulates. Fix: pin goal in system message; use task ledger. (4) Prompt injection via external content: external data overrides agent instructions. Fix: structural defences - least-privilege tools, isolating untrusted content, approvals for consequential actions, policy checks in code (see Production Agents: Agent Security). (5) Hallucinated tool arguments: agent invents parameter values not in context. Fix: validate arguments, log every tool call. (6) HITL timeout: no human responds, task is stuck. Fix: define timeout policy and escalation path.
+
 *Last reviewed: 2026-09*

@@ -1,6 +1,6 @@
 # Production Agents - Q&A Review Bank
 
-Thirty questions across architecture, security, durability, cost, evaluation and observability. Try each one before revealing the answer.
+Thirty-two questions across architecture, security, durability, cost, evaluation and observability. Try each one before revealing the answer.
 
 ```objectives
 time: 45 min
@@ -79,6 +79,10 @@ prerequisites:
 ## Evaluation and Observability
 
 ```quiz
+- q: "What is trajectory evaluation and why is it needed alongside outcome checks?"
+  answer: "It grades the path - which tools were called, with what arguments, how many steps, whether the agent looped or did something unsafe - not just the final answer or state. An agent can reach the right outcome through a wasteful or risky path (hallucinated arguments that happened not to fail, redundant calls), and trajectory metrics such as tool-selection accuracy, argument validity and steps-to-completion catch it. Use state-based outcome checks as the primary grade and trajectory checks as diagnostics and guardrails."
+- q: "How does LLM-as-judge differ for single-turn evaluation and trajectory evaluation?"
+  answer: "A single-turn judge rates one output against a rubric. A trajectory judge must understand the task, the available tools and each step's context to decide whether each call was right and the path efficient - harder, so it needs a stronger judge, a more detailed rubric, and validation against human-labelled trajectories. Prefer deterministic step checks (argument validation, repeated-call detection) where possible and use the judge for what code can't check."
 - q: "Regression vs capability suites?"
   answer: "Regression suites sit near 100% and block releases when they regress; capability suites are deliberately hard and show whether changes genuinely improve the agent. Tasks graduate from capability to regression."
 - q: "How do you validate an LLM judge?"

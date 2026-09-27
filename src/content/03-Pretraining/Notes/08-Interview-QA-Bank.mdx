@@ -153,3 +153,42 @@
 **Q24** `[Hard]` How does Muon differ from AdamW, and what problem did MuonClip address?
 
 > Muon orthogonalizes the momentum update of each 2D weight matrix (approximately, with Newton-Schulz iterations) instead of scaling each element by its own second-moment estimate, and needs one state buffer instead of two; Moonshot reported about 2× compute efficiency over AdamW at scale. At trillion-parameter scale Muon led to exploding attention logits, and Kimi K2's MuonClip (QK-clip) rescales the query/key projections when the maximum logit exceeds a threshold, which let it pretrain on 15.5T tokens with no loss spikes.
+
+---
+
+## Training Fundamentals and Memory
+
+**Q25** `[Easy]` What is the Causal Language Modeling (CLM) training objective?
+
+> Predict the next token given all preceding tokens. Loss = average cross-entropy over all positions in the sequence. `L = -Σ log P(t_i | t_1, ..., t_{i-1})`. During training, all positions are predicted in parallel using the causal mask. The model is penalized for each position where its predicted probability distribution doesn't match the actual next token.
+
+---
+
+**Q26** `[Medium]` What is gradient checkpointing and what does it trade?
+
+> Gradient checkpointing (activation checkpointing) discards forward-pass activations during the forward pass and recomputes them during the backward pass from saved "checkpoint" activations. This reduces activation memory by ~5× (activations are usually the largest memory component during training for long sequences) at the cost of ~30–40% additional compute. Essential for fine-tuning large models or training with long sequences.
+
+---
+
+**Q27** `[Hard]` Why is data deduplication critical in pretraining and what are the consequences of skipping it?
+
+> Duplicate data causes models to memorize specific sequences rather than learning generalizable patterns. Consequences: (1) Models can verbatim recall training data → privacy risk (memorized PII, copyrighted text). (2) Perplexity on held-out data is inflated (artificially good - test overlap with train). (3) Models overfit to duplicated domains, underperforming on underrepresented topics. Near-deduplication (MinHash, SimHash) finds near-duplicates that exact hashing misses.
+
+---
+
+**Q28** `[Easy]` How much VRAM does a 13B model need for inference in BF16?
+
+> 13B × 2 bytes = 26 GB. Needs at least 1× A100-40GB (40 GB). INT8: 13 GB (fits on a 16GB GPU). INT4: ~6.5 GB (fits on consumer GPU).
+
+---
+
+**Q29** `[Medium]` How many bytes per parameter does mixed-precision Adam training need, and what does that imply for training VRAM?
+
+> 16 bytes per parameter: BF16 weights (2) + BF16 gradients (2) + FP32 master weights (4) + FP32 momentum (4) + FP32 variance (4). A 7B model needs 7B × 16 = 112 GB of model state before activations - more than one 80 GB GPU, so full fine-tuning of 7B is sharded with ZeRO-3/FSDP across 2+ GPUs (or uses 8-bit optimizers / CPU offload). This is why LoRA/QLoRA exist: they avoid gradients and optimizer state for the frozen base weights.
+
+---
+
+**Q30** `[Hard]` What does ZeRO Stage 3 do and how does it differ from Stage 1 and 2?
+
+> **ZeRO Stage 1**: partitions optimizer states (momentum, variance) across GPUs → ~4× memory reduction. Parameters and gradients still replicated on all GPUs. **Stage 2**: partitions optimizer states + gradients → ~8× reduction. **Stage 3**: partitions optimizer states + gradients + model parameters → ~16× reduction. Each GPU holds only 1/N of the parameters; during forward/backward, parameters are gathered via all-gather as needed. This enables training models much larger than single-GPU memory but at the cost of higher all-gather communication overhead.
+

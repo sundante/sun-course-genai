@@ -129,3 +129,12 @@
 **Q20** `[Medium]` What are the main failure modes of reasoning models in production?
 
 > Overthinking easy inputs (cost and latency), chains of thought that don't faithfully reflect the real reason for an answer, reward-hacking behaviours learned during RL, and smaller gains on open-ended tasks without verifiable rewards. Effort controls and per-route evaluation are the practical levers.
+
+---
+
+## Preference Tuning in Practice
+
+**Q21** `[Medium]` Why did DPO become a common default over PPO-based RLHF, and where does online RL still win?
+
+> DPO reformulates preference optimization as a supervised loss directly on (chosen, rejected) pairs - no separate reward model training, no PPO. RLHF/PPO challenges: reward model is a proxy (can be gamed), PPO is unstable (KL constraint must be tuned carefully), requires two separate training stages. DPO: one training stage, same stability as SFT, competitive results on chat-preference benchmarks. Llama 3's post-training, for example, used SFT + rejection sampling + DPO rather than PPO. The limit: DPO is offline (it learns from a fixed set of pairs), so it cannot discover behaviours beyond that data. Reasoning models brought online RL back - GRPO-style RL with verifiable rewards (DeepSeek-R1, 2025) trains on the model's own fresh samples scored by a checker, which is how long chain-of-thought reasoning is elicited.
+

@@ -78,7 +78,17 @@ Deviation from plan: instead of per-pattern x per-framework lab matrices, each m
 - [x] 17 Agent Engineering - 8 notes restructured and cited (harness, loops & graphs, context for agents, coding agents, computer use, skills & memory incl. SKILL.md spec, verifiers/environments/agent RL, spec-driven development), Q&A bank (30), Interview-Questions/12 rewritten, Minimal Coding Harness lab (8 repo tasks with hidden tests): bare 0.62, stop hook 0.67, stop hook + repeated-call detection 0.79 - the model mostly looped instead of finishing, so the hook only engaged once repeats were blocked
 
 ## Phase 5 - Pedagogy layer
-- [ ] Note template applied everywhere (objectives, quiz, exercise, references)
-- [ ] Capstones (3)
-- [ ] Q&A dedupe: one bank per module; delete `All_Questions.mdx`
-- [ ] `/quiz/[module]` powered by quiz fences
+Audit (2026-09-27): modules 06 and 10-17 already follow the template (done in Phases 2-4). The gap is ~40 concept notes and labs in modules 01-05 and 07-09 whose text predates the template, plus INDEX objectives in 02, 05, 07, 08, 09. Expectations by page type: concept notes and labs - objectives + quiz + exercise + references; module INDEX - `scope: module` objectives; Q&A banks - objectives (questions stay in bank format); system designs - objectives + references.
+
+- [x] `/quiz/[module]` and `/quiz/all` powered by the quiz fences of each module's pages - `src/lib/content/quizzes.ts` collects each page's ```quiz fences in nav order (links re-based to the module folder) and renders them through the same MDX pipeline as the learn pages; `/quiz/all` lists modules by track with question counts (446 questions at completion; modules 01-09 are thin until the template pass below)
+- [x] Q&A dedupe - `All_Questions.mdx` and the 12 Knowledge Check "Concept Review" pages removed (redirected to the owning banks): unique questions merged into module banks with answers checked (e.g. LoRA target modules per QLoRA, vLLM 24x figure, FP8, Agent Platform naming, prompt-leak and injection defences), duplicates dropped; the old module-01 bank split so training/fine-tuning/serving questions live in banks 03/04/05/07 (01: 71 -> 43); Knowledge Check is now a hub page (bank + quiz per module); module INDEX pages link their quiz; home-page question count now includes quiz-fence banks (581 questions in 17 banks)
+- [ ] Capstones (3): train & post-train a small model; serve it with an SLO report; a production agent - each with deliverables and a rubric
+- [ ] Note template - module INDEX objectives (02, 05, 07, 08, 09)
+- [ ] Note template - 01 LLM Foundations (5 notes)
+- [ ] Note template - 02 PyTorch (5 notes + lab)
+- [ ] Note template - 03 Pretraining (2 notes) and 04 Post-Training (1 note)
+- [ ] Note template - 05 Fine-Tuning Lab (4 notes + lab)
+- [ ] Note template - 07 Serving & Inference (6 notes + lab; 01 needs only references)
+- [ ] Note template - 08 Production Engineering (4 notes + lab)
+- [ ] Note template - 09 Cloud Platforms (4 notes + 1 exercise)
+- [ ] Note template - objectives on Q&A banks and system designs

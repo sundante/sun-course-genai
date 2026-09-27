@@ -150,4 +150,11 @@ Name, description, version, provider, skills, capabilities (streaming, push, ext
 **Q40: List the A2A task states and how a client follows a long task.** `[Medium]`
 SUBMITTED, WORKING, INPUT_REQUIRED, AUTH_REQUIRED (interrupted), COMPLETED, FAILED, CANCELED, REJECTED (terminal). Follow a task by polling `GetTask`, streaming (`SendStreamingMessage`, `SubscribeToTask`), or push notifications to a webhook for long or disconnected tasks.
 
+---
+
+## More Review Questions
+
+**Q41: How would you design an MCP server for an enterprise database?**
+Prefer task-shaped tools (`find_customer_orders(customer_id)`, `revenue_by_month(year)`) over a raw `query_database(sql)`, which is an injection and exfiltration risk; if free-form SQL is essential, run it read-only against a restricted view with a statement allow-list and row limits. Authenticate users with OAuth and enforce row-level security as the user, not a shared service account. Add resources: expose schema documentation as readable resources. Add rate limiting and connection pooling. Consider a query allow-list to prevent dangerous operations.
+
 *Last reviewed: 2026-09*
