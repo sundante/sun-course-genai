@@ -1,4 +1,19 @@
-# Fine-Tuning LLMs
+# Fine-Tuning: SFT and Parameter-Efficient Methods
+
+Fine-tuning continues training a pretrained model on task- or behaviour-specific data. This chapter covers the decision to fine-tune at all, supervised fine-tuning (and why the loss is masked), and the parameter-efficient methods - LoRA and QLoRA - that make fine-tuning affordable; preference tuning and reinforcement learning follow in the next chapters.
+
+```objectives
+time: 50 min
+outcomes:
+  - Decide between prompting, RAG and fine-tuning for a requirement, and between full fine-tuning and PEFT
+  - Prepare SFT data with the model's chat template and mask the loss to the response tokens
+  - Derive LoRA's parameter count and initialisation, and choose rank, alpha and target modules
+  - Estimate memory for full, LoRA and QLoRA fine-tuning of a given model and configure a QLoRA run
+  - Evaluate a fine-tune for task gains and for regressions on general capability
+prerequisites:
+  - "[GPU Memory & Hardware](../../03-Pretraining/Notes/02-GPU-and-Hardware.mdx) - bytes per parameter"
+  - "[Pretraining Overview](../../03-Pretraining/Notes/01-Training-and-Pretraining.mdx) - the causal LM loss"
+```
 
 ## Fine-Tuning Taxonomy
 
@@ -61,111 +76,24 @@ Why? You want the model to learn to generate good outputs, not to memorize the i
 If you include instruction tokens in the loss, you're computing gradients to "predict" arbitrary instruction text - but instructions vary across examples and have no consistent pattern to learn. More importantly, you want to optimize output quality, not instruction completion. Masking ensures gradients only flow from the target output.
 
 **SFT data quality > quantity:**
-- 1,000 high-quality diverse instruction-response pairs often outperform 100,000 noisy ones (LIMA paper, 2023)
+- LIMA (Zhou et al., 2023) fine-tuned a 65B model on 1,000 carefully curated examples and got responses that human raters often preferred or rated equal to those of models trained with far more data - evidence that most capability comes from pretraining and SFT mainly teaches format and style
 - Diversity matters: different tasks, domains, lengths, and formats
 - Consistency matters: the output should reflect the persona and format you want the model to learn
 
 ---
 
-## RLHF - Reinforcement Learning from Human Feedback
+## Beyond SFT: Preference Tuning and RL
 
-### Concept
+SFT imitates demonstrations. The next stages optimise for what people or verifiers prefer; each has its own chapter:
 
-SFT teaches the model to produce outputs matching a dataset, but datasets can't capture all preferences. RLHF fine-tunes for **human preference** directly.
+| Method | Needs | How it works | Chapter |
+|---|---|---|---|
+| **RLHF with PPO** | Preference data → reward model; a critic | On-policy RL maximising reward with a KL penalty to the SFT model | [RL for LLMs](03-RL-for-LLMs.mdx) |
+| **DPO and variants (IPO, KTO, SimPO, ORPO)** | Chosen/rejected pairs | A supervised loss derived from the RLHF objective; no reward model or RL loop; offline | [Preference Optimization](02-Preference-Optimization.mdx) |
+| **Rejection-sampling fine-tuning** | A scorer or verifier | Sample several answers, keep the best, run SFT on them | [RL for LLMs](03-RL-for-LLMs.mdx) |
+| **GRPO / RLVR** | A reward function or verifier (tests, exact answers) | Online RL with group-relative advantages instead of a critic; drives reasoning models | [RL for LLMs](03-RL-for-LLMs.mdx), [Reasoning Models](04-Reasoning-Models-and-Test-Time-Compute.mdx) |
 
-**The RLHF pipeline:**
-
-```mermaid
-flowchart LR
-    A["🏗️ Base model"] --> B["1️⃣ SFT on instruction dataset"] --> C["🎯 SFT model"]
-    C --> D["2️⃣ Reward Model Training<br/>Human preference: A vs B → prefer A<br/>(prompt, response) → scalar reward"]
-    D --> E["🏆 Reward model"]
-    C --> F["3️⃣ PPO Reinforcement Learning<br/>Maximize reward, KL-constrained to SFT"]
-    E --> F
-    F --> G["✅ Aligned policy model"]
-
-    style B fill:#e8f4fd,stroke:#4a9eca
-    style D fill:#fff3cd,stroke:#f0a500
-    style F fill:#d4edda,stroke:#28a745
-```
-
-**Why RLHF is hard:**
-- Reward models are imperfect proxies for human preference - they can be gamed
-- PPO is unstable: too many updates → reward hacking (model exploits reward model flaws)
-- Expensive: requires thousands of human preference annotations
-- Distribution shift: fine-tuned model wanders from the SFT distribution → capability regression
-
----
-
-## DPO - Direct Preference Optimization
-
-### Concept
-
-DPO (Rafailov et al., 2023) achieves the same goal as RLHF but **without training a separate reward model** or running PPO. It reformulates the preference optimization problem into a direct supervised loss.
-
-**Key insight:** The optimal policy under the RLHF objective has a closed-form relationship with the reward function. DPO rearranges this to optimize directly on preference pairs without explicitly computing rewards.
-
-**DPO loss:**
-```
-L_DPO = -E[(chosen, rejected)] [ log σ( β * log(π_θ(y_w|x)/π_ref(y_w|x)) 
-                                       - β * log(π_θ(y_l|x)/π_ref(y_l|x)) ) ]
-
-Where:
-  y_w = preferred (winning) response
-  y_l = rejected (losing) response  
-  π_ref = reference SFT model (frozen)
-  β = temperature controlling how far policy deviates from reference
-```
-
-In plain English: increase the log-probability of preferred responses relative to the reference model; decrease the log-probability of rejected responses - all in one supervised loss without RL.
-
-**Why DPO became a common default for preference tuning:**
-- No separate reward model training
-- No PPO instability
-- Single training stage (like SFT)
-- Competitive results on chat-preference benchmarks
-- Example: Llama 3's post-training used SFT + rejection sampling + DPO rather than PPO (Dubey et al., 2024)
-
-**Its limit:** DPO is *offline* - it learns only from a fixed set of preference pairs. Online RL, where the model is trained on its own fresh samples, came back with reasoning models (see GRPO below).
-
-| Method | Reward model? | RL training? | Stability | Used by |
-|--------|--------------|-------------|-----------|---------|
-| RLHF/PPO | Yes (separate) | Yes (PPO, with a critic) | Difficult | InstructGPT, early ChatGPT |
-| DPO | No | No (offline, supervised-style loss) | Easy | Llama 3 post-training |
-| ORPO | No | No (folds preference into SFT, no reference model) | Easy | Smaller open fine-tunes |
-| Rejection-sampling FT | Scorer or verifier | No (sample, keep the best, SFT on them) | Easy | Llama 2/3 post-training |
-| GRPO | Reward function or verifier | Yes (online, no critic) | Good at scale | DeepSeekMath, DeepSeek-R1, open reasoning models |
-
----
-
-## Rejection Sampling and GRPO - Modern Alternatives
-
-### Concept
-
-**Rejection-sampling fine-tuning (RSFT, sometimes called RFT):** Sample several responses per prompt, score them with a reward model or a verifier (unit tests, exact-match answers), keep the best, and run ordinary SFT on them. No RL machinery, so it is simple and stable, but it only learns from what the model already produces. (Note: "RFT" is also OpenAI's product name for *reinforcement* fine-tuning, which is an online RL method - the acronym is ambiguous, so spell it out.)
-
-**GRPO (Group Relative Policy Optimization; Shao et al., DeepSeekMath, 2024):** A PPO-style *online* RL algorithm that drops the learned value function (critic). For each prompt it samples a group of outputs, scores them, and uses each output's reward relative to the group mean as its advantage. That removes a whole model from training memory and works well with sparse, verifiable rewards.
-
-```
-GRPO vs PPO key difference:
-PPO: needs a value function (critic) estimated for each token
-GRPO: samples a group of outputs, uses relative reward within the group as baseline
-      → eliminates the need for a separate critic model
-      → more stable gradient estimates for long responses
-```
-
-**Why GRPO matters for reasoning models:**
-- DeepSeek-R1 (2025) used GRPO to train long chain-of-thought reasoning - the model learns to produce extended reasoning traces that score higher on math/code benchmarks
-- GRPO's group-relative baseline naturally handles sparse rewards (e.g., "is the final answer correct?") without training a critic over very long responses
-- This is **RL with verifiable rewards (RLVR)**: R1-Zero was rewarded only on final-answer correctness and format, not on intermediate steps - long, self-checking reasoning emerged because it raised the outcome reward
-- Follow-ups such as DAPO and Dr. GRPO fix GRPO's length and normalization biases; the Post-training module covers them
-
-| Method | Reward model needed? | Stability | Best for |
-|--------|---------------------|-----------|---------|
-| RLHF/PPO | Yes (separate) | Difficult | Helpfulness + safety alignment |
-| DPO | No | Easy | Preference alignment from pairs |
-| Rejection-sampling FT | Scorer or verifier | Easy | Bootstrapping from the model's own best samples |
-| GRPO | Reward function or verifier | Good | Reasoning, math, code (verifiable rewards) |
+Llama 3's post-training, for example, combined SFT, rejection sampling and DPO; DeepSeek-R1 added large-scale GRPO with verifiable rewards. ("RFT" is ambiguous - rejection-sampling fine-tuning or OpenAI's reinforcement fine-tuning - so spell it out.)
 
 ---
 
@@ -213,7 +141,7 @@ LoRA:        r × k + d × r = r × (d + k) (e.g., r=16: 16 × 8192 = 131K)
 Reduction:   16.8M → 131K = 128× fewer parameters to train
 ```
 
-**LoRA is typically applied to:** Q and V projection matrices (most impactful), sometimes also K, O, and FFN layers.
+**Where to apply LoRA:** the original paper adapted only the Q and V projections; the QLoRA paper found adapting **all linear layers** (attention and MLP) was needed to match full fine-tuning, and most current recipes use `target_modules="all-linear"`.
 
 **Scaling parameter alpha (α):**
 ```
@@ -242,9 +170,10 @@ Full fine-tuning (BF16):    8B × 16 bytes = 128 GB model state + activations
 LoRA (BF16 base):           16 GB weights + ~0.3 GB adapters + optimizer ≈ 24 GB
                             Fits on 1× A100-40GB
 
-QLoRA (NF4 base + BF16 LoRA): 8B × 0.5 bytes = 4 GB weights 
-                                + BF16 adapters ≈ 6 GB total
-                                Fits on 1× RTX 4090 (24 GB) ✓
+QLoRA (NF4 base + BF16 LoRA): 8B × 0.5 bytes ≈ 4-5 GB weights
+                                + adapters and their optimizer state (< 1 GB)
+                                + activations (several GB, depends on sequence length)
+                                ≈ 10-16 GB in practice → fits on 1× RTX 4090 (24 GB) ✓
 ```
 
 ### Code
@@ -252,7 +181,7 @@ QLoRA (NF4 base + BF16 LoRA): 8B × 0.5 bytes = 4 GB weights
 ```python
 # QLoRA fine-tuning with PEFT + BitsAndBytes
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-from peft import LoraConfig, get_peft_model, TaskType
+from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training, TaskType
 import torch
 
 # Step 1: Load base model in NF4 (4-bit quantization)
@@ -272,11 +201,15 @@ model = AutoModelForCausalLM.from_pretrained(
 tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.2-1B")
 tokenizer.pad_token = tokenizer.eos_token
 
+# Prepare the quantized model for training: casts norms to fp32 and enables input gradients
+# (required with gradient checkpointing) - skipping this is the classic silent QLoRA failure
+model = prepare_model_for_kbit_training(model)
+
 # Step 2: Add LoRA adapters
 lora_config = LoraConfig(
     r=16,                       # rank
     lora_alpha=32,              # scaling = alpha/r = 2
-    target_modules=["q_proj", "v_proj", "k_proj", "o_proj"],  # which layers
+    target_modules="all-linear",  # attention and MLP projections, as in the QLoRA paper
     lora_dropout=0.1,
     bias="none",
     task_type=TaskType.CAUSAL_LM
@@ -284,7 +217,7 @@ lora_config = LoraConfig(
 
 model = get_peft_model(model, lora_config)
 model.print_trainable_parameters()
-# Output: trainable params: X | all params: 1B | trainable%: ~0.5%
+# Output: trainable params: ~11M | all params: ~1.25B | trainable%: ~0.9%
 
 # Step 3: Training loop (simplified)
 from transformers import TrainingArguments, Trainer
@@ -295,8 +228,7 @@ training_args = TrainingArguments(
     per_device_train_batch_size=4,
     gradient_accumulation_steps=4,  # effective batch = 4×4 = 16
     learning_rate=2e-4,
-    fp16=False,         # can't use fp16 with NF4 loaded model
-    bf16=True,
+    bf16=True,          # match bnb_4bit_compute_dtype above
     logging_steps=10,
     save_strategy="epoch",
     optim="paged_adamw_32bit",  # memory-efficient optimizer for QLoRA
@@ -403,14 +335,13 @@ optimizer = torch.optim.AdamW([
 | Use Case | Recommended Method |
 |----------|--------------------|
 | Lightweight tuning for multiple tasks | LoRA / QLoRA / Adapter Tuning |
-| Personalization or named entity learning | DreamBooth / Textual Inversion (multimodal) |
-| Teaching specific structured response formats | SFT + RFT |
-| Aligning with human preferences | SFT → Reward Modeling → RLHF / GRPO |
+| Teaching specific structured response formats | SFT (plus rejection-sampling fine-tuning on verified outputs) |
+| Aligning with human preferences | SFT, then DPO-family preference tuning (or RLHF with a reward model) |
 | Tuning on large domain corpus without labels | Continual Pretraining |
 | High compute, max performance task adaptation | Full Fine-Tuning |
 | Few-shot, low-resource setups | Prefix Tuning / LoRA |
 | Fast prototyping with prebuilt tools | PEFT (Hugging Face library) |
-| Long-chain reasoning (math, code) | GRPO-based RL fine-tuning |
+| Long-chain reasoning (math, code) | RL with verifiable rewards (GRPO and variants) |
 
 **Continual Pretraining** (distinct from instruction fine-tuning): Resume language model training on unlabeled domain-specific corpus. Captures domain jargon and writing style without requiring labeled examples. Risk: forgetting general language knowledge. Used when you want the model to "speak the language" of your domain before task-specific instruction tuning.
 
@@ -459,17 +390,60 @@ Want to actually run a LoRA/QLoRA fine-tune, not just the math? See the [Fine-Tu
 
 ## Study Notes
 
-**Must-know for interviews:**
-- SFT loss is masked on instruction tokens - gradients only from output tokens
-- RLHF: reward model + PPO; DPO: direct preference on pairs without RL - DPO is now dominant
-- LoRA: ΔW ≈ BA where rank r << min(d,k); base model is frozen; ~0.5% trainable params at r=16
-- QLoRA = NF4 quantized base + BF16 LoRA adapters → enables 7B fine-tuning on a 24GB GPU
-- Multi-head fine-tuning: shared encoder + task-specific heads; task interference → use gradient surgery or per-task LoRA adapters
-- When to fine-tune: task-specific format/style that prompting can't achieve consistently
+- Try prompting, then RAG; fine-tune for consistent format, style or task behaviour that prompting can't deliver - fine-tuning is a poor way to add changing facts
+- SFT uses the causal LM loss masked to response tokens; format with the model's chat template
+- LoRA: ΔW ≈ B·A with rank r ≪ min(d, k); B initialised to zero so training starts from the base model; scale α/r; adapt all linear layers
+- LoRA parameters per matrix = r(d + k); for 4096 × 4096 at r = 16: 131K vs 16.8M
+- QLoRA: frozen NF4 base + bf16 adapters + double quantization + paged optimizers; call `prepare_model_for_kbit_training`
+- Full fine-tuning needs ~16 bytes/param of model state; LoRA and QLoRA cut this to roughly the base weights plus activations
+- Preference tuning (DPO family) and RL (PPO, GRPO) come after SFT - see the next chapters
+- Evaluate on the target task and on a fixed general suite to catch forgetting
 
-**Quick recall Q&A:**
-- *Why mask instruction tokens in SFT?* To only optimize on output quality - instructions vary per example with no consistent target distribution.
-- *What is the LoRA initialization strategy and why?* B=zeros, A=random → ΔW=BA=0 at init → training starts exactly from base model behavior.
-- *What is NF4?* 4-bit NormalFloat - bins placed at equal probability intervals of a normal distribution, optimal for LLM weights.
-- *What is the KL penalty in RLHF PPO?* KL(π_θ || π_SFT) penalizes deviating too far from the SFT model - prevents reward hacking.
-- *Why is DPO easier than RLHF?* No separate reward model training; no PPO instability; single supervised training stage.
+## Check Yourself
+
+```quiz
+- q: "LoRA with rank 8 is applied to a 4096 × 11008 projection. How many trainable parameters does it add?"
+  options: ["8 × (4096 + 11008) ≈ 121K", "4096 × 11008 ≈ 45M", "8 × 4096 ≈ 33K", "8 × 11008 ≈ 88K"]
+  answer: 1
+- q: "Why is B initialised to zero in LoRA?"
+  options:
+    - "So ΔW = BA = 0 at the start and training begins exactly from the base model's behaviour"
+    - "To save memory"
+    - "Because A is also zero"
+    - "To speed up convergence by 2×"
+  answer: 1
+- q: "Your support bot must reflect a policy that changes weekly. Fine-tune or RAG?"
+  options: ["RAG - facts that change belong in retrieved documents", "Fine-tune weekly", "Full fine-tuning once", "Prompt engineering only"]
+  answer: 1
+- q: "Why mask the prompt tokens out of the SFT loss?"
+  answer: "The goal is to learn to produce good responses; training to predict the (varied, arbitrary) prompt text wastes gradient signal and can teach the model to imitate user turns. Masking makes every gradient come from response quality."
+- q: "What does `prepare_model_for_kbit_training` do, and what happens if you skip it?"
+  answer: "It casts layer norms to fp32 and enables gradients on the input embeddings (needed with gradient checkpointing). Without it, training can run without errors but the adapters receive no or unstable gradients, so the model barely learns."
+```
+
+## Exercises
+
+```exercise
+- title: Memory for three ways to fine-tune
+  task: |
+    For an 8B model, estimate the memory for (a) full fine-tuning with mixed-precision AdamW, (b) LoRA at r = 16 on all linear layers of a bf16 base, and (c) QLoRA with an NF4 base. Assume Llama-3-8B shapes (32 layers, d_model 4096, 1024-dim K/V, FFN 14336) and ignore activations. Which runs on one 24 GB GPU?
+  solution: |
+    (a) 8B × 16 bytes = 128 GB - needs sharding across several 80 GB GPUs. (b) Per layer, LoRA adds r × (d + k) for Q (4096+4096), K and V (4096+1024 each), O (4096+4096) and three MLP matrices (4096+14336 each): 16 × (8192 + 5120 + 5120 + 8192 + 3 × 18432) ≈ 1.31M per layer, ≈ 42M total. With AdamW in fp32 that's ~0.7 GB of adapter state, plus 16 GB of bf16 base weights → ~17 GB before activations; tight on 24 GB. (c) NF4 base ≈ 4.5-5 GB + the same ~0.7 GB → comfortably fits on 24 GB with room for activations.
+- title: Does fine-tuning help your task?
+  task: |
+    Pick a narrow task (for example extracting fields from invoices into JSON). Build 200 labelled examples, split 150/50, and compare few-shot prompting of an instruct model with a QLoRA fine-tune of the same model on the 50 held-out items. Report accuracy with confidence intervals and the cost of each approach.
+  solution: |
+    Expect the fine-tune to win on format consistency and on edge cases present in the training data, with a smaller gap on the easy majority. With 50 test items the CIs are wide (±10-14 points); decide only if the gap is clearly larger than that, and weigh the ongoing cost of maintaining a fine-tuned model.
+```
+
+## References
+
+- Hu et al., [LoRA: Low-Rank Adaptation of Large Language Models](https://arxiv.org/abs/2106.09685) (2021)
+- Dettmers et al., [QLoRA: Efficient Finetuning of Quantized LLMs](https://arxiv.org/abs/2305.14314) (2023)
+- Zhou et al., [LIMA: Less Is More for Alignment](https://arxiv.org/abs/2305.11206) (2023)
+- Ouyang et al., [Training language models to follow instructions with human feedback (InstructGPT)](https://arxiv.org/abs/2203.02155) (2022)
+- Biderman et al., [LoRA Learns Less and Forgets Less](https://arxiv.org/abs/2405.09673) (2024)
+- Yu et al., [Gradient Surgery for Multi-Task Learning (PCGrad)](https://arxiv.org/abs/2001.06782) (2020)
+- Hugging Face, [PEFT documentation](https://huggingface.co/docs/peft) (2026)
+
+*Last reviewed: 2026-09*

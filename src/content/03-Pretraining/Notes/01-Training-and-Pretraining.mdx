@@ -1,4 +1,17 @@
-# Training and Pretraining
+# Pretraining: Overview, Tokenization and Objectives
+
+Pretraining turns a randomly initialised network into a base model by training it to predict text over trillions of tokens. This chapter gives the big picture of a pretraining run and covers two foundations the rest of the module builds on - how text becomes tokens, and which training objective each architecture uses - then points to the chapters that go deep on data, scaling, distributed training and stability.
+
+```objectives
+time: 45 min
+outcomes:
+  - Describe the stages from pretraining to an aligned assistant, and the scale (tokens, GPU-hours, cost) of a modern pretraining run
+  - Train and apply a BPE tokenizer, and compare tokenization algorithms and vocabulary sizes by their effect on sequence length
+  - Write the loss for causal LM, masked LM and span corruption, and explain label shifting and padding masks
+  - Map each part of a pretraining run to the chapter that covers it in depth
+prerequisites:
+  - "[LLM Fundamentals](../../01-LLM-Foundations/Notes/01-LLM-Fundamentals.mdx) and [Model Architecture Types](../../01-LLM-Foundations/Notes/04-Model-Architecture-Types.mdx)"
+```
 
 ## Pre-Training
 
@@ -16,47 +29,8 @@ flowchart LR
 
 **Scale of pretraining:**
 - Llama 3 8B: ~15 trillion tokens (15T), ~1.3M H100 GPU-hours (Meta model card; the 70B took ~6.4M)
-- GPT-4: estimated 10T+ tokens, undisclosed compute
+- Frontier closed models do not publish token counts or compute; open reports (Llama 3, DeepSeek-V3, Qwen3) are the reliable reference points
 - Rule of thumb: at roughly $2-4 per H100-hour, **1M GPU-hours costs ~$2M-$4M** in cloud compute (a frontier run is tens of millions of GPU-hours)
-
----
-
-## Dataset Curation
-
-### Concept
-
-The quality of pretraining data is at least as important as model architecture. "Garbage in, garbage out" applies at trillion-token scale.
-
-**Data sources:**
-- **Common Crawl:** Web scrapes of the entire internet - petabytes of raw text; requires aggressive filtering
-- **Books:** Project Gutenberg, BooksCorpus, Books3 - high-quality, diverse language
-- **Wikipedia:** Clean, factual, structured - high signal-to-noise
-- **Code:** GitHub - improves reasoning capabilities, not just coding
-- **Academic papers:** ArXiv - improves scientific understanding
-- **Curated datasets:** Refinedweb, RedPajama, SlimPajama, Dolma
-
-**Data processing pipeline:**
-```mermaid
-flowchart TD
-    A["🌐 Raw web text"] --> B["🚫 URL/domain filtering<br/>block adult content, spam, low-quality domains"]
-    B --> C["🌍 Language detection<br/>keep target languages"]
-    C --> D["🔁 Exact deduplication<br/>URL + content hashes"]
-    D --> E["🔁 Near-deduplication<br/>MinHash LSH, SimHash, n-gram overlap"]
-    E --> F["⭐ Quality filtering<br/>perplexity · heuristic rules · classifier scoring"]
-    F --> G["🔒 PII removal<br/>email, phone numbers, SSNs"]
-    G --> H["✅ Final tokenization + storage"]
-```
-
-**Why deduplication matters:** Training on duplicate data memorizes specific text rather than learning generalizable patterns. Deduplication also reduces privacy risk (memorized PII).
-
-**Data mixture ratios** (as published in the Llama 3 paper, Dubey et al., 2024):
-```
-Llama 3 final pretraining mix (by token category):
-~50% general knowledge
-~25% mathematical and reasoning
-~17% code
-~8%  multilingual
-```
 
 ---
 
@@ -100,7 +74,7 @@ Example:
 | SentencePiece (BPE/Unigram) | Works on raw UTF-8 bytes | Multilingual models | T5, mT5, Gemini | No pre-tokenization needed | May be less readable |
 | Byte-Level BPE | Extends BPE to raw bytes | Includes spaces, emojis | GPT-2, GPT-Neo, GPT-J | No UNK tokens | Tokens may be unreadable |
 | SentencePiece (byte-level) | Uses bytes with Unigram | Language-agnostic | PaLM, Gemini | Works on all scripts | Needs detokenization mapping |
-| tiktoken (OpenAI) | GPT-custom BPE | Special tokens, efficient | GPT-3, GPT-4 | Very fast | Custom, undocumented |
+| tiktoken (OpenAI) | Byte-level BPE (open-source library) | Special tokens, efficient | GPT-3.5, GPT-4, GPT-4o, Llama 3 (tiktoken-based) | Very fast | Vocabularies tied to specific model families |
 
 **Key practical notes:**
 - **SentencePiece (LLaMA 1/2, Gemma, T5):** Works on raw text without pre-tokenization - handles all languages and code uniformly; no whitespace issues.
@@ -167,73 +141,6 @@ Loss:    CrossEntropy on the decoder's output
 ```
 
 ---
-
-## Scaling Laws
-
-### Concept
-
-Neural scaling laws describe how model performance improves predictably with scale. Kaplan et al. (2020, OpenAI) and Hoffmann et al. (2022, DeepMind/Chinchilla) are the key papers.
-
-**Kaplan scaling laws (original):**
-- Loss scales as a power law in compute, parameters, and data independently
-- For a fixed compute budget: larger model + less data tends to be better
-- This led to GPT-3 (175B) being undertrained - not enough tokens for the model size
-
-**Chinchilla scaling law (the correction):**
-Hoffmann et al. showed the Kaplan law overweighted parameters. Their revised finding:
-```
-Optimal: tokens = 20 × parameters
-```
-
-- A 7B model should train on 140B tokens for "compute-optimal" training
-- LLaMA-1's 65B model was trained on only 1.4T tokens - compute-optimal would be 1.3T, so roughly right
-- **LLaMA-2 and LLaMA-3 deliberately overtrain** beyond Chinchilla optimal because the serving cost of a smaller model is more valuable than training efficiency at a fixed compute budget
-
-**The inference-aware scaling insight (LLaMA philosophy):**
-Chinchilla optimizes for minimum training loss. But in practice, you want a model that's as good as possible *after serving millions of requests*. Training a smaller model on more tokens → smaller model → cheaper inference × millions of requests. So "compute-optimal training" ≠ "deployment-optimal training."
-
-**Key scaling law takeaways for interviews:**
-- Performance scales predictably as a power law in N (parameters), D (tokens), C (compute)
-- Doubling parameters gives diminishing returns unless you also double training data
-- Chinchilla: optimal token count ≈ 20× parameter count
-- Modern LLMs (LLaMA-3, Gemma) train well beyond Chinchilla optimal for inference efficiency
-
----
-
-## Distributed Training
-
-### Concept
-
-A 70B model in BF16 requires 140 GB of VRAM just for weights - that's more than any single GPU. Training is even worse (4× for optimizer states - see [GPU and Hardware](02-GPU-and-Hardware.mdx)). Distributed training splits work across many GPUs.
-
-**Data Parallelism (DDP - DistributedDataParallel):**
-- Replicate the full model on each GPU
-- Split the batch across GPUs (different data, same model)
-- After each backward pass, average gradients across all GPUs (all-reduce)
-- Simplest strategy; works when model fits on one GPU
-
-**Tensor Parallelism (Megatron-LM style):**
-- Split individual weight matrices across GPUs
-- Attention heads split across GPUs: head 1–8 on GPU 1, head 9–16 on GPU 2, etc.
-- FFN layers split across GPUs: first half of d_ffn on GPU 1, second half on GPU 2
-- Requires all-reduce after each layer - high communication overhead
-- Essential for models too large to fit on one GPU
-
-**Pipeline Parallelism:**
-- Split layers (not weights) across GPUs: layers 1–16 on GPU 1, layers 17–32 on GPU 2
-- Micro-batching: split the batch into micro-batches so GPUs overlap computation ("bubble" reduction)
-- Communication: only activations at layer boundaries cross GPU - less bandwidth than tensor parallelism
-- Bubble overhead: GPUs still idle when waiting for previous stage - mitigated by micro-batching
-
-**ZeRO (Zero Redundancy Optimizer) - covered in detail in [GPU and Hardware](02-GPU-and-Hardware.mdx):**
-- Shards optimizer states, gradients, and parameters across GPUs
-- Eliminates redundant copies present in pure DDP
-- ZeRO-3: full parameter sharding - enables training models much larger than per-GPU memory
-
-**Practical training setup for 7B model:**
-- 8× A100-80GB: enough for BF16 training with ZeRO-2
-- Gradient checkpointing: trade 30% compute for 5× memory reduction on activations
-- Mixed precision (BF16): 2× memory reduction vs FP32, similar training stability
 
 ### Code
 
@@ -305,47 +212,74 @@ print("BPE tokenizer configured (needs corpus file to actually train)")
 
 ---
 
-## Learning Rate and Training Stability
+## The Rest of a Pretraining Run
 
-### Concept
+The other ingredients each have a chapter in this module:
 
-**Warmup + cosine decay:** The standard schedule for transformer training.
+| Topic | Key ideas | Chapter |
+|---|---|---|
+| **Data** | Web-scale extraction, language ID, exact and MinHash near-deduplication, classifier-based quality filtering (FineWeb-Edu, DCLM), PII removal, mixtures and annealing - Llama 3's final mix was roughly 50% general knowledge, 25% maths and reasoning, 17% code, 8% multilingual | [Data Curation & Mixtures](03-Data-Curation-and-Mixtures.mdx) |
+| **Scale** | Loss falls as a power law in parameters, data and compute; Chinchilla's compute-optimal ratio is ~20 tokens per parameter; modern models train far beyond it because smaller models are cheaper to serve (Llama 3 8B saw ~15T tokens) | [Scaling Laws & Compute Budgets](04-Scaling-Laws-and-Compute-Budgets.mdx) |
+| **Parallelism** | Data, tensor, pipeline, context and expert parallelism; ZeRO/FSDP sharding; mixed-precision Adam needs ~16 bytes per parameter of model state - 8× the bf16 weights - before activations | [Distributed Training at Scale](05-Distributed-Training-at-Scale.mdx) and [GPU & Hardware](02-GPU-and-Hardware.mdx) |
+| **Stability** | Warmup plus cosine or warmup-stable-decay schedules, gradient clipping, loss-spike handling, QK-norm, z-loss, optimizer choices (AdamW, Muon) | [Training Stability & Optimizers](06-Training-Stability-and-Optimizers.mdx) |
+| **Hardware** | GPU generations, interconnects, MFU | [Accelerators & Interconnects](07-Accelerators-and-Interconnects.mdx) |
 
-```
-Warmup (0 → max_lr over first T_warmup steps):
-  lr = max_lr × (step / T_warmup)
-
-Cosine decay (T_warmup → T_total):
-  lr = min_lr + 0.5 × (max_lr - min_lr) × (1 + cos(π × t / T_decay))
-```
-
-**Why warmup?** At the start of training, gradients are large and inconsistent - high learning rates cause instability. Warmup gradually increases lr while the model's parameter estimates stabilize.
-
-**Gradient clipping:** Clips the global gradient norm to a maximum value (typically 1.0):
-```
-if ||g|| > max_norm:
-    g = g × max_norm / ||g||
-```
-Prevents gradient explosions from occasional bad batches. Essential for stable pretraining.
-
-**Gradient checkpointing:** Instead of storing all activations from the forward pass (needed for backpropagation), discard them and recompute from saved checkpoints during backward. Reduces activation memory by ~5× at the cost of ~30% more compute. Standard for training large models.
+Two memory techniques appear in every run and are worth knowing here: **mixed precision** (bf16 compute with fp32 master weights) and **gradient checkpointing** (discard most activations in the forward pass and recompute them during backward - roughly one extra forward pass, about 30% more compute, for a large cut in activation memory).
 
 ---
 
 ## Study Notes
 
-**Must-know for interviews:**
-- Pretraining = learn language from massive unlabeled data; fine-tuning = specialize for tasks
-- Data quality matters enormously: deduplication, quality filtering, and PII removal are critical
-- BPE builds subword vocabulary by merging frequent adjacent pairs iteratively
-- CLM loss: cross-entropy on next-token prediction; label shifting handled by the framework
-- Chinchilla: compute-optimal training = 20× tokens per parameter
-- Modern LLMs deliberately overtrain beyond Chinchilla because smaller models are cheaper to serve
-- Distributed training: data parallelism (batch split), tensor parallelism (weight split), pipeline parallelism (layer split)
+- Pretraining = next-token (or masked/span) prediction over trillions of tokens; post-training turns the base model into an assistant
+- Llama 3 8B: ~15T tokens and ~1.3M H100 GPU-hours; 1M GPU-hours is roughly $2-4M at cloud prices
+- BPE builds a vocabulary by repeatedly merging the most frequent adjacent pair; byte-level BPE never needs an unknown token
+- Larger vocabularies (Llama 3's 128K, OpenAI's o200k) shorten sequences, especially for code and non-English text
+- CLM: cross-entropy on every next token, labels shifted by the framework, padding masked with -100; MLM: 15% of tokens selected (80/10/10); T5: sentinel span corruption
+- Data, scaling, parallelism, stability and hardware each have their own chapter
 
-**Quick recall Q&A:**
-- *What is the Chinchilla scaling law?* Optimal token count ≈ 20× parameter count for compute-efficient training.
-- *Why does LLaMA-3 overtrain beyond Chinchilla?* Inference cost dominates training cost over millions of requests - a smaller, well-trained model costs less to serve.
-- *What is gradient checkpointing?* Trading compute for memory by discarding and recomputing activations during backward pass.
-- *Why is data deduplication critical?* Duplicate data causes memorization of specific text rather than learning generalizable patterns; also reduces privacy risk.
-- *What is the CLM training objective?* Predict the next token given all preceding tokens; minimize cross-entropy averaged over all positions.
+## Check Yourself
+
+```quiz
+- q: "Why did Llama 3 move from a 32K SentencePiece vocabulary to a 128K tiktoken-based BPE vocabulary?"
+  options:
+    - "Larger vocabularies encode text in fewer tokens, especially non-English text and code, lowering compute per document"
+    - "SentencePiece cannot handle bytes"
+    - "Smaller vocabularies cause more hallucination"
+    - "tiktoken is the only open-source tokenizer"
+  answer: 1
+- q: "In Hugging Face causal-LM training, what should `labels` be set to at padding positions?"
+  options: ["-100, so they are ignored by the loss", "0", "The pad token id", "The EOS token id"]
+  answer: 1
+- q: "In BERT's masked-LM objective, what happens to the 15% of selected tokens?"
+  answer: "80% are replaced with [MASK], 10% with a random token, and 10% are left unchanged - so the model can't rely on seeing [MASK] to know where to predict, which also matches fine-tuning inputs that contain no [MASK] tokens."
+- q: "A 1B-parameter model is trained on 20B tokens. Roughly how many training FLOPs is that?"
+  options: ["1.2 × 10²⁰", "2 × 10¹⁹", "1.2 × 10¹⁸", "6 × 10²¹"]
+  answer: 1
+  explain: "Training compute ≈ 6 × N × D = 6 × 10⁹ × 2 × 10¹⁰ = 1.2 × 10²⁰ FLOPs."
+```
+
+## Exercises
+
+```exercise
+- title: Train a tokenizer and measure it
+  task: |
+    Train byte-level BPE tokenizers with vocabulary sizes 8K, 32K and 128K on the same 100 MB text sample (Hugging Face `tokenizers`). For a held-out English sample, a Python file and a non-English sample, report tokens per 1,000 characters for each.
+  solution: |
+    Tokens per character fall as the vocabulary grows, with diminishing returns for English and larger gains for code and non-English text (if they are in the training sample). The trade-off: a larger vocabulary means a larger embedding and output matrix (vocab × d_model each) and rarer tokens with fewer training examples each.
+- title: BPE by hand
+  task: |
+    Run BPE merges by hand on the corpus "low low low lower lowest newest newest" until you have made four merges. Show the merge list and the final segmentation of "lowest".
+  solution: |
+    Word counts: low ×3, lower ×1, lowest ×1, newest ×2. Merge 1: (l, o) with 5 occurrences (tied with (o, w) - ties are broken by the implementation's ordering). Merge 2: (lo, w) -> low, 5. Merge 3: (e, s) -> es, 3 (lowest + newest ×2; tied with (s, t)). Merge 4: (es, t) -> est, 3. Final segmentations: low = [low], lower = [low, e, r], lowest = [low, est], newest = [n, e, w, est].
+```
+
+## References
+
+- Sennrich et al., [Neural Machine Translation of Rare Words with Subword Units (BPE)](https://arxiv.org/abs/1508.07909) (2016)
+- Kudo and Richardson, [SentencePiece](https://arxiv.org/abs/1808.06226) (2018)
+- Devlin et al., [BERT](https://arxiv.org/abs/1810.04805) (2019); Raffel et al., [T5](https://arxiv.org/abs/1910.10683) (2020)
+- Grattafiori et al., [The Llama 3 Herd of Models](https://arxiv.org/abs/2407.21783) (2024)
+- Chen et al., [Training Deep Nets with Sublinear Memory Cost (gradient checkpointing)](https://arxiv.org/abs/1604.06174) (2016)
+- Meta, [Llama 3 model card](https://github.com/meta-llama/llama3/blob/main/MODEL_CARD.md) (2024)
+
+*Last reviewed: 2026-09*
