@@ -4,6 +4,17 @@
 
 Inference-time quantization (GPTQ, AWQ) and training-time quantization (NF4/`bitsandbytes`) both shrink model weights to fewer bits, but they optimize for different things - GPTQ/AWQ are calibrated once, offline, purely to make a frozen model cheaper and faster to *serve*, while NF4/`bitsandbytes` is designed to make a model cheap enough to *train* against, with speed as a secondary concern.
 
+```objectives
+time: 40 min
+outcomes:
+  - Distinguish training-time quantization (NF4) from serving formats (FP8, INT8, GPTQ, AWQ, FP4)
+  - Choose a serving precision for a GPU generation and task sensitivity
+  - Produce and serve a quantized checkpoint with llm-compressor and vLLM, and gate it on a quality evaluation
+prerequisites:
+  - "[GPU Memory & Hardware](../../03-Pretraining/Notes/02-GPU-and-Hardware.mdx)"
+  - "[vLLM & Paged Attention](02-vLLM-and-Paged-Attention.mdx)"
+```
+
 <div class="audience-biz" markdown="1">
 
 If the Fine-Tuning Lab (module 05) taught you to quantize a model so you could afford to fine-tune it on a single GPU, this page is about a related but distinct decision: quantizing an already-trained model purely to make it cheaper and faster to run for everyone who calls it in production. The tools and priorities are different even though the underlying idea - "use fewer bits per weight" - sounds the same.
@@ -174,15 +185,38 @@ NF4/`bitsandbytes` quantization is optimized for training-time memory reduction 
 - Quantize aggressively for cost-sensitive, quality-tolerant tasks; use FP8/INT8 or skip quantization for precision-sensitive tasks (code, math, structured extraction)
 - A common production pipeline: merge LoRA adapter into a full-precision model, then separately AWQ/GPTQ-quantize the merged model for serving
 
-**Quick recall Q&A:**
-- *Why can't you just serve a `bitsandbytes` NF4-quantized model the same way you'd serve a GPTQ/AWQ model?* You can load it, but it won't get the throughput benefit of the specialized INT4 serving kernels GPTQ/AWQ artifacts are built for - `bitsandbytes` optimizes for training-time memory fit, not serving-time latency.
-- *What does AWQ preserve that plain uniform quantization doesn't?* A small fraction of weight channels identified as disproportionately important based on activation magnitude, kept at effectively higher precision via per-channel scaling before the rest is quantized to INT4.
-- *When would INT8 be the better choice over INT4 for a production deployment?* When the task is precision-sensitive enough that INT4's larger quality delta is unacceptable, but the memory/throughput win of some quantization is still wanted.
+## Check Yourself
+
+```quiz
+- q: "On an H100 fleet, which quantization would you try first for serving?"
+  options: ["FP8 weights and activations", "NF4 via bitsandbytes", "INT2", "No quantization ever"]
+  answer: 1
+- q: "Why does weight-only 4-bit quantization speed up decode at small batch sizes?"
+  options: ["Decode is memory-bandwidth bound, and 4-bit weights are a quarter of the bytes to read", "It reduces FLOPs by 4×", "It shrinks the KV cache", "It enables larger batches only"]
+  answer: 1
+- q: "Why can't you just serve a `bitsandbytes` NF4-quantized model the same way you'd serve a GPTQ/AWQ model?"
+  answer: "You can load it, but it won't get the throughput benefit of the specialized INT4 serving kernels GPTQ/AWQ artifacts are built for - `bitsandbytes` optimizes for training-time memory fit, not serving-time latency."
+- q: "What does AWQ preserve that plain uniform quantization doesn't?"
+  answer: "A small fraction of weight channels identified as disproportionately important based on activation magnitude, kept at effectively higher precision via per-channel scaling before the rest is quantized to INT4."
+- q: "When would INT8 be the better choice over INT4 for a production deployment?"
+  answer: "When the task is precision-sensitive enough that INT4's larger quality delta is unacceptable, but the memory/throughput win of some quantization is still wanted."
+```
+
+## Exercises
+
+```exercise
+- title: "Quantize and gate"
+  task: |
+    Quantize a small instruct model to FP8 (or AWQ INT4) with llm-compressor, serve it with vLLM, and compare it with the BF16 original on 100 items of a task you care about and on decode throughput. Would you ship it?
+  solution: |
+    Report accuracy with a paired comparison and throughput at 1 and 32 concurrent requests. FP8 is usually within noise of BF16 with a throughput gain on Hopper-class GPUs; INT4 gains more but may lose points on precise tasks - ship only if the quality delta is inside your tolerance.
+```
 
 ## References
 
 - Frantar et al., [GPTQ](https://arxiv.org/abs/2210.17323) (2022); Lin et al., [AWQ](https://arxiv.org/abs/2306.00978) (2023); Xiao et al., [SmoothQuant](https://arxiv.org/abs/2211.10438) (2022)
 - Micikevicius et al., [FP8 Formats for Deep Learning](https://arxiv.org/abs/2209.05433) (2022)
 - vLLM project, [llm-compressor](https://github.com/vllm-project/llm-compressor) and vLLM's [quantization docs](https://docs.vllm.ai/en/latest/features/quantization/)
+- Dettmers et al., [QLoRA (NF4)](https://arxiv.org/abs/2305.14314) (2023)
 
 *Last reviewed: 2026-09*

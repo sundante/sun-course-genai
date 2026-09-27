@@ -4,6 +4,17 @@ A real FastAPI endpoint backed by a vLLM V1 `AsyncLLM`, serving a small open ins
 
 ← **Back to Overview:** [Serving & Inference](../INDEX.mdx) · **Back to Concepts:** [vLLM & Paged Attention](../Notes/02-vLLM-and-Paged-Attention.mdx) · [Batching, Concurrency & Latency](../Notes/04-Batching-Concurrency-and-Latency.mdx) · [Streaming & TTFT](../Notes/05-Streaming-and-TTFT.mdx)
 
+```objectives
+time: 2 hours (plus GPU time)
+outcomes:
+  - Serve a model with vLLM's AsyncLLM behind a FastAPI endpoint with streaming (SSE) and non-streaming responses
+  - Load-test the endpoint and report tokens per second, p50/p95 latency and TTFT at several concurrency levels
+  - Find the concurrency at which a latency SLO breaks, and explain it from batching and KV-cache behaviour
+prerequisites:
+  - "[vLLM & Paged Attention](../Notes/02-vLLM-and-Paged-Attention.mdx), [Batching, Concurrency & Latency](../Notes/04-Batching-Concurrency-and-Latency.mdx) and [Streaming & TTFT](../Notes/05-Streaming-and-TTFT.mdx)"
+  - "A CUDA GPU with at least 16 GB for the default 1.7B model"
+```
+
 ---
 
 ## What's In This Lab
@@ -62,3 +73,39 @@ python load_test.py --url http://localhost:8000/generate --concurrency 16 --requ
 ```
 
 Full details, code walkthrough, and what each part demonstrates: see [README](https://github.com/sundante/sun-course-genai/tree/main/src/content/07-Serving-and-Inference/CodeLabs/01-FastAPI-vLLM-Endpoint).
+
+## Check Yourself
+
+```quiz
+- q: "Why should the load test report p95 latency rather than the average?"
+  options: ["Averages hide the slow tail that users notice and SLOs are written against", "p95 is always lower", "Averages can't be computed for streams", "vLLM only exposes p95"]
+  answer: 1
+- q: "TTFT rises sharply at concurrency 64 while aggregate tokens/s still grows. What is happening?"
+  answer: "New requests queue and their prefill competes with ongoing decodes (chunked prefill spreads it over several steps), so each request waits longer for its first token even though total throughput is still increasing."
+- q: "Why does the server use AsyncLLM rather than calling LLM.generate() per request?"
+  options: ["AsyncLLM feeds all in-flight requests into one continuously batched engine", "LLM.generate is deprecated", "AsyncLLM uses less memory per token", "It is required for FastAPI"]
+  answer: 1
+```
+
+## Exercises
+
+```exercise
+- title: Map the latency curve
+  task: |
+    Run load_test.py at concurrency 1, 4, 16, 64 and 128 with a fixed prompt set. Plot p50/p95 TTFT, p95 end-to-end latency and aggregate tokens/s. For an SLO of p95 TTFT < 500 ms, what capacity do you report?
+  solution: |
+    Report the highest concurrency where p95 TTFT stays under 500 ms, minus a safety margin; show that aggregate throughput keeps rising past that point, which is why throughput alone is the wrong capacity metric.
+- title: Prefix caching on and off
+  task: |
+    Give every request the same 1,500-token system prompt. Run the load test with prefix caching enabled and disabled (`enable_prefix_caching` in the engine args) and compare TTFT and throughput.
+  solution: |
+    With caching, the shared prefix is prefilled once and reused, so TTFT drops sharply and throughput rises because prefill compute is freed for decoding; without it, each request pays the full prefill.
+```
+
+## References
+
+- Kwon et al., [PagedAttention (vLLM)](https://arxiv.org/abs/2309.06180) (2023)
+- vLLM project, [vLLM documentation](https://docs.vllm.ai/) - engine arguments, OpenAI-compatible server, benchmarking (2026)
+- FastAPI, [StreamingResponse](https://fastapi.tiangolo.com/advanced/custom-response/#streamingresponse) (2026)
+
+*Last reviewed: 2026-09*

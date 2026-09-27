@@ -4,6 +4,17 @@
 
 vLLM is the dominant open-source LLM serving engine because it treats the GPU's KV-cache memory the way an operating system treats virtual memory - paged, non-contiguous, and shared wherever possible - which is what lets it run continuous batching at near-full GPU utilization instead of the ~30-50% typical of naive serving.
 
+```objectives
+time: 40 min
+outcomes:
+  - Explain the two problems vLLM solves - KV-cache fragmentation and idle GPU slots - and the mechanism for each
+  - Tune gpu_memory_utilization, block size, max_num_seqs, max_num_batched_tokens and max_model_len for a workload
+  - Explain how prefix caching reuses KV blocks across requests
+  - Choose a serving engine (vLLM, SGLang, TensorRT-LLM, llama.cpp) for a deployment
+prerequisites:
+  - "[KV Cache & Inference Optimization](01-KV-Cache-and-Inference-Optimization.mdx)"
+```
+
 <div class="audience-biz" markdown="1">
 
 If you've only run a model in a notebook with `model.generate()`, this page explains the gap between that and a production endpoint serving hundreds of concurrent users. The short version: most of the engineering effort in serving an LLM well goes into not wasting GPU memory and not leaving the GPU idle, and vLLM's two headline features - Paged Attention and continuous batching - solve exactly those two problems.
@@ -162,8 +173,39 @@ Because it allocates KV-cache memory contiguously per request (wasting 60-80% to
 - `gpu_memory_utilization`, `max_num_seqs`, and `max_num_batched_tokens` are the primary vLLM server tuning knobs
 - Combined, these features typically deliver 2-4x higher throughput than naive serving on identical hardware
 
-**Quick recall Q&A:**
-- *What does vLLM's `block_size` control?* The granularity (in tokens) of each physical KV-cache block - the unit Paged Attention allocates and frees.
-- *Why is chunked prefill needed alongside continuous batching?* A very long prompt's prefill would otherwise monopolize a full scheduling step, delaying decode steps for other in-flight requests - `max_num_batched_tokens` caps how much prefill work happens per step.
-- *How does prefix caching avoid recomputing a shared system prompt for every request?* Blocks are addressed by content hash, so identical prefixes across different requests point at the same physical blocks instead of being recomputed and stored separately.
-- *What's the practical effect of setting `gpu_memory_utilization` too low?* The KV-cache block pool is smaller than it could be, so vLLM can serve fewer concurrent sequences than the GPU's memory would otherwise allow.
+## Check Yourself
+
+```quiz
+- q: "What did the vLLM paper measure as KV-cache memory waste in earlier serving systems versus PagedAttention?"
+  options: ["60-80% vs under 4%", "10% vs 1%", "30% vs 20%", "90% vs 50%"]
+  answer: 1
+- q: "A long prompt arrives while 50 sequences are decoding. Which setting stops its prefill from stalling their decode steps?"
+  options: ["max_num_batched_tokens (chunked prefill)", "gpu_memory_utilization", "block_size", "max_model_len"]
+  answer: 1
+- q: "What does vLLM's `block_size` control?"
+  answer: "The granularity (in tokens) of each physical KV-cache block - the unit Paged Attention allocates and frees."
+- q: "Why is chunked prefill needed alongside continuous batching?"
+  answer: "A very long prompt's prefill would otherwise monopolize a full scheduling step, delaying decode steps for other in-flight requests - `max_num_batched_tokens` caps how much prefill work happens per step."
+- q: "How does prefix caching avoid recomputing a shared system prompt for every request?"
+  answer: "Blocks are addressed by content hash, so identical prefixes across different requests point at the same physical blocks instead of being recomputed and stored separately."
+- q: "What's the practical effect of setting `gpu_memory_utilization` too low?"
+  answer: "The KV-cache block pool is smaller than it could be, so vLLM can serve fewer concurrent sequences than the GPU's memory would otherwise allow."
+```
+
+## Exercises
+
+```exercise
+- title: "Size the block pool"
+  task: |
+    An 8B model with 32 layers, 8 KV heads of dimension 128, served in BF16 on an 80 GB GPU with gpu_memory_utilization = 0.9. How many 16-token KV blocks fit after the ~16 GB of weights, and how many concurrent 4K-token sequences is that?
+  solution: |
+    KV bytes per token = 2 × 32 × 8 × 128 × 2 = 131,072 (128 KiB). Budget ≈ 0.9 × 80 - 16 = 56 GB (ignoring activations and CUDA graphs), so about 56e9 / 131,072 ≈ 427,000 tokens ≈ 26,700 blocks of 16 tokens - roughly 104 sequences at 4,096 tokens each. Real numbers are lower because of activation memory and fragmentation at the last block of each sequence.
+```
+
+## References
+
+- Kwon et al., [Efficient Memory Management for LLM Serving with PagedAttention](https://arxiv.org/abs/2309.06180) (2023)
+- vLLM project, [vLLM documentation](https://docs.vllm.ai/) (2026)
+- Zheng et al., [SGLang](https://arxiv.org/abs/2312.07104) (2024)
+
+*Last reviewed: 2026-09*

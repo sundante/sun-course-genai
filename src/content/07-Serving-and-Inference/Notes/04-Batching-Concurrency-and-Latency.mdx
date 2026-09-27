@@ -4,6 +4,16 @@
 
 Batch size and concurrency both push throughput up, but they cost latency differently - a bigger batch increases tokens/sec by keeping the GPU busier, while more concurrent requests increase queuing and per-request wait time, so capacity planning is really the exercise of picking a target point on that curve for your specific SLO.
 
+```objectives
+time: 35 min
+outcomes:
+  - Distinguish batch size from concurrency under continuous batching
+  - Relate aggregate throughput to per-request throughput and explain why they diverge
+  - Plan capacity from an SLO using load-test data, considering both KV-cache memory and compute limits
+prerequisites:
+  - "[vLLM & Paged Attention](02-vLLM-and-Paged-Attention.mdx)"
+```
+
 <div class="audience-biz" markdown="1">
 
 Two questions look similar but aren't: "how many tokens per second can this GPU produce in total?" and "how long does any one user wait for their response?" Optimizing purely for the first number can make the second one worse. This page is about understanding that trade-off well enough to answer "how many concurrent users can this GPU serve" with real numbers instead of a guess.
@@ -129,7 +139,37 @@ No - aggregate throughput climbing is not the metric that matters if your SLO is
 - Capacity planning means picking the largest concurrency level that still satisfies a defined SLO (p95 latency or p95 per-request tok/s), then sizing the GPU fleet around it with a safety margin
 - Both KV-cache memory capacity and compute/bandwidth budget can bind capacity - whichever hits its limit first determines real capacity, not either one in isolation
 
-**Quick recall Q&A:**
-- *Why can concurrency exceed `max_num_seqs` under continuous batching?* Because requests rotate through batch slots as sequences finish - concurrency counts all in-flight requests (queued + active), not just the instantaneous batch occupancy.
-- *What's the risk of sizing GPU capacity purely off an aggregate throughput number?* Aggregate throughput can look great while individual users experience unacceptable latency - capacity should be sized against a per-request SLO, not the aggregate number alone.
-- *Why add more GPU replicas instead of just raising batch size indefinitely on one GPU?* Past the saturation point, a bigger batch on one GPU adds queuing/decode latency without proportional throughput gains - horizontal scaling keeps per-request latency in check while still growing total capacity.
+## Check Yourself
+
+```quiz
+- q: "Aggregate throughput keeps rising up to 128 concurrent requests, but p95 per-request tok/s falls below the SLO at 48. What is your per-GPU capacity?"
+  options: ["Somewhat below 48, with a safety margin", "128", "The point of maximum aggregate throughput", "Whatever the KV cache can hold"]
+  answer: 1
+- q: "What two resources can each cap concurrent users per GPU?"
+  options: ["KV-cache memory and compute/bandwidth per step", "CPU cores and disk", "Network and DNS", "Tokenizer speed and Python GIL"]
+  answer: 1
+- q: "Why can concurrency exceed `max_num_seqs` under continuous batching?"
+  answer: "Because requests rotate through batch slots as sequences finish - concurrency counts all in-flight requests (queued + active), not just the instantaneous batch occupancy."
+- q: "What's the risk of sizing GPU capacity purely off an aggregate throughput number?"
+  answer: "Aggregate throughput can look great while individual users experience unacceptable latency - capacity should be sized against a per-request SLO, not the aggregate number alone."
+- q: "Why add more GPU replicas instead of just raising batch size indefinitely on one GPU?"
+  answer: "Past the saturation point, a bigger batch on one GPU adds queuing/decode latency without proportional throughput gains - horizontal scaling keeps per-request latency in check while still growing total capacity."
+```
+
+## Exercises
+
+```exercise
+- title: "Find the knee"
+  task: |
+    Using the lab's load_test.py (or vllm bench serve), measure aggregate and per-request throughput at concurrency 1, 4, 16, 64 and 128. Plot both and mark the capacity for an SLO of 20 tok/s per request at p95.
+  solution: |
+    Aggregate throughput rises steeply then flattens; per-request throughput falls slowly then sharply. The capacity is the highest concurrency where p95 per-request throughput is still ≥ 20 tok/s, minus a 20-30% margin for traffic spikes.
+```
+
+## References
+
+- vLLM project, [vLLM documentation](https://docs.vllm.ai/) (2026) - benchmarking and scheduler configuration
+- Yu et al., [Orca](https://www.usenix.org/conference/osdi22/presentation/yu) (OSDI 2022)
+- Agrawal et al., [Taming Throughput-Latency Tradeoff in LLM Inference with Sarathi-Serve](https://arxiv.org/abs/2403.02310) (2024)
+
+*Last reviewed: 2026-09*

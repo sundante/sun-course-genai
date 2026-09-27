@@ -380,6 +380,16 @@ flowchart TD
   explain: "The accept/reject rule is constructed so that accepted tokens are distributed exactly as the target model would have sampled them, at any temperature. Only latency changes."
 - q: "Why is the decode phase usually memory-bandwidth bound rather than compute bound?"
   answer: "Each decode step produces one token per sequence, so every weight and the whole KV cache must be read from HBM to do very little arithmetic (low arithmetic intensity). Batching many sequences reuses each weight read across more tokens, which is why continuous batching raises throughput."
+- q: "What two phases does LLM inference have?"
+  answer: "Prefill (process prompt in parallel) and decode (generate one token at a time)."
+- q: "Why does a large batch size improve throughput but hurt latency?"
+  answer: "More sequences share the GPU \u2192 higher utilization \u2192 more tokens/second total. But each sequence waits longer for the batch to cycle \u2192 higher per-request latency."
+- q: "What is Paged Attention?"
+  answer: "A virtual memory system for KV cache blocks - non-contiguous physical allocation with page tables, eliminating memory fragmentation."
+- q: "How does GQA differ from MHA?"
+  answer: "GQA groups query heads and shares a single K/V pair per group; MHA has unique K/V per head. GQA reduces KV cache by h/G\u00d7 with minimal quality loss."
+- q: "When does speculative decoding NOT help?"
+  answer: "When the draft model acceptance rate is low - i.e., highly creative, diverse generation where the draft model's predictions are often wrong."
 ```
 
 ## Exercises
@@ -410,12 +420,16 @@ flowchart TD
 - Paged Attention (vLLM) uses virtual memory for KV blocks - eliminates fragmentation, enables prefix sharing
 - Prefix caching reuses KV cache for shared prompt prefixes - high ROI for chatbot system prompts
 - Speculative decoding: draft proposes K tokens, target verifies in one pass → 2–3× decode speedup
-- Continuous batching: remove finished sequences and insert new ones mid-batch → 5–10× throughput vs static batching
+- Continuous batching: remove finished sequences and insert new ones mid-batch → several-fold higher throughput than static batching in published benchmarks
 - Prefill is compute-bound; decode is memory-bandwidth-bound
 
-**Quick recall Q&A:**
-- *What two phases does LLM inference have?* Prefill (process prompt in parallel) and decode (generate one token at a time).
-- *Why does a large batch size improve throughput but hurt latency?* More sequences share the GPU → higher utilization → more tokens/second total. But each sequence waits longer for the batch to cycle → higher per-request latency.
-- *What is Paged Attention?* A virtual memory system for KV cache blocks - non-contiguous physical allocation with page tables, eliminating memory fragmentation.
-- *How does GQA differ from MHA?* GQA groups query heads and shares a single K/V pair per group; MHA has unique K/V per head. GQA reduces KV cache by h/G× with minimal quality loss.
-- *When does speculative decoding NOT help?* When the draft model acceptance rate is low - i.e., highly creative, diverse generation where the draft model's predictions are often wrong.
+## References
+
+- Pope et al., [Efficiently Scaling Transformer Inference](https://arxiv.org/abs/2211.05102) (2022)
+- Kwon et al., [Efficient Memory Management for LLM Serving with PagedAttention (vLLM)](https://arxiv.org/abs/2309.06180) (2023)
+- Yu et al., [Orca: A Distributed Serving System for Transformer-Based Generative Models](https://www.usenix.org/conference/osdi22/presentation/yu) (OSDI 2022) - iteration-level (continuous) batching
+- Leviathan et al., [Fast Inference from Transformers via Speculative Decoding](https://arxiv.org/abs/2211.17192) (2023)
+- Ainslie et al., [GQA](https://arxiv.org/abs/2305.13245) (2023); Shazeer, [MQA](https://arxiv.org/abs/1911.02150) (2019)
+- Zheng et al., [SGLang: Efficient Execution of Structured Language Model Programs (RadixAttention)](https://arxiv.org/abs/2312.07104) (2024)
+
+*Last reviewed: 2026-09*

@@ -1,5 +1,19 @@
 # Production Deployment
 
+Running a model in production is an exercise in budgets: where each millisecond of latency goes, which caches remove work, how to handle inputs longer than the context window, what each request costs, and which metrics tell you the service is healthy.
+
+```objectives
+time: 45 min
+outcomes:
+  - Build a latency budget (queue, prefill, decode) and set SLOs for a use case
+  - Use each caching layer - KV, prefix, semantic, batch - where it pays off
+  - Handle inputs longer than the context window (RAG, sliding windows, summarisation, compression, RoPE scaling)
+  - Estimate and reduce cost per request, and choose the metrics and alerts for a serving deployment
+prerequisites:
+  - "[Streaming & TTFT](05-Streaming-and-TTFT.mdx)"
+```
+
+
 ## Serving Engines and Batching
 
 This note is the production view - latency budgets, caching, context-window workarounds, cost and monitoring. The engine-level mechanics each have one home in this module:
@@ -35,7 +49,7 @@ Tokens-per-second (TPS)    = 1 / per-token-decode-time
 - Each token requires one full forward pass through the model
 - Must read the entire KV cache for all past tokens
 - Bottleneck: memory bandwidth (reading KV cache from HBM)
-- Typical: 20–50ms per token for 7B model on A100 → 20–50 TPS
+- Floor: every decode step reads all the weights - 14 GB for a 7B model in BF16 - so at ~2 TB/s an A100 needs at least ~7 ms per step; real single-request latencies are typically ~10-30 ms per token (roughly 30-100 tokens/s), and rise with batch size
 
 **Queue time:**
 - If all GPU capacity is occupied with other requests, your request waits
@@ -158,12 +172,14 @@ LongLoRA:
 
 A comprehensive list of techniques to reduce perceived and actual latency:
 
-**1. Quantization (2–4× throughput improvement)**
+**1. Quantization (up to ~2-3× decode throughput)**
 ```
-BF16 → INT8: ~1.5× faster (memory bandwidth halved)
-BF16 → INT4: ~2–4× faster (AWQ/GPTQ with optimized kernels)
-Quality tradeoff: acceptable for most tasks at INT4 AWQ
+BF16 → FP8 (W8A8, Hopper/Blackwell): the first choice on current GPUs - small quality loss, faster decode
+BF16 → INT8 weight-only: up to ~1.5-2× faster decode (half the bytes to read)
+BF16 → INT4 / FP4 weight-only: up to ~2-3× faster decode at small batch
+Quality: task-dependent - re-evaluate on your own set, especially for code, maths and structured output
 ```
+Details and methods: [Quantized Inference](03-Quantized-Inference.mdx).
 
 **2. Speculative Decoding (2–3× decode speedup)**
 - Use a small draft model (1B) to propose K tokens
@@ -194,9 +210,9 @@ Quality tradeoff: acceptable for most tasks at INT4 AWQ
 - Already discussed - essential for production throughput
 
 **8. Tensor Parallelism Tuning**
-- Split across 2 GPUs: ~1.8× faster (some communication overhead)
-- Split across 4 GPUs: ~3.2× faster
-- Beyond 8 GPUs: communication overhead often outweighs benefit for 7B models
+- Splitting a model across GPUs lowers per-token latency sub-linearly - each layer adds all-reduces, so the gain depends on model size and interconnect (NVLink vs PCIe)
+- Small models (≤ 8B) rarely benefit beyond 2 GPUs; prefer replicas for throughput
+- Measure latency and throughput at your batch sizes before choosing a TP degree
 
 **9. CUDA Graphs (static shapes)**
 - Capture the computation graph for fixed-size batches
@@ -232,7 +248,7 @@ With 90% cache hit rate:
 
 **4. Quantization:**
 - INT4 inference: ~2–4× higher throughput per GPU → fewer GPUs needed
-- Break-even vs quality: most production tasks are acceptable at AWQ INT4
+- Quality: FP8 is usually near-lossless; 4-bit is task-dependent - gate every quantized deployment on your evaluation set
 
 **5. Output length control:**
 - `max_new_tokens`: set tight bounds to prevent runaway generation
@@ -262,7 +278,7 @@ Key metrics to track in production LLM serving:
 - `cache_hit_rate`: prefix cache effectiveness
 
 **GPU metrics:**
-- `gpu_utilization`: should be > 80% in healthy serving
+- `gpu_utilization`: coarse (nvidia-smi counts a GPU as busy if any kernel is running); prefer throughput, batch occupancy and KV-cache utilization as capacity signals
 - `gpu_memory_used`: approaching limit → reduce batch size or add GPUs
 - `kv_cache_utilization`: paged attention's block utilization
 
@@ -278,13 +294,11 @@ Key metrics to track in production LLM serving:
 # pip install vllm
 
 # Start server (command line):
-# python -m vllm.entrypoints.openai.api_server \
-#   --model meta-llama/Llama-3.2-1B-Instruct \
+# vllm serve meta-llama/Llama-3.2-1B-Instruct \
 #   --tensor-parallel-size 1 \
 #   --max-model-len 8192 \
-#   --enable-prefix-caching \
-#   --quantization awq  # if using AWQ quantized model
 #   --port 8000
+# (Prefix caching is on by default in vLLM V1; quantized checkpoints are detected from their config)
 
 # Client usage (OpenAI-compatible):
 from openai import OpenAI
@@ -365,11 +379,44 @@ print(f"Second request (cache hit): {(time.time()-t0)*1000:.0f}ms")
 - Prefix caching eliminates reprocessing shared system prompts - very high ROI for chatbots
 - Speculative decoding: small draft model proposes tokens → large model verifies in one pass → 2–3× speedup
 - Token window workarounds: sliding window, hierarchical summarization, RAG, LLMLingua compression, RoPE scaling
-- Cost optimization: prompt caching > model routing > quantization > batch API
+- Cost levers: prompt caching, model routing, quantization, batch APIs, output-length control - their order depends on the workload, so measure
 
-**Quick recall Q&A:**
-- *What is TTFT and what determines it?* Time-to-first-token = queue wait + prefill compute time. Determined by input prompt length and server load.
-- *Why is continuous batching better than static batching?* Completed sequences are evicted immediately and new requests fill their slots - no wasted GPU capacity waiting for stragglers.
-- *What is chunked prefill?* Processing long prompts in chunks to avoid monopolizing the GPU during prefill, which would delay decode steps for other in-flight requests.
-- *When should you use RAG vs sliding window?* RAG when you can identify relevant content via search. Sliding window when you must process a document sequentially without a query.
-- *Name 3 ways to improve TTFT.* Prefix caching (eliminate redundant prefill), quantization (faster compute), reduce prompt length (LLMLingua compression).
+## Check Yourself
+
+```quiz
+- q: "A 1,000-token system prompt is shared by every request. Which cache removes most of its cost?"
+  options: ["Prefix (prompt) caching", "Semantic caching", "The per-request KV cache", "A CDN"]
+  answer: 1
+- q: "Which metric is the better early warning of running out of serving capacity?"
+  options: ["Queue depth / waiting requests", "nvidia-smi GPU utilization", "Average output length", "Number of models loaded"]
+  answer: 1
+- q: "What is TTFT and what determines it?"
+  answer: "Time-to-first-token = queue wait + prefill compute time. Determined by input prompt length and server load."
+- q: "Why is continuous batching better than static batching?"
+  answer: "Completed sequences are evicted immediately and new requests fill their slots - no wasted GPU capacity waiting for stragglers."
+- q: "What is chunked prefill?"
+  answer: "Processing long prompts in chunks to avoid monopolizing the GPU during prefill, which would delay decode steps for other in-flight requests."
+- q: "When should you use RAG vs sliding window?"
+  answer: "RAG when you can identify relevant content via search. Sliding window when you must process a document sequentially without a query."
+- q: "Name 3 ways to improve TTFT."
+  answer: "Prefix caching (eliminate redundant prefill), quantization (faster compute), reduce prompt length (LLMLingua compression)."
+```
+
+## Exercises
+
+```exercise
+- title: "Cost per request"
+  task: |
+    A chat product serves 2M requests a day with 1,500 input tokens (1,000 of them a shared system prompt) and 300 output tokens. At $3 per million input tokens, $15 per million output tokens and cache reads at 10% of the input price, compute the daily cost with and without prompt caching (ignore cache writes).
+  solution: |
+    Without caching: input 2M × 1,500 = 3B tokens → $9,000; output 2M × 300 = 600M tokens → $9,000; total $18,000/day. With caching the 1,000 shared tokens are read at $0.30/M: 2B × $0.30/M = $600 plus 1B uncached × $3/M = $3,000, so input is $3,600 and the total $12,600/day - a 30% saving, limited by output cost.
+```
+
+## References
+
+- Kwon et al., [PagedAttention (vLLM)](https://arxiv.org/abs/2309.06180) (2023)
+- Jiang et al., [LLMLingua](https://arxiv.org/abs/2310.05736) (2023)
+- Chen et al., [Extending Context Window via Positional Interpolation](https://arxiv.org/abs/2306.15595) (2023); Peng et al., [YaRN](https://arxiv.org/abs/2309.00071) (2023)
+- vLLM project, [vLLM documentation](https://docs.vllm.ai/) (2026) - production metrics
+
+*Last reviewed: 2026-09*

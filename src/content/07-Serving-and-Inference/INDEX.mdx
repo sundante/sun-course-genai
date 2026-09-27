@@ -1,15 +1,19 @@
 # 07 - Inference & Serving
 
-## What You Will Learn
+Making models fast and cheap to serve: the KV cache and its memory math, vLLM's paged memory and continuous batching, quantized serving formats, the batch-size/latency trade-off and capacity planning, streaming and time-to-first-token, production budgets and monitoring, and the multi-node stack (disaggregated prefill/decode, KV-aware routing, speculative decoding, MoE and multi-LoRA serving).
 
-- Why vLLM exists and how Paged Attention manages KV-cache memory like an OS manages virtual memory
-- Continuous batching vs static batching, and why it drives the 5-10x throughput jump production serving stacks rely on
-- Inference-time quantization with GPTQ and AWQ - how it differs from training-time NF4/`bitsandbytes` quantization and when to use each
-- The batch size vs concurrency trade-off, tokens/sec vs latency-per-request, and back-of-envelope GPU capacity planning
-- Streaming responses (SSE/chunked), time-to-first-token (TTFT) vs total generation time, and why TTFT dominates perceived latency
-- Serving a real model behind a FastAPI + vLLM endpoint, with streaming and non-streaming responses
-- Load-testing an inference endpoint for tokens/sec, p50/p95 latency, and TTFT under concurrent load
-- Interview-ready answers on the full serving and inference stack
+```objectives
+scope: module
+time: 9-11 hours (notes + lab)
+outcomes:
+  - Compute KV-cache memory for a model and context, and explain how GQA, paging and prefix caching change it
+  - Configure and tune a vLLM deployment, and choose a serving engine and precision (BF16, FP8, INT4/FP4) for a GPU and task
+  - Plan capacity from an SLO using load tests - batch size vs concurrency, TTFT vs time per output token, goodput
+  - Serve a model behind a streaming endpoint and measure TTFT, latency percentiles and throughput under load
+  - Explain the modern serving stack - chunked prefill, disaggregation, KV-aware routing, speculative decoding, MoE and multi-LoRA serving
+prerequisites:
+  - "[Attention Mechanisms](../01-LLM-Foundations/Notes/03-Attention-Mechanisms.mdx) and [GPU Memory & Hardware](../03-Pretraining/Notes/02-GPU-and-Hardware.mdx)"
+```
 
 ## Chapter Map
 
@@ -22,7 +26,7 @@
 | 5 | [Streaming & TTFT](Notes/05-Streaming-and-TTFT.mdx) | SSE/chunked streaming, TTFT vs total generation time, streaming's interaction with batching | Intermediate |
 | 6 | [Production Deployment](Notes/06-Production-Deployment.mdx) | Latency budgets, caching hierarchy, context-window workarounds, cost, monitoring | Advanced |
 | 7 | [The Modern Serving Stack](Notes/07-Modern-Serving-Stack.mdx) | Goodput and SLOs, chunked prefill, prefill/decode disaggregation, KV-aware routing and offloading, FP8/FP4, speculative decoding, MoE and multi-LoRA serving, Dynamo / llm-d | Advanced |
-| 8 | [Q&A Review Bank](Notes/08-Interview-QA-Bank.mdx) | 22 Q&A pairs across all topics in this module | All levels |
+| 8 | [Q&A Review Bank](Notes/08-Interview-QA-Bank.mdx) | 35 Q&A pairs across all topics in this module | All levels |
 
 > **One home per concept:** KV-cache math, GQA and speculative-decoding theory live in note 1; PagedAttention, prefix caching and the engine comparison in note 2; capacity planning in note 4; the multi-node stack in note 7. Note 6 is the production view and links to the others rather than repeating them.
 
@@ -39,7 +43,7 @@
 1. [vLLM & Paged Attention](Notes/02-vLLM-and-Paged-Attention.mdx) - PagedAttention and continuous batching are asked constantly
 2. [Batching, Concurrency & Latency](Notes/04-Batching-Concurrency-and-Latency.mdx) - capacity planning math comes up in system design rounds
 3. [Streaming & TTFT](Notes/05-Streaming-and-TTFT.mdx) - TTFT vs throughput is a favorite follow-up
-4. [Q&A Review Bank](Notes/08-Interview-QA-Bank.mdx) - drill all 22 questions
+4. [Q&A Review Bank](Notes/08-Interview-QA-Bank.mdx) - drill all 35 questions
 
 ### Path C: Cost & Capacity Engineering (Advanced)
 1. [Quantized Inference](Notes/03-Quantized-Inference.mdx) - GPTQ/AWQ tradeoffs for shrinking GPU footprint
@@ -48,8 +52,8 @@
 
 ## Resources
 
-- [Q&A Review Bank](Notes/08-Interview-QA-Bank.mdx) - 22 Q&A pairs in this module
-- [Cross-topic Interview Questions](Notes/08-Interview-QA-Bank.mdx)
+- [Q&A Review Bank](Notes/08-Interview-QA-Bank.mdx) - 35 Q&A pairs in this module
+- [Module quiz](/quiz/serving-and-inference) - every *Check Yourself* question in this module
 - [FastAPI + vLLM Endpoint Code Lab](CodeLabs/01-FastAPI-vLLM-Endpoint.mdx) - hands-on streaming/non-streaming vLLM endpoint with a concurrent load test
 
 ## Key Cross-References
