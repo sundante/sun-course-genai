@@ -1,8 +1,23 @@
 # 08 - Production Engineering
 
+Taking a serving stack to production: GPU container images, Kubernetes and Helm for GPU workloads, model registries and safe rollouts, security and compliance for AI systems, and the Kubernetes-native tooling for serving LLMs at scale.
+
+```objectives
+scope: module
+time: 6-8 hours (notes + lab)
+outcomes:
+  - Build GPU inference images and explain where the driver, CUDA libraries and framework each come from
+  - Deploy a model server on Kubernetes with correct GPU scheduling, probes and queue-depth autoscaling, packaged as a Helm chart
+  - Plan a rollout with a registry, a strategy (blue/green, canary, shadow, champion-challenger) and quantified rollback criteria
+  - Secure an AI system - IAM, secrets, PHI/PII redaction, OWASP LLM Top 10, model supply chain - and place it on the EU AI Act timeline
+  - Choose Kubernetes-native LLM serving tools (GPU sharing and DRA, KServe, LeaderWorkerSet, llm-d, inference gateways) for a workload
+prerequisites:
+  - "[Inference & Serving](../07-Serving-and-Inference/INDEX.mdx) and its [FastAPI + vLLM lab](../07-Serving-and-Inference/CodeLabs/01-FastAPI-vLLM-Endpoint.mdx)"
+```
+
 ## What You Will Learn
 
-- Dockerfiles for GPU inference: CUDA-compatible base images, `-devel` vs `-runtime`, multi-stage builds, why weights shouldn't be baked into the image
+- Dockerfiles for GPU inference: where the driver and CUDA libraries come from, `-devel` vs `-runtime`, multi-stage builds, why weights shouldn't be baked into the image
 - Core Kubernetes objects for model serving: Deployment, Service, Ingress, HorizontalPodAutoscaler
 - GPU scheduling: node pools, taints/tolerations, why GPU requests must equal limits
 - Helm charts: templating deployments across environments, `helm template` vs `--dry-run`
@@ -16,12 +31,12 @@
 
 | # | File | Topic | Difficulty |
 |---|------|-------|-----------|
-| 1 | [Docker for GPU Inference](Notes/01-Docker-for-GPU-Inference.mdx) | CUDA base images, multi-stage builds, weight mounting | Intermediate |
+| 1 | [Docker for GPU Inference](Notes/01-Docker-for-GPU-Inference.mdx) | Driver vs CUDA libraries, base-image choice, multi-stage builds, weight mounting | Intermediate |
 | 2 | [Kubernetes & Helm](Notes/02-Kubernetes-and-Helm.mdx) | Deployment/Service/Ingress/HPA, GPU scheduling, Helm charts | Advanced |
 | 3 | [Model Lifecycle & Rollout](Notes/03-Model-Lifecycle-and-Rollout.mdx) | Registries, blue/green, canary, champion-challenger, rollback criteria | Advanced |
 | 4 | [Security & Compliance](Notes/04-Security-and-Compliance.mdx) | IAM, secrets, PHI/PII handling, SAST, HIPAA safeguards, OWASP LLM Top 10, model supply chain, EU AI Act timeline | Advanced |
 | 5 | [LLM Serving on Kubernetes](Notes/05-LLM-Serving-on-Kubernetes.mdx) | GPU Operator, MIG / time-slicing / DRA, KServe, LeaderWorkerSet, Gateway API Inference Extension, llm-d, queue-depth autoscaling, cold starts | Advanced |
-| 6 | [Q&A Review Bank](Notes/06-Interview-QA-Bank.mdx) | 21 Q&A pairs across all topics | All levels |
+| 6 | [Q&A Review Bank](Notes/06-Interview-QA-Bank.mdx) | 23 Q&A pairs across all topics | All levels |
 
 ## Recommended Learning Paths
 
@@ -43,8 +58,9 @@
 
 ## Resources
 
-- [Q&A Review Bank](Notes/06-Interview-QA-Bank.mdx) - 21 Q&A pairs in this module
-- [Cross-topic Interview Questions](Notes/06-Interview-QA-Bank.mdx)
+- [Q&A Review Bank](Notes/06-Interview-QA-Bank.mdx) - 23 Q&A pairs in this module
+- [Module quiz](/quiz/production-engineering) - every *Check Yourself* question in this module
+- [Helm Chart & Release Checklist Code Lab](CodeLabs/01-Helm-Chart-and-Release-Checklist.mdx) - image, chart with queue-depth autoscaling, release checklist
 
 ## Key Cross-References
 

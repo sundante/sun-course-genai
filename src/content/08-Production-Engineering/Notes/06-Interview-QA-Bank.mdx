@@ -2,8 +2,8 @@
 
 ## Docker & GPU Inference
 
-**Q: Why does a plain `python:slim` base image fail to run GPU inference even if `torch` with CUDA support is pip-installed?**
-`pip install torch` with a CUDA-linked wheel installs CUDA userspace libraries, but the container still needs a CUDA runtime bridge to the host's GPU driver, which the base image doesn't provide. `torch.cuda.is_available()` returns `False` until the image is built from a CUDA-compatible base (`nvidia/cuda` or a vendor PyTorch image) and the container runtime is invoked with GPU access.
+**Q: Can a plain `python:slim` image with pip-installed CUDA `torch` run GPU inference? What does the container actually need?**
+Yes, if the container runs with GPU access. The host provides the driver (`libcuda.so`), which the NVIDIA Container Toolkit injects at run time (`--gpus all`, or the device plugin in Kubernetes); the CUDA wheels bring their own CUDA user-space libraries. A CUDA base image (`nvidia/cuda`, or a pinned vendor image like `vllm/vllm-openai`) is needed when you compile CUDA code (flash-attn from source), when libraries expect system CUDA, or to standardise one CUDA/cuDNN/NCCL combination. If `torch.cuda.is_available()` is `False`, check GPU access first, then for a CPU-only wheel, then the driver version.
 
 **Q: What's the difference between a CUDA `-devel` and `-runtime` tag, and which belongs in production?**
 `-devel` includes the full toolkit (compiler, headers, static libs) needed to compile CUDA code; `-runtime` includes only the shared libraries needed to execute already-compiled CUDA binaries. Production images should ship on `-runtime` - smaller, with a reduced attack surface, since nothing needs to compile at deploy time.

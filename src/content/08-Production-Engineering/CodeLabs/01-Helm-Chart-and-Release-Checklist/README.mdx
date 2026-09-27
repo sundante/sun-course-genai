@@ -13,7 +13,7 @@ flowchart TD
     Dep --> P2["🖥️ Pod (1 GPU)"]
     Svc["🔌 Service"] --> P1
     Svc --> P2
-    HPA["📈 HPA\nGPU util > 70%"] -.->|"scale"| Dep
+    HPA["📈 HPA\nqueue depth > 5 per pod"] -.->|"scale"| Dep
     Ing["🚪 Ingress"] --> Svc
 
     style Dev fill:#d8dfe8,stroke:#b0bac8
@@ -26,8 +26,9 @@ flowchart TD
 1. A GPU-inference Dockerfile using a multi-stage build (CUDA `-devel` for install, `-runtime` for the final image)
 2. A Helm chart with proper `Chart.yaml`, environment-driven `values.yaml`, and templated Deployment/Service/HPA manifests
 3. GPU resource requests/limits set equal, as required by the Kubernetes device plugin model
-4. An HPA scaling on a custom GPU-utilization metric rather than default CPU/memory
-5. A release-readiness checklist that turns the [Model Lifecycle & Rollout](../../Notes/03-Model-Lifecycle-and-Rollout.mdx) note into something you'd actually hand to a team
+4. An HPA scaling on a custom queue-depth metric (vLLM's waiting requests) rather than CPU/memory or GPU utilization
+5. A startup probe that gives a slow model load time before liveness checks start
+6. A release-readiness checklist that turns the [Model Lifecycle & Rollout](../../Notes/03-Model-Lifecycle-and-Rollout.mdx) note into something you'd actually hand to a team
 
 ## Running
 
@@ -36,7 +37,7 @@ flowchart TD
 cp ../../../07-Serving-and-Inference/CodeLabs/01-FastAPI-vLLM-Endpoint/serve.py .
 
 # Build the image
-docker build -t vllm-serving:latest .
+docker build -t vllm-serving:0.1.0 .
 
 # Validate the chart without touching a cluster
 helm lint helm-chart/

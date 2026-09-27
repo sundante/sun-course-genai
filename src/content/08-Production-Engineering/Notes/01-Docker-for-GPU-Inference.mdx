@@ -2,7 +2,18 @@
 
 ## The One-Line Definition
 
-A GPU inference Dockerfile is a normal Python Dockerfile with three things bolted on: a CUDA-enabled base image instead of a plain Python one, a runtime that can actually see the host GPU, and a multi-stage build so the final image doesn't ship a full compiler toolchain to production.
+A GPU inference image is a normal Python image plus CUDA user-space libraries (from pip wheels or a CUDA base image), run with a container runtime that injects the host's GPU driver - and, when kernels must be compiled, a multi-stage build so the compiler toolchain never ships to production.
+
+```objectives
+time: 35 min
+outcomes:
+  - Explain which layer supplies the GPU driver, the CUDA libraries and the framework in a GPU container
+  - Diagnose `torch.cuda.is_available() == False` in a container by checking GPU access, wheel variant and driver version in order
+  - Choose between a slim Python base with CUDA wheels, a CUDA base image and a vendor image such as `vllm/vllm-openai`
+  - Write a multi-stage Dockerfile that compiles in a `-devel` stage and ships a `-runtime` stage, with weights mounted rather than copied
+prerequisites:
+  - "[FastAPI + vLLM Endpoint](../../07-Serving-and-Inference/CodeLabs/01-FastAPI-vLLM-Endpoint.mdx) - the service being containerized"
+```
 
 <div class="audience-biz" markdown="1">
 
@@ -18,7 +29,7 @@ This page assumes the FastAPI + vLLM serving stack from [Inference & Serving](..
 
 ```mermaid
 flowchart LR
-    Base["🧱 CUDA base image\n(nvidia/cuda or\nvendor PyTorch image)"] --> Build["🔧 Build stage\ncompile deps, download\nmodel weights/cache"]
+    Base["🧱 Base image\n(python-slim + CUDA wheels,\nnvidia/cuda, or vendor image)"] --> Build["🔧 Build stage\ncompile deps, download\nmodel weights/cache"]
     Build --> Runtime["🚀 Runtime stage\nminimal CUDA runtime\n+ app code only"]
     Runtime --> Registry["📦 Push to registry\n(tagged, scanned)"]
 
@@ -30,31 +41,33 @@ flowchart LR
 
 ---
 
-## Why a Normal Python Dockerfile Doesn't Work
-
-<div class="audience-biz" markdown="1">
-
-A standard `python:3.11-slim` image has no idea a GPU exists. It has no CUDA driver bindings, no NVIDIA runtime libraries, and no way for `torch.cuda.is_available()` to ever return `True` inside the container, no matter how powerful the underlying machine is. GPU inference needs a base image that already carries the CUDA toolkit/runtime libraries that PyTorch and vLLM link against.
-
-</div>
+## What a GPU Container Actually Needs
 
 <div class="audience-tech" markdown="1">
 
-Three things a GPU inference Dockerfile needs that a normal one doesn't:
+A GPU program in a container needs three layers, and only the last one comes from your image:
 
-1. **A CUDA-compatible base image** - either an official `nvidia/cuda:<version>-runtime-<os>` image, or a vendor-maintained image that already bundles a matching PyTorch build (e.g. `pytorch/pytorch:<version>-cuda<ver>-cudnn<ver>-runtime`). The CUDA version in the image must match what the installed PyTorch/vLLM wheel was built against - a mismatch is a common source of `CUDA driver version is insufficient` errors at container start, not build time.
-2. **The NVIDIA Container Toolkit on the host**, not in the image. The image never bundles a GPU driver - drivers are host-level and version-pinned to the physical GPU. The container runtime (`docker run --gpus all`, or `nvidia` as the Kubernetes `runtimeClassName`) is what bridges the container's CUDA userspace libraries to the host's driver.
-3. **Explicit `ENV NVIDIA_VISIBLE_DEVICES=all` and `NVIDIA_DRIVER_CAPABILITIES=compute,utility`** (usually already set in official CUDA base images) so the container requests GPU visibility correctly at the orchestrator level.
+1. **The GPU driver - on the host, never in the image.** The driver (including `libcuda.so`) is tied to the host's kernel and GPU. The **NVIDIA Container Toolkit** injects the driver libraries and device nodes into the container when you run it with GPU access - `docker run --gpus all`, or in Kubernetes the NVIDIA device plugin plus the NVIDIA runtime (`runtimeClassName: nvidia` where required).
+2. **CUDA user-space libraries** (runtime, cuBLAS, cuDNN, NCCL) - these *can* come from the image, and they must be supported by the host driver version (newer CUDA needs a newer driver).
+3. **Your framework** - PyTorch, vLLM and similar.
+
+So where do the CUDA libraries come from? **Pip wheels bring their own**: the Linux CUDA builds of `torch` and `vllm` depend on `nvidia-*` pip packages containing the CUDA runtime, cuBLAS, cuDNN and NCCL. A plain Python base image therefore works for many inference servers:
 
 ```dockerfile
-# Won't work for GPU inference - no CUDA runtime present
-FROM python:3.11-slim
-RUN pip install torch vllm
-# torch.cuda.is_available() -> False, always, regardless of the host GPU
+# Works for pip-installed CUDA wheels, as long as the container runs with --gpus all
+FROM python:3.12-slim
+RUN pip install --no-cache-dir vllm
+# docker run --gpus all ... -> torch.cuda.is_available() == True
 ```
 
+A **CUDA base image** (`nvidia/cuda:<version>-runtime-<os>`, or a vendor image such as `vllm/vllm-openai` that pins CUDA, PyTorch and vLLM together) is the better choice when:
+
+- you **compile** CUDA code (flash-attn or custom kernels from source) - that needs the `-devel` image's `nvcc` and headers, typically in a build stage;
+- a library expects **system** CUDA libraries rather than pip-provided ones (some TensorRT and custom C++ builds);
+- you want **one known-good combination** of CUDA, cuDNN and NCCL across every service.
+
 ```dockerfile
-# Correct base for GPU inference
+# CUDA runtime base + a virtualenv
 FROM nvidia/cuda:12.8.1-runtime-ubuntu24.04
 RUN apt-get update && apt-get install -y python3.12 python3.12-venv
 # Ubuntu 24.04 blocks system-wide pip installs (PEP 668), so install into a virtualenv
@@ -62,7 +75,7 @@ RUN python3.12 -m venv /opt/venv && /opt/venv/bin/pip install vllm
 ENV PATH="/opt/venv/bin:$PATH"
 ```
 
-For a standard OpenAI-compatible server you can also start from the project's own image (`vllm/vllm-openai`), which already pins matching CUDA, PyTorch and vLLM versions.
+**When `torch.cuda.is_available()` is `False` in a container**, check in this order: the container was started without GPU access (no `--gpus`, missing device plugin or runtime class); a CPU-only wheel was installed (for example from the CPU index URL); or the host driver is too old for the wheel's CUDA version (`nvidia-smi` shows the maximum CUDA version the driver supports).
 
 </div>
 
@@ -83,7 +96,7 @@ Where the size actually comes from, and what to do about each source:
 | Source | Typical size | Mitigation |
 |---|---|---|
 | CUDA runtime base image | 2-4 GB | Use `-runtime` variant, not `-devel` (no compiler toolchain needed at runtime) |
-| PyTorch + CUDA-linked wheels | 3-6 GB | Pin exact versions; avoid pulling both CPU and GPU wheel variants |
+| PyTorch + CUDA-linked wheels | 3-6 GB | Pin exact versions; avoid pulling both CPU and GPU wheel variants. The wheels carry their own CUDA libraries, so on a CUDA base image you ship two copies - one reason the framework's own image or a slim base is often smaller |
 | Model weights baked into the image | Multi-GB per model | Prefer mounting weights from a volume/object store at startup over `COPY`-ing them into the image (see below) |
 | pip/apt build caches, `.git`, test files | 100s of MB - GBs if unmanaged | `--no-cache-dir` on pip, `rm -rf /var/lib/apt/lists/*`, `.dockerignore` |
 
@@ -128,21 +141,65 @@ CMD ["python3.12", "serve.py"]
 
 </div>
 
-**Interview Q:** *A teammate suggests `FROM python:3.11-slim` and installing `torch` with CUDA support via pip, arguing it's simpler than a CUDA base image. What's wrong with that plan?*
-The GPU-enabled `torch` wheel includes CUDA *userspace* libraries, but the container still has no CUDA *runtime* environment (`libcuda.so`, driver bridge) unless the base image or host mount provides one - `torch.cuda.is_available()` will report `False` even though the wheel installed cleanly, because pip installing a CUDA-linked package doesn't install a CUDA runtime.
+**Interview Q:** *A teammate suggests `FROM python:3.12-slim` and installing CUDA `torch` via pip, arguing it's simpler than a CUDA base image. Is that wrong?*
+Not necessarily - the CUDA wheels bundle the CUDA user-space libraries, and the NVIDIA Container Toolkit injects the host driver when the container runs with GPU access, so inference works. The trade-offs: no `nvcc` for compiling extensions such as flash-attn, less control over the exact CUDA/cuDNN/NCCL combination, and the host driver must still be new enough for the wheel's CUDA version. Many teams use the framework's own image (for example `vllm/vllm-openai`) to get a pinned, tested combination.
 
 ---
 
 ## Study Notes
 
 **Must-know for interviews:**
-- GPU inference images need a CUDA-compatible base image (official `nvidia/cuda` or a vendor PyTorch image) - a plain `python:slim` image cannot see the GPU no matter what's pip-installed on top
-- GPU drivers live on the host, never in the image - the NVIDIA Container Toolkit (`--gpus all` in Docker, `runtimeClassName: nvidia` in Kubernetes) bridges the container's CUDA libraries to the host driver
+- The host provides the driver (injected by the NVIDIA Container Toolkit when the container runs with GPU access); the image provides CUDA user-space libraries - pip CUDA wheels bundle them, CUDA base images provide them system-wide and are needed for compiling kernels
 - CUDA base images are large (multi-GB) before any app code - use `-runtime` not `-devel` variants for the final stage, and avoid baking model weights into the image
 - Multi-stage builds let you compile in a fat `-devel` stage and ship only the resulting artifacts on a slim `-runtime` stage, cutting final image size without changing the compiled output
 - Model weights are generally better mounted at container start (volume/object store) than `COPY`'d into the image, so model version and code version can roll independently
 
-**Quick recall Q&A:**
-- *Why does `torch.cuda.is_available()` return `False` inside a container even on a GPU host?* Because the container's base image has no CUDA runtime bridge to the host driver - either the base image lacks CUDA libraries, or the container runtime wasn't invoked with GPU access (`--gpus all` / `runtimeClassName: nvidia`).
-- *What's the practical difference between a CUDA `-devel` and `-runtime` image tag?* `-devel` includes the full toolkit (`nvcc`, headers, static libs) for compiling CUDA code; `-runtime` includes only the shared libraries needed to run already-compiled CUDA binaries - `-runtime` is smaller and is what should ship in the final production image.
-- *Why should model weights usually not be `COPY`'d into the Docker image?* It couples model version to container version (any weight update forces a full image rebuild/repush of multi-GB layers) and bloats the image - mounting weights from a volume or object store at startup decouples the two and keeps the image itself lean.
+## Check Yourself
+
+```quiz
+- q: "Where does `libcuda.so` (the GPU driver library) come from inside a running GPU container?"
+  options: ["It is installed by `pip install torch`", "It must be copied into the image from the `nvidia/cuda` base", "It is injected from the host by the NVIDIA Container Toolkit when the container runs with GPU access", "It is compiled by `nvcc` in the build stage"]
+  answer: 3
+  explain: "The driver is tied to the host kernel and GPU, so it never ships in the image; the toolkit mounts it in at run time (`--gpus all`, or the device plugin and runtime in Kubernetes)."
+- q: "Which situation genuinely requires a CUDA `-devel` image (in at least one build stage)?"
+  options: ["Running a pip-installed CUDA `torch` wheel", "Compiling flash-attn or a custom CUDA kernel from source", "Serving a model with `vllm serve`", "Using `--gpus all`"]
+  answer: 2
+  explain: "Only compilation needs `nvcc` and the CUDA headers. Prebuilt wheels run on a slim or `-runtime` base."
+- q: "Why does `torch.cuda.is_available()` return `False` inside a container even on a GPU host?"
+  answer: "Most often the container was started without GPU access (no `--gpus all`, missing device plugin or runtime class); otherwise a CPU-only wheel was installed, or the host driver is older than the CUDA version the wheel needs."
+- q: "What's the practical difference between a CUDA `-devel` and `-runtime` image tag?"
+  answer: "`-devel` includes the full toolkit (`nvcc`, headers, static libs) for compiling CUDA code; `-runtime` includes only the shared libraries needed to run already-compiled CUDA binaries - `-runtime` is smaller and is what should ship in the final production image."
+- q: "Why should model weights usually not be `COPY`'d into the Docker image?"
+  answer: "It couples model version to container version (any weight update forces a full image rebuild/repush of multi-GB layers) and bloats the image - mounting weights from a volume or object store at startup decouples the two and keeps the image itself lean."
+```
+
+## Exercises
+
+```exercise
+- title: "Debug a GPU-less container"
+  task: |
+    A container built `FROM python:3.12-slim` with `pip install torch` prints `torch.cuda.is_available() == False` on a host with an H100. List the checks you would run, in order, and the command or evidence for each.
+  hints: ["Three causes cover almost every case."]
+  solution: |
+    1. **GPU access** - was it started with `docker run --gpus all` (or, in Kubernetes, does the pod request `nvidia.com/gpu` on a node with the device plugin and NVIDIA runtime)? Inside the container, `nvidia-smi` or `ls /dev/nvidia*` should succeed.
+    2. **Wheel variant** - `python -c "import torch; print(torch.version.cuda)"`. `None` means a CPU-only wheel was installed; reinstall from the CUDA index.
+    3. **Driver version** - `nvidia-smi` on the host shows the highest CUDA version the driver supports; it must be at least the wheel's `torch.version.cuda` (minor-version compatibility aside). Upgrade the driver or pick a wheel built for an older CUDA.
+- title: "Shrink an image"
+  task: |
+    An image is 14 GB: `nvidia/cuda:*-devel` base (≈7 GB), CUDA `torch` + vLLM wheels (≈5 GB), and a 2 GB model copied in with `COPY`. Propose changes and estimate the new size.
+  solution: |
+    - Move compilation (if any) to a `-devel` build stage and ship on a slim or `-runtime` base: the `-devel` toolkit is several GB you do not need at run time. Since the wheels bundle their own CUDA libraries, a `python:3.12-slim` base (≈0.15 GB) is enough if nothing is compiled.
+    - Mount the weights from a volume or object store instead of `COPY` - removes 2 GB and decouples model and code versions.
+    - `--no-cache-dir`, cleaned apt lists and a `.dockerignore`.
+    
+    Result: roughly 5-6 GB (wheels plus a slim base), down from 14 GB - and a code change no longer re-pushes the weights.
+```
+
+## References
+
+- NVIDIA, [Container Toolkit documentation](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/) (2026)
+- NVIDIA, [CUDA compatibility](https://docs.nvidia.com/deploy/cuda-compatibility/) - driver vs toolkit versions (2026)
+- PyTorch, [Get Started - install matrix](https://pytorch.org/get-started/locally/) (2026)
+- Docker, [Multi-stage builds](https://docs.docker.com/build/building/multi-stage/) (2026)
+
+*Last reviewed: 2026-09*

@@ -1,6 +1,6 @@
 image:
   repository: vllm-serving
-  tag: latest
+  tag: "0.1.0"   # pin an immutable tag (or digest) - never deploy :latest
   pullPolicy: IfNotPresent
 
 replicaCount: 2
@@ -18,7 +18,7 @@ resources:
     nvidia.com/gpu: "1"
 
 nodeSelector:
-  cloud.google.com/gke-accelerator: nvidia-tesla-t4
+  cloud.google.com/gke-accelerator: nvidia-l4
 
 tolerations:
   - key: "nvidia.com/gpu"
@@ -34,9 +34,12 @@ autoscaling:
   enabled: true
   minReplicas: 2
   maxReplicas: 6
-  # Requires a custom-metrics pipeline (DCGM exporter + Prometheus Adapter) -
-  # the default HPA only sees CPU/memory, see Notes/02-Kubernetes-and-Helm.mdx
-  targetGPUUtilizationPercentage: 70
+  # Scale on queue depth, not GPU utilization - a busy vLLM server shows high GPU
+  # utilization whether or not requests are queueing. Requires a custom-metrics
+  # pipeline (Prometheus scraping vLLM's /metrics + Prometheus Adapter, or KEDA);
+  # the default HPA only sees CPU/memory. See Notes/05-LLM-Serving-on-Kubernetes.mdx
+  queueDepthMetric: vllm_num_requests_waiting
+  targetWaitingRequestsPerPod: 5
 
 rollout:
   strategy: RollingUpdate

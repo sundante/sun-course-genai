@@ -23,4 +23,4 @@ A one-page checklist to walk through before promoting any new model version to p
 
 - [ ] Rollback criteria monitored for an agreed observation window before calling it stable
 - [ ] Audit log confirms who approved the promotion and when
-- [ ] Registry updated to reflect the new `Production` stage and the previous version archived, not deleted
+- [ ] Registry alias (e.g. `@champion`) moved to the new version; the previous version kept, not deleted, so rollback is moving the alias back

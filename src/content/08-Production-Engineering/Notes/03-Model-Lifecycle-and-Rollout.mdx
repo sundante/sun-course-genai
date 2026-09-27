@@ -12,6 +12,17 @@ Model lifecycle management covers four concerns: tracking which model version is
 
 </div>
 
+```objectives
+time: 30 min
+outcomes:
+  - Explain what a model registry stores and how aliases (such as `@champion`) drive promotion
+  - Compare blue/green, canary, shadow and champion-challenger rollouts and pick one for a scenario
+  - Write quantified rollback criteria before launch, covering quality, latency, errors and cost
+prerequisites:
+  - "[Kubernetes & Helm](02-Kubernetes-and-Helm.mdx)"
+  - "[Evaluation & Benchmarks](../../06-Evaluation/INDEX.mdx) - offline evaluation"
+```
+
 ---
 
 ## Model Registry and Versioning
@@ -42,6 +53,7 @@ Instead of switching every user to the new model at once, roll it out gradually 
 
 - **Blue/green** - two full environments running simultaneously (old = blue, new = green); traffic cuts over atomically at the load balancer/Service level, and rollback is just cutting back
 - **Canary** - a small percentage of traffic (e.g. 5%) routed to the new version while most stays on the old one; the percentage ramps up only if health/quality metrics hold
+- **Shadow** - the new version receives a mirrored copy of live requests and its responses are logged but never returned to users; no user risk, but double the compute and no signal on user reactions
 - **Champion-challenger** - both versions run continuously on live traffic (often via shadow traffic or a persistent small split), with the challenger promoted to champion only after it wins on the metrics that matter over a meaningful sample size
 
 </div>
@@ -87,7 +99,47 @@ Rollback criteria should be quantitative and pre-agreed: error rate above X%, p9
 - Rollback criteria must be decided and quantified before launch, not during an incident
 - The base-vs-tuned benchmark table from a fine-tuning workflow is exactly the evidence a registry promotion decision needs
 
-**Quick recall Q&A:**
-- *What's the difference between canary and champion-challenger?* Canary is a temporary, ramping traffic shift during a single rollout event; champion-challenger is an ongoing comparison pattern that can run continuously, not just during a deploy.
-- *Why is "we'll decide if it's bad enough to roll back when we see it" a risky plan?* Under incident pressure, teams tend to under-react (hoping it self-resolves) or over-react (rolling back a false alarm) - pre-agreed quantitative thresholds remove that judgment call from the highest-stress moment.
-- *What does a model registry actually store?* Lineage and metadata - training run, metrics, artifacts, and promotion status (aliases such as `@champion`) - not the serving infrastructure itself.
+## Check Yourself
+
+```quiz
+- q: "You want to see how a new model behaves on real traffic without any user seeing its answers. Which strategy fits?"
+  options: ["Blue/green", "Canary at 5%", "Shadow deployment - mirror requests to the new model and discard its responses", "Rolling update"]
+  answer: 3
+  explain: "Every other option serves some users from the new version. Shadowing costs extra compute but carries no user risk."
+- q: "In MLflow's current registry, how is \"the version production should serve\" usually marked?"
+  options: ["By the `Production` stage", "By an alias such as `@champion` that points at a version", "By the highest version number", "By a Git tag"]
+  answer: 2
+  explain: "Stages are deprecated in favour of aliases; moving an alias is an instant promotion or rollback."
+- q: "What's the difference between canary and champion-challenger?"
+  answer: "Canary is a temporary, ramping traffic shift during a single rollout event; champion-challenger is an ongoing comparison pattern that can run continuously, not just during a deploy."
+- q: "Why is \"we'll decide if it's bad enough to roll back when we see it\" a risky plan?"
+  answer: "Under incident pressure, teams tend to under-react (hoping it self-resolves) or over-react (rolling back a false alarm) - pre-agreed quantitative thresholds remove that judgment call from the highest-stress moment."
+- q: "What does a model registry actually store?"
+  answer: "Lineage and metadata - training run, metrics, artifacts, and promotion status (aliases such as `@champion`) - not the serving infrastructure itself."
+```
+
+## Exercises
+
+```exercise
+- title: "Rollback criteria for a canary"
+  task: |
+    A fine-tuned support model replaces the current one through a canary (5% → 25% → 100%). Write four quantified rollback criteria and say how each is measured.
+  solution: |
+    Example (numbers depend on the product):
+    
+    | Criterion | Threshold | Measured by |
+    |---|---|---|
+    | Quality | Resolution rate or judge score more than 2 points below the champion, significant at 95% | Online eval on a sample of canary vs control traffic |
+    | Latency | p95 TTFT above 800 ms for 10 minutes | Serving metrics per version label |
+    | Errors | 5xx or malformed-output rate above 1% | Gateway logs and output validators |
+    | Cost | Tokens per resolved conversation up more than 20% | Usage logs per version |
+    
+    Each stage runs long enough to collect the samples the quality test needs; any breach reverts the traffic split (or moves the alias back) automatically.
+```
+
+## References
+
+- MLflow, [Model Registry](https://mlflow.org/docs/latest/ml/model-registry/) - aliases (2026)
+- Google, [The Site Reliability Workbook - Canarying Releases](https://sre.google/workbook/canarying-releases/) (2018)
+
+*Last reviewed: 2026-09*

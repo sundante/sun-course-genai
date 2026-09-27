@@ -34,17 +34,23 @@ spec:
           volumeMounts:
             - name: model-weights
               mountPath: /models
+          # Model loading can take minutes: the startup probe holds off liveness
+          # checks (up to 60 x 10 s) so a slow load is not killed and restarted
+          startupProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.service.port }}
+            failureThreshold: 60
+            periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /health
               port: {{ .Values.service.port }}
-            initialDelaySeconds: 30
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /health
               port: {{ .Values.service.port }}
-            initialDelaySeconds: 60
             periodSeconds: 30
       volumes:
         - name: model-weights

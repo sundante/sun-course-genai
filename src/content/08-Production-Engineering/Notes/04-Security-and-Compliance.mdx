@@ -12,6 +12,17 @@ Security and compliance for AI systems layers standard application-security cont
 
 </div>
 
+```objectives
+time: 45 min
+outcomes:
+  - Scope IAM and secrets per component so a single compromise has a limited blast radius
+  - Design a redaction step that keeps PHI/PII out of traces and eval datasets
+  - Map a GenAI system's risks to the OWASP Top 10 for LLM Applications with a first-line control for each
+  - Secure the model supply chain with safetensors, pinning and signing, and place a system on the EU AI Act timeline
+prerequisites:
+  - "[Model Lifecycle & Rollout](03-Model-Lifecycle-and-Rollout.mdx)"
+```
+
 ---
 
 ## IAM and Least Privilege
@@ -142,11 +153,39 @@ The EU AI Act (Regulation (EU) 2024/1689) applies in stages. Dates as amended by
 - HIPAA's technical safeguards are five named things: access control, audit controls, integrity, person or entity authentication, transmission security - naming them precisely reads as far more credible than "we're HIPAA compliant"
 - SAST + dependency scanning belong in CI, blocking merge on high-severity findings
 
-**Quick recall Q&A:**
-- *Why is a shared "AI service account" with broad permissions risky?* It turns a compromise of any single component into full-system access, defeating the point of scoping permissions at all.
-- *Why do tracing tools pose a specific compliance risk for LLM systems that they don't for typical apps?* They're designed to capture full request/response content by default for debugging, and in an LLM system that content routinely includes the sensitive data users typed into the prompt.
-- *What are HIPAA's five technical safeguards?* Access control, audit controls, integrity, person or entity authentication, and transmission security (45 CFR §164.312).
-- *What should trigger a CI pipeline to block a merge, from a security standpoint?* A high-severity finding from SAST (code-level vulnerability) or dependency scanning (known-CVE in a third-party package).
+## Check Yourself
+
+```quiz
+- q: "Why is loading a `.bin`/`.pt` checkpoint from an untrusted hub repository risky?"
+  options: ["The weights might be quantized", "Pickle files can execute arbitrary code when loaded", "They are slower to load than safetensors", "They lack a model card"]
+  answer: 2
+  explain: "Prefer safetensors; for pickles use `torch.load(..., weights_only=True)`, the default since PyTorch 2.6."
+- q: "A RAG assistant returns passages from HR documents the user is not permitted to read. Which OWASP LLM risk is this, and what is the first-line control?"
+  options: ["LLM01 prompt injection - input filtering", "LLM08 vector and embedding weaknesses - permission-aware retrieval (ACL filtering at query time)", "LLM10 unbounded consumption - rate limits", "LLM04 data poisoning - data provenance"]
+  answer: 2
+- q: "Why is a shared \"AI service account\" with broad permissions risky?"
+  answer: "It turns a compromise of any single component into full-system access, defeating the point of scoping permissions at all."
+- q: "Why do tracing tools pose a specific compliance risk for LLM systems that they don't for typical apps?"
+  answer: "They're designed to capture full request/response content by default for debugging, and in an LLM system that content routinely includes the sensitive data users typed into the prompt."
+- q: "What are HIPAA's five technical safeguards?"
+  answer: "Access control, audit controls, integrity, person or entity authentication, and transmission security (45 CFR §164.312)."
+- q: "What should trigger a CI pipeline to block a merge, from a security standpoint?"
+  answer: "A high-severity finding from SAST (code-level vulnerability) or dependency scanning (known-CVE in a third-party package)."
+```
+
+## Exercises
+
+```exercise
+- title: "Threat-model a clinical summarizer"
+  task: |
+    A service summarizes patient notes with a hosted LLM, logs traces to an observability tool and saves low-rated outputs into an eval dataset. List the five most important controls, each tied to a HIPAA safeguard or an OWASP LLM risk.
+  solution: |
+    1. **Redact PHI before traces and eval datasets** (or use a backend covered by a BAA with access controls) - HIPAA access control; OWASP LLM02.
+    2. **Per-component service identities** - summarizer reads notes, eval job reads only the redacted dataset - HIPAA access control and person or entity authentication.
+    3. **Audit log of every PHI access** (who, when, why) - HIPAA audit controls.
+    4. **TLS everywhere and a BAA with the model provider** - HIPAA transmission security.
+    5. **Treat note content as untrusted input and validate the output** - notes may contain injected text; summaries rendered in the EHR are escaped - OWASP LLM01 and LLM05.
+```
 
 ## References
 
