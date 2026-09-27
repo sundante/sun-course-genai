@@ -4,6 +4,18 @@
 > **Role:** Senior Platform Architect / AI Practice Lead
 > **Question:** "A global automotive manufacturer wants to equip their factory floor technicians with a Smart Diagnostic Assistant on phone or tablet. When a machine breaks down, the technician should be able to use the app to get repair instructions. Design the end-to-end architecture."
 
+```objectives
+time: 75 min
+outcomes:
+  - Justify an orchestrator-subagent architecture for the same problem as Version 1, and say when it is worth the cost
+  - Build a latency budget across parallel sub-agents and a synthesizer
+  - Answer interviewer probes on trade-offs, failure scenarios and success metrics
+  - Compare this design with Version 1 and choose between them for a stated constraint
+prerequisites:
+  - "[Smart Diagnostic Assistant - Version 1](03-Smart-Diagnostic-Assistant-1.mdx)"
+  - "[Multi-Agent Architectures](../../14-Agent-Patterns/Notes/03-Multi-Agent-Architectures.mdx)"
+```
+
 ---
 
 ## How I'd Open This in an Interview (2 min)
@@ -547,3 +559,11 @@ How the design maps onto the [Production Agents](../INDEX.mdx) chapters:
 | Durability and approvals | The orchestrator's fan-out runs as a durable workflow so a slow or failed sub-agent is retried without repeating the others; supervisor escalations are durable waits |
 | Evaluation | Per-sub-agent evals (classification accuracy on labelled failures, retrieval recall on manuals) plus end-to-end task success on historical cases; the validator's judge is checked against engineer labels |
 | Observability | One trace per case (`invoke_agent` → `chat` / `execute_tool` spans, OpenTelemetry GenAI conventions) with prompt, model and tool-set versions recorded; see [Agent Observability](../Notes/06-Agent-Observability.mdx) |
+
+## References
+
+- Anthropic, [Building Effective Agents](https://www.anthropic.com/engineering/building-effective-agents) (Dec 2024)
+- Anthropic, [How we built our multi-agent research system](https://www.anthropic.com/engineering/multi-agent-research-system) (Jun 2025)
+- OpenTelemetry, [Semantic conventions for generative AI systems](https://opentelemetry.io/docs/specs/semconv/gen-ai/) (2026)
+
+*Last reviewed: 2026-09*

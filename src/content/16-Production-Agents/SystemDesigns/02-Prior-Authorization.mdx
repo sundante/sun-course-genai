@@ -4,6 +4,18 @@
 >
 > ← [Back to Agentic AI Concepts](../../12-Agent-Foundations/Notes/01-What-Are-AI-Agents.mdx)
 
+```objectives
+time: 60 min
+outcomes:
+  - Design an evidence-aggregation agent that checks clinical documentation against payer policy with cited criteria
+  - Keep clinicians in the decision loop and design the urgency tiers, state machine and audit trail
+  - Apply PHI handling and HIPAA safeguards to every component that sees patient data
+  - Specify production controls: tools, injection defences, durability, evaluation and observability
+prerequisites:
+  - "[Security & Compliance](../../08-Production-Engineering/Notes/04-Security-and-Compliance.mdx)"
+  - "[Agent Security](../Notes/02-Agent-Security.mdx)"
+```
+
 ---
 
 ## Interview Problem Statement
@@ -122,6 +134,8 @@ See the [End-to-End Agent Orchestration Flow](#end-to-end-agent-orchestration-fl
 | **Urgent / Concurrent** | Patient currently admitted or in active treatment | 4 hours | 1 hour |
 
 All tiers use the same pipeline - urgency flag sets queue priority and SLA alerts only.
+
+These are the provider-side targets for assembling a submission. Payer decision deadlines are set separately by regulation: under CMS-0057-F, Medicare Advantage, Medicaid and CHIP payers must decide expedited requests within 72 hours and standard requests within 7 calendar days, from January 2026 (medical items and services; drugs are excluded, and so are marketplace plans for these timeframes).
 
 ---
 
@@ -321,7 +335,6 @@ stateDiagram-v2
     DENIED --> CLOSED : Denial letter + appeal rights sent · Audit finalised
 ```
 
-
 ## Production Controls
 
 How the design maps onto the [Production Agents](../INDEX.mdx) chapters:
@@ -337,3 +350,12 @@ How the design maps onto the [Production Agents](../INDEX.mdx) chapters:
 ---
 
 ← [Back to Agentic AI Concepts](../../12-Agent-Foundations/Notes/01-What-Are-AI-Agents.mdx) · [All System Designs](../INDEX.mdx)
+
+## References
+
+- CMS, [Interoperability and Prior Authorization Final Rule (CMS-0057-F)](https://www.cms.gov/newsroom/fact-sheets/cms-interoperability-prior-authorization-final-rule-cms-0057-f) (2024)
+- US HHS, [HIPAA Security Rule, 45 CFR §164.312](https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164/subpart-C/section-164.312)
+- Anthropic, [Building Effective Agents](https://www.anthropic.com/engineering/building-effective-agents) (Dec 2024)
+- OWASP GenAI Security Project, [Top 10 for Agentic Applications](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/) (Dec 2025)
+
+*Last reviewed: 2026-09*

@@ -3,6 +3,18 @@
 > **Role:** Senior Platform Architect / AI Practice Lead
 > **Question:** "A global automotive manufacturer wants to equip their factory floor technicians with a Smart Diagnostic Assistant on phone or tablet. When a machine breaks down, the technician should be able to use the app to get repair instructions. Design the end-to-end architecture."
 
+```objectives
+time: 75 min
+outcomes:
+  - Frame an open-ended design question and drive clarifying questions about users, connectivity, safety and scale
+  - Design retrieval over manuals and maintenance history for technicians on mobile devices, including offline use
+  - Call out the trade-offs and failure scenarios, and define how success is measured
+  - Structure a system-design interview answer from opening to close
+prerequisites:
+  - "[RAG System Design](../../11-RAG/Notes/10-RAG-System-Design.mdx)"
+  - "[Agent Foundations](../../12-Agent-Foundations/INDEX.mdx)"
+```
+
 ---
 
 ## How I Would Open (Framing the Problem)
@@ -400,3 +412,11 @@ How the design maps onto the [Production Agents](../INDEX.mdx) chapters:
 | Durability and approvals | Offline-first sessions sync as durable workflows when connectivity returns; escalations to supervisors are durable waits with timeouts |
 | Evaluation | A regression suite of past failures with verified fixes (correct failure mode, correct procedure template, never a missing safety step), and a pilot measured on first-time fix rate |
 | Observability | One trace per case (`invoke_agent` → `chat` / `execute_tool` spans, OpenTelemetry GenAI conventions) with prompt, model and tool-set versions recorded; see [Agent Observability](../Notes/06-Agent-Observability.mdx) |
+
+## References
+
+- Anthropic, [Building Effective Agents](https://www.anthropic.com/engineering/building-effective-agents) (Dec 2024)
+- Anthropic, [Introducing Contextual Retrieval](https://www.anthropic.com/news/contextual-retrieval) (Sep 2024)
+- OpenTelemetry, [Semantic conventions for generative AI systems](https://opentelemetry.io/docs/specs/semconv/gen-ai/) (2026)
+
+*Last reviewed: 2026-09*

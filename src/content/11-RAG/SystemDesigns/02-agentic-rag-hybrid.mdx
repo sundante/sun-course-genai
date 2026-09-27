@@ -4,6 +4,18 @@
 >
 > ← [Back to RAG Concepts](../Notes/07-Advanced-RAG-Patterns.mdx) | [Simple RAG Design ←](01-simple-rag.mdx)
 
+```objectives
+time: 75 min
+outcomes:
+  - Explain which questions simple RAG cannot answer and why multi-hop, relationship-heavy queries need a graph
+  - Design a knowledge-graph schema and agent tools that combine vector retrieval with graph traversal
+  - Bound an agentic retrieval loop and choose between simple and agentic RAG with a decision matrix
+  - Design observability and failure handling for a multi-store retrieval agent
+prerequisites:
+  - "[Simple RAG Pipeline](01-simple-rag.mdx)"
+  - "[Advanced RAG Patterns](../Notes/07-Advanced-RAG-Patterns.mdx)"
+```
+
 ---
 
 ## Interview Problem Statement
@@ -320,3 +332,12 @@ A: Three sources of non-determinism: (1) **Graph data changes** - new papers add
 **Q7: Design the observability stack for this system. What metrics do you track at each layer?** `[Medium]`
 
 A: Four layers: (1) **Infrastructure** (Cloud Monitoring): Cloud Run CPU/memory per service, Spanner read/write latency P50/P99, Vector Search query latency, Redis cache hit rate. Alert on: Spanner P99 > 500ms, cache hit rate < 10%, Cloud Run error rate > 1%. (2) **Agent** (Cloud Trace + custom spans): total ReAct loop duration, iterations per query, tool call latency per tool type (graph_query vs. search_literature), timeout rate. Track `mean_iterations_per_query` - if it rises, queries are getting more complex or the agent is getting confused. (3) **Retrieval quality** (BigQuery + offline eval): graph traversal recall (did the graph path exist?), vector search MRR@5, entity extraction precision/recall on a labeled test set. Run RAGAS weekly on a sample of queries. (4) **Answer quality** (human feedback + LLM-as-judge): thumbs up/down from researchers, LLM-as-judge faithfulness score (are answer claims grounded in graph facts?), hallucination rate on labeled golden set. Dashboard in Looker Studio.
+
+## References
+
+- Edge et al., [From Local to Global: A Graph RAG Approach to Query-Focused Summarization](https://arxiv.org/abs/2404.16130) (2024)
+- Yao et al., [ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/abs/2210.03629) (2022)
+- Asai et al., [Self-RAG](https://arxiv.org/abs/2310.11511) (2023)
+- Anthropic, [Building Effective Agents](https://www.anthropic.com/engineering/building-effective-agents) (Dec 2024)
+
+*Last reviewed: 2026-09*

@@ -4,6 +4,17 @@
 >
 > ← [Back to RAG Concepts](../Notes/01-RAG-Fundamentals.mdx) | [RAG System Design →](../Notes/10-RAG-System-Design.mdx)
 
+```objectives
+time: 60 min
+outcomes:
+  - Scope an enterprise RAG system with clarifying questions about corpus, users, freshness, access control and latency
+  - Design the ingestion, retrieval, reranking and generation path, with a reason for each component
+  - Plan for scale and name the failure modes (stale index, permission leaks, lost-in-the-middle) with a mitigation for each
+  - Answer the follow-up questions an interviewer asks about this design
+prerequisites:
+  - "[RAG Fundamentals](../Notes/01-RAG-Fundamentals.mdx) and [RAG System Design](../Notes/10-RAG-System-Design.mdx)"
+```
+
 ---
 
 ## Interview Problem Statement
@@ -290,3 +301,12 @@ A: Agent Platform Vector Search is a dedicated ANN service - it handles billion-
 **Q7: What is "lost-in-the-middle" and how do you mitigate it in this system?** `[Medium]`
 
 A: Lost-in-the-middle is the empirically-observed degradation in LLM attention on context chunks placed in the middle of a long context window - information in positions 2 through N-1 is less well-utilized than the first and last chunks. For a 3-chunk RAG context, this is minimal, but for 10+ chunks it significantly degrades answer quality. Mitigations: (1) **Limit to 3–5 chunks** - enforce a hard cap on context size, relying on the reranker to surface only the most relevant. (2) **Positional priority** - place the highest-relevance chunk first and second, not in the middle. (3) **Summary-then-detail** - prepend a 2-sentence summary of each chunk before the full text, giving the model anchor points. (4) **Test your model** - newer long-context models are less position-sensitive, but degradation with length and distractors persists (context rot), so measure answer accuracy by evidence position on your own eval.
+
+## References
+
+- Lewis et al., [Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401) (2020)
+- Liu et al., [Lost in the Middle: How Language Models Use Long Contexts](https://arxiv.org/abs/2307.03172) (2023)
+- Anthropic, [Introducing Contextual Retrieval](https://www.anthropic.com/news/contextual-retrieval) (Sep 2024)
+- Es et al., [RAGAS: Automated Evaluation of Retrieval Augmented Generation](https://arxiv.org/abs/2309.15217) (2023)
+
+*Last reviewed: 2026-09*

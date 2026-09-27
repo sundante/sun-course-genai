@@ -144,18 +144,18 @@ Restructured 2026-09-26 (redesign Phase 1). Order, numbering and tracks come fro
 | 07 | Serving & Production | Inference & Serving (`serving-and-inference`) | `07-Serving-and-Inference/` | 6 notes (2 moved from 01) + Q&A bank + FastAPI/vLLM lab |
 | 08 | Serving & Production | Production Engineering (`production-engineering`) | `08-Production-Engineering/` | 4 notes + Q&A bank + Helm lab |
 | 09 | Serving & Production | Cloud Platforms (`platform-breadth`) | `09-Cloud-Platforms/` | 4 notes + Q&A bank |
-| 10 | Building Apps | Prompt & Context Engineering (`prompt-engineering`) | `10-Prompt-Engineering/` | 9 notes + Q&A bank (48) + 1 lab (Prompt Evals & Structured Outputs) |
+| 10 | Building Apps | Prompt & Context Engineering (`prompt-engineering`) | `10-Prompt-Engineering/` | 9 notes + Q&A bank (56) + 1 lab (Prompt Evals & Structured Outputs) |
 | 11 | Building Apps | RAG (`rag`) | `11-RAG/` | 12 notes + Q&A bank (60) + 1 lab (Retrieval Evaluation) + 2 system designs |
-| 12 | Agents | Agent Foundations (`agents`) | `12-Agent-Foundations/` | 8 notes (one memory taxonomy) + Q&A bank (46) + Agent Loop from Scratch lab (shop env, pass^k; run on Qwen3-8B/4B) |
-| 13 | Agents | MCP & A2A (`mcp`) | `13-MCP-and-A2A/` | 7 notes (MCP 2026-07-28, auth, security, A2A v1.0) + Q&A bank (40) + MCP Server & Agent lab (poisoning measured, A2A end to end) |
-| 14 | Agents | Agent Patterns & Multi-Agent (`agentic-ai`) | `14-Agent-Patterns/` | 4 notes + Q&A bank (35) + Patterns Under Measurement lab (HumanEval, hidden tests, paired CIs) |
+| 12 | Agents | Agent Foundations (`agents`) | `12-Agent-Foundations/` | 8 notes (one memory taxonomy) + Q&A bank (48) + Agent Loop from Scratch lab (shop env, pass^k; run on Qwen3-8B/4B) |
+| 13 | Agents | MCP & A2A (`mcp`) | `13-MCP-and-A2A/` | 7 notes (MCP 2026-07-28, auth, security, A2A v1.0) + Q&A bank (41) + MCP Server & Agent lab (poisoning measured, A2A end to end) |
+| 14 | Agents | Agent Patterns & Multi-Agent (`agentic-ai`) | `14-Agent-Patterns/` | 4 notes + Q&A bank (40) + Patterns Under Measurement lab (HumanEval, hidden tests, paired CIs) |
 | 15 | Agents | Agent Frameworks (`agent-frameworks`) | `15-Agent-Frameworks/` | 8 notes (choosing + 7 frameworks) + Q&A bank (31) + One Agent, Many Frameworks lab (7 frameworks, pinned per-framework requirements) |
-| 16 | Agents | Production Agents (`production-agents`) | `16-Production-Agents/` | 6 notes (architecture, security, durable execution, cost, evals/benchmarks, observability) + Q&A bank (30) + 4 system designs |
+| 16 | Agents | Production Agents (`production-agents`) | `16-Production-Agents/` | 6 notes (architecture, security, durable execution, cost, evals/benchmarks, observability) + Q&A bank (32) + 4 system designs |
 | 17 | Agents | Agent Engineering (`agent-engineering`) | `17-Agent-Engineering/` | 8 notes (harness, loops/graphs, context, coding agents, computer use, skills/memory, verifiers/RL, spec-driven) + Q&A bank (30) + Minimal Coding Harness lab |
 | 18 | Capstones | Capstones (`capstones`) | `18-Capstones/` | 3 projects (train & post-train, serve with an SLO, production agent) with deliverables and rubrics |
 | - | Review | Knowledge Check (`knowledge-check`) | `Interview-Questions/INDEX.mdx` | Hub linking every module's Q&A bank and `/quiz/<module>` page |
 
-**Most recently active area:** Agents track (modules 12-17), redesign Phase 4 (2026-09-27) - every module rewritten to the note template with a lab that runs against a local model (`mlx_lm.server`, Qwen3-8B 4-bit); see the Changelog and `vibes/course-redesign-checklist.md`.
+**Most recently active area:** redesign Phase 5 (2026-09-27/28) - the note template on every concept note, lab, module INDEX, Q&A bank and system design; module quizzes at `/quiz/<module>`; one Q&A bank per module; capstones. The redesign is complete; its checklist was deleted and the outcome is in the Changelog.
 
 **Naming convention:** zero-padded numeric prefixes (`01-`, `02-`, ...) at module and file level; `INDEX.mdx` per module overview; `Notes/`, `SystemDesigns/`, `CodeLabs/`, `Resources/`, `Implementation/` as topic subfolders. See root `CLAUDE.md` for the renumbering rule when files are deleted.
 
@@ -200,12 +200,13 @@ Restructured 2026-09-26 (redesign Phase 1). Order, numbering and tracks come fro
 8. ~~**~173 broken internal links**~~ **Fixed 2026-09-26** - content linked to `.md` targets and `.mdx#anchor` targets that `remarkRewriteMdLinks.ts` never matched; the rewriter now resolves `.md` -> `.mdx` and preserves anchors. Verified: all 291 distinct `/learn/...` hrefs in the built `out/` resolve to real pages. `npm run check:content` now guards this.
 9. ~~**Home-page tiles are hand-maintained**~~ **Fixed 2026-09-26** - module numbers, tracks and note/lab/Q&A counts on the home page now come from `nav.yml` + `src/lib/content/stats.ts`; only subtitles and descriptions in `CurriculumTiles.tsx` are hand-written. The old copy claimed "180+ notes / 370+ Q&A"; the real counts are 81 concept notes and 447 bank questions.
 10. **Old URLs of moved pages** - 62 page URLs changed in the restructure. `src/lib/content/legacy-redirects.json` + `LegacyRedirect.tsx` forward them from the 404 page, which relies on the host serving `404.html` for unknown paths (`public/.htaccess` sets `ErrorDocument 404 /404.html` for Apache/LiteSpeed). Verified locally with an Apache-like static server, not yet on Hostinger.
+11. **Lab verification limits (from the redesign)** - GPU paths were not run: the MNIST lab's CUDA AMP path, the GPT-from-scratch default preset, the QLoRA/TRL labs (smoke-tested on CPU only), the vLLM endpoint lab and the Helm lab (no cluster or `helm` available; chart not linted). The Claude Agent SDK lab script is import-verified only. Agent labs were run against a local Qwen3-8B (`mlx_lm.server`).
 
 ---
 
 ## 5. Handover Notes (read this first if picking up a new session)
 
-**Current focus (2026-09-26): full-course redesign.** A three-angle audit (LLM training/serving, agentic AI, pedagogy) found factual errors, 2024-era content, heavy duplication and no pedagogy scaffolding. The approved plan restructures the course into 17 modules in 5 tracks and is tracked phase by phase in `vibes/course-redesign-checklist.md` - read that first. Phases 0 (correctness & hygiene), 1 (fence components, nav-derived home page, 17-module restructure), 2 (LLM-track content, modules 01-09) 3 (Prompt & Context Engineering, RAG) and 4 (agents track, modules 12-17) are done; Phase 5 (pedagogy layer: template everywhere, capstones, Q&A dedupe, quiz pages) is next. Research tip: verify library APIs by installing them in a scratch venv and inspecting signatures - several documented-looking imports (LangChain v0 retrievers, `vertexai.generative_models`, vLLM `guided_*`) no longer exist.
+**Redesign status (2026-09-28): complete.** All six phases (0-5) of the full-course redesign are done - 17 teaching modules in 5 tracks plus Capstones and the Knowledge Check hub, every page on the note template. The tracking checklist has been deleted; see the Changelog. Original context: A three-angle audit (LLM training/serving, agentic AI, pedagogy) found factual errors, 2024-era content, heavy duplication and no pedagogy scaffolding. The approved plan restructures the course into 17 modules in 5 tracks and is tracked phase by phase in `vibes/course-redesign-checklist.md` - read that first. Phases 0 (correctness & hygiene), 1 (fence components, nav-derived home page, 17-module restructure), 2 (LLM-track content, modules 01-09) 3 (Prompt & Context Engineering, RAG) and 4 (agents track, modules 12-17) are done; Phase 5 (pedagogy layer: template everywhere, capstones, Q&A dedupe, quiz pages) is next. Research tip: verify library APIs by installing them in a scratch venv and inspecting signatures - several documented-looking imports (LangChain v0 retrievers, `vertexai.generative_models`, vLLM `guided_*`) no longer exist.
 
 **Earlier state (2026-08-10):** As of 2026-08-10, two large bodies of work landed in the same extended session and are **committed to `dev` locally but not yet pushed to `origin` or merged to `main`** (commit `69f4c46`, "New course tranche + sidebar reorg") - plus a second, larger batch of changes on top of that (the full glass UI redesign, Sections 5-11) that is **still uncommitted** as of this writing. Check `git status`/`git log` before assuming what's actually on disk vs. committed:
 1. The 07-11 content tranche (5 new modules: PyTorch Fundamentals, Fine-Tuning Lab, Serving & Inference, Production Engineering, Platform Breadth) plus a sidebar reorg that moved PyTorch into a new "Prog Langs" grouping and renumbered 07-10 - this part is committed (`69f4c46`).
@@ -214,7 +215,7 @@ Restructured 2026-09-26 (redesign Phase 1). Order, numbering and tracks come fro
 **Suggested next steps, in priority order:**
 1. **Commit the uncommitted glass-redesign work**, then decide whether to push `dev` to `origin` and/or merge to `main` for production deploy - nothing has been pushed or deployed yet.
 2. Decide whether to wire `npm run lint` (and ideally `next build`) into a CI check on PRs/push - currently nothing automated guards `main` before a manual deploy.
-3. Pick one near-term backlog item to unblock next: Quiz feature is the most visible gap (routes exist but are pure placeholders), and `QuizCard` in `src/types/content.ts` is already scaffolded for it.
+3. ~~Quiz feature~~ - done in redesign Phase 5: `/quiz/<module>` and `/quiz/all` are built from the pages' quiz fences (`src/lib/content/quizzes.ts`).
 4. If rotating or auditing deploy credentials, use the secret names in this file (`FTP_SERVER`/`FTP_USERNAME`/`FTP_PASSWORD`), not any older doc.
 5. Sanity-check `nav.yml` against `src/content/` before adding new content - it's the single source of truth for navigation, and (as of the 07-11 tranche) `src/lib/content/nav.ts`'s `MODULE_SLUG_MAP`/`MODULE_DIR_MAP` must also be updated for any new top-level module or its pages silently fail to render - see Changelog for the bug this caused on Module 07.
 6. Re-verify content counts (`find src/content -name '*.mdx' | wc -l`) whenever content is added/removed, and update this file's header count.
@@ -278,7 +279,6 @@ scripts/
 
 vibes/                                project tracking & active plans
   status.md                          this file - the sole live source of truth
-  course-redesign-checklist.md       live tracker for the 2026 full-course redesign (Phases 0-5)
   status.html                        polished collapsible status view (regenerated on demand, not auto-synced)
   GLASS-UI-REDESIGN.md               glassmorphism/dark-mode redesign plan - COMPLETE, all 11 sections shipped
   design-system-playbook.md          portable layout/nav/UX spec, reusable across projects (not a task tracker)
@@ -334,3 +334,4 @@ vibes/                                project tracking & active plans
 - **2026-09-27** - Phase 5: added `18-Capstones` (3 projects with deliverables and rubrics, own track, not counted as a teaching module); refreshed stale home-page module descriptions (MCP & A2A, patterns, frameworks, production agents, agent engineering); 174 `.mdx` files.
 - **2026-09-27** - Phase 5: module 08 Production Engineering on the note template (notes 01-04, Helm lab, INDEX); GPU-container CUDA misconception corrected; lab autoscaling switched to queue depth. Checklist updated.
 - **2026-09-27** - Phase 5: module 09 Cloud Platforms on the note template (notes 01-05, INDEX); every module INDEX now has objectives. Checklist updated.
+- **2026-09-28** - **Redesign Phase 5 complete (pedagogy layer)** - objectives on all 16 Q&A banks (and question counts in bank intros and INDEX pages corrected after the dedupe merges: 01 43, 03 30, 04 21, 10 56, 12 48, 13 41, 14 40, 16 32) and objectives + references on the 6 system designs (Prior Authorization gains the CMS-0057-F payer deadlines, checked on cms.gov). `npm run check:content` and `npm run build` pass. With every item done, `vibes/course-redesign-checklist.md` has been deleted; remaining lab-verification limits are recorded as Known Issue 11.
