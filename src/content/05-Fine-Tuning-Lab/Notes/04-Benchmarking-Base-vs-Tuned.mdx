@@ -4,6 +4,18 @@
 
 A fine-tune is only proven to have worked once you've measured the tuned model against the base model on a held-out eval set, across quality, latency, and cost - not just eyeballed a few sample outputs.
 
+```objectives
+time: 40 min
+outcomes:
+  - Carve out a held-out evaluation set before training and keep it untouched
+  - Compare base, prompted and tuned models on a task metric and a validated LLM judge, with confidence intervals
+  - Measure latency (with warm-up and synchronisation), peak VRAM and cost per 1,000 requests
+  - Decide from the numbers whether fine-tuning, prompting or RAG is the right fix
+prerequisites:
+  - "[Instruction Data & Training Runs](03-Instruction-Data-and-Training-Runs.mdx)"
+  - "[Evaluation & Benchmarks](../../06-Evaluation/INDEX.mdx) for statistical comparison"
+```
+
 <div class="audience-biz" markdown="1">
 
 This is the "did it actually help, and was it worth it" step. It's tempting to skip straight from "training finished" to "ship it," but the only way to know a fine-tune improved things - and by how much, at what cost - is to run a fair, structured comparison against the model you started with.
@@ -263,8 +275,39 @@ This is the practical decision gate on top of [Fine-Tuning](../../04-Post-Traini
 - Cost-per-1k-requests ties quality, latency, and VRAM into one comparable number across base/prompted/tuned approaches
 - Fine-tuning is the wrong tool when the quality gap vs prompting is small, when the real gap is missing facts (use RAG instead), or when the task changes too frequently to justify re-training
 
-**Quick recall Q&A:**
-- *Why exclude the first `generate()` call from a latency benchmark?* It pays one-time CUDA kernel compilation/caching cost that doesn't recur on subsequent calls - including it understates steady-state throughput.
-- *Why measure peak VRAM instead of computing it from parameter count?* Actual peak usage includes activations, the KV cache, and allocator overhead, not just static weight storage - a parameter-count estimate is systematically too low.
-- *A fine-tune scores well on the eval set but users report worse real-world behavior - what's the most likely explanation?* The eval set doesn't represent production traffic distribution closely enough (too narrow, too similar to training examples) - it needs broader, more representative examples.
-- *Give one clear signal that RAG, not fine-tuning, is the right fix.* The model's errors are factual (wrong or outdated information) rather than stylistic/format errors - fine-tuning changes behavior and format reliably but does not reliably and durably inject new factual knowledge.
+## Check Yourself
+
+```quiz
+- q: "Why call torch.cuda.synchronize() before reading the timer?"
+  options: ["CUDA kernels run asynchronously, so the timer would stop before the GPU finished", "It frees memory", "It warms up the GPU", "It is required by generate()"]
+  answer: 1
+- q: "A tuned model beats few-shot prompting by 1.5 points on 60 eval items. What do you conclude?"
+  options: ["Nothing yet - the difference is within the noise for 60 items; test more items or use a paired analysis", "The fine-tune is clearly better", "Prompting is clearly better", "The judge is broken"]
+  answer: 1
+- q: "Why exclude the first `generate()` call from a latency benchmark?"
+  answer: "It pays one-time CUDA kernel compilation/caching cost that doesn't recur on subsequent calls - including it understates steady-state throughput."
+- q: "Why measure peak VRAM instead of computing it from parameter count?"
+  answer: "Actual peak usage includes activations, the KV cache, and allocator overhead, not just static weight storage - a parameter-count estimate is systematically too low."
+- q: "A fine-tune scores well on the eval set but users report worse real-world behavior - what's the most likely explanation?"
+  answer: "The eval set doesn't represent production traffic distribution closely enough (too narrow, too similar to training examples) - it needs broader, more representative examples."
+- q: "Give one clear signal that RAG, not fine-tuning, is the right fix."
+  answer: "The model's errors are factual (wrong or outdated information) rather than stylistic/format errors - fine-tuning changes behavior and format reliably but does not reliably and durably inject new factual knowledge."
+```
+
+## Exercises
+
+```exercise
+- title: "Break-even volume"
+  task: |
+    A fine-tune costs $300 to train and $50 a month to maintain. It saves 1,200 input tokens per request versus few-shot prompting at $0.50 per million input tokens, with equal quality. At what monthly request volume does it pay back within 3 months?
+  solution: |
+    Savings per request = 1,200 × $0.50 / 1M = $0.0006. Three-month cost = $300 + 3 × $50 = $450, so you need 450 / 0.0006 = 750,000 requests in three months, i.e. about 250,000 per month. Below that, stay with prompting (unless quality differs).
+```
+
+## References
+
+- Chiang et al., [Chatbot Arena](https://arxiv.org/abs/2403.04132) (2024) - pairwise evaluation
+- Zheng et al., [Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena](https://arxiv.org/abs/2306.05685) (2023)
+- Hugging Face, [evaluate library](https://huggingface.co/docs/evaluate) (2026)
+
+*Last reviewed: 2026-09*

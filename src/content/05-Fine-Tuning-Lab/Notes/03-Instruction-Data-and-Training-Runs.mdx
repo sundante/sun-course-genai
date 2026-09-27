@@ -4,6 +4,17 @@
 
 Running a real fine-tune means formatting instruction data consistently, masking the loss so the model only learns from completions, and watching the loss curve closely enough to catch overfitting or a bad learning rate before the run finishes.
 
+```objectives
+time: 40 min
+outcomes:
+  - Tokenize instruction examples with the chat template and mask the prompt out of the labels
+  - Batch variable-length examples with a collator that pads labels with -100
+  - Write a PEFT training loop and read a loss curve to diagnose learning-rate, data and overfitting problems
+prerequisites:
+  - "[LoRA & QLoRA Hands-On](02-LoRA-and-QLoRA-Hands-On.mdx)"
+  - "[Training Loop From Scratch](../../02-Prog-Langs/PyTorch/Notes/03-Training-Loop-From-Scratch.mdx)"
+```
+
 <div class="audience-biz" markdown="1">
 
 This is the "actually pressing go" part of fine-tuning. It covers how training examples get built from raw instruction/response pairs, why the model is only graded on the part it's supposed to generate (not the question it was asked), and how to read the graph that training produces to tell whether it's actually working.
@@ -106,13 +117,13 @@ With `labels` already containing `-100` at masked positions, `model(**batch)` (a
 ```python
 import torch
 from torch.utils.data import DataLoader
-from transformers import default_data_collator
+from transformers import DataCollatorForSeq2Seq
 
 def train(model, train_dataset, tokenizer, epochs=3, lr=2e-4, batch_size=4, device="cuda"):
-    loader = DataLoader(
-        train_dataset, batch_size=batch_size, shuffle=True,
-        collate_fn=default_data_collator,
-    )
+    # Examples have different lengths: pad input_ids with pad_token_id and labels with -100
+    # (default_data_collator would fail - it only stacks equal-length sequences)
+    collator = DataCollatorForSeq2Seq(tokenizer, padding=True, label_pad_token_id=-100)
+    loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collator)
     optimizer = torch.optim.AdamW(
         [p for p in model.parameters() if p.requires_grad], lr=lr
     )
@@ -204,8 +215,40 @@ def plot_loss_curve(train_losses, val_losses, save_path="loss_curve.png"):
 - Train loss decreasing while validation loss rises is the classic overfitting signature - only catchable with a held-out split
 - Gradient clipping (`clip_grad_norm_`) is common in instruction-tuning loops to control loss spikes from outlier examples
 
-**Quick recall Q&A:**
-- *What does setting a label to `-100` actually do mechanically?* `CrossEntropyLoss`'s default `ignore_index=-100` skips that position entirely when computing the loss and gradient - it contributes exactly zero to backpropagation.
-- *Why mask the prompt tokens instead of just weighting them lower?* Full masking (zero gradient) rather than down-weighting keeps the objective purely "generate a good completion given this prompt" - down-weighting would still push the model toward memorizing prompt phrasing to some degree.
-- *You see loss oscillating without trending down - what are the two most likely first things to try?* Lower the learning rate, and/or increase effective batch size via `gradient_accumulation_steps` - both stabilize the gradient signal per update.
-- *Why is overfitting harder to spot in fine-tuning than in typical ML training?* Instruction datasets are often small (hundreds-to-thousands of examples) so the model can start memorizing within a single epoch - overfitting can happen much faster than on large pretraining-scale corpora.
+## Check Yourself
+
+```quiz
+- q: "Why does the training loop use DataCollatorForSeq2Seq rather than default_data_collator?"
+  options: ["It pads variable-length examples, filling labels with -100", "It shuffles the data", "It masks the prompt", "It applies the chat template"]
+  answer: 1
+- q: "Training loss falls to near zero during epoch 1 on a 500-example dataset. Most likely?"
+  options: ["Memorisation - learning rate too high or data too small/repetitive", "A perfect fine-tune", "The loss mask is wrong", "The model is too small"]
+  answer: 1
+- q: "What does setting a label to `-100` actually do mechanically?"
+  answer: "`CrossEntropyLoss`'s default `ignore_index=-100` skips that position entirely when computing the loss and gradient - it contributes exactly zero to backpropagation."
+- q: "Why mask the prompt tokens instead of just weighting them lower?"
+  answer: "Full masking (zero gradient) rather than down-weighting keeps the objective purely \"generate a good completion given this prompt\" - down-weighting would still push the model toward memorizing prompt phrasing to some degree."
+- q: "You see loss oscillating without trending down - what are the two most likely first things to try?"
+  answer: "Lower the learning rate, and/or increase effective batch size via `gradient_accumulation_steps` - both stabilize the gradient signal per update."
+- q: "Why is overfitting harder to spot in fine-tuning than in typical ML training?"
+  answer: "Instruction datasets are often small (hundreds-to-thousands of examples) so the model can start memorizing within a single epoch - overfitting can happen much faster than on large pretraining-scale corpora."
+```
+
+## Exercises
+
+```exercise
+- title: "Verify your loss mask"
+  task: |
+    For three examples from your dataset, print each token alongside its label (or -100), and confirm that exactly the assistant response and its end-of-turn token carry labels. Then check that the tokenized prompt is a prefix of the tokenized full text.
+  hints: ["BPE can merge characters across the prompt/response boundary if the template doesn't end with a newline or special token"]
+  solution: |
+    The prompt tokens and all padding should show -100; the response and the final end-of-turn/EOS token should show their own IDs. If the prompt tokenization isn't a prefix of the full tokenization, the mask boundary is off by one token - tokenize prompt and response separately and concatenate the IDs instead of re-tokenizing the concatenated string.
+```
+
+## References
+
+- Hugging Face TRL, [SFTTrainer and completion-only loss](https://huggingface.co/docs/trl/sft_trainer) (2026)
+- Ouyang et al., [InstructGPT](https://arxiv.org/abs/2203.02155) (2022)
+- Zhou et al., [LIMA](https://arxiv.org/abs/2305.11206) (2023)
+
+*Last reviewed: 2026-09*

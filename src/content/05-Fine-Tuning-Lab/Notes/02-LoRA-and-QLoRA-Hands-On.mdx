@@ -4,6 +4,17 @@
 
 LoRA and QLoRA are the hands-on tools that make parameter-efficient fine-tuning practical - `peft` gives you a `LoraConfig` you attach to any base model, and `bitsandbytes` lets that base model live in 4-bit memory while training happens in a small set of full-precision adapter weights.
 
+```objectives
+time: 45 min
+outcomes:
+  - Configure LoraConfig (rank, alpha, dropout, target modules) and predict the trainable parameter count
+  - Load a 4-bit base with BitsAndBytesConfig and prepare it for training
+  - Choose between merging an adapter and serving it separately, including for a quantized base
+prerequisites:
+  - "[SFT & Parameter-Efficient Fine-Tuning](../../04-Post-Training/Notes/01-Fine-Tuning-and-Alignment.mdx) - the LoRA math"
+  - "[HuggingFace Ecosystem](01-HuggingFace-Ecosystem.mdx)"
+```
+
 <div class="audience-biz" markdown="1">
 
 This page picks up where the theory left off. If you already know *why* LoRA and QLoRA work (the low-rank math, the VRAM savings), this is about actually setting the dials: which rank to pick, which layers to attach adapters to, and how to decide whether to bake your fine-tune permanently into the model or keep it as a swappable add-on.
@@ -66,14 +77,14 @@ lora_config = LoraConfig(
     r=16,                                            # rank - trainable capacity
     lora_alpha=32,                                   # scaling: effective update = (alpha/r) * B*A
     lora_dropout=0.05,                                # dropout on the LoRA path only
-    target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
+    target_modules="all-linear",                     # attention + MLP projections (QLoRA recipe)
     bias="none",                                      # don't train bias terms
     task_type=TaskType.CAUSAL_LM,
 )
 
 model = get_peft_model(base_model, lora_config)
 model.print_trainable_parameters()
-# trainable params: 4,718,592 || all params: 1,547,382,784 || trainable%: 0.3049
+# For Qwen3-1.7B: trainable params ≈ 17.4M || all params ≈ 1.74B || trainable% ≈ 1.0
 ```
 
 ### Field-by-Field Guide
@@ -83,7 +94,7 @@ model.print_trainable_parameters()
 | `r` (rank) | Size of the low-rank bottleneck; trainable parameter count scales linearly with `r` | 8-16 for small/simple tasks (style, format, narrow domain), 32-64 for broader behavior changes; going past 64 rarely helps and starts approaching full fine-tune cost |
 | `lora_alpha` | Scaling factor on the adapter output: `output = base + (alpha/r) * B·A` | Common convention: `alpha = 2 * r` (or `alpha = r`); higher alpha = adapter has more influence relative to the frozen base |
 | `lora_dropout` | Dropout applied only on the LoRA path during training | `0.05-0.1` typical; helps on small datasets, can be `0` for large datasets |
-| `target_modules` | Which weight matrices get an adapter attached | Attention projections (`q_proj`, `v_proj`, sometimes `k_proj`/`o_proj`) are the standard minimum; adding FFN modules (`gate_proj`, `up_proj`, `down_proj`) increases capacity and cost |
+| `target_modules` | Which weight matrices get an adapter attached | `"all-linear"` (attention and MLP projections) is the current default, following the QLoRA paper's finding that adapting all linear layers was needed to match full fine-tuning; attention-only (`q_proj`, `v_proj`) is a cheaper first experiment |
 | `bias` | Whether bias terms are also trained | `"none"` is standard - biases contribute little and training them adds bookkeeping for merge/save |
 | `task_type` | Tells `peft` which model head shape to expect | `TaskType.CAUSAL_LM` for any decoder-only text generation fine-tune |
 
@@ -177,23 +188,23 @@ Once training is done, you have two options for using the result. You can perman
 ```python
 # Option A: merge into a standalone model (simplest to deploy, no PEFT dependency at inference)
 merged_model = model.merge_and_unload()
-merged_model.save_pretrained("./qwen2.5-1.5b-support-bot-merged")
-tokenizer.save_pretrained("./qwen2.5-1.5b-support-bot-merged")
+merged_model.save_pretrained("./qwen3-1.7b-support-bot-merged")
+tokenizer.save_pretrained("./qwen3-1.7b-support-bot-merged")
 
 # Option B: keep the adapter separate (smallest artifact, swappable at inference)
-model.save_pretrained("./qwen2.5-1.5b-support-bot-lora")  # a few MB, not the full base model
+model.save_pretrained("./qwen3-1.7b-support-bot-lora")  # tens of MB, not the full base model
 
 # ... later, at inference time ...
 from peft import PeftModel
 base = AutoModelForCausalLM.from_pretrained("Qwen/Qwen3-1.7B", dtype="auto")
-inference_model = PeftModel.from_pretrained(base, "./qwen2.5-1.5b-support-bot-lora")
+inference_model = PeftModel.from_pretrained(base, "./qwen3-1.7b-support-bot-lora")
 ```
 
 ### Merge vs Serve Comparison
 
 | | Merged | Adapter-Only (`PeftModel`) |
 |---|---|---|
-| Artifact size | Full model size (e.g. ~3 GB for a 1.5B model in BF16) | Just the adapter (typically 5-50 MB) |
+| Artifact size | Full model size (e.g. ~3.4 GB for a 1.7B model in BF16) | Just the adapter (typically 10-100 MB; ~35 MB for Qwen3-1.7B at r=16, all-linear, in BF16) |
 | Inference latency | No overhead - ordinary dense model | Tiny overhead from the extra low-rank matmul (usually negligible) |
 | Multi-tenant serving | One deployment per fine-tune | One base model, many adapters loaded/swapped per request |
 | Quantized base compatibility | Merging a QLoRA adapter into a 4-bit base is lossy - typically requires dequantizing to a higher precision first, then merging | Works directly - the adapter stays separate from the quantized base |
@@ -209,12 +220,42 @@ Not cleanly - the base weights are stored in a lossy quantized format, so mergin
 **Must-know for interviews:**
 - `LoraConfig(r, lora_alpha, lora_dropout, target_modules, task_type)` is the full surface area for configuring LoRA via `peft`
 - Rank `r` trades capacity for parameter count; `alpha` scales adapter influence; common convention is `alpha = 2r`
-- `target_modules` minimally covers attention projections (`q_proj`, `v_proj`); adding FFN modules increases capacity and training cost
+- `target_modules="all-linear"` is the default recipe; attention-only adapters are cheaper but usually learn less
 - QLoRA additionally requires `BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4", ...)` at model load time, plus `prepare_model_for_kbit_training()` before attaching LoRA
 - `merge_and_unload()` produces a standalone dense model with zero adapter overhead; unmerged `PeftModel` keeps the adapter swappable and tiny
 - Merging a QLoRA adapter into its 4-bit base directly is lossy - dequantize to full precision first if you need a merged artifact
 
-**Quick recall Q&A:**
-- *Why does `prepare_model_for_kbit_training` matter for QLoRA?* It stabilizes numerics (FP32 norms) and enables gradient flow through frozen quantized layers - without it, QLoRA training can silently fail to converge.
-- *When would you choose adapter-only serving over merging?* When you need to serve multiple fine-tuned variants from one base model (multi-tenant, A/B testing, per-customer tuning) without duplicating the much larger base weights per variant.
-- *What's the tradeoff of a higher LoRA rank?* More trainable capacity and potentially better task quality, at the cost of more trainable parameters, more VRAM, and higher overfitting risk on small datasets.
+## Check Yourself
+
+```quiz
+- q: "lora_alpha = 32 and r = 16. What multiplies the adapter's output?"
+  options: ["alpha / r = 2", "alpha = 32", "r = 16", "1 / r"]
+  answer: 1
+- q: "You need one base model to serve 40 customer-specific fine-tunes. What do you do?"
+  options: ["Keep adapters unmerged and load them per request on one base (multi-LoRA serving)", "Merge each adapter into its own copy of the base", "Retrain one model on all customers' data", "Quantize each merged model"]
+  answer: 1
+- q: "Why does `prepare_model_for_kbit_training` matter for QLoRA?"
+  answer: "It stabilizes numerics (FP32 norms) and enables gradient flow through frozen quantized layers - without it, QLoRA training can silently fail to converge."
+- q: "When would you choose adapter-only serving over merging?"
+  answer: "When you need to serve multiple fine-tuned variants from one base model (multi-tenant, A/B testing, per-customer tuning) without duplicating the much larger base weights per variant."
+- q: "What's the tradeoff of a higher LoRA rank?"
+  answer: "More trainable capacity and potentially better task quality, at the cost of more trainable parameters, more VRAM, and higher overfitting risk on small datasets."
+```
+
+## Exercises
+
+```exercise
+- title: "Rank sweep"
+  task: |
+    Fine-tune the same small model on the same data with r = 4, 16 and 64 (alpha = 2r), keeping everything else fixed. Record trainable parameters, peak memory, training loss and a held-out task metric.
+  solution: |
+    Trainable parameters scale linearly with r; memory barely changes (the base dominates); held-out quality usually rises from 4 to 16 and flattens or overfits by 64 on small datasets. Pick the smallest rank that reaches the plateau.
+```
+
+## References
+
+- Hu et al., [LoRA](https://arxiv.org/abs/2106.09685) (2021)
+- Dettmers et al., [QLoRA](https://arxiv.org/abs/2305.14314) (2023)
+- Hugging Face, [PEFT documentation](https://huggingface.co/docs/peft) and [bitsandbytes integration](https://huggingface.co/docs/transformers/quantization/bitsandbytes) (2026)
+
+*Last reviewed: 2026-09*

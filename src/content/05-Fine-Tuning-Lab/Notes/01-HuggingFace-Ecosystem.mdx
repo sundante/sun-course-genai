@@ -4,6 +4,17 @@
 
 The Hugging Face ecosystem is the standard toolchain for loading pretrained models, tokenizing text consistently with how a model was trained, and preparing datasets for fine-tuning - `transformers` for models/tokenizers, `datasets` for data, and the Hub for sharing and discovering both.
 
+```objectives
+time: 40 min
+outcomes:
+  - Load any causal LM and its tokenizer with the Auto classes and read its config
+  - Format conversations with the model's chat template, and set padding correctly for training and for batched generation
+  - Load, transform and split datasets with the datasets library
+  - Check a model card for licence, gating and compatibility before building on it
+prerequisites:
+  - "[PyTorch fundamentals](../../02-Prog-Langs/PyTorch/INDEX.mdx)"
+```
+
 <div class="audience-biz" markdown="1">
 
 Think of Hugging Face as the app store and toolkit for open AI models. Instead of every team building their own way to download a model, prepare it to run, and load training data, everyone uses the same few tools. That means a fine-tuning recipe that works for one open model usually works for hundreds of others with almost no changes.
@@ -102,7 +113,7 @@ if tokenizer.pad_token is None:
     tokenizer.pad_token = tokenizer.eos_token
 ```
 
-This is safe for causal LM fine-tuning because padded positions are excluded from the loss via the attention mask - the model never actually "learns" from the pad token.
+This works for causal LM fine-tuning as long as padded positions are excluded from the **loss** - by setting their `labels` to `-100` (the attention mask alone does not remove them from the loss). One trap: if you build labels by masking every position whose token ID equals `pad_token_id`, you also mask the real end-of-sequence tokens, and the model never learns to stop. Pad labels by position (as `DataCollatorForSeq2Seq(label_pad_token_id=-100)` does), not by token ID.
 
 ### Chat Templates
 
@@ -215,8 +226,8 @@ Before choosing a base model for fine-tuning, the model card (the repo's `README
 After fine-tuning (see [LoRA & QLoRA Hands-On](02-LoRA-and-QLoRA-Hands-On.mdx)), adapters or merged models can be pushed back to the Hub for sharing or deployment:
 
 ```python
-model.push_to_hub("your-username/qwen2.5-1.5b-instruct-lora-support-bot")
-tokenizer.push_to_hub("your-username/qwen2.5-1.5b-instruct-lora-support-bot")
+model.push_to_hub("your-username/qwen3-1.7b-lora-support-bot")
+tokenizer.push_to_hub("your-username/qwen3-1.7b-lora-support-bot")
 ```
 
 This uploads the current `state_dict` (or, for a `PeftModel`, just the small adapter weights - see the next Notes file) plus `config.json`, creating a new Hub repo with model-card scaffolding you can then edit.
@@ -247,7 +258,38 @@ This uploads the current `state_dict` (or, for a `PeftModel`, just the small ada
 - `datasets.map(batched=True)` is the standard way to tokenize/format an entire dataset in one vectorized pass
 - Gated Hub repos require prior license acceptance + an authenticated token before `from_pretrained` succeeds
 
-**Quick recall Q&A:**
-- *Why does a mismatched tokenizer/model pairing not throw an error?* Because tokenization always succeeds - it just maps text to some valid token IDs. The model then computes on IDs that don't mean what it was trained to expect, producing degraded output with no exception raised.
-- *What happens if you skip `apply_chat_template` and just concatenate strings yourself for an instruction model?* You risk a format mismatch vs the model's actual instruction-tuning format (missing turn markers, wrong special tokens) - the model may still generate something, but instruction-following quality degrades.
-- *Why is `datasets` Arrow-backed instead of just loading a Python list/dict?* Arrow's memory-mapped columnar format lets `datasets` operate on data larger than RAM without loading it all at once, and vectorizes `.map()` transformations efficiently.
+## Check Yourself
+
+```quiz
+- q: "Which padding side does batched generation with a decoder-only model need?"
+  options: ["Left", "Right", "Either", "No padding"]
+  answer: 1
+  explain: "Left padding puts every prompt's last real token at the end, so the next-token prediction lines up for all rows."
+- q: "You set pad_token = eos_token and build labels by setting -100 wherever input_ids == pad_token_id. What goes wrong?"
+  options: ["The real EOS tokens are masked too, so the model never learns to stop", "Training crashes", "Padding stops working", "Nothing"]
+  answer: 1
+- q: "Why does a mismatched tokenizer/model pairing not throw an error?"
+  answer: "Because tokenization always succeeds - it just maps text to some valid token IDs. The model then computes on IDs that don't mean what it was trained to expect, producing degraded output with no exception raised."
+- q: "What happens if you skip `apply_chat_template` and just concatenate strings yourself for an instruction model?"
+  answer: "You risk a format mismatch vs the model's actual instruction-tuning format (missing turn markers, wrong special tokens) - the model may still generate something, but instruction-following quality degrades."
+- q: "Why is `datasets` Arrow-backed instead of just loading a Python list/dict?"
+  answer: "Arrow's memory-mapped columnar format lets `datasets` operate on data larger than RAM without loading it all at once, and vectorizes `.map()` transformations efficiently."
+```
+
+## Exercises
+
+```exercise
+- title: "Inspect three chat templates"
+  task: |
+    Print the rendered chat template (tokenize=False) for the same two-turn conversation with a Qwen, a Llama and a Gemma instruct tokenizer. List the special tokens each uses and where the assistant turn starts.
+  solution: |
+    Each family marks roles differently (Qwen: <|im_start|>role ... <|im_end|>; Llama 3: <|start_header_id|>role<|end_header_id|> ... <|eot_id|>; Gemma: <start_of_turn>user/model ... <end_of_turn>). Training data rendered with one family's template and served with another's is a silent quality bug - always use the target model's own template.
+```
+
+## References
+
+- Hugging Face, [Transformers documentation](https://huggingface.co/docs/transformers) and [Chat templates](https://huggingface.co/docs/transformers/chat_templating) (2026)
+- Hugging Face, [Datasets documentation](https://huggingface.co/docs/datasets) (2026)
+- Wolf et al., [Transformers: State-of-the-Art Natural Language Processing](https://arxiv.org/abs/1910.03771) (2020)
+
+*Last reviewed: 2026-09*
