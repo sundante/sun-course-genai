@@ -83,7 +83,9 @@ for (const file of mdxFiles) {
     warnings.push(`not in nav.yml: ${rel}`);
   }
 
-  for (const m of prose.matchAll(/\]\(([^)\s]+)\)/g)) {
+  // Course fences hold Markdown strings (prerequisites, explanations, solutions), so their links count too
+  const linkText = prose + fences.filter((f) => ["quiz", "objectives", "exercise"].includes(f.lang)).map((f) => f.body).join("\n");
+  for (const m of linkText.matchAll(/\]\(([^)\s]+)\)/g)) {
     const url = m[1];
     if (/^[a-z]+:/i.test(url) || url.startsWith("#")) continue;
     const [target, anchor] = url.split("#");

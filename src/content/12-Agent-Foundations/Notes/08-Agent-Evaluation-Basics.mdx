@@ -145,7 +145,7 @@ A **failure taxonomy with counts** turns evaluation into an engineering plan: fi
   task: |
     Run the lab with `--show-failures`, read every failing trace, and tag each with a class from this chapter's table. Which single fix would remove the most failures?
   solution: |
-    Count by class. In our reference run (Qwen3-8B, `full` variant) the failing tasks split into claimed actions (refund_one, refund_shoes, mixed), a policy violation the tools don't enforce (other_customer), a wrong target (already_cancelled) and an unsupported answer (count_items). Claimed actions were the largest class, so the first fix is a harness check or templated confirmations - not prompt tweaks. The exercise is the method: taxonomy → most frequent class → targeted fix → re-run.
+    Count by class. In our reference run (Qwen3-8B, `full` variant) the failing tasks split into claimed actions (refund_one, refund_shoes, mixed), a policy violation the tools don't enforce (other_customer), a wrong target (already_cancelled) and an unsupported answer (count_items). Claimed actions were the largest class, so the first fix targets them - a harness check or templated confirmations, not prompt tweaks. Then measure the fix: in the lab, a nudge turn fixed `mixed` but not the two refund tasks, because once the model did call `refund_item` it picked the customer's pending order - a second, wrong-target error that the claimed action had been hiding. The exercise is the method: taxonomy → most frequent class → targeted fix → re-run.
 ```
 
 ## Study Notes

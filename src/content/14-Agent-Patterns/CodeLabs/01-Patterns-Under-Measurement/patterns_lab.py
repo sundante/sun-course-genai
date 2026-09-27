@@ -5,7 +5,7 @@ use the docstring examples as *visible* tests; grading uses HumanEval's *hidden*
 
     python patterns_lab.py --no-thinking --limit 5                  # smoke test
     python patterns_lab.py --no-thinking                            # 40 problems, all strategies
-    python patterns_lab.py --no-thinking --strategies single,test_feedback --limit 76
+    python patterns_lab.py --no-thinking --strategies single,test_feedback --limit 68   # all eligible
 
 Strategies
   single         one attempt

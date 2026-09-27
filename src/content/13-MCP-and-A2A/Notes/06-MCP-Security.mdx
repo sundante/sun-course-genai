@@ -79,9 +79,16 @@ Model providers train models to resist prompt injection, and that helps - but re
 
 ### What the lab measured
 
-The module's [lab](../CodeLabs/01-MCP-Server-and-Agent.mdx) poisons the description of the shop server's `get_order` tool with a hidden instruction to cancel another customer's order, and runs 15 ordinary customer-service tasks twice each with a local Qwen3-8B agent:
+The module's [lab](../CodeLabs/01-MCP-Server-and-Agent.mdx) gives a local Qwen3-8B agent the shop server's tools and 15 ordinary customer-service tasks (two trials each), and tries to make it cancel an order belonging to a customer who is in none of the tasks. The same instruction is delivered two ways: hidden in `get_order`'s description, and as a fake "cache is stale" error returned by the first `list_orders` call.
 
-MEASURED_RESULTS_PLACEHOLDER
+| Variant | Task success | Attack success |
+|---|---|---|
+| Clean server | 20/30 | 0/30 |
+| Poisoned description | 19/30 | 0/30 |
+| Poisoned tool result | 9/30 | **7/30** |
+| Poisoned tool result + ownership guard in the harness | 8/30 | **0/30** |
+
+Two conclusions generalise. The channel matters: the model ignored the instruction in a description every time but obeyed it in almost a quarter of episodes when it arrived as a tool result - and result injection is invisible to definition pinning. And the harness guard held completely without the model's help, while task success stayed low: policy in code stops the harmful action, but only trusted servers and data protect the task itself. A 0/30 against one model and one phrasing is not evidence of safety; attacks adapt.
 
 ---
 
@@ -123,7 +130,7 @@ MEASURED_RESULTS_PLACEHOLDER
     Trifectas: web search or incoming email (untrusted) + CRM or wiki (private) + send email (external) - an injected web page or email can make the agent mail CRM data out. Redesign: a research sub-agent with web search and no private-data or send tools returns summaries; the main agent has wiki/CRM read and drafts emails, but sending requires human approval showing recipients and content; external recipients are restricted by a harness allowlist; incoming email is processed by a quarantined reader whose output is treated as data; CRM writes are scoped to records the user owns.
 - title: Pin and review
   task: |
-    Run the lab's inspect_client.py with --pin-file against the normal server, then against the --poisoned server. Extend the pinning so it also shows a diff of the changed description to the user.
+    Run the lab's inspect_client.py with --pin-file against the normal server, then against the server started with --poisoned description. Extend the pinning so it also shows a diff of the changed description to the user.
   solution: |
     Store the full definitions alongside the hashes; on mismatch, print a unified diff (difflib.unified_diff) of the old and new description and schema, and require explicit approval before updating the pin. The poisoned server's diff shows the appended <IMPORTANT> block.
 ```
