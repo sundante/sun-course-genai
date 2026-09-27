@@ -210,9 +210,6 @@ inference_model = PeftModel.from_pretrained(base, "./qwen3-1.7b-support-bot-lora
 | Quantized base compatibility | Merging a QLoRA adapter into a 4-bit base is lossy - typically requires dequantizing to a higher precision first, then merging | Works directly - the adapter stays separate from the quantized base |
 | Best for | Single-purpose production deployment, edge/offline deployment | Multiple fine-tuned variants sharing one base, frequent adapter swapping (A/B tests, per-customer tuning) |
 
-**Interview Q:** *Can you merge a QLoRA adapter straight back into the 4-bit quantized base?*
-Not cleanly - the base weights are stored in a lossy quantized format, so merging directly would compound quantization error into the merge. The standard path is to load the base in full precision (BF16/FP16), attach and merge the adapter there, then optionally re-quantize the merged result for serving.
-
 ---
 
 ## Study Notes
@@ -240,6 +237,8 @@ Not cleanly - the base weights are stored in a lossy quantized format, so mergin
   answer: "When you need to serve multiple fine-tuned variants from one base model (multi-tenant, A/B testing, per-customer tuning) without duplicating the much larger base weights per variant."
 - q: "What's the tradeoff of a higher LoRA rank?"
   answer: "More trainable capacity and potentially better task quality, at the cost of more trainable parameters, more VRAM, and higher overfitting risk on small datasets."
+- q: "Can you merge a QLoRA adapter straight back into the 4-bit quantized base?"
+  answer: "Not cleanly - the base weights are stored in a lossy quantized format, so merging directly would compound quantization error into the merge. The standard path is to load the base in full precision (BF16/FP16), attach and merge the adapter there, then optionally re-quantize the merged result for serving."
 ```
 
 ## Exercises

@@ -147,9 +147,6 @@ Streaming doesn't conflict with serving many users at once - continuous batching
 
 </div>
 
-**Interview Q:** *A user reports that responses "feel slow" even though your dashboard shows average total generation time is well within SLO. What's the likely gap in your metrics?*
-Total generation time doesn't capture perceived latency - the dashboard is probably missing TTFT specifically, or averaging it in a way that hides p95/p99 tail latency. A user waiting 3 seconds before anything appears feels slow even if the full response completes quickly once streaming starts; TTFT (and its tail, not just its average) needs to be tracked as its own SLO.
-
 ---
 
 ## Study Notes
@@ -179,6 +176,8 @@ Total generation time doesn't capture perceived latency - the dashboard is proba
   answer: "Prefill time scales with input prompt length, and TTFT = queue wait + prefill - a long retrieved context is processed in full before the first output token can be generated, regardless of output length."
 - q: "Why measure TTFT at increasing concurrency instead of just at concurrency=1?"
   answer: "Chunked prefill scheduling means a busy server can delay a new request's prefill across more scheduling steps, increasing its TTFT - single-request TTFT understates what users experience under real load."
+- q: "A user reports that responses \"feel slow\" even though your dashboard shows average total generation time is well within SLO. What's the likely gap in your metrics?"
+  answer: "Total generation time doesn't capture perceived latency - the dashboard is probably missing TTFT specifically, or averaging it in a way that hides p95/p99 tail latency. A user waiting 3 seconds before anything appears feels slow even if the full response completes quickly once streaming starts; TTFT (and its tail, not just its average) needs to be tracked as its own SLO."
 ```
 
 ## Exercises

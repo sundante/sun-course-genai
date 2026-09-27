@@ -169,9 +169,6 @@ Quantize for serving when GPU cost or throughput is the binding constraint and y
 
 </div>
 
-**Interview Q:** *A teammate proposes reusing the QLoRA NF4 config from training directly for production serving, to save setup time. What's the issue?*
-NF4/`bitsandbytes` quantization is optimized for training-time memory reduction with dequant-on-the-fly kernels, not for serving throughput - it doesn't benefit from the specialized fast INT4 inference kernels (`exllama`, `marlin`) that GPTQ/AWQ formats are built for. For a serving deployment, the better path is to merge the adapter into a full-precision model, then separately run an offline GPTQ/AWQ calibration pass targeting the serving stack's optimized kernels.
-
 ---
 
 ## Study Notes
@@ -200,6 +197,8 @@ NF4/`bitsandbytes` quantization is optimized for training-time memory reduction 
   answer: "A small fraction of weight channels identified as disproportionately important based on activation magnitude, kept at effectively higher precision via per-channel scaling before the rest is quantized to INT4."
 - q: "When would INT8 be the better choice over INT4 for a production deployment?"
   answer: "When the task is precision-sensitive enough that INT4's larger quality delta is unacceptable, but the memory/throughput win of some quantization is still wanted."
+- q: "A teammate proposes reusing the QLoRA NF4 config from training directly for production serving, to save setup time. What's the issue?"
+  answer: "NF4/`bitsandbytes` quantization is optimized for training-time memory reduction with dequant-on-the-fly kernels, not for serving throughput - it doesn't benefit from the specialized fast INT4 inference kernels (`exllama`, `marlin`) that GPTQ/AWQ formats are built for. For a serving deployment, the better path is to merge the adapter into a full-precision model, then separately run an offline GPTQ/AWQ calibration pass targeting the serving stack's optimized kernels."
 ```
 
 ## Exercises

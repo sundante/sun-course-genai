@@ -182,9 +182,6 @@ Because instruction datasets for fine-tuning are typically small (hundreds to te
 | Loss barely moves from the starting value | Learning rate too low, or LoRA rank too small for the task's complexity | Raise LR, raise `r`, verify gradients are actually flowing (check `requires_grad` on adapter params) |
 | Loss looks fine but validation loss rises early | Classic overfitting invisible from train loss alone | Track validation loss every N steps, not just train loss |
 
-**Interview Q:** *Training loss looks great (steadily decreasing, ends near zero) but the fine-tuned model performs worse than the base model on held-out prompts. What happened?*
-The model likely overfit to the training set's exact phrasing rather than learning the general task/style - train loss alone doesn't detect this because it's measured on data the model has now memorized. This is why a held-out eval set with task-level metrics (not just loss) is mandatory - see [Benchmarking Base vs Tuned](04-Benchmarking-Base-vs-Tuned.mdx).
-
 ### Minimal Loss Logging
 
 ```python
@@ -232,6 +229,8 @@ def plot_loss_curve(train_losses, val_losses, save_path="loss_curve.png"):
   answer: "Lower the learning rate, and/or increase effective batch size via `gradient_accumulation_steps` - both stabilize the gradient signal per update."
 - q: "Why is overfitting harder to spot in fine-tuning than in typical ML training?"
   answer: "Instruction datasets are often small (hundreds-to-thousands of examples) so the model can start memorizing within a single epoch - overfitting can happen much faster than on large pretraining-scale corpora."
+- q: "Training loss looks great (steadily decreasing, ends near zero) but the fine-tuned model performs worse than the base model on held-out prompts. What happened?"
+  answer: "The model likely overfit to the training set's exact phrasing rather than learning the general task/style - train loss alone doesn't detect this because it's measured on data the model has now memorized. This is why a held-out eval set with task-level metrics (not just loss) is mandatory - see [Benchmarking Base vs Tuned](04-Benchmarking-Base-vs-Tuned.mdx)."
 ```
 
 ## Exercises

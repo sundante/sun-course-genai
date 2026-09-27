@@ -161,9 +161,6 @@ Hallucination occurs when an LLM generates factually incorrect, fabricated, or u
 | Constitutional AI | Self-critique against principles | Doesn't eliminate hallucination, reduces rate |
 | Factuality fine-tuning | Fine-tune on factuality-preserving datasets | Requires curated data; may reduce fluency |
 
-**Interview Q:** *RAG reduces hallucination - why doesn't it eliminate it?*
-Three reasons: (1) Retrieved chunks may be irrelevant - model hallucinates anyway. (2) Lost-in-the-middle: key information in context is overlooked. (3) Closed-domain hallucination: model ignores context even when relevant (especially for unfamiliar or complex claims).
-
 ---
 
 ## Sycophancy
@@ -322,6 +319,8 @@ When providing few-shot examples, models exhibit bias toward the **label distrib
   answer: 1
 - q: "Why is the intrinsic vs extrinsic distinction useful when evaluating a RAG system?"
   answer: "Intrinsic hallucinations contradict the retrieved context and point to a reading or faithfulness problem; extrinsic ones add unsupported facts and point to the model filling gaps from its parameters - different fixes (better context use and citations vs abstention and grounding checks)."
+- q: "RAG reduces hallucination - why doesn't it eliminate it?"
+  answer: "Three reasons: (1) Retrieved chunks may be irrelevant - model hallucinates anyway. (2) Lost-in-the-middle: key information in context is overlooked. (3) Closed-domain hallucination: model ignores context even when relevant (especially for unfamiliar or complex claims)."
 ```
 
 ## Exercises

@@ -125,9 +125,6 @@ Both constraints matter - a GPU might have enough *memory* to hold KV cache for 
 
 </div>
 
-**Interview Q:** *Your load test shows aggregate throughput still climbing at concurrency=200, but p95 per-request latency has already tripled. Do you keep raising the concurrency limit?*
-No - aggregate throughput climbing is not the metric that matters if your SLO is per-request latency. The right capacity limit is the concurrency level where per-request latency/throughput last met the SLO, with a safety margin, not the point where aggregate throughput stops improving.
-
 ---
 
 ## Study Notes
@@ -154,6 +151,8 @@ No - aggregate throughput climbing is not the metric that matters if your SLO is
   answer: "Aggregate throughput can look great while individual users experience unacceptable latency - capacity should be sized against a per-request SLO, not the aggregate number alone."
 - q: "Why add more GPU replicas instead of just raising batch size indefinitely on one GPU?"
   answer: "Past the saturation point, a bigger batch on one GPU adds queuing/decode latency without proportional throughput gains - horizontal scaling keeps per-request latency in check while still growing total capacity."
+- q: "Your load test shows aggregate throughput still climbing at concurrency=200, but p95 per-request latency has already tripled. Do you keep raising the concurrency limit?"
+  answer: "No - aggregate throughput climbing is not the metric that matters if your SLO is per-request latency. The right capacity limit is the concurrency level where per-request latency/throughput last met the SLO, with a safety margin, not the point where aggregate throughput stops improving."
 ```
 
 ## Exercises

@@ -158,9 +158,6 @@ Key scheduler knobs:
 
 Above the engine sits an **orchestration layer** for multi-node deployments - NVIDIA Dynamo, llm-d, and SGLang's own router - which adds disaggregated prefill/decode and KV-cache-aware request routing. See [The Modern Serving Stack](07-Modern-Serving-Stack.mdx).
 
-**Interview Q:** *Why does naive `transformers.generate()` in a loop not scale to production traffic even on a large GPU?*
-Because it allocates KV-cache memory contiguously per request (wasting 60-80% to fragmentation) and processes one static batch at a time, leaving the GPU idle whenever any sequence in the batch finishes early. Both problems compound under real, variable-length concurrent traffic - the GPU is simultaneously memory-starved and compute-idle.
-
 ---
 
 ## Study Notes
@@ -190,6 +187,8 @@ Because it allocates KV-cache memory contiguously per request (wasting 60-80% to
   answer: "Blocks are addressed by content hash, so identical prefixes across different requests point at the same physical blocks instead of being recomputed and stored separately."
 - q: "What's the practical effect of setting `gpu_memory_utilization` too low?"
   answer: "The KV-cache block pool is smaller than it could be, so vLLM can serve fewer concurrent sequences than the GPU's memory would otherwise allow."
+- q: "Why does naive `transformers.generate()` in a loop not scale to production traffic even on a large GPU?"
+  answer: "Because it allocates KV-cache memory contiguously per request (wasting 60-80% to fragmentation) and processes one static batch at a time, leaving the GPU idle whenever any sequence in the batch finishes early. Both problems compound under real, variable-length concurrent traffic - the GPU is simultaneously memory-starved and compute-idle."
 ```
 
 ## Exercises

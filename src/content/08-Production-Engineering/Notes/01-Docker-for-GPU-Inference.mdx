@@ -141,9 +141,6 @@ CMD ["python3.12", "serve.py"]
 
 </div>
 
-**Interview Q:** *A teammate suggests `FROM python:3.12-slim` and installing CUDA `torch` via pip, arguing it's simpler than a CUDA base image. Is that wrong?*
-Not necessarily - the CUDA wheels bundle the CUDA user-space libraries, and the NVIDIA Container Toolkit injects the host driver when the container runs with GPU access, so inference works. The trade-offs: no `nvcc` for compiling extensions such as flash-attn, less control over the exact CUDA/cuDNN/NCCL combination, and the host driver must still be new enough for the wheel's CUDA version. Many teams use the framework's own image (for example `vllm/vllm-openai`) to get a pinned, tested combination.
-
 ---
 
 ## Study Notes
@@ -171,6 +168,8 @@ Not necessarily - the CUDA wheels bundle the CUDA user-space libraries, and the 
   answer: "`-devel` includes the full toolkit (`nvcc`, headers, static libs) for compiling CUDA code; `-runtime` includes only the shared libraries needed to run already-compiled CUDA binaries - `-runtime` is smaller and is what should ship in the final production image."
 - q: "Why should model weights usually not be `COPY`'d into the Docker image?"
   answer: "It couples model version to container version (any weight update forces a full image rebuild/repush of multi-GB layers) and bloats the image - mounting weights from a volume or object store at startup decouples the two and keeps the image itself lean."
+- q: "A teammate suggests `FROM python:3.12-slim` and installing CUDA `torch` via pip, arguing it's simpler than a CUDA base image. Is that wrong?"
+  answer: "Not necessarily - the CUDA wheels bundle the CUDA user-space libraries, and the NVIDIA Container Toolkit injects the host driver when the container runs with GPU access, so inference works. The trade-offs: no `nvcc` for compiling extensions such as flash-attn, less control over the exact CUDA/cuDNN/NCCL combination, and the host driver must still be new enough for the wheel's CUDA version. Many teams use the framework's own image (for example `vllm/vllm-openai`) to get a pinned, tested combination."
 ```
 
 ## Exercises
