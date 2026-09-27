@@ -99,8 +99,8 @@ flowchart TD
     APP -->|"HTTPS/REST + Firebase Realtime"| GW["🚪 API Gateway + Backend (Cloud Run)<br/>Firebase Auth + IAP (identity + skill tier)<br/>Rate limit: 300 concurrent sessions<br/>Session context: Firestore"]
 
     subgraph IPP["⚙️ Input Processing Pipeline (Cloud Run)"]
-        V2T["🗣️ Voice → Text<br/>Vertex AI Speech-to-Text (noise-suppress)"]
-        IMG["🖼️ Image Analysis<br/>Gemini 1.5 Pro Vision:<br/>component, failure type, severity, part match"]
+        V2T["🗣️ Voice → Text<br/>Cloud Speech-to-Text (noise-suppress)"]
+        IMG["🖼️ Image Analysis<br/>Multimodal frontier model:<br/>component, failure type, severity, part match"]
         MID["🔎 Machine ID Resolution<br/>QR scan → Firestore machine registry<br/>→ model, location, fault codes, maintenance date"]
         UPD["📦 Unified Problem Description<br/>{machine_id, model, location, fault_codes[],<br/>symptom_text, image_analysis, technician_id, skill_tier}"]
         V2T --> UPD
@@ -110,10 +110,10 @@ flowchart TD
     GW --> IPP
 
     subgraph DA["🧠 Diagnostic Agent (Cloud Run - ADK / LangGraph)"]
-        S1["1️⃣ Failure Mode Classification<br/>Gemini 1.5 Pro → failure_mode + component<br/>confidence &gt;0.85 → proceed; low → ask clarifying Q"]
+        S1["1️⃣ Failure Mode Classification<br/>a frontier model → failure_mode + component<br/>confidence &gt;0.85 → proceed; low → ask clarifying Q"]
         S2["2️⃣ Hybrid Knowledge Retrieval<br/>graph_query → Spanner Graph (procedure, parts, skill level)<br/>vector_search → manuals + historical outcomes<br/>get_machine_context → Firestore"]
         S3["3️⃣ Safety Gate (HARD STOP)<br/>Skill-level gate · LOTO requirement (mandatory prepend)<br/>Escalation triggers (structural damage, value, time)"]
-        S4["4️⃣ Instruction Generation<br/>Gemini 1.5 Pro synthesizes procedure from<br/>graph template + manuals + context + history"]
+        S4["4️⃣ Instruction Generation<br/>a frontier model synthesizes procedure from<br/>graph template + manuals + context + history"]
         S5["5️⃣ Real-time Integrations (parallel, non-blocking)<br/>check_parts_inventory · create_work_order<br/>check_maintenance_history"]
         S1 --> S2 --> S3 --> S4 --> S5
     end
@@ -121,7 +121,7 @@ flowchart TD
 
     subgraph KB["🗄️ Knowledge Base Layer"]
         SG[("🕸️ Spanner Graph<br/>Machine → Component → Failure → Procedure")]
-        VS[("📡 Vertex AI Vector Search<br/>repair manuals, historical logs,<br/>safety bulletins, parts catalog")]
+        VS[("📡 Agent Platform Vector Search<br/>repair manuals, historical logs,<br/>safety bulletins, parts catalog")]
         FS[("🔥 Firestore<br/>machine registry, technician profiles,<br/>active sessions, offline sync queue")]
     end
     DA --> KB
@@ -194,13 +194,13 @@ Factory floors are harsh for UX. Design choices that matter:
 
 **Voice as primary input:**
 - Technician holds up the tablet, says: "Machine 47-B, hydraulic press. It's making a grinding noise from the left side and stopped mid-cycle."
-- Vertex AI Speech-to-Text with `enhanced_phone_call` model (handles background noise)
+- Cloud Speech-to-Text with `enhanced_phone_call` model (handles background noise)
 - On-device Whisper model as offline fallback (no network needed)
 - Voice input must work at 80–90 dB ambient noise - use noise-canceling audio processing before STT
 
 **Photo as diagnostic input:**
 - Technician photographs the damaged component
-- Gemini Vision identifies: component name, failure type (crack, wear, leak, burn mark), severity
+- The multimodal model identifies: component name, failure type (crack, wear, leak, burn mark), severity
 - Output becomes part of the problem description - not just visual context
 - Photo is stored with the repair session for compliance documentation
 
@@ -223,7 +223,7 @@ Factory floors are harsh for UX. Design choices that matter:
 flowchart TD
     A["📄 Repair manuals (PDFs)"] --> B["⚙️ Document AI<br/>OCR + layout detection"]
     B --> C["✂️ Chunker<br/>Semantic chunks: 512 tokens, procedure-boundary aware<br/>Metadata: machine_model, section_type, procedure_id<br/>Image extraction → Cloud Storage, linked to chunk"]
-    C --> D["🧬 text-embedding-005"] --> E[("📡 Vertex AI Vector Search<br/>RAG index")]
+    C --> D["🧬 Gemini embedding model"] --> E[("📡 Agent Platform Vector Search<br/>RAG index")]
 
     F["🗃️ Structured CMMS data<br/>(SAP PM export)"] --> G["⚙️ Dataflow: transform"]
     G --> H[("🕸️ Spanner Graph upsert<br/>Nodes: Machine, Model, Component,<br/>FailureMode, RepairProcedure, Part<br/>Edges: HAS_COMPONENT, EXHIBITS_FAILURE,<br/>RESOLVED_BY, REQUIRES_PART")]
@@ -246,13 +246,13 @@ flowchart TD
 | API backend | Cloud Run | Stateless, scales to 300 concurrent sessions |
 | Auth + rate limiting | Firebase Auth + Identity-Aware Proxy | Technician identity + skill tier enforcement |
 | Session state | Firestore | Machine_id, active repair session, step progress |
-| Voice → text | Vertex AI Speech-to-Text (enhanced) | Industrial noise model, low-latency streaming |
+| Voice → text | Cloud Speech-to-Text (enhanced) | Industrial noise model, low-latency streaming |
 | On-device STT (offline) | Whisper (on-device, bundled in app) | Offline voice input fallback |
-| Image analysis | Vertex AI Gemini 1.5 Pro (Vision) | Multimodal damage identification |
-| Failure classification | Vertex AI Gemini 1.5 Pro | Reasoning over fault codes + symptoms + image |
+| Image analysis | Frontier multimodal model (vision) | Multimodal damage identification |
+| Failure classification | Frontier model | Reasoning over fault codes + symptoms + image |
 | Knowledge graph | Spanner Graph | Machine → Component → Failure → Procedure graph |
-| RAG index (manuals + logs) | Vertex AI Vector Search | Semantic search over 5M manual chunks |
-| Instruction generation | Vertex AI Gemini 1.5 Pro | Synthesize contextual repair steps |
+| RAG index (manuals + logs) | Agent Platform Vector Search | Semantic search over 5M manual chunks |
+| Instruction generation | Frontier model | Synthesize contextual repair steps |
 | Machine registry | Firestore | QR code → machine_id resolution, <10ms |
 | Document ingestion (manuals) | Document AI (OCR + Form Parser) | Layout-aware PDF parsing |
 | Ingestion pipeline | Dataflow | Parallel manual processing + graph upsert |
@@ -299,7 +299,7 @@ Simple repairs: single-turn (describe → get instructions → execute). Complex
 | Failure | Impact | Mitigation |
 |---|---|---|
 | Network drop mid-repair (step 6 of 12) | Technician stranded mid-procedure | Firestore local cache: all received steps cached; technician can continue with cached content; new steps queued for delivery on reconnect |
-| Gemini misclassifies failure mode (confidence > threshold but wrong) | Wrong repair instructions → potential damage | Technician confirmation step: "I identified this as a bearing failure in the left drive shaft. Does this match what you're seeing?" before generating steps |
+| Model misclassifies failure mode (confidence > threshold but wrong) | Wrong repair instructions → potential damage | Technician confirmation step: "I identified this as a bearing failure in the left drive shaft. Does this match what you're seeing?" before generating steps |
 | Safety gate false positive (escalates fixable issue) | Technician frustration, unnecessary escalation | Log all escalations; weekly review by maintenance manager; adjust threshold or procedure tier if pattern identified |
 | SAP PM API down | Can't create work order or check parts | Non-blocking: work order creation queued in Pub/Sub, retried when SAP recovers; show technician parts location from cached inventory snapshot |
 | Outdated repair manual in knowledge base | Instructions reference superseded procedure | Every document chunk has `valid_until` metadata; stale chunks suppressed in retrieval; CMMS change notifications trigger re-ingestion |
@@ -388,3 +388,15 @@ Strong candidate proactively raises:
 The key insight I want to leave you with is that the hardest problems in this design are not the AI problems - they're the environmental and safety constraints that most candidates forget. The LLM is capable of generating excellent repair instructions given the right context. What makes this system production-ready is everything around the LLM: the offline cache that works in dead zones, the LOTO enforcement that cannot be LLM-generated, the skill-tier gate that can't be bypassed, and the confidence threshold that chooses escalation over hallucination.
 
 A RAG chatbot that works 95% of the time in a factory is dangerous because of the 5% where it confidently generates wrong instructions. The architecture I've described is designed so that uncertainty leads to escalation, not fabrication - and safety checks are structural, not instructional. That's the difference between a demo and a system you'd deploy to 5,000 people working with machinery that can kill them.
+
+## Production Controls
+
+How the design maps onto the [Production Agents](../INDEX.mdx) chapters:
+
+| Concern | In this design |
+|---|---|
+| Tools | Maintenance (CMMS/SAP PM), parts and sensor systems behind MCP servers; work-order creation requires technician confirmation |
+| Injection and the lethal trifecta | Manuals and historical logs are semi-trusted, technician input untrusted; the agent has no external communication path beyond the technician's device, and safety procedures (LOTO) come from structured, signed templates rather than generated text |
+| Durability and approvals | Offline-first sessions sync as durable workflows when connectivity returns; escalations to supervisors are durable waits with timeouts |
+| Evaluation | A regression suite of past failures with verified fixes (correct failure mode, correct procedure template, never a missing safety step), and a pilot measured on first-time fix rate |
+| Observability | One trace per case (`invoke_agent` → `chat` / `execute_tool` spans, OpenTelemetry GenAI conventions) with prompt, model and tool-set versions recorded; see [Agent Observability](../Notes/06-Agent-Observability.mdx) |

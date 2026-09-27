@@ -1,170 +1,134 @@
 # Harness Engineering
 
-← **Back to Overview:** [Agent Engineering](../INDEX.mdx)
+A **harness** is everything in an agent that isn't the model: the loop, the tools and their execution environment, state and storage, context management, verification, permissions and the conventions the agent is given (like `AGENTS.md`). Harness engineering is designing that system so a model does reliable work - and it is where most of the difference between two products built on the same model comes from.
 
----
+```objectives
+time: 50 min
+outcomes:
+  - Name the responsibilities of an agent harness and the failure you see when each is missing
+  - Design state and handoffs for work that spans many context windows (progress files, git, feature lists, initializer and worker sessions)
+  - Separate generation from evaluation, and put verification in the harness (stop hooks, tests, evaluator agents) rather than in the prompt
+  - Decide which harness components to remove as models improve
+prerequisites:
+  - "[Anatomy of an AI Agent](../../12-Agent-Foundations/Notes/02-Anatomy-of-an-AI-Agent.mdx)"
+  - "[Claude Agent SDK](../../15-Agent-Frameworks/Notes/04-Claude-Agent-SDK.mdx) - a production harness as a library"
+```
 
 ## Agent = Model + Harness
 
-<div class="audience-biz" markdown="1">
-
-Two companies can use the exact same underlying model and get wildly different results. The difference isn't the model - it's everything built around it: how it remembers things, what tools it can reach for, how it recovers when something goes wrong. That surrounding system is the "harness." A brilliant model in a weak harness behaves like a brilliant employee with no filing cabinet, no email access, and no manager - capable, but unable to get much done.
-
-</div>
-
-<div class="audience-tech" markdown="1">
-
-A **harness** is every piece of code, configuration, and execution logic that isn't the model itself: the storage layer, the sandbox, the context-management strategy, the planning and verification loops wrapped around the raw LLM calls. The model supplies intelligence; the harness makes that intelligence functional and durable. Model training increasingly happens "in the loop" with harness design - useful harness primitives (structured tool use, long-context handling) get absorbed into later model generations - but harness optimization for a specific task remains valuable regardless of how capable the base model is.
-
-</div>
+LangChain's framing (*The Anatomy of an Agent Harness*, 2026) is a useful slogan: the model supplies the intelligence; the harness makes it useful. OpenAI described the same shift from the other side in *Harness engineering* (February 2026): a team that built and shipped a product with roughly a million lines of code written by Codex agents found that the engineers' job became designing the environment - repository structure, documentation for agents, tests, linters and feedback loops - in which the agents could work reliably.
 
 ```mermaid
-flowchart LR
-    M["🧠 Model\nReasoning & language"]
-    H["🧰 Harness\nEverything else"]
-    A(["🤖 Agent"])
-
-    M --> A
-    H --> A
-
-    style M fill:#e8e2d9,stroke:#ccc4b8,color:#3d3730
-    style H fill:#e8f4fd,stroke:#4a9eca
-    style A fill:#d4edda,stroke:#28a745
+mindmap
+  root((🧰 Harness))
+    🔁 Loop
+      bounds
+      error handling
+      stop conditions
+    🛠️ Tools & execution
+      file and shell tools
+      sandbox
+      permissions
+    💾 State
+      filesystem and git
+      progress notes
+      checkpoints
+    🧠 Context
+      compaction
+      offloading
+      skills on demand
+    ✅ Verification
+      tests and linters
+      stop hooks
+      evaluator agents
+    📜 Conventions
+      AGENTS.md
+      specs
 ```
 
-This note is about the four things a harness is responsible for, and how to know when it's carrying its weight. It's distinct from the [Evaluation Harness](../../16-Production-Agents/Notes/02-Evaluation-and-Observability.mdx) covered in Agentic AI - that's the CI/grading infrastructure that scores an agent's outputs. This harness is the execution scaffolding the agent runs *inside*.
+| Responsibility | What it means | Failure when missing |
+|---|---|---|
+| Loop and bounds | Runs model/tool turns; stops on success, budget or repeated calls | Runaway loops, stuck agents |
+| Tools and execution | File, shell, browser and domain tools; a sandbox; permissions | The agent can only describe work, or can do damage |
+| State | Durable record of what's done and what's next - files, git, a progress log | Each session re-derives or redoes the work |
+| Context | What goes into the window each turn - compaction, offloading, on-demand skills | Context rot; the agent loses the thread |
+| Verification | Checks the harness runs, not the model - tests, type checks, evaluators | Claimed completion without working results |
+| Conventions | `AGENTS.md`, style guides, specs the agent reads | Repeated avoidable mistakes |
 
----
+This harness is the execution scaffolding the agent runs *inside*. It is related to, but not the same as, an *evaluation* harness that runs and grades agents ([Evaluation and Benchmarks](../../16-Production-Agents/Notes/05-Agent-Evaluation-and-Benchmarks.mdx)).
 
-## Component 1 - Storage & State
+## State Across Context Windows
 
-```mermaid
-flowchart TD
-    S["💾 Storage & State"]
-    S --> FS["📁 Filesystem\nDurable data across sessions"]
-    S --> GIT["🌱 Git\nVersion control, work tracking"]
-    S --> MEM["📝 Memory Files\nAGENTS.md-style continual learning"]
+Long tasks outlive a single context window. Anthropic's *Effective harnesses for long-running agents* (November 2025) describes a two-part design for multi-session coding:
 
-    style S fill:#e8e2d9,stroke:#ccc4b8,color:#3d3730
+- An **initializer** session sets up the environment once: a feature list with explicit pass/fail status, an `init.sh` that starts the app and tests, a progress log (`claude-progress.txt`) and an initial git commit.
+- Every later **worker** session starts by reading the progress log and git history, runs the smoke tests, picks *one* unfinished feature, implements and verifies it, commits, and updates the log - leaving the environment clean for the next session.
+
+The general principles: state lives in **files and git**, not in the conversation; each session makes **incremental, verified progress**; and the handoff is **structured** (a list with statuses, a log), so a fresh context can resume without re-deriving everything. Git doubles as the checkpoint system - any step can be diffed, reverted or branched.
+
+## Verification in the Harness
+
+Models are unreliable judges of their own work: they tend to declare success early and rate their own output generously. Lab 12 measured the symptom (claimed actions); the harness fix is to make completion something the harness checks:
+
+- **Stop hooks**: when the agent tries to finish, the harness runs tests, linters or type checks and returns failures instead of accepting the claim ([Claude Agent SDK hooks](../../15-Agent-Frameworks/Notes/04-Claude-Agent-SDK.mdx)). [This module's lab](../CodeLabs/01-Minimal-Harness.mdx) found a hook only helps once the agent reaches `finish`: its small model mostly looped on repeated identical edits instead, and repeated-call detection had to come first.
+- **Generator-evaluator separation**: a separate evaluator agent, prompted to be skeptical and given explicit criteria, checks the generator's work. Anthropic's *Harness design for long-running application development* (March 2026) used a planner, a generator and an evaluator that exercised the running app with Playwright, and had generator and evaluator agree a **sprint contract** - testable criteria for "done" - before each chunk of work.
+- **External feedback beats self-critique**: tests, execution and tools add information; a model re-reading its own answer mostly doesn't (see the evidence in [Single-Agent Patterns](../../14-Agent-Patterns/Notes/02-Single-Agent-Patterns.mdx) and the Module 14 lab).
+
+## Reassessing the Harness
+
+Harness components often exist to compensate for a model's weaknesses - elaborate output parsers, retry-and-repair loops, rigid step-by-step plans. When the model improves, some become dead weight that adds latency, cost and failure modes. Re-test regularly by **ablation**: remove a component, run the evaluation suite, and keep the component only if removing it hurts. Anthropic's harness-design write-up describes exactly this: after upgrading to a newer model the author removed the sprint construct, which was no longer needed, while keeping the separate evaluator - agents still praised their own mediocre work. Keep the components that encode the task's real structure (verification, state, permissions).
+
+## Check Yourself
+
+```quiz
+- q: "Two products use the same model; one completes far more long coding tasks. What most plausibly explains it?"
+  options:
+    - "Harness differences - state handoffs, verification, context management, tools"
+    - "Temperature settings"
+    - "The API region"
+    - "Prompt length"
+  answer: 1
+- q: "In the initializer/worker design, what does each worker session do first?"
+  options:
+    - "Read the progress log and git history and run the smoke tests before choosing one feature"
+    - "Re-read the whole conversation from the previous session"
+    - "Start implementing the next feature immediately"
+    - "Ask the user what to do"
+  answer: 1
+- q: "Why put verification in a stop hook rather than in the system prompt?"
+  answer: "A prompt instruction can be skipped or claimed without being done; a hook runs the check itself and returns real failures to the agent, so completion is verified by the harness regardless of what the model asserts."
+- q: "How do you decide whether a harness component is still needed after a model upgrade?"
+  answer: "Ablate it: remove the component, run the evaluation suite with enough trials, and keep it only if success, cost or safety measurably worsen without it."
 ```
 
-<div class="audience-biz" markdown="1">
+## Exercises
 
-Models don't remember anything on their own - each call starts fresh. Storage is how an agent keeps a record of what it's done, what it's learned, and what's still in progress, the same way a human worker keeps notes and a filing system instead of re-learning the job every morning.
-
-</div>
-
-<div class="audience-tech" markdown="1">
-
-A filesystem gives an agent durable state that survives a context reset. Git turns that filesystem into a reviewable audit trail - commits become checkpoints an agent (or a human) can diff, revert, or branch from. Memory files (an `AGENTS.md`-style convention) let an agent write down project-specific facts it discovers, so the next session doesn't re-derive them from scratch.
-
-</div>
-
----
-
-## Component 2 - Execution
-
-```mermaid
-flowchart TD
-    E["⚙️ Execution"]
-    E --> BASH["💻 Bash / Code Execution\nAutonomous problem-solving"]
-    E --> SB["📦 Sandboxes\nIsolated, secure environments"]
-    E --> TOOLS["🔧 Pre-configured Tools\nBrowsers, test runners, language runtimes"]
-
-    style E fill:#e8e2d9,stroke:#ccc4b8,color:#3d3730
+```exercise
+- title: Design a multi-session harness
+  task: |
+    Design the state files and session protocol for an agent that migrates a 200-file codebase from one logging library to another over many sessions. What does the initializer create? What does each worker session do? How does a session know it is done?
+  solution: |
+    Initializer: a migration manifest (file list with status: todo / done / needs-review), a script that runs the tests and a grep for remaining old-library imports, a progress log, an initial commit. Worker: read the log and manifest, run the script, take the next N todo files, migrate, run tests, commit, mark done, append to the log. Done when the manifest has no todo entries and the grep and tests are clean - checked by the harness, not the agent's opinion.
+- title: Ablate your harness
+  task: |
+    In this module's lab, remove one component at a time - AGENTS.md in the prompt, output truncation, the edit_file tool (write_file only) - and measure pass rate over three trials each. Which components are load-bearing for this model?
+  solution: |
+    Report pass rate with trials per variant. Typically edit_file matters for larger files (rewriting whole files invites mistakes), truncation matters only when outputs are long, and AGENTS.md matters when it contains non-obvious facts (the test command). Components that don't move the metric are candidates for removal.
 ```
-
-<div class="audience-biz" markdown="1">
-
-Execution is what lets an agent actually do things instead of just describing what it would do - run a script, click through a form, execute a test. Sandboxes are the safety boundary: a contained space where the agent can act freely without risking the systems around it.
-
-</div>
-
-<div class="audience-tech" markdown="1">
-
-Bash and code execution give the model a general-purpose escape hatch - instead of requiring a human to pre-build a bespoke tool for every possible action, the agent can write and run code to solve novel problems. Sandboxes (container isolation, syscall filtering, network egress rules) contain the blast radius of that freedom. Pre-configured tools (browsers, test runners, language runtimes) shortcut common tasks the agent would otherwise have to bootstrap from bash primitives.
-
-</div>
-
----
-
-## Component 3 - Context Management
-
-<div class="audience-biz" markdown="1">
-
-An agent's working memory - its context window - is limited and fills up fast on long tasks. Context management is the discipline of keeping that window full of what matters and empty of what doesn't, so the agent doesn't lose the thread halfway through a task.
-
-</div>
-
-<div class="audience-tech" markdown="1">
-
-Three techniques, in increasing order of aggressiveness:
-
-- **Compaction** - summarizing older turns to reclaim tokens, trading detail for continuity
-- **Tool call offloading** - writing large tool outputs to the filesystem instead of the context window, and passing the agent a file path instead of the raw content
-- **Progressive disclosure via skills** - packaging domain knowledge as an on-demand reference the agent loads only when relevant, instead of front-loading everything into the system prompt
-
-</div>
-
-| Technique | Cost | When to Use |
-|-----------|------|-------------|
-| Compaction | Lossy - detail is discarded | Context is filling up mid-task |
-| Tool call offloading | Cheap - full fidelity preserved | Tool output is large but rarely re-read in full |
-| Progressive disclosure | Requires upfront packaging | Domain knowledge is broad but any one task only needs a slice |
-
----
-
-## Component 4 - Long-Horizon Support
-
-```mermaid
-flowchart LR
-    G["🎯 Generator\nDoes the work"]
-    EV["🔍 Evaluator\nJudges the work"]
-    G -->|"output"| EV
-    EV -->|"feedback"| G
-
-    style G fill:#d4edda,stroke:#28a745
-    style EV fill:#fde8d8,stroke:#fd7e14
-```
-
-<div class="audience-biz" markdown="1">
-
-Long-running tasks need more than one continuous conversation - they need checkpoints, handoffs, and someone (or something) double-checking the work. Two ideas do most of the work here: separating the "doer" from the "checker," and resetting context cleanly between phases instead of letting one giant conversation degrade over time.
-
-</div>
-
-<div class="audience-tech" markdown="1">
-
-**Generator-evaluator separation.** Don't rely on an agent to grade its own output - generators exhibit self-bias, rating their own work more favorably than an independent judge would. A dedicated evaluator agent, calibrated for skepticism and given explicit grading criteria, catches what self-review misses. This is the same principle behind [Design Patterns: Reflexion](../../14-Agent-Patterns/Notes/02-Single-Agent-Patterns.mdx) in Agentic AI, applied at the harness level rather than the prompt level.
-
-**Context resets with structured handoffs.** Rather than letting one session run until it degrades, clear the context window entirely at a phase boundary and start a fresh agent - passing state through a structured handoff (a file, a summary, a task ledger) instead of raw conversation history. This addresses the coherence loss that comes from a context window stretched too thin.
-
-**Sprint contracts.** Agree on a concrete definition of "done" before implementation starts - explicit acceptance criteria the evaluator checks against, not a vague sense of completeness the generator negotiates with itself.
-
-</div>
-
----
-
-## Reassessing Harness Complexity
-
-<div class="audience-biz" markdown="1">
-
-A harness built for last year's model might be carrying dead weight today. Scaffolding that compensated for a weaker model can become unnecessary overhead once the model improves - and every extra moving part is something that can break or slow things down.
-
-</div>
-
-<div class="audience-tech" markdown="1">
-
-Continuously reassess which harness components are load-bearing. A component built to work around a model limitation (e.g. an elaborate retry-and-validate loop for unreliable tool-call formatting) may become redundant when a newer model handles that case natively. Removing dead scaffolding isn't just cleanup - it reduces latency, cost, and surface area for bugs.
-
-</div>
-
----
 
 ## Study Notes
 
-- **Agent = Model + Harness.** The model provides intelligence; the harness is everything that turns that intelligence into durable, safe, effective action.
-- **Storage, execution, context management, and long-horizon support** are the four responsibilities a harness carries - miss one and the agent degrades in a predictable way (forgets everything, can't act, loses the thread, or can't sustain multi-phase work).
-- **Generators shouldn't grade themselves.** Separating the agent that does the work from the agent that judges it is one of the highest-leverage harness design choices.
-- **This is not the same "harness" as an evaluation harness.** One is execution scaffolding around the agent; the other is CI/grading infrastructure that scores the agent's outputs after the fact. See [Evaluation & Observability](../../16-Production-Agents/Notes/02-Evaluation-and-Observability.mdx).
-- **Harnesses should shrink as models improve.** Periodically remove scaffolding that a newer model no longer needs.
+- Agent = model + harness; harness = loop, tools/execution, state, context, verification, conventions
+- Long tasks: state in files and git; initializer sets up feature list, init script, progress log; workers make one verified increment per session
+- Verification belongs to the harness: stop hooks, tests, evaluator agents with sprint contracts; external feedback beats self-critique
+- Ablate components as models improve; keep what encodes the task's structure
+
+## References
+
+- LangChain, [The Anatomy of an Agent Harness](https://www.langchain.com/blog/the-anatomy-of-an-agent-harness) (2026)
+- OpenAI, [Harness engineering: leveraging Codex in an agent-first world](https://openai.com/index/harness-engineering/) (Feb 2026)
+- Anthropic, [Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) (Nov 2025)
+- Anthropic, [Harness design for long-running application development](https://www.anthropic.com/engineering/harness-design-long-running-apps) (Mar 2026)
+- Huang et al., [Large Language Models Cannot Self-Correct Reasoning Yet](https://arxiv.org/abs/2310.01798) (2023)
+
+*Last reviewed: 2026-09*

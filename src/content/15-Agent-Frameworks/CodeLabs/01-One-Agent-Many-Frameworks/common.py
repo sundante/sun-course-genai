@@ -65,6 +65,7 @@ def parse_args(description: str):
     ap.add_argument("--no-thinking", action="store_true",
                     help="send chat_template_kwargs={'enable_thinking': False} (Qwen3 on vLLM / mlx-lm)")
     ap.add_argument("--tasks", default=",".join(TASK_IDS))
+    ap.add_argument("--trials", type=int, default=3)
     return ap.parse_args()
 
 
@@ -74,7 +75,7 @@ def extra_body(args) -> dict | None:
 
 def run_tasks(framework: str, args, run_one) -> None:
     """run_one(shop, instruction) -> final answer text. Prints one line per task and a summary."""
-    tasks = [t for t in env.TASKS if t.tid in args.tasks.split(",")]
+    tasks = [t for t in env.TASKS if t.tid in args.tasks.split(",")] * args.trials
     passed, t0 = 0, time.time()
     for task in tasks:
         shop = env.Shop()

@@ -1,0 +1,112 @@
+# Agent Frameworks - Q&A Review Bank
+
+Thirty-one questions across the module, from choosing a framework to the specifics of each. Try each one before revealing the answer.
+
+```objectives
+time: 45 min
+outcomes:
+  - Recall the core abstraction, state model and human-in-the-loop mechanism of each major framework
+  - Justify a framework choice for a scenario, including choosing none
+  - Explain framework behaviour from the underlying agent loop
+prerequisites:
+  - "Chapters 1-8 of this module"
+```
+
+## Choosing a Framework
+
+```quiz
+- q: "What does an agent framework add to a raw model API loop? Name five things."
+  answer: "Tool schemas generated from type hints, a runner with bounds and error handling, sessions/checkpoints, human-in-the-loop pause and resume, multi-agent composition, tracing, and integrations (models, MCP, stores, deployment)."
+- q: "What does a framework hide that you need when debugging?"
+  answer: "The exact prompt and tool schemas sent, how tool errors become messages, how history is truncated or compacted, and when retries happen. Read traces or log raw requests."
+- q: "Place these on the layer map: LangGraph, OpenAI Agents SDK, anthropic SDK, Bedrock AgentCore."
+  answer: "anthropic SDK - model SDK; OpenAI Agents SDK - agent SDK; LangGraph - orchestration runtime; Bedrock AgentCore - managed platform."
+- q: "When is no framework the right choice?"
+  answer: "When the task is a single call or a short fixed chain, or a simple tool loop you can own in ~50 lines, and you don't need durable state, approvals, tracing or integrations. Fewer dependencies and full prompt control."
+- q: "The same model and tools ran in six frameworks in this module's lab. Where did results differ, and why?"
+  answer: "Only on the rule enforced solely by the prompt (don't act on another customer's order): three frameworks' agents always refused, two never did. Replaying requests traced it to incidental tool-schema details (title fields plus additionalProperties false) that flipped a small model's behaviour. Lesson: frameworks change the tokens the model sees - test your tasks, and enforce rules in code."
+- q: "How do you keep the cost of switching frameworks low?"
+  answer: "Keep tools as plain typed functions with business rules inside them, keep prompts in your own files, keep an end-to-end graded task suite, and pin framework versions."
+```
+
+## LangChain and LangGraph
+
+```quiz
+- q: "What replaced AgentExecutor in LangChain 1.x?"
+  answer: "create_agent, which builds a tool-calling agent on the LangGraph runtime and is customised with middleware. The legacy classes live in langchain-classic."
+- q: "Name four built-in LangChain middleware and what each does."
+  answer: "HumanInTheLoopMiddleware (interrupt before tools), ToolCallLimitMiddleware/ModelCallLimitMiddleware (bounds), SummarizationMiddleware (compress history), ModelFallbackMiddleware (fallback models), PIIMiddleware (redaction), LLMToolSelectorMiddleware (pre-select tools)."
+- q: "What two things does interrupt() need to work?"
+  answer: "A checkpointer on the compiled graph and a thread_id in the config, so the paused state can be saved and resumed with Command(resume=...)."
+- q: "Why must side effects come after interrupt() in a node, or be idempotent?"
+  answer: "On resume the node re-runs from its beginning; interrupt() then returns the resume value. Anything before it executes twice."
+- q: "What is the LangGraph Store for?"
+  answer: "Long-term memory shared across threads - key-value items in namespaces, with optional semantic search - as opposed to the checkpointer, which holds one thread's state."
+```
+
+## OpenAI Agents SDK
+
+```quiz
+- q: "Handoff vs agent.as_tool - what's the difference?"
+  answer: "A handoff transfers the conversation to another agent, which answers the user. as_tool calls the other agent like a function and returns its result to the caller, which keeps control."
+- q: "How is a run requiring approval resumed after a restart?"
+  answer: "result.interruptions lists pending approvals; result.to_state() gives a serialisable RunState; later, approve or reject each item on the state and pass the state back to Runner.run."
+- q: "What do input guardrails cost and how is latency hidden?"
+  answer: "An extra model call (or check) per input; by default they run in parallel with the agent and a tripwire cancels the run."
+- q: "What do you lose running the Agents SDK on a non-OpenAI model through Chat Completions?"
+  answer: "Responses-API features: hosted tools (web search, file search, hosted MCP, code interpreter) and some tracing detail. Default tracing also uploads to OpenAI, so disable or re-route it."
+```
+
+## Claude Agent SDK
+
+```quiz
+- q: "How does the Claude Agent SDK differ from the Messages API Tool Runner?"
+  answer: "The Tool Runner loops over your tools. The Agent SDK is the Claude Code harness as a library: built-in file, shell and web tools, context compaction, permissions, hooks, subagents, skills and sessions."
+- q: "How are custom tools added, and what name does the model see?"
+  answer: "Through an MCP server - in-process with @tool and create_sdk_mcp_server, or external. Names are mcp__<server>__<tool>."
+- q: "In what order are permissions decided?"
+  answer: "Hooks, then deny rules, then the permission mode and allow rules, and finally the can_use_tool callback."
+- q: "Which hook would you use to make the agent run tests before finishing?"
+  answer: "A Stop hook that runs the tests and blocks the stop with the failures as the reason, so verification is enforced by the harness rather than requested in the prompt."
+```
+
+## Google ADK
+
+```quiz
+- q: "What are ADK's three ways to involve another agent?"
+  answer: "sub_agents (the model transfers control), AgentTool (the model calls the agent and gets a result), and Workflow graphs (code decides) - plus A2A for remote agents."
+- q: "What replaced SequentialAgent, ParallelAgent and LoopAgent in ADK 2?"
+  answer: "Graph Workflows: nodes (functions, agents, tools) connected by edges, with routes, fan-out, joins, retries and timeouts."
+- q: "What happens when before_tool_callback returns a dict?"
+  answer: "The tool doesn't run; the dict is used as its result. That makes callbacks the place for guards and caching."
+- q: "What do the state prefixes user:, app: and temp: mean?"
+  answer: "user: persists across a user's sessions; app: across all users; temp: only for the current invocation. Unprefixed keys belong to the session."
+```
+
+## CrewAI
+
+```quiz
+- q: "What does a hierarchical crew add over a sequential one?"
+  answer: "A manager agent that plans, delegates tasks to agents and validates results, instead of running tasks in list order."
+- q: "In a Flow, what do @start, @listen and @router do?"
+  answer: "@start marks entry points; @listen runs a method when a step finishes or a route label is emitted; @router returns a route label that selects the next listeners."
+- q: "Why is a Flow the recommended backbone for production CrewAI apps?"
+  answer: "It gives explicit, testable, persistent control flow (typed state, @persist, human feedback) and uses crews only where autonomous collaboration helps."
+```
+
+## Microsoft Agent Framework and PydanticAI
+
+```quiz
+- q: "What does Microsoft Agent Framework combine?"
+  answer: "AutoGen's agent abstractions and multi-agent patterns with Semantic Kernel's enterprise features (sessions, middleware, telemetry, connectors), plus graph workflows with checkpointing."
+- q: "Name MAF's five built-in orchestrations."
+  answer: "Sequential, concurrent, handoff, group chat and Magentic (task and progress ledgers, re-planning)."
+- q: "How does PydanticAI pass a database connection to tools?"
+  answer: "Through dependency injection: deps_type on the Agent, deps=... on each run, and ctx.deps in tools via RunContext."
+- q: "How does PydanticAI pause for approval?"
+  answer: "A tool with requires_approval=True ends the run with DeferredToolRequests; you answer with DeferredToolResults and rerun with the message history."
+- q: "How does PydanticAI make runs durable?"
+  answer: "By wrapping the agent for Temporal, DBOS or Prefect (TemporalAgent, DBOSAgent, PrefectAgent) so each model request and tool call is a recorded, replayable step."
+```
+
+*Last reviewed: 2026-09*

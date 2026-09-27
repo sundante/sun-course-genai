@@ -35,7 +35,7 @@ See the [End-to-End Agent Orchestration Flow](#end-to-end-agent-orchestration-fl
 ## Agent Breakdown
 
 ### 1. Orchestrator Agent
-**Model:** Multi-modal foundation model (Gemini 1.5 Pro or Claude) - single model maintains coherent reasoning across text and image evidence without context loss between handoffs.
+**Model:** A frontier multimodal model (any major provider's current flagship) - single model maintains coherent reasoning across text and image evidence without context loss between handoffs.
 
 | Responsibility | Details |
 |---|---|
@@ -112,7 +112,7 @@ Outputs one of three structured recommendations with a **fraud risk score (Low /
 | Threat | Mitigation |
 |---|---|
 | PII exposure to LLMs | PII redacted in Security Layer before any evidence reaches a model |
-| Prompt injection via free-text | Input sanitisation; system prompt isolation |
+| Prompt injection via free-text | Treat claimant text as untrusted data: quarantined extraction into structured fields, no write tools in that step, adjuster approval for payouts |
 | Fraudulent imagery | EXIF metadata check + reverse image search at ingestion |
 | Adversarial image manipulation | Perceptual hash comparison against known fraud imagery DB |
 
@@ -157,7 +157,7 @@ flowchart TD
 
     B[Security & Ingestion Layer\nPII Redaction · Prompt Injection Guard\nFraudulent Imagery Detection]
 
-    B -->|Sanitised claim package| C[Orchestrator Agent\nMulti-modal Foundation Model\nGemini / Claude]
+    B -->|Sanitised claim package| C[Orchestrator Agent\nFrontier multimodal model]
 
     C --> D[Damage Analyst\nVision model · Weather API · EXIF check\nClassifies type + severity]
     C --> E[Policy Auditor\nPolicy DB · Rules Engine\nCoverage · Deductibles · Exclusions]
@@ -249,6 +249,19 @@ gantt
     Notification Agent                             :a7, after a6, 00:20
 ```
 
+
+## Production Controls
+
+How the design maps onto the [Production Agents](../INDEX.mdx) chapters:
+
+| Concern | In this design |
+|---|---|
+| Tools | Policy, claims-history and repair-cost systems exposed as MCP servers with read-only scopes for the agents; only the settlement service can write, and only after adjuster approval |
+| Injection and the lethal trifecta | Claimant text and images are untrusted and the agents read private policy data, so the only external channel - the settlement offer - is gated by an adjuster who sees the exact offer ([Agent Security](../Notes/02-Agent-Security.mdx)); extraction from claimant documents runs in a quarantined step that returns structured fields |
+| Durability and approvals | Each claim is a durable workflow ([Durable Execution](../Notes/03-Durable-Execution.mdx)): the 48-hour override window and adjuster reviews are durable waits, and every write carries an idempotency key |
+| Evaluation | A regression suite of historical claims with known outcomes (settlement amount within tolerance, correct routing to escalation), a safety suite of injected-text and doctored-image cases, and adjuster overrides fed back as new tasks |
+| Observability | One trace per case (`invoke_agent` → `chat` / `execute_tool` spans, OpenTelemetry GenAI conventions) with prompt, model and tool-set versions recorded; see [Agent Observability](../Notes/06-Agent-Observability.mdx) |
+
 ---
 
-← [Back to Agentic AI Concepts](../../12-Agent-Foundations/Notes/01-What-Are-AI-Agents.mdx) · [All System Designs](../../14-Agent-Patterns/INDEX.mdx)
+← [Back to Agentic AI Concepts](../../12-Agent-Foundations/Notes/01-What-Are-AI-Agents.mdx) · [All System Designs](../INDEX.mdx)

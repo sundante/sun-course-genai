@@ -47,7 +47,7 @@ See the [End-to-End Agent Orchestration Flow](#end-to-end-agent-orchestration-fl
 ## Agent Breakdown
 
 ### 1. Orchestrator Agent
-**Model:** Multi-modal foundation model (Claude / Gemini)
+**Model:** A frontier multimodal model (any major provider's current flagship)
 
 | Responsibility | Details |
 |---|---|
@@ -144,7 +144,7 @@ All tiers use the same pipeline - urgency flag sets queue priority and SLA alert
 | Threat | Mitigation |
 |---|---|
 | PHI exposure to cloud LLM | De-identify / tokenize patient identifiers before any cloud model call |
-| Prompt injection via clinical notes | Sanitise free-text fields in Security Layer; system prompt isolation |
+| Prompt injection via clinical notes | Treat notes as untrusted data: structured extraction in a step without write tools; decisions from structured criteria; clinician review of all denials |
 | Stale policy criteria | Policy library versioned and timestamped; always retrieve criteria valid at date of service |
 | Audit trail gaps | Immutable log created at intake; every agent action appended; finalised at decision |
 | Appeals traceability | Every evidence→criterion mapping stored with policy citation; retrievable for appeals |
@@ -194,7 +194,7 @@ flowchart TD
 
     B[Security & Compliance Layer\nPHI De-identification · Prompt Injection Guard\nBAA Verification · Audit Log Init]
 
-    B -->|Sanitised PA package + urgency flag| C[Orchestrator Agent\nMulti-modal Foundation Model\nClaude / Gemini]
+    B -->|Sanitised PA package + urgency flag| C[Orchestrator Agent\nFrontier multimodal model]
 
     C --> D[Evidence Aggregator\nFHIR R4 API · OCR · Document Parser\nLabs · Meds · Diagnoses · Notes]
     C --> E[Policy Interpreter\nRAG over Payer Policy Library\nCPT/ICD criteria · PDF guidelines]
@@ -321,6 +321,19 @@ stateDiagram-v2
     DENIED --> CLOSED : Denial letter + appeal rights sent · Audit finalised
 ```
 
+
+## Production Controls
+
+How the design maps onto the [Production Agents](../INDEX.mdx) chapters:
+
+| Concern | In this design |
+|---|---|
+| Tools | EHR (FHIR), payer policy and formulary systems as MCP servers with per-request, patient-scoped tokens; payer and provider systems that run their own agents are reached over A2A with authenticated Agent Cards |
+| Injection and the lethal trifecta | Clinical notes are untrusted text next to PHI, and the decision letter is external communication - so letters are templated from structured decision fields and denials always go to a clinician reviewer ([Agent Security](../Notes/02-Agent-Security.mdx)) |
+| Durability and approvals | A PA request is a durable workflow that can wait days for missing documentation or a peer-to-peer review; SLA timers (urgent vs standard) are durable timers ([Durable Execution](../Notes/03-Durable-Execution.mdx)) |
+| Evaluation | Historical PA decisions as a regression suite (agreement with final determinations, per-criterion citation accuracy), clinician-validated rubric judges, and a safety suite where any auto-denial is a failure |
+| Observability | One trace per case (`invoke_agent` → `chat` / `execute_tool` spans, OpenTelemetry GenAI conventions) with prompt, model and tool-set versions recorded; see [Agent Observability](../Notes/06-Agent-Observability.mdx) |
+
 ---
 
-← [Back to Agentic AI Concepts](../../12-Agent-Foundations/Notes/01-What-Are-AI-Agents.mdx) · [All System Designs](../../14-Agent-Patterns/INDEX.mdx)
+← [Back to Agentic AI Concepts](../../12-Agent-Foundations/Notes/01-What-Are-AI-Agents.mdx) · [All System Designs](../INDEX.mdx)

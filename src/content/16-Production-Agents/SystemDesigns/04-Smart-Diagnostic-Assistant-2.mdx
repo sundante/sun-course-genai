@@ -84,8 +84,8 @@ flowchart TD
     IN["🧑‍🔧 Technician Input<br/>(voice / QR scan / photo)"] --> S1
 
     subgraph S1["1️⃣ Data Processing Agent"]
-        V["🗣️ Voice → Vertex AI Speech-to-Text → problem description"]
-        P["📷 Photo → Gemini Vision API → failure symptoms"]
+        V["🗣️ Voice → Cloud Speech-to-Text → problem description"]
+        P["📷 Photo → a multimodal model (vision) → failure symptoms"]
         Q["🔎 QR Code → Equipment Registry lookup → machine context"]
         OUT1["📦 EquipmentContext {equipment_id, machine_model,<br/>location, failure_description, symptom_tags[],<br/>technician_id, skill_tier}"]
         V --> OUT1
@@ -96,7 +96,7 @@ flowchart TD
     S1 --> S2
 
     subgraph S2["2️⃣ Orchestrator"]
-        O1["Classify failure mode (Gemini Flash) + confidence"]
+        O1["Classify failure mode (a small fast model) + confidence"]
         O2["Authorization check: skill_tier sufficient?<br/>If no → escalate immediately, skip all agents"]
         O3["Check LOTO requirement for this failure class"]
         O4["Decide which agents to invoke:<br/>SOPs & Safety: ALWAYS · RAG Manual: ALWAYS<br/>Legacy & History: only if repair history exists"]
@@ -108,7 +108,7 @@ flowchart TD
     S2 -->|parallel| S3C
 
     S3A["🕸️ 3A: Legacy & History Fetch<br/>Spanner Graph: machine → failure → procedure<br/>BigQuery: past repairs, MTTR, tech notes<br/>Returns: similar cases + outcomes"]
-    S3B["📡 3B: RAG Manual Fetch<br/>Vertex AI Vector Search: OEM manuals,<br/>repair guides, parts catalog<br/>Returns: top-k chunks + source refs + confidence"]
+    S3B["📡 3B: RAG Manual Fetch<br/>Agent Platform Vector Search: OEM manuals,<br/>repair guides, parts catalog<br/>Returns: top-k chunks + source refs + confidence"]
     S3C["🛡️ 3C: SOPs & Safety Fetch<br/>Firestore: LOTO procedures, IEC 62443,<br/>NFPA 70E, escalation limits, skill tier map<br/>Returns: required safety steps, LOTO Y/N"]
 
     S3A --> S4
@@ -124,7 +124,7 @@ flowchart TD
 
     S4 -->|only if validation passed| S5
 
-    subgraph S5["5️⃣ Synthesizer (Gemini 1.5 Pro)"]
+    subgraph S5["5️⃣ Synthesizer (a frontier model)"]
         G1["Step-by-step procedure (mobile-optimized)<br/>Safety warnings + regulatory citations<br/>Parts list + SAP inventory status<br/>Time estimate · sources · bilingual output"]
         G2["Side effects: create SAP PM work order ·<br/>log to BigQuery · trigger parts pre-order"]
         G1 --> G2
@@ -152,9 +152,9 @@ means the Orchestrator always receives a structured object - it never sees raw v
 
 **Latency target:** < 500ms
 - Speech-to-Text: ~200ms for a 10-second voice clip
-- Gemini Vision: ~300ms for a single photo
+- The multimodal model: ~300ms for a single photo
 
-**What happens when input is ambiguous?** If Gemini Vision returns `confidence < 0.6` on the failure
+**What happens when input is ambiguous?** If The multimodal model returns `confidence < 0.6` on the failure
 description, the Data Processing Agent asks the technician one clarifying question before producing the
 `EquipmentContext`. This adds latency but prevents the Orchestrator from misclassifying based on a blurry
 photo.
@@ -165,7 +165,7 @@ photo.
 
 The Orchestrator is the control plane. It makes decisions; the sub-agents do retrieval.
 
-**Failure classification with Gemini Flash:**
+**Failure classification with a small fast model:**
 
 ```python
 classification_prompt = f"""
@@ -239,7 +239,7 @@ and technician notes. The Validator will use the success rate to flag if a proce
 **What it does:** Semantic search over the OEM technical manuals and repair guides for this machine model,
 returning the most relevant procedure sections.
 
-**Why Vertex AI Vector Search?** The manuals are unstructured PDFs. Semantic similarity is the right
+**Why Agent Platform Vector Search?** The manuals are unstructured PDFs. Semantic similarity is the right
 retrieval strategy - "hydraulic pump cavitation" in the technician's description needs to match
 "cavitation in piston pump assemblies" in the manual. Keyword search would fail.
 
@@ -322,7 +322,7 @@ If the historical agent says "procedure A worked 90% of the time" and the SOPs a
 requires LOTO Step 1 which was missing in past repairs", SOPs win. The Validator will note the discrepancy
 in the output and recommend a knowledge base update.
 
-**LLM-as-judge for semantic cross-validation (Gemini Flash):**
+**LLM-as-judge for semantic cross-validation (a small fast model):**
 
 Pure rule engines catch known violations. The LLM-as-judge catches semantic contradictions that rules
 can't encode - for example, the manual saying "remove power before servicing" while the SOPs agent
@@ -401,19 +401,19 @@ Output in English, then repeat in Spanish.
 
 | Agent / Stage | Service | Why |
 |---|---|---|
-| Data Processing Agent | Vertex AI Speech-to-Text | Industry-leading accuracy for noisy factory environments |
-| Data Processing Agent | Gemini Vision API | Multimodal failure symptom extraction |
+| Data Processing Agent | Cloud Speech-to-Text | Industry-leading accuracy for noisy factory environments |
+| Data Processing Agent | a multimodal model (vision) | Multimodal failure symptom extraction |
 | Data Processing Agent | Firestore (equipment registry) | Fast key-value lookup for machine context by QR code |
-| Orchestrator | Gemini Flash (classification) | Fast, cheap - failure classification is a classification task, not generation |
-| Orchestrator | Vertex AI ADK or LangGraph on Cloud Run | Agent framework for state management + parallel dispatch |
+| Orchestrator | Small fast model (classification) | Fast, cheap - failure classification is a classification task, not generation |
+| Orchestrator | ADK or LangGraph on Cloud Run / Agent Runtime | Agent framework for state management + parallel dispatch |
 | Legacy & History Fetch | Cloud Spanner | Graph-capable, strongly consistent, globally distributed |
 | Legacy & History Fetch | BigQuery | Analytical queries on repair history at scale |
-| RAG Manual Fetch | Vertex AI Vector Search | Managed ANN search over 5M document chunks |
+| RAG Manual Fetch | Agent Platform Vector Search | Managed ANN search over 5M document chunks |
 | RAG Manual Fetch | Cloud Storage | Stores document chunks + original PDFs |
 | SOPs & Safety Fetch | Firestore | Structured safety rules with real-time consistency |
 | Analyser / Validator | Cloud Run (rule engine) | Deterministic safety checks, not LLM |
-| Analyser / Validator | Gemini Flash (LLM-as-judge) | Semantic contradiction detection |
-| Synthesizer | Gemini 1.5 Pro | Full procedure generation, long-context window |
+| Analyser / Validator | Small fast model (LLM-as-judge) | Semantic contradiction detection |
+| Synthesizer | Frontier model | Full procedure generation, long-context window |
 | Synthesizer | SAP PM API | Work order creation |
 | Synthesizer | BigQuery (event log) | Feedback loop data |
 | Offline delivery | Cloud Storage + Cloud CDN | Pre-generated guide cache delivery |
@@ -430,11 +430,11 @@ Output in English, then repeat in Spanish.
 | Stage | Target | Why Achievable |
 |-------|--------|----------------|
 | Data Processing Agent | ~500ms | Speech-to-Text + Vision in parallel |
-| Orchestrator (classification) | ~400ms | Gemini Flash, simple classification |
+| Orchestrator (classification) | ~400ms | Small fast model, simple classification |
 | Orchestrator (dispatch overhead) | ~100ms | Async dispatch, minimal compute |
 | Parallel sub-agents (slowest of 3) | ~1.5s | Vector Search + graph query both under 1.5s at this scale |
 | Analyser / Validator | ~500ms | Rule checks are fast; LLM-as-judge adds ~300ms |
-| Synthesizer | ~1.5s | Gemini 1.5 Pro for ~500-token output |
+| Synthesizer | ~1.5s | Frontier model for ~500-token output |
 | **Total P99** | **< 5s** | All stages sequential except fan-out |
 
 The parallel fan-out in Stage 3 is the key latency win. Sequential execution of three agents would cost
@@ -469,7 +469,7 @@ individual agent.
 | Validate before synthesize vs. validate after | Before | Industrial safety anti-pattern to generate first; validate before synthesis is non-negotiable |
 | LLM-as-judge vs. pure rule engine in Validator | Hybrid | Rules for known violations; LLM for semantic contradictions between sources |
 | Offline capability via pre-generation | Pre-generate top-500 failure patterns per machine family | 5s P99 is impossible if WiFi required; factory floors have dead zones |
-| Gemini Flash for classification vs. Pro | Flash | Classification is a classification task - Pro capability not needed; Flash is 10× cheaper and faster |
+| Small model for classification vs. frontier model | Small | Classification doesn't need frontier capability; small models are typically an order of magnitude cheaper and faster - verify accuracy on labelled failures first |
 | Spanner Graph vs. Neo4j | Spanner | GCP-native, managed, ACID transactions, globally consistent; Neo4j would require separate management |
 
 ---
@@ -483,7 +483,7 @@ individual agent.
 | SOPs agent unavailable | Safety validation impossible | **Hard block** - return escalation to supervisor, do not attempt synthesis |
 | Orchestrator misclassifies failure (confidence < 0.75) | Wrong agents invoked | Invoke all three agents regardless + require tech to confirm failure description before displaying output |
 | Validator finds conflicting safety data (unresolvable) | Synthesis blocked | Return escalation with conflict details - supervisor must manually resolve, system logs for knowledge base update |
-| Gemini 1.5 Pro (Synthesizer) slow or degraded | Latency exceeds 5s | Pre-generated offline guide served from cache (covers ~85% of common failures) |
+| Synthesizer model slow or degraded | Latency exceeds 5s | Pre-generated offline guide served from cache (covers ~85% of common failures) |
 | SAP PM API fails | Work order not created | Synthesizer completes - work order failure logged to BigQuery for async retry. Guide delivery is not blocked by SAP. |
 
 ---
@@ -535,3 +535,15 @@ more explainable, more reliable, and more defensible in a senior ML system desig
 - [ ] Cloud Trace configured with per-agent span labels
 - [ ] Escalation paths tested: supervisor notification working end-to-end
 - [ ] P99 latency load test at 300 concurrent requests passing < 5s target
+
+## Production Controls
+
+How the design maps onto the [Production Agents](../INDEX.mdx) chapters:
+
+| Concern | In this design |
+|---|---|
+| Tools | Each sub-agent's data source (manuals, sensor history, parts, CMMS) is an MCP server with read-only scope; only the orchestrator's work-order tool writes, after technician confirmation |
+| Injection and the lethal trifecta | Sub-agents that read untrusted technician input have no write tools; the synthesizer's output is validated against structured safety templates before display |
+| Durability and approvals | The orchestrator's fan-out runs as a durable workflow so a slow or failed sub-agent is retried without repeating the others; supervisor escalations are durable waits |
+| Evaluation | Per-sub-agent evals (classification accuracy on labelled failures, retrieval recall on manuals) plus end-to-end task success on historical cases; the validator's judge is checked against engineer labels |
+| Observability | One trace per case (`invoke_agent` → `chat` / `execute_tool` spans, OpenTelemetry GenAI conventions) with prompt, model and tool-set versions recorded; see [Agent Observability](../Notes/06-Agent-Observability.mdx) |

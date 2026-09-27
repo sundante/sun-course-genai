@@ -1,41 +1,76 @@
 # 17 - Agent Engineering
 
-## What You Will Learn
+Agent engineering is designing the system *around* the model: the harness it runs in, the loops and graphs that structure its work, the context it sees, the verifiers that decide whether it succeeded, the skills and memory that let it reuse know-how, and the specifications it works from. This module draws on the published practice of teams building coding and long-running agents, examines coding and computer-use agents as case studies, and ends with a lab where you build a harness and measure one of its components.
 
-Agent Engineering is the practice of designing the system *around* the model rather than the model itself: what scaffolding it runs inside (harness), how you decide when work should self-iterate versus stay a single step (loop), how you decide when a single iterating step should split into a coordinated structure of specialized parts (graph) - and, beyond those three, how you curate what the model sees (context), how you make "good" measurable at scale (evaluation & verifiers), how you build the worlds agents train and are tested in (environment), how you package reusable know-how (memory & skills), and what changes about software delivery once all of that is in place (spec & vibe engineering). Where Prompt Engineering optimizes a single call and Agentic AI covers the mechanics of a single agent loop, this module covers the architectural decisions that sit above both.
+```objectives
+scope: module
+time: 8-10 hours (notes + lab)
+outcomes:
+  - Design an agent harness - state across context windows, verification in the harness, context management - and ablate it as models improve
+  - Decide when to build a loop, when to split it into a graph, and what it must iterate against
+  - Explain how coding and computer-use agents work, set a repository up for agents, and read the productivity evidence critically
+  - Package procedures as SKILL.md skills and design memory policies
+  - Build verifiers and environments that resist reward hacking, and relate them to agent RL
+  - Run spec-driven development with review at the points that matter
+prerequisites:
+  - "[Agent Foundations](../12-Agent-Foundations/INDEX.mdx)"
+  - "[Agent Frameworks](../15-Agent-Frameworks/INDEX.mdx)"
+  - "[Production Agents](../16-Production-Agents/INDEX.mdx)"
+```
 
-## Why It Comes After Agents and Agentic AI
+## Where This Module Fits
 
-You need to understand what an agent is (Topic 10) and how the base agent loop actually executes - the LLM/Tool Executor/Loop Controller, ReAct, termination conditions (Topic 11) - before the design-level questions here make sense. Harness Engineering asks what surrounds that loop to make it durable. Loop Engineering asks when building a loop at all is worth the setup cost. Graph Engineering asks when a single loop should become a coordinated structure instead. The five notes that follow build on all three: each one names a discipline that became necessary once teams tried to run harnesses, loops, and graphs reliably at scale.
+```mermaid
+flowchart LR
+    H["01 Harness"] --> LG["02 Loops &<br/>graphs"]
+    H --> CX["03 Context"]
+    CX --> CA["04 Coding<br/>agents"]
+    CX --> CU["05 Computer use"]
+    H --> SK["06 Skills &<br/>memory"]
+    LG --> VE["07 Verifiers, environments,<br/>agent RL"]
+    CA --> SD["08 Spec-driven<br/>development"]
+    VE -.-> LAB["🧪 Lab: minimal<br/>harness"]
+    H -.-> LAB
+
+    style H fill:#d8dfe8,stroke:#b0bac8
+    style VE fill:#e8e0d4,stroke:#c8b89a
+    style LAB fill:#dde4dc,stroke:#b0c4b0
+```
 
 ## Chapter Map
 
-| # | File | Topic |
-|---|------|-------|
-| 1 | [Harness Engineering](Notes/01-Harness-Engineering.mdx) | Agent = Model + Harness; storage, execution, context management, long-horizon support |
-| 2 | [Loop Engineering](Notes/02-Loop-Engineering.mdx) | Design loops not prompts; verification surface; the six-component practice; loop economics |
-| 3 | [Graph Engineering](Notes/03-Graph-Engineering.mdx) | Loop vs. graph; five signals justifying a graph; failure modes; hybrid architectures |
-| 4 | [Context Engineering](Notes/04-Context-Engineering.mdx) | Curating the full token budget; context rot; retrieval, compaction, pruning, isolation |
-| 5 | [Evaluation & Verifier Engineering](Notes/05-Evaluation-and-Verifier-Engineering.mdx) | Rubric design; LLM-as-judge failure modes; reward hacking; RLVR |
-| 6 | [Environment Engineering](Notes/06-Environment-Engineering.mdx) | Building the sandboxed worlds agents train/are tested in; environment-as-product |
-| 7 | [Memory & Skill Engineering](Notes/07-Memory-and-Skill-Engineering.mdx) | Memory as an explicit subsystem; packaging procedural knowledge as reusable skills |
-| 8 | [Spec & Vibe Engineering](Notes/08-Spec-and-Vibe-Engineering.mdx) | Spec-driven development; disciplined vibe engineering vs. casual vibe coding |
-| - | [Q&A Review Bank](Notes/09-Interview-QA-Bank.mdx) | 25 questions across all eight topics |
+| # | Chapter | You will learn | Time |
+|---|---|---|---|
+| 1 | [Harness Engineering](Notes/01-Harness-Engineering.mdx) | Agent = model + harness; state across context windows; verification in the harness; ablation | 50 min |
+| 2 | [Loops and Graphs](Notes/02-Loops-and-Graphs.mdx) | When a loop pays off; the verifier as bottleneck; graph signals; the "dies halfway" test | 45 min |
+| 3 | [Context Engineering for Agents](Notes/03-Context-Engineering-for-Agents.mdx) | Context rot; just-in-time context; clearing, compaction, offloading, notes, sub-agents | 45 min |
+| 4 | [Coding Agents](Notes/04-Coding-Agents.mdx) | Anatomy, modes of use, agent-ready repositories, benchmark and productivity evidence | 45 min |
+| 5 | [Computer-Use and Browser Agents](Notes/05-Computer-Use-and-Browser-Agents.mdx) | Perceive-act loop, API vs DOM vs pixels, environment safeguards, injection risk | 40 min |
+| 6 | [Skills and Memory](Notes/06-Skills-and-Memory.mdx) | SKILL.md and progressive disclosure; where knowledge belongs; memory policies | 45 min |
+| 7 | [Verifiers, Environments and Agent RL](Notes/07-Verifiers-Environments-and-Agent-RL.mdx) | Verifier types and rubrics; environments; RLVR for agents; reward hacking | 50 min |
+| 8 | [Spec-Driven Development](Notes/08-Spec-Driven-Development.mdx) | Vibe coding vs vibe engineering; specify → plan → tasks; where humans review | 35 min |
+| 9 | [Q&A Review Bank](Notes/09-Interview-QA-Bank.mdx) | 30 questions across the module | 45 min |
 
-## Recommended Path
+## Code Lab
 
-1. [Harness Engineering](Notes/01-Harness-Engineering.mdx) - what surrounds the model to make it functional and durable
-2. [Loop Engineering](Notes/02-Loop-Engineering.mdx) - deciding when and how to design work as a self-iterating loop
-3. [Graph Engineering](Notes/03-Graph-Engineering.mdx) - deciding when a loop should become a graph instead
-4. [Context Engineering](Notes/04-Context-Engineering.mdx) - curating what the model sees, and avoiding context rot
-5. [Evaluation & Verifier Engineering](Notes/05-Evaluation-and-Verifier-Engineering.mdx) - making "good" measurable at scale
-6. [Environment Engineering](Notes/06-Environment-Engineering.mdx) - building the worlds agents are trained and graded in
-7. [Memory & Skill Engineering](Notes/07-Memory-and-Skill-Engineering.mdx) - packaging reusable know-how
-8. [Spec & Vibe Engineering](Notes/08-Spec-and-Vibe-Engineering.mdx) - where this all points for day-to-day software delivery
-9. Drill with the [Q&A Review Bank](Notes/09-Interview-QA-Bank.mdx) or the [Concept Review](../Interview-Questions/12-Agent-Engineering.mdx)
+| Lab | What you build | Runs on |
+|---|---|---|
+| [A Minimal Coding Harness](CodeLabs/01-Minimal-Harness.mdx) | A coding-agent harness with file/edit/shell tools on eight repository tasks graded by hidden tests; measures a verification stop hook | A local OpenAI-compatible model (laptop) or any hosted API |
+
+## Mini-Project
+
+Take one repository you work in and make it **agent-ready, with evidence**:
+
+1. Write its `AGENTS.md` and one skill for a recurring procedure.
+2. Build ten tasks from real past issues, each with hidden tests.
+3. Run a coding agent (the lab harness or a product) on them before and after your changes, three trials each.
+4. Report pass rate, claimed-but-failed rate and cost, and which change mattered - with the traces that show why.
+
+## Review
+
+- [Q&A Review Bank](Notes/09-Interview-QA-Bank.mdx) - consolidated questions for this module
+- [Knowledge Check: Agent Engineering](../Interview-Questions/12-Agent-Engineering.mdx) - short-form review
 
 ---
-
-## Next Topic
 
 Previous: [16 - Production Agents](../16-Production-Agents/INDEX.mdx) · Next: [Knowledge Check](../Interview-Questions/INDEX.mdx)

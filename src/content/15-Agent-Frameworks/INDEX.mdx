@@ -1,46 +1,74 @@
 # 15 - Agent Frameworks
 
-Frameworks package the agent loop, tool calling, state and orchestration so you don't rebuild them for every project. They also hide those mechanics, which is why this module comes after you have built the loop by hand. Here you compare the major frameworks and build the same agents in each.
+Frameworks package the agent loop, tool schemas, state, approvals, multi-agent wiring and tracing so you don't rebuild them for every project - and they hide those mechanics, which is why this module comes after you built the loop by hand. You learn what each major framework is built around, how to choose one (or none), and build the same agent in seven of them.
 
 ```objectives
 scope: module
-time: 10-14 hours (including labs)
+time: 8-10 hours (notes + lab)
 outcomes:
-  - Explain what an agent framework adds on top of a raw model API loop, and what it hides
-  - Compare frameworks by their core abstraction - graph, conversation, crew of roles, or event-driven runner - and pick one for a project
-  - Build single agents of increasing complexity in LangChain, LangGraph, CrewAI and Google ADK
-  - Build an end-to-end multi-agent system (research, document processing, planning or code review) in one framework
+  - Explain what an agent framework adds to a raw model API loop and what it hides, and place frameworks on the layer map
+  - Compare LangChain/LangGraph, OpenAI Agents SDK, Claude Agent SDK, Google ADK, CrewAI, Microsoft Agent Framework and PydanticAI by abstraction, state, human-in-the-loop, durability and model neutrality
+  - Implement human approval and resumable runs in each framework's native style
+  - Choose a framework for a project with a written rationale backed by measurements
 prerequisites:
-  - "[Agent Foundations](../12-Agent-Foundations/INDEX.mdx) - the agent loop and tool use"
-  - "[Agent Patterns & Multi-Agent](../14-Agent-Patterns/INDEX.mdx) - the patterns the labs implement"
-  - Python 3.10+ and an API key for at least one model provider
+  - "[Agent Foundations](../12-Agent-Foundations/INDEX.mdx) - the loop, tools, evaluation"
+  - "[Agent Patterns & Multi-Agent](../14-Agent-Patterns/INDEX.mdx) - the patterns frameworks implement"
+  - "Python 3.10+; a local OpenAI-compatible model server or a hosted API"
 ```
+
+## Where This Module Fits
+
+```mermaid
+flowchart LR
+    C["01 Choosing a<br/>framework"] --> G["02 LangChain /<br/>LangGraph"]
+    C --> O["03 OpenAI<br/>Agents SDK"]
+    C --> CL["04 Claude<br/>Agent SDK"]
+    C --> A["05 Google ADK"]
+    C --> CR["06 CrewAI"]
+    C --> M["07 Microsoft Agent<br/>Framework"]
+    C --> P["08 PydanticAI"]
+    G & O & CL & A & CR & M & P -.-> LAB["🧪 Lab: one agent,<br/>many frameworks"]
+
+    style C fill:#e8e2d9,stroke:#ccc4b8
+    style LAB fill:#dde4dc,stroke:#b0c4b0
+```
+
+Chapters 2-8 are independent: read chapter 1, then the frameworks you are considering. Running agents in production - durable execution, security, observability, cost - is [Production Agents](../16-Production-Agents/INDEX.mdx).
 
 ## Chapter Map
 
-| # | Page | Topic |
-|---|------|-------|
-| 1 | [Agent Frameworks](Notes/01-Agent-Frameworks.mdx) | Framework internals, code examples, comparison matrix |
+| # | Chapter | You will learn | Time |
+|---|---|---|---|
+| 1 | [Choosing an Agent Framework](Notes/01-Choosing-an-Agent-Framework.mdx) | What frameworks add and hide, the layer map, comparison, decision guide, when to use none | 45 min |
+| 2 | [LangChain and LangGraph](Notes/02-LangChain-and-LangGraph.mdx) | `create_agent` and middleware; state graphs, checkpoints, `interrupt()`/`Command`, Store | 50 min |
+| 3 | [OpenAI Agents SDK](Notes/03-OpenAI-Agents-SDK.mdx) | Agents, handoffs, guardrails, sessions, approvals with `RunState`, tracing | 40 min |
+| 4 | [Claude Agent SDK](Notes/04-Claude-Agent-SDK.mdx) | The Claude Code harness as a library: built-in tools, permissions, hooks, subagents, skills | 40 min |
+| 5 | [Google ADK](Notes/05-Google-ADK.mdx) | `LlmAgent`, Runner and sessions, graph Workflows, callbacks, confirmation, deploy | 45 min |
+| 6 | [CrewAI](Notes/06-CrewAI.mdx) | Crews of role-playing agents, processes, Flows with typed state | 40 min |
+| 7 | [Microsoft Agent Framework](Notes/07-Microsoft-Agent-Framework.mdx) | Agents, graph workflows with checkpoints, orchestrations, migration from AutoGen/Semantic Kernel | 40 min |
+| 8 | [PydanticAI](Notes/08-PydanticAI.mdx) | Typed agents, dependency injection, deferred tools, testing, durable execution | 35 min |
+| 9 | [Q&A Review Bank](Notes/09-Interview-QA-Bank.mdx) | 31 questions across the module | 45 min |
 
-## Code Labs
+## Code Lab
 
-| Lab | What you build |
-|-----|----------------|
-| [AI Agent Types](CodeLabs/01-Agent-Types.mdx) | Simple, intermediate and complex agents in each of four frameworks |
-| [Agentic Systems](CodeLabs/02-Agentic-Systems.mdx) | Four end-to-end systems (research assistant, document processor, task planner, code review), each in four frameworks |
+| Lab | What you build | Runs on |
+|---|---|---|
+| [One Agent, Many Frameworks](CodeLabs/01-One-Agent-Many-Frameworks.mdx) | The Lab 12 shop agent with a refund approval step in LangChain, OpenAI Agents SDK, ADK, CrewAI, MAF and PydanticAI (graded on state), plus a Claude Agent SDK version | A local OpenAI-compatible model (laptop) or any hosted API; Claude Agent SDK needs an Anthropic key |
 
-## Framework Guides
+## Mini-Project
 
-Per-framework guides - [Google ADK](GCP-ADK/INDEX.mdx), [LangChain](LangChain/INDEX.mdx), [LangGraph](LangGraph/INDEX.mdx), [CrewAI](CrewAI/INDEX.mdx) - each have an overview today; their Fundamentals / Simple / Complex pages are marked WIP in the sidebar.
+Choose a framework for a real agent at your work, **with evidence**:
 
-> **Planned in the agents-track content pass:** current-generation SDKs (OpenAI Agents SDK, Claude Agent SDK, Microsoft Agent Framework, PydanticAI), LangChain v1's `create_agent` in place of the legacy `AgentExecutor`, LangGraph `interrupt()` for human-in-the-loop, and pinned `requirements.txt` files for every lab.
+1. A task set of 20+ inputs with state-based or rubric checks.
+2. Two candidate frameworks, the tools shared as plain functions, one approval step in each.
+3. Task success (with confidence intervals), tokens, latency and lines of framework-specific code for each.
+4. A one-page decision covering deployment, durability, observability, lock-in and upgrade risk - not just the numbers.
 
 ## Review
 
-- [Concept Review: Agents](../Interview-Questions/09-Agents.mdx)
+- [Q&A Review Bank](Notes/09-Interview-QA-Bank.mdx) - consolidated questions for this module
+- [Knowledge Check: Agents](../Interview-Questions/09-Agents.mdx) - short-form review
 
 ---
-
-## Next Topic
 
 Previous: [14 - Agent Patterns & Multi-Agent](../14-Agent-Patterns/INDEX.mdx) · Next: [16 - Production Agents](../16-Production-Agents/INDEX.mdx)
