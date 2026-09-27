@@ -8,7 +8,7 @@ All content files under `src/content/` use zero-padded numeric prefixes (`01-`, 
 
 - When files are deleted, **renumber the remaining files** so there are no gaps (e.g. if `01` and `02` are deleted, rename `03→01`, `04→02`, etc.)
 - Keep `nav.yml` in sync with any file renames - it is the single source of truth for navigation
-- Module folders are numbered in nav order (`01-LLM-Foundations` ... `17-Agent-Engineering`); a new top-level module needs a title -> slug entry in `MODULE_SLUG_MAP` (`src/lib/content/nav.ts`) - the build throws if one is missing. The module's content folder is derived from its pages, so there is no second map to update
+- Module folders are numbered in nav order (`01-LLM-Foundations` ... `18-Capstones`); a new top-level module needs a title -> slug entry in `MODULE_SLUG_MAP` (`src/lib/content/nav.ts`) - the build throws if one is missing. The module's content folder is derived from its pages, so there is no second map to update
 - Moving or renaming a page changes its URL. Add the old -> new `/learn/...` path to `src/lib/content/legacy-redirects.json`; the 404 page forwards old URLs from that map (static export has no server-side redirects)
 - Run `npm run check:content` after any content change: broken links, em dashes, numbering gaps, pages missing from `nav.yml`, invalid fence YAML
 

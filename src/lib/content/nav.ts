@@ -28,6 +28,7 @@ const MODULE_SLUG_MAP: Record<string, string> = {
   "Agent Frameworks": "agent-frameworks",
   "Production Agents": "production-agents",
   "Agent Engineering": "agent-engineering",
+  "Capstones": "capstones",
   "Knowledge Check": "knowledge-check",
 };
 

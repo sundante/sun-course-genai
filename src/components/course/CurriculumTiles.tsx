@@ -27,11 +27,12 @@ const MODULE_META: Record<string, ModuleMeta> = {
   "prompt-engineering":     { subtitle: "The Interface",    description: "Talking to models well - prompting techniques, prompting mechanics, production prompt systems, and optimization." },
   "rag":                    { subtitle: "The Memory",       description: "Retrieval-Augmented Generation - giving LLMs access to your own knowledge and keeping answers grounded." },
   "agents":                 { subtitle: "The Actors",       description: "What agents are and how they work - the agent loop, tool use, memory, and planning." },
-  "mcp":                    { subtitle: "The Protocol",     description: "Model Context Protocol - the open standard that connects AI applications to tools, APIs, and data sources." },
-  "agentic-ai":             { subtitle: "The Blueprints",   description: "Architectural and design patterns for agents, and what changes when several agents coordinate." },
-  "agent-frameworks":       { subtitle: "The Workshop",     description: "LangChain, LangGraph, CrewAI and Google ADK compared - with labs that build the same agents in each." },
-  "production-agents":      { subtitle: "The Systems",      description: "Shipping agents - system design, reliability, human oversight, evaluation, observability, and case studies." },
-  "agent-engineering":      { subtitle: "The Architecture", description: "Designing the system around the model - harness, loop and graph engineering, plus context, evaluation, environments, memory and skills." },
+  "mcp":                    { subtitle: "The Protocol",     description: "Model Context Protocol and A2A - connecting agents to tools, data and each other, with authorization and security." },
+  "agentic-ai":             { subtitle: "The Blueprints",   description: "Workflow and single-agent patterns, multi-agent architectures and engineering - and the evidence on when each helps." },
+  "agent-frameworks":       { subtitle: "The Workshop",     description: "LangGraph, OpenAI Agents SDK, Claude Agent SDK, Google ADK, CrewAI, Microsoft Agent Framework and PydanticAI - one agent built in each." },
+  "production-agents":      { subtitle: "The Systems",      description: "Shipping agents - architecture, security, durable execution, cost, evaluation and benchmarks, observability, and system designs." },
+  "agent-engineering":      { subtitle: "The Architecture", description: "Designing the system around the model - harnesses, loops and graphs, context, coding and computer-use agents, skills, verifiers and specs." },
+  "capstones":              { subtitle: "The Proof",        description: "Three end-to-end projects with rubrics - train and post-train a model, serve it against an SLO, and ship a production agent." },
 };
 
 function countLabel(n: number, singular: string, plural = `${singular}s`): string {

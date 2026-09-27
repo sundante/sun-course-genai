@@ -55,10 +55,13 @@ export interface CourseStats {
   byModule: Record<string, ModuleStats>;
 }
 
-/** Course-wide totals. The review-only Knowledge Check module is not counted as a module. */
+// Capstone projects and the review hub are not teaching modules
+const NON_TEACHING = new Set(["capstones", "knowledge-check"]);
+
+/** Course-wide totals, over teaching modules only (not the capstones or the Knowledge Check hub). */
 export function getCourseStats(): CourseStats {
   const { modules } = getNavigationTree();
-  const teaching = modules.filter((mod) => mod.slug !== "knowledge-check");
+  const teaching = modules.filter((mod) => !NON_TEACHING.has(mod.slug));
   const byModule = Object.fromEntries(teaching.map((mod) => [mod.slug, getModuleStats(mod)]));
   const sum = (key: keyof ModuleStats) => Object.values(byModule).reduce((total, s) => total + s[key], 0);
   return {
