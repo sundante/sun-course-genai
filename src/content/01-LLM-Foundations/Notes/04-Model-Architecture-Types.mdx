@@ -1,5 +1,18 @@
 # Model Architecture Types
 
+Transformers come in three shapes - encoder-only, decoder-only and encoder-decoder - distinguished by the attention mask and the training objective, and each shape can be made sparse with mixture-of-experts layers. This chapter explains what each shape can and cannot do, why decoder-only models took over general-purpose AI, and how to choose one for a task.
+
+```objectives
+time: 45 min
+outcomes:
+  - Distinguish encoder-only, decoder-only and encoder-decoder models by attention mask, training objective and what they can output
+  - Explain why decoder-only models became the default for general-purpose assistants, and where encoders and encoder-decoders still win
+  - Explain mixture-of-experts: total vs active parameters, routing, load balancing, and why it saves compute but not memory
+  - Choose an architecture (and model size class) for a task and justify it
+prerequisites:
+  - "[Transformer Architecture](02-Architecture.mdx) and [Attention Mechanisms](03-Attention-Mechanisms.mdx)"
+```
+
 ## Encoder-Only Architecture
 
 ### Concept
@@ -75,8 +88,8 @@ flowchart LR
 | GPT-4 (2023) | Undisclosed | 8K / 32K | Multimodal input, top-tier reasoning at release |
 | LLaMA-2 | 7B–70B | 4K | Open weights, commercial license |
 | LLaMA-3.1 | 8B–405B | 128K | GQA, strong open weights |
-| Gemma 2 | 2B–27B | 8K | Google open, KV-cache sliding window |
-| Mistral 7B | 7B | 32K | GQA + sliding window attention |
+| Gemma 2 | 2B–27B | 8K | Google open weights, interleaved local (sliding-window) and global attention |
+| Mistral 7B | 7B | 8K (v0.1) / 32K (v0.2+) | GQA + sliding window attention (v0.1) |
 | Phi-3-mini | 3.8B | 128K | High quality from small size |
 | Falcon | 7B–180B | 2K–8K | Multi-Query Attention |
 | DeepSeek-V3 | 671B MoE (37B active) | 128K | MLA, fine-grained MoE, FP8 training |
@@ -200,19 +213,19 @@ A reference table of influential model families and the architectural idea each 
 | GPT-4.1 | OpenAI | Undisclosed | 1M | Extended context, code + general |
 | LLaMA-2 | Meta | Decoder | 4K | Open weights, GQA (70B) |
 | LLaMA-3 / 3.1 | Meta | Decoder | 8K / 128K | GQA all sizes, 405B |
-| LLaMA-4 Scout | Meta | MoE Transformer | 10M | Ultra-long context, open source |
+| LLaMA-4 Scout | Meta | MoE Transformer | 10M | Ultra-long context, open weights |
 | LLaMA-4 Maverick | Meta | MoE Transformer | 1M | Balanced capability/cost |
-| Gemma | Google | Decoder | 8K | Multi-query attention |
+| Gemma | Google | Decoder | 8K | Multi-query attention (2B), open weights |
 | Gemma 2 | Google | Decoder | 8K | GQA + local+global attn |
 | Gemini 2.5 Pro | Google DeepMind | Undisclosed | 1M | Complex reasoning, multimodal |
 | Gemma 3 | Google | Decoder | 128K | 5:1 local:global attention, QK-norm |
-| Mistral 7B | Mistral | Decoder | 32K | GQA + sliding window |
+| Mistral 7B | Mistral | Decoder | 8K / 32K | GQA + sliding window (v0.1) |
 | Mixtral 8x7B | Mistral | Decoder (MoE) | 32K | Top-2 MoE, 47B/13B active |
 | Phi-3-mini | Microsoft | Decoder | 128K | 3.8B, textbook-quality data |
 | Qwen3 | Alibaba Cloud | Dense + MoE | 32K native (128K with YaRN) | Hybrid thinking mode, Apache-2.0 |
 | DeepSeek-V3 / R1 | DeepSeek | MoE (671B / 37B active) | 128K | MLA, aux-loss-free balancing, open reasoning (R1) |
 | gpt-oss | OpenAI | MoE (117B / 5.1B active) | 128K | Open weights, MXFP4 experts, banded attention |
-| Command A | Cohere | Retrieval-optimized | 256K | RAG systems, enterprise search |
+| Command A | Cohere | Decoder | 256K | Tuned for RAG, tool use and enterprise search |
 | BERT-base | Google | Encoder | 512 | MLM + NSP, bidirectional |
 | RoBERTa | Meta | Encoder | 512 | Better BERT training |
 | DeBERTa-v3 | Microsoft | Encoder | 512 | Disentangled attention |
@@ -231,7 +244,7 @@ Beyond architecture type, LLMs are also categorized by the **modalities they han
 |------|-------------|----------|-----------|
 | Text-Only | Trained on text corpora only | GPT-3, LLaMA, BERT, Falcon | General NLP, summarization, generation |
 | Multilingual | Trained on multilingual corpora | XLM-R, mT5, BLOOM, GPT-4 | Translation, cross-lingual search |
-| Multimodal | Input: image/video/audio + text | GPT-4o, Gemini 1.5, Kosmos-2, LLaVA | Image captioning, audio Q&A, OCR, document understanding |
+| Multimodal | Input: image/video/audio + text | GPT-4o, Gemini, Qwen-VL, LLaVA | Image captioning, audio Q&A, OCR, document understanding |
 | Code | Specialized in programming languages | Codex, CodeLLaMA, CodeGemma, StarCoder | Code generation, completion, refactoring |
 | Speech-Text | Integrate speech recognition and synthesis | Whisper, SeamlessM4T | Transcription, speech translation |
 | Image/Vision | Image understanding and classification | ViT, ConvNeXT, DETR, Mask2Former | Object detection, segmentation, depth estimation |
@@ -332,29 +345,27 @@ for model_name in ["bert-base-uncased", "gpt2", "facebook/bart-large"]:
 
 ---
 
-## 8 Types of LLMs Used in AI Agents
+## Functional Model Categories
 
 ### Concept
 
-Beyond the classic encoder/decoder taxonomy, modern AI agent systems draw from a richer vocabulary of specialized model types. These represent functional roles more than architecture classes.
+Beyond the three architecture shapes, people describe models by what they are trained to do. These are overlapping labels, not separate architectures - one model can be an MoE, a reasoning model and a vision-language model at once.
 
-| Type | Full Name | What It Is | Key Examples | Primary Use in Agents |
-|------|-----------|-----------|-------------|----------------------|
-| **GPT** | Generative Pretrained Transformer | Standard autoregressive decoder-only LLM | GPT-4, LLaMA, Gemma | General reasoning, planning, text generation |
-| **MoE** | Mixture of Experts | Sparse routing - only top-K expert FFNs fire per token | Mixtral-8x7B, DeepSeek-V3, Qwen3-235B-A22B, Llama 4 | Scale capacity without proportional compute cost |
-| **LRM** | Large Reasoning Model | LLM fine-tuned (via GRPO/RL) to produce long chain-of-thought reasoning traces before answering | DeepSeek-R1, OpenAI o1/o3, QwQ | Complex math, coding, multi-step logical deduction |
-| **VLM** | Vision-Language Model | Multi-stage model combining a vision encoder (ViT) with a language model; trained on image-text pairs | GPT-4o, Gemini, LLaVA, Qwen-VL | Document parsing, image Q&A, multimodal agent perception |
-| **SLM** | Small Language Model | Compact decoder-only model (1B–7B params) with GQA and efficient attention, deployable on edge/local | Phi-3-mini (3.8B), Gemma 2B, TinyLLaMA | On-device inference, latency-critical agent sub-tasks |
-| **LAM** | Large Action Model | LLM trained to produce structured actions (tool calls, API sequences, UI interactions) not just text | Browser-use, Claude Computer Use, OpenAI Operator | Agentic task execution, tool orchestration, UI automation |
-| **HLM** | Hierarchical Language Model | Two-LLM system: an item/task-level LLM models specifics; a user-level LLM models user behavior across sessions | Research architectures | Personalization, recommendation, sequential decision-making |
-| **LCM** | Large Concept Model | Operates in a learned concept space (not tokens); encodes input into concepts, reasons in that space, decodes back | Meta SONAR LCM (2025) | Language-agnostic reasoning, cross-lingual transfer |
+| Category | What it is | Examples | Typical use |
+|---|---|---|---|
+| **Reasoning model** | A decoder-only LLM post-trained, largely with RL on verifiable tasks, to produce a long chain of thought before answering (see [Post-Training & Reasoning](../../04-Post-Training/INDEX.mdx)) | DeepSeek-R1, OpenAI o-series, Qwen3 in thinking mode | Maths, code, multi-step planning |
+| **Mixture of experts** | Sparse FFN layers: a router sends each token to a few experts | Mixtral, DeepSeek-V3, Qwen3-235B-A22B, gpt-oss | Large capacity at lower compute per token |
+| **Vision-language model** | A vision encoder (often a ViT) whose features are mapped into the LM's embedding space by a projector, trained on image-text data, or a natively multimodal model | LLaVA, Qwen-VL, Gemma 3, GPT-4o | Documents, screenshots, image Q&A, agent perception |
+| **Small language model** | Models of roughly 1-8B parameters, trained (often with distillation from a larger model) to run on a single GPU or device | Phi, Gemma, Qwen and Llama small sizes | On-device use, latency-critical sub-tasks, fine-tuning |
+| **Computer-use / action model** | An LLM trained or tuned to output actions - tool calls, clicks, keystrokes - from screenshots or UI trees | OpenAI's Computer-Using Agent, Anthropic's computer-use capability, Gemini computer-use models | Browser and desktop agents (see [Computer-Use and Browser Agents](../../17-Agent-Engineering/Notes/05-Computer-Use-and-Browser-Agents.mdx)) |
+| **Embedding model** | Usually an encoder (or a decoder adapted) trained with contrastive objectives to output a fixed vector | BGE, E5, Gemini and OpenAI embedding models | Search, RAG, clustering |
+| **Large concept model** (research) | Models that predict the next sentence-level embedding ("concept") instead of the next token | Meta's LCM (2024) | Research into language-agnostic reasoning |
 
-**Key distinctions for interviews:**
-- **LRM vs GPT:** Both are decoder-only, but LRM is trained with RL to output explicit reasoning steps (think-then-answer). GPT answers directly.
-- **VLM training stages:** (1) Pretrain vision encoder + LM separately; (2) Align vision→language with image-text pairs; (3) SFT on multi-task visual instruction data. The ViT and LM share a projection layer.
-- **SLM vs quantized LLM:** SLMs are architecturally designed small (GQA, RMSNorm, SwiGLU) - not just a compressed large model.
-- **LAM vs standard LLM with tools:** A LAM is specifically fine-tuned on action trajectories; a standard LLM uses tools via prompt engineering. LAMs produce more reliable action sequences.
-- **LCM:** Addresses the token-level limitation - instead of next-token prediction, LCMs predict the next concept embedding. This makes them language-agnostic by design.
+**Distinctions worth knowing:**
+- **Reasoning model vs chat model:** same architecture; the difference is post-training that rewards correct final answers and lets the model spend tokens thinking first.
+- **Vision-language training** typically goes: pretrained vision encoder and LM → train the projector on image-caption pairs → instruction-tune on visual tasks (LLaVA's recipe); newer models are trained multimodally from the start.
+- **Small model vs quantized large model:** a small model has fewer parameters; quantization keeps the parameter count and lowers the precision. They trade off differently (see [Quantized Inference](../../07-Serving-and-Inference/Notes/03-Quantized-Inference.mdx)).
+- **Action models vs tool use:** any tool-calling LLM can act through tools; computer-use models are additionally trained on screen-and-action data so they can operate interfaces that have no API.
 
 ---
 
@@ -368,8 +379,56 @@ Beyond the classic encoder/decoder taxonomy, modern AI agent systems draw from a
 - LLaMA-3, Gemma, Mistral all use GQA for efficient KV caching
 - When in doubt: reach for a decoder-only model (e.g. Llama, Qwen, Gemma)
 
-**Quick recall Q&A:**
-- *Why can BERT not generate text?* BERT was trained with MLM (predict masked tokens), not CLM (predict next token) - it has no autoregressive generation mechanism.
-- *What is MoE and what is the key tradeoff?* Multiple expert FFNs with sparse routing - scales capacity without proportional compute, but requires load balancing and has communication overhead in distributed settings.
-- *Why did decoder-only beat encoder-decoder for summarization?* At scale + instruction fine-tuning, decoder-only generalizes across tasks without architectural inductive bias; operational simplicity wins.
-- *Name 3 decoder-only models and their context lengths.* LLaMA-3.1 (128K), Gemma 2 (8K), Mistral 7B (32K).
+## Check Yourself
+
+```quiz
+- q: "Why can't BERT generate free text?"
+  options:
+    - "It was trained with masked-token prediction and bidirectional attention, so it has no next-token distribution to sample from"
+    - "It is too small"
+    - "It has no vocabulary"
+    - "Its context is only 512 tokens"
+  answer: 1
+- q: "Mixtral 8x7B has about 47B parameters, not 56B. Why?"
+  options:
+    - "Only the FFN experts are replicated; attention and embeddings are shared"
+    - "Two experts are removed after training"
+    - "It is quantized"
+    - "The router merges experts"
+  answer: 1
+- q: "What does a mixture-of-experts model save compared with a dense model of the same total size?"
+  options: ["Compute per token", "GPU memory for weights", "KV-cache memory", "Training data"]
+  answer: 1
+  explain: "All experts must be resident in memory; only the compute per token falls, because each token uses a few experts."
+- q: "What distinguishes a reasoning model from an ordinary chat model with the same architecture?"
+  answer: "Post-training - largely reinforcement learning on tasks with checkable answers - that teaches it to produce a long chain of thought before the final answer."
+- q: "You need fast, cheap intent classification for 50 million support messages a day. Which architecture class do you start with, and why?"
+  answer: "A small fine-tuned encoder (BERT/DeBERTa class): classification needs no generation, encoders are small and fast, and bidirectional context suits labelling - generation would add cost and latency for no benefit."
+```
+
+## Exercises
+
+```exercise
+- title: Choose the architecture
+  task: |
+    For each task pick encoder-only, decoder-only or encoder-decoder and a size class, and justify it: (a) deduplicating 20M product titles by semantic similarity; (b) a customer-facing assistant that answers policy questions; (c) translating 1M short UI strings into 30 languages on a fixed budget; (d) tagging personal data in documents at the token level.
+  solution: |
+    (a) Encoder embedding model - fixed vectors plus approximate nearest-neighbour search; no generation. (b) Decoder-only instruct model with RAG - open-ended generation grounded in documents. (c) Either a small encoder-decoder translation model (cheap, strong for a fixed task) or a small decoder-only model; measure quality per dollar on a sample. (d) Encoder token classifier (NER-style) - per-token labels with bidirectional context, fast and cheap.
+- title: Total vs active parameters
+  task: |
+    A MoE layer has 64 experts, each an FFN with d_model = 4096 and d_ffn = 1408 (SwiGLU), and routes each token to 6 experts plus 2 always-on shared experts. Compute the FFN parameters per layer in total and active per token.
+  solution: |
+    Each expert: 3 × 4096 × 1408 ≈ 17.3M parameters. Total per layer: (64 + 2) × 17.3M ≈ 1.14B. Active per token: (6 + 2) × 17.3M ≈ 138M - about 12% of the layer's FFN parameters, which is the compute saving; memory must still hold all 1.14B.
+```
+
+## References
+
+- Devlin et al., [BERT](https://arxiv.org/abs/1810.04805) (2019)
+- Raffel et al., [Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer (T5)](https://arxiv.org/abs/1910.10683) (2020)
+- Lewis et al., [BART](https://arxiv.org/abs/1910.13461) (2020)
+- Brown et al., [Language Models are Few-Shot Learners (GPT-3)](https://arxiv.org/abs/2005.14165) (2020)
+- Fedus et al., [Switch Transformers](https://arxiv.org/abs/2101.03961) (2022); Jiang et al., [Mixtral of Experts](https://arxiv.org/abs/2401.04088) (2024)
+- Liu et al., [Visual Instruction Tuning (LLaVA)](https://arxiv.org/abs/2304.08485) (2023)
+- LCM team (Meta), [Large Concept Models](https://arxiv.org/abs/2412.08821) (2024)
+
+*Last reviewed: 2026-09*

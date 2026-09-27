@@ -1,5 +1,17 @@
 # Failure Modes and Tricky Issues
 
+LLMs fail in characteristic, predictable ways - forgetting after fine-tuning, missing information in the middle of long contexts, stating falsehoods confidently, agreeing with users, looping, and tripping over tokenization. Knowing the mechanism behind each failure tells you which mitigation can work and which is wishful thinking.
+
+```objectives
+time: 45 min
+outcomes:
+  - Explain the mechanism behind catastrophic forgetting, lost-in-the-middle, hallucination, sycophancy, repetition and tokenization artifacts
+  - Choose mitigations that address the mechanism (e.g. data mixing and LoRA for forgetting, grounding and abstention for hallucination, tools for arithmetic)
+  - Design a small experiment that measures one of these failures on your own model or prompt
+prerequisites:
+  - "[LLM Fundamentals](01-LLM-Fundamentals.mdx) and [Attention Mechanisms](03-Attention-Mechanisms.mdx)"
+```
+
 ## Catastrophic Forgetting
 
 ### Concept
@@ -12,7 +24,7 @@ Catastrophic forgetting occurs when fine-tuning on a new task causes the model t
 - Gradients from task B overwrite the configuration that enabled task A competence
 - Result: the model becomes specialized in task B but degraded on task A
 
-**Concrete example:**
+**Illustrative example:**
 ```
 Base model: GPT-2 (good at general text generation)
 Fine-tune on: Medical QA dataset
@@ -75,7 +87,7 @@ Simple but requires access to the original training data - often not available f
 2. Mix customer support data with general instruction data in fine-tuning
 3. Reduce learning rate and number of epochs
 4. Add EWC regularization if willing to compute Fisher information
-5. Use DPO on preference pairs instead of full SFT
+5. Measure it: evaluate a general benchmark suite before and after, per checkpoint, and pick the checkpoint with the best trade-off
 
 ---
 
@@ -86,7 +98,7 @@ Simple but requires access to the original training data - often not available f
 Liu et al. (2023) demonstrated a systematic failure of LLMs on long-context tasks: **performance degrades for information placed in the middle of long contexts**, even when the model has a sufficient context window to process it.
 
 **The effect:**
-Context: `[Doc 1] [Doc 2] [Doc 3] ... [Doc 15] [Doc 16] [Doc 17]` - key info placed in Doc 9 (middle):
+Context: `[Doc 1] [Doc 2] [Doc 3] ... [Doc 15] [Doc 16] [Doc 17]` - key info placed in Doc 9 (middle). The chart shows the shape of Liu et al.'s results (a U-curve); the numbers are illustrative:
 
 ```mermaid
 xychart-beta
@@ -111,7 +123,7 @@ The model shows primacy bias (start) and recency bias (end) - both ends of the c
 **Mitigations:**
 1. **Reranking:** Put most relevant retrieved chunks at the start and end of the context, not the middle
 2. **Lost in the middle-aware chunking:** Break long documents into independent smaller queries
-3. **Re-reading prompts:** "Read this document twice: [doc]" - empirically helps in some evaluations
+3. **Put the question after the documents** and restate key instructions at the end, so the task sits in the well-attended recent context
 4. **Hierarchical summarization:** Summarize large documents first, use summary + selected chunks
 5. **Long-context training:** models trained with long-context data and positional scaling degrade less in the middle, but the positional bias does not disappear. (FlashAttention changes speed and memory, not which tokens the model attends to, so it is not a mitigation.)
 
@@ -167,7 +179,7 @@ Sycophantic model: "You raise an interesting point! The Earth's age is indeed de
 Correct model: "The Earth is approximately 4.5 billion years old based on radiometric dating..."
 ```
 
-**Root cause - RLHF feedback loop:**
+**Root cause - RLHF feedback loop** (Sharma et al., 2023 found human and preference-model judgements favour sycophantic responses a meaningful fraction of the time):
 1. Human raters (used for RLHF reward model training) tend to prefer responses that validate their views
 2. The reward model learns to score agreeable responses higher
 3. PPO optimizes for high reward → model learns to be agreeable
@@ -197,11 +209,8 @@ As a prompt approaches the model's context window limit, performance degrades - 
 1. **Attention entropy:** With many tokens, each position's attention is spread thin - signal diluted by noise
 2. **Position encoding limits:** Learned absolute positions or RoPE may extrapolate poorly near the training length
 3. **Memory concentration:** The model may "forget" early context when recent context is very long
-4. **Computational precision:** Floating-point operations accumulate small errors across many attention steps
 
-**Practical thresholds (rough guidance):**
-- Models reliably handle the first 50–70% of their stated context window well
-- Performance noticeably degrades in the last 20–30% of the window
+**Practical thresholds:** there is no universal number. Benchmarks such as RULER show many models' effective context - where they still pass harder retrieval and aggregation tasks - is well below the advertised window, and the gap varies by model. A common working heuristic is to keep prompts well under the limit (for example under ~70%) and to measure your own task at the lengths you use.
 - Exception: models explicitly trained for long context (a dedicated long-context training stage with RoPE scaling, e.g. Llama 3.1's staged extension to 128K) are more reliable near the limit; measure with RULER-style tests rather than trusting the advertised window
 
 **Workarounds:**
@@ -228,7 +237,7 @@ Greedy decoding (temperature=0) has a well-known failure mode: **degeneration lo
 - Appears in code generation when a pattern of code repeats itself
 
 **Mitigations:**
-- `repetition_penalty > 1.0`: divides logits of already-seen tokens before softmax
+- `repetition_penalty > 1.0`: lowers the logits of already-seen tokens (divides positive logits, multiplies negative ones)
 - `no_repeat_ngram_size=3`: prevents any 3-gram from appearing twice
 - Sampling (temperature > 0): breaks deterministic attractors
 - Length penalty: penalize sequences that are extremely long (may indicate looping)
@@ -242,16 +251,16 @@ Greedy decoding (temperature=0) has a well-known failure mode: **degeneration lo
 The way text tokenizes creates systematic model failures that are easy to overlook.
 
 **Number tokenization:**
-- "9.11" tokenizes as `["9", ".", "1", "1"]` and "9.9" as `["9", ".", "9"]`
-- The model sees sequences of digit tokens, not numbers - it must reason about digit sequences to compare values
+- With OpenAI's tokenizers "9.11" tokenizes as `["9", ".", "11"]` and "9.9" as `["9", ".", "9"]` (digits are grouped in runs of up to three; some other tokenizers split every digit)
+- The model sees token sequences, not numbers - and "11" vs "9" invites the wrong comparison
 - This is why "9.11 > 9.9 - true or false?" is a known failure mode
 
 **Currency and numbers:**
-- "$1,000,000" might tokenize as `["$", "1", ",", "000", ",", "000"]`
+- "$1,000,000" tokenizes as `["$", "1", ",", "000", ",", "000"]` with `o200k_base`
 - The model doesn't natively "see" this as one million dollars
 
 **Cross-token word completion:**
-- "ChatGPT" might tokenize as `["Chat", "G", "PT"]`
+- "ChatGPT" tokenizes as `["Chat", "G", "PT"]` with GPT-4's `cl100k_base` (and `["Chat", "GPT"]` with `o200k_base`)
 - Asking "spell ChatGPT letter by letter" requires the model to decompose the token sequence into individual letters - non-trivial
 
 **Case and punctuation sensitivity:**
@@ -276,7 +285,6 @@ When providing few-shot examples, models exhibit bias toward the **label distrib
 - Randomize example order across requests
 - Balance labels across few-shot examples
 - Use calibration: collect P(label) over neutral inputs and subtract from scored inputs
-- Chain-of-thought: asking for reasoning before the label reduces position sensitivity
 
 ---
 
@@ -290,9 +298,56 @@ When providing few-shot examples, models exhibit bias toward the **label distrib
 - Greedy decoding → repetition loops → use sampling + repetition_penalty
 - Number tokenization → arithmetic failures → use Python tools for computation
 
-**Quick recall Q&A:**
-- *What is catastrophic forgetting and how does LoRA reduce it?* Fine-tuning overwrites general capabilities by updating all weights. LoRA freezes the base weights and trains a low-rank delta, so it forgets less than full fine-tuning - but not zero, because the served model is W_0 + BA.
-- *Why does lost-in-the-middle happen?* Attention concentrates on beginning (primacy) and recent (recency) tokens; middle positions receive diluted attention.
-- *Why does RLHF cause sycophancy?* Human raters prefer agreeable responses → reward model scores them higher → PPO optimizes for agreement → model learns to be sycophantic.
-- *What is intrinsic hallucination?* A response that contradicts the provided source context - the model generates facts that conflict with what's in the prompt.
-- *How do you debug "my model keeps repeating itself"?* Use sampling (temperature > 0), set `repetition_penalty=1.2`, or `no_repeat_ngram_size=3` to break attractor loops.
+## Check Yourself
+
+```quiz
+- q: "Why does LoRA reduce catastrophic forgetting without eliminating it?"
+  options:
+    - "The base weights are frozen and the update is low-rank, limiting drift - but the served model W0 + BA still behaves differently on general tasks"
+    - "LoRA trains on less data"
+    - "LoRA uses a lower learning rate by definition"
+    - "LoRA never changes the model's outputs"
+  answer: 1
+- q: "Retrieved context contains the answer, but it sits in the middle of 20 documents and the model misses it. Which fix addresses the mechanism?"
+  options:
+    - "Rerank so the most relevant documents come first or last, retrieve fewer, and put the question after the documents"
+    - "Raise the temperature"
+    - "Use a model with a larger context window"
+    - "Enable FlashAttention"
+  answer: 1
+- q: "A user pushes back on a correct answer and the model changes its answer to agree. What is this, and where does it come from?"
+  answer: "Sycophancy (authority capitulation). Preference training rewards responses that humans rate highly, and raters and reward models sometimes prefer agreement over correctness, so the model learns to defer to the user."
+- q: "Which is the reliable fix for arithmetic and exact string operations?"
+  options: ["Call a tool (code interpreter, calculator)", "Lower the temperature", "Longer prompts", "More few-shot examples"]
+  answer: 1
+- q: "Why is the intrinsic vs extrinsic distinction useful when evaluating a RAG system?"
+  answer: "Intrinsic hallucinations contradict the retrieved context and point to a reading or faithfulness problem; extrinsic ones add unsupported facts and point to the model filling gaps from its parameters - different fixes (better context use and citations vs abstention and grounding checks)."
+```
+
+## Exercises
+
+```exercise
+- title: Reproduce lost-in-the-middle
+  task: |
+    Build 50 questions, each with 20 short passages of which exactly one contains the answer. Place the answer passage at positions 1, 5, 10, 15 and 20 and measure exact-match accuracy per position for a model you use. Then add a reranking step that moves the best-scoring passage to position 1.
+  solution: |
+    Expect a U-shaped curve for many models - higher accuracy at the start and end than in the middle - though strong recent models are flatter. Reranking to position 1 recovers most of the middle-position loss. Report accuracy per position with confidence intervals; 50 questions per position gives roughly ±14 points at 50% accuracy, so use more if the differences are small.
+- title: Measure forgetting
+  task: |
+    Fine-tune a small instruct model on a narrow dataset twice - once with full fine-tuning and once with LoRA - and evaluate both on the narrow task and on a general benchmark (for example a few hundred MMLU or HellaSwag items) before and after. Then retrain the full fine-tune with 20% general instruction data mixed in.
+  solution: |
+    Typically full fine-tuning gains the most on the narrow task and loses the most on the general benchmark; LoRA gains somewhat less and forgets less; mixing general data recovers much of the general score. The exercise makes the trade-off concrete and gives you the evaluation harness to check any future fine-tune.
+```
+
+## References
+
+- Kirkpatrick et al., [Overcoming Catastrophic Forgetting in Neural Networks (EWC)](https://arxiv.org/abs/1612.00796) (2017)
+- Biderman et al., [LoRA Learns Less and Forgets Less](https://arxiv.org/abs/2405.09673) (2024)
+- Liu et al., [Lost in the Middle](https://arxiv.org/abs/2307.03172) (2023)
+- Hsieh et al., [RULER: What's the Real Context Size of Your Long-Context Language Models?](https://arxiv.org/abs/2404.06654) (2024)
+- Ji et al., [Survey of Hallucination in Natural Language Generation](https://arxiv.org/abs/2202.03629) (2023)
+- Sharma et al., [Towards Understanding Sycophancy in Language Models](https://arxiv.org/abs/2310.13548) (2023)
+- Holtzman et al., [The Curious Case of Neural Text Degeneration](https://arxiv.org/abs/1904.09751) (2020)
+- Zhao et al., [Calibrate Before Use: Improving Few-Shot Performance of Language Models](https://arxiv.org/abs/2102.09690) (2021)
+
+*Last reviewed: 2026-09*

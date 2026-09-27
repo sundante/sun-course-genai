@@ -1,5 +1,19 @@
 # LLM Fundamentals
 
+A large language model is a neural network trained to predict the next token of text; everything it does - answering, summarising, coding, reasoning - is built on repeated next-token prediction. This chapter covers the working vocabulary you need before the architecture: tokens, context windows, sampling, the main model types, and open versus proprietary models.
+
+```objectives
+time: 45 min
+outcomes:
+  - Explain what an LLM computes and why autoregressive generation is sequential
+  - Estimate token counts and predict tokenization failures (letter counting, number comparison) for a given tokenizer
+  - Explain what limits a context window - quadratic attention compute, linear KV-cache memory, trained length - and why quality degrades before the limit
+  - Choose sampling parameters (temperature, top-p, top-k, repetition penalty) for a task and explain what each does to the distribution
+  - Compare open-weight and proprietary models for a deployment scenario
+prerequisites:
+  - "Basic Python and probability (softmax, sampling)"
+```
+
 ## What Is a Large Language Model
 
 <div class="audience-biz" markdown="1">
@@ -86,16 +100,16 @@ LLMs operate on **tokens** - subword units produced by a tokenizer - not charact
 - English text: ~1 token ≈ 4 characters ≈ 0.75 words
 - Code: more tokens per line (brackets, indentation, symbols are expensive)
 - Non-Latin scripts (Chinese, Arabic): often 1–3 characters per token (less efficient)
-- Numbers: each digit is often a separate token - source of arithmetic failures
+- Numbers: tokenizers split them inconsistently - OpenAI's tokenizers group digits in runs of up to three, some others (e.g. Llama 2) split every digit - a source of arithmetic failures
 
 **Why tokenization causes reasoning failures:**
-- "9.11 > 9.9": the model sees `["9", ".", "1", "1"]` and `["9", ".", "9"]` as token sequences, not numbers - it cannot easily do digit-wise comparison
+- "9.11 > 9.9": OpenAI's tokenizers produce `["9", ".", "11"]` and `["9", ".", "9"]` - the model compares token sequences, not numbers, and "11" looks bigger than "9"
 - "50,000" vs "50000" may tokenize differently, causing inconsistency
 - Words split across tokens can confuse rhyming and spelling tasks
 
 **Token boundary quiz (common interview trap):**
 - Q: *How many tokens is "ChatGPT is great"?*  
-  A: 5 tokens: `["Chat", "G", "PT", " is", " great"]` - "ChatGPT" splits because it was rare at training time
+  A: It depends on the tokenizer. GPT-4's `cl100k_base` gives 5 tokens (`["Chat", "G", "PT", " is", " great"]`) - "ChatGPT" was rare in its training data; the newer `o200k_base` gives 4 (`["Chat", "GPT", " is", " great"]`). Always count with the model's own tokenizer.
 
 ### Code
 
@@ -114,7 +128,7 @@ print(f"Tokens: {[enc.decode([t]) for t in tokens]}")
 number_text = "Is 9.11 greater than 9.9?"
 print(f"\n'{number_text}'")
 print(f"Tokens: {[enc.decode([t]) for t in enc.encode(number_text)]}")
-# Output shows digits tokenized individually
+# Output: ['Is', ' ', '9', '.', '11', ' greater', ' than', ' ', '9', '.', '9', '?'] - digits grouped, not numbers
 
 # Compare across model families
 llama_tok = AutoTokenizer.from_pretrained("meta-llama/Llama-3.2-1B")
@@ -147,12 +161,12 @@ Context window sizes vary widely - from a few thousand words (small chatbots) to
 
 ### Concept
 
-The context window is the maximum number of tokens an LLM can process in a single forward pass - input + output combined. It is a hard architectural limit.
+The context window is the maximum number of tokens an LLM can attend to in one request - input and output combined. It is set by how the model was trained and configured, and enforced by the serving stack.
 
 **Why context windows are bounded:**
-- Self-attention computes pairwise relationships between every pair of tokens: **O(n²) memory and compute**
-- A 128K-token context requires 128K × 128K = 16.4 billion attention weight computations per layer
-- This is why extending context is expensive; Flash Attention and architectural tricks mitigate but don't eliminate this
+- **Compute:** self-attention scores every pair of tokens, so prefill compute grows as **O(n²)** - a 128K-token prompt means 128K × 128K ≈ 16.4 billion query-key scores per head per layer
+- **Memory:** the KV cache grows **linearly** with context (O(n) per sequence) and dominates GPU memory at long lengths; FlashAttention removes the O(n²) attention *memory* but not the O(n²) compute
+- **Quality:** models only generalise reliably to lengths they were trained on; extending context needs position-encoding changes (RoPE scaling) plus long-context training
 
 **How context windows grew (for current numbers see the [Model Landscape](07-Model-Landscape.mdx)):**
 
@@ -252,7 +266,7 @@ P(token_i) = softmax(logits / T)[i]
 | 1.5–2.0 | Very random, often incoherent | Brainstorming, diversity sampling |
 
 **Tricky Q:** *Is temperature=0 identical to greedy decoding?*  
-Mathematically yes - as T→0, softmax concentrates all mass on the argmax. In practice, `temperature=0` in most APIs is implemented as `argmax`, producing deterministic results. True floating-point `softmax(logits/0)` would divide by zero.
+Mathematically yes - as T→0, softmax concentrates all mass on the argmax, and implementations special-case `temperature=0` as `argmax` (literal `softmax(logits/0)` would divide by zero). But it is **not guaranteed to be deterministic** in practice: batched GPU inference changes floating-point reduction order with batch composition, so near-tied logits can flip between runs (see [Prompt Fundamentals](../../10-Prompt-Engineering/Notes/01-Prompt-Fundamentals.mdx)).
 
 **Top-p (Nucleus Sampling):** Consider only the smallest set of tokens whose cumulative probability ≥ `p`, then renormalize and sample from that nucleus.
 
@@ -266,11 +280,13 @@ Top-p adapts: when the model is confident (peaked distribution), the nucleus is 
 
 **Top-k:** Restrict to the `k` highest-probability tokens before sampling. Less adaptive than top-p.
 
-**Repetition penalty:** Divides the logit of tokens that have already appeared:
+**Repetition penalty:** lowers the score of tokens that have already appeared (the CTRL formulation, as implemented in Hugging Face):
 ```
-logit[token] /= repetition_penalty  (if token appeared before)
+if token appeared before:
+    logit[token] = logit[token] / penalty   if logit > 0
+                   logit[token] * penalty   if logit < 0
 ```
-Values > 1.0 penalize repetition. Without this, greedy decoding often collapses into loops.
+Values > 1.0 penalize repetition. Without it (or sampling), greedy decoding often collapses into loops. API providers expose related `frequency_penalty` / `presence_penalty` parameters that subtract from logits instead.
 
 | Parameter | Effect | Typical Range |
 |-----------|--------|---------------|
@@ -364,7 +380,7 @@ Full architecture deep dive: see [Transformer Architecture](02-Architecture.mdx)
 
 **Choose proprietary when:**
 - Rapid prototyping where GPU ops is not your core competency
-- Tasks requiring frontier-quality reasoning (frontier open models are ~6–12 months behind)
+- Tasks requiring frontier-quality reasoning (the best open-weight models have typically trailed the top closed models by some months on public benchmarks)
 - Low-volume usage where managed reliability > cost optimization
 - Multimodal tasks (vision, audio) where open models still lag
 
@@ -375,14 +391,58 @@ Full architecture deep dive: see [Transformer Architecture](02-Architecture.mdx)
 **Must-know for interviews:**
 - LLM = next-token predictor; all capabilities emerge from this at scale
 - ~1 token ≈ 4 characters / 0.75 words in English; code and non-Latin scripts use more tokens
-- Context window = hard O(n²) limit; large windows exist but quality degrades in the middle
-- Temperature=0 ≈ greedy; top-p nucleus sampling is preferred for creative tasks
+- Context window = trained limit on tokens attended per request; attention compute is O(n²), KV-cache memory O(n); quality degrades well before the limit
+- Temperature=0 ≈ greedy but not guaranteed deterministic; top-p nucleus sampling adapts to the model's confidence
 - Three architecture types: decoder-only (dominant, generative), encoder-only (BERT, classification), encoder-decoder (seq2seq)
 - Open source = data control + cost at scale; proprietary = ops simplicity + frontier capability
 
-**Quick recall Q&A:**
-- *What does temperature=0 produce?* Deterministic greedy output - always the highest-probability next token.
-- *Why can't LLMs reliably do arithmetic?* Digits tokenize individually; no native integer arithmetic, only learned statistical patterns over digit sequences.
-- *What limits context window size?* Attention is O(n²) - quadratic memory and compute in sequence length.
-- *What is a token?* A subword unit produced by BPE/SentencePiece; typically 3–5 characters in English.
-- *Why did decoder-only win?* Unified CLM objective, natural generation, instruction fine-tuning works well, scales with emergent in-context learning.
+## Check Yourself
+
+```quiz
+- q: "With OpenAI's o200k_base tokenizer, how is \"9.11\" split?"
+  options: ["9 . 11", "9 . 1 1", "9.11 as one token", "9. 11"]
+  answer: 1
+  explain: "Digits are grouped in runs of up to three, so the model sees the tokens 9, . and 11 - and 11 looks bigger than 9, one reason for the classic 9.11 vs 9.9 error."
+- q: "A 128K-context model receives a 100K-token prompt. What is the most it can generate?"
+  options: ["About 28K tokens", "128K tokens", "Unlimited, the window slides", "100K tokens"]
+  answer: 1
+  explain: "Input and output share the window."
+- q: "What does FlashAttention change about long-context cost?"
+  options:
+    - "Attention memory becomes linear in length; compute stays quadratic"
+    - "Compute becomes linear"
+    - "It removes the KV cache"
+    - "It extends the trained context length"
+  answer: 1
+- q: "Why might two identical requests at temperature 0 return different text?"
+  answer: "Batched GPU inference changes floating-point reduction order depending on what else is in the batch, so near-tied logits can flip; temperature 0 means argmax, not bitwise reproducibility."
+- q: "When does top-p (nucleus) sampling keep only a few candidate tokens?"
+  answer: "When the model is confident: a peaked distribution reaches the cumulative threshold p with very few tokens; a flat distribution needs many."
+```
+
+## Exercises
+
+```exercise
+- title: Count tokens across tokenizers
+  task: |
+    Tokenize the same 1,000-word English article, a 200-line Python file and a paragraph of Chinese text with `cl100k_base`, `o200k_base` and a Llama 3 tokenizer. Report tokens per word (English), tokens per line (code) and tokens per character (Chinese). What would the price difference be for 1M such documents at $3 per million input tokens?
+  hints: ["tiktoken for the OpenAI encodings; transformers AutoTokenizer for Llama"]
+  solution: |
+    Expect roughly 1.3 tokens per English word, noticeably more per line for code (whitespace and symbols), and roughly one token per one to two Chinese characters, with newer large-vocabulary tokenizers (o200k, Llama 3's 128K vocabulary) using fewer tokens than cl100k for non-English text. Multiply tokens per document by 1M and by $3/1M - the tokenizer choice alone can change the bill by tens of percent for non-English corpora.
+- title: Sampling by hand
+  task: |
+    Logits for five tokens are [2.0, 1.0, 0.5, 0.0, -1.0]. Compute the probabilities at temperature 1.0 and 0.5, then the top-p = 0.9 nucleus at temperature 1.0.
+  solution: |
+    T=1: the exp values are 7.39, 2.72, 1.65, 1.00, 0.37 (total 13.12), giving [0.563, 0.207, 0.126, 0.076, 0.028]. T=0.5 doubles the logits: exp values 54.6, 7.39, 2.72, 1.00, 0.14 (total 65.84) -> [0.829, 0.112, 0.041, 0.015, 0.002] - much sharper. Top-p 0.9 at T=1: cumulative 0.563, 0.770, 0.896, 0.972 -> the nucleus is the first four tokens (0.896 < 0.9, so the fourth is needed), renormalised over 0.972.
+```
+
+## References
+
+- Sennrich et al., [Neural Machine Translation of Rare Words with Subword Units (BPE)](https://arxiv.org/abs/1508.07909) (2016)
+- Radford et al., [Language Models are Unsupervised Multitask Learners (GPT-2)](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf) (2019)
+- Holtzman et al., [The Curious Case of Neural Text Degeneration (nucleus sampling)](https://arxiv.org/abs/1904.09751) (2020)
+- Keskar et al., [CTRL: A Conditional Transformer Language Model (repetition penalty)](https://arxiv.org/abs/1909.05858) (2019)
+- Liu et al., [Lost in the Middle](https://arxiv.org/abs/2307.03172) (2023)
+- [tiktoken](https://github.com/openai/tiktoken) (2026)
+
+*Last reviewed: 2026-09*

@@ -1,5 +1,18 @@
 # Attention Mechanisms
 
+Attention lets every token build its representation from a weighted mix of the other tokens' information, with weights computed from how well its query matches their keys. This chapter derives scaled dot-product and multi-head attention, the causal mask, the quadratic cost, and the variants that make attention affordable at scale - FlashAttention, grouped-query attention and sliding windows.
+
+```objectives
+time: 50 min
+outcomes:
+  - Compute scaled dot-product attention by hand and explain the √d_k scaling from the variance of the dot product
+  - Explain how causal masking allows parallel training of an autoregressive model
+  - Estimate attention compute and memory for a sequence length, and explain what FlashAttention changes (memory and IO, not the math)
+  - Compare MHA, MQA and GQA by KV-cache size and quality, and compute the saving for a given head configuration
+prerequisites:
+  - "[Transformer Architecture](02-Architecture.mdx)"
+```
+
 ## Scaled Dot-Product Attention
 
 ### Concept
@@ -46,7 +59,7 @@ Input X: [seq_len, d_model]
 
 **Why scale by √d_k?**
 
-As d_k grows, the dot product Q·K grows in variance (its magnitude scales as √d_k for random vectors). Without scaling, large dot products push softmax into regions of extremely small gradients (near-zero everywhere except the argmax). Dividing by √d_k keeps the dot product variance at ~1, keeping softmax in its useful gradient range.
+If the components of q and k are independent with mean 0 and variance 1, their dot product has variance d_k (standard deviation √d_k). Without scaling, large dot products push softmax into regions of extremely small gradients (near-zero everywhere except the argmax). Dividing by √d_k keeps the dot product variance at ~1, keeping softmax in its useful gradient range.
 
 **Tricky Q:** *Why does large Q·K variance cause softmax to become "spiky"?*  
 Softmax is `exp(x_i) / Σ exp(x_j)`. With large magnitude differences, one term dominates the denominator exponentially - the distribution collapses to a one-hot. The gradient of softmax at this extreme is near-zero → training stalls.
@@ -90,7 +103,7 @@ Total per layer:     4 × d_model² ≈ 67M (for 4096)
 
 **Tricky Q:** *Why use separate projection matrices per head rather than just splitting the embedding dimension?*  
 
-Simply splitting d_model/h gives each head a different slice of the same embedding - the slices are not independent because the preceding LayerNorm and FFN computed them jointly. Separate W_Q/W_K/W_V projections allow each head to compute a **different linear transformation** of the full embedding, giving each head a genuinely different "view" of the input. This is the critical distinction.
+Splitting the raw embedding would restrict each head to d_model/h of the input features and give it no learned choice of what to compare. A learned projection lets each head compute its own linear transformation of the **full** embedding - its own notion of "similar" for queries and keys. (In code this is one d_model × d_model matrix per Q, K and V whose output is reshaped into h heads, which is mathematically the same as h separate projections of the full input.)
 
 ---
 
@@ -212,7 +225,7 @@ h heads × (d_k + d_v) × d_model = full KV memory
 ```
 1 shared K + 1 shared V - KV memory reduced by h×
 Quality trade-off: slightly worse, especially for complex tasks
-Used by: Falcon, some early efficient models
+Used by: PaLM, Falcon, Gemma 1 2B
 ```
 
 **Grouped-Query Attention (GQA):** G groups of heads, each group shares one K/V.
@@ -233,7 +246,7 @@ MQA:  [Q1 Q2 Q3 Q4  K  V ]                           (1 KV pair)
 |---------|--------------|---------|---------|
 | MHA | Full (h KV pairs) | Best | BERT, early GPT |
 | GQA | h/G KV pairs | Near-MHA | LLaMA-3, Gemma, Mistral |
-| MQA | 1 KV pair | Slightly lower | Falcon, Gemma-1 |
+| MQA | 1 KV pair | Slightly lower | PaLM, Falcon, Gemma 1 2B |
 
 ---
 
@@ -245,11 +258,11 @@ Instead of attending to all past tokens, each token attends only to the W neares
 
 ```
 Standard: token 100 attends to all 100 previous tokens
-Sliding:  token 100 attends only to tokens 95–100 (W=5)
+Sliding:  token 100 attends only to tokens 96–100 (W=5)
 After L layers: receptive field = L × W
 ```
 
-Mistral 7B uses W=4096 with a 32K context - each token's effective receptive field grows with depth. Reduces attention compute from O(n²) to O(n×W).
+Mistral 7B v0.1 used W=4096 with an 8K training context; across 32 layers the theoretical receptive field is about 131K tokens. Per-layer attention compute falls from O(n²) to O(n×W), and a rolling KV cache of W entries caps memory. Gemma 2 and 3 interleave sliding-window layers with global-attention layers.
 
 **Trade-off:** Cannot directly attend to distant context within a single layer. Works well for most generation tasks; less effective for tasks requiring precise recall of distant facts.
 
@@ -270,10 +283,10 @@ def scaled_dot_product_attention(Q, K, V, mask=None):
     V: [batch, heads, seq, d_v]
     """
     d_k = Q.shape[-1]
-    scores = np.matmul(Q, K.transpose(-2, -1)) / np.sqrt(d_k)
+    scores = np.matmul(Q, np.swapaxes(K, -2, -1)) / np.sqrt(d_k)
 
-    if mask is not None:
-        scores = np.where(mask == 0, scores, -1e9)
+    if mask is not None:                    # mask is True where attention is NOT allowed
+        scores = np.where(mask, -1e9, scores)
 
     weights = np.exp(scores - scores.max(axis=-1, keepdims=True))
     weights /= weights.sum(axis=-1, keepdims=True)  # softmax
@@ -287,7 +300,7 @@ Q = np.random.randn(1, 1, seq_len, d_k)
 K = np.random.randn(1, 1, seq_len, d_k)
 V = np.random.randn(1, 1, seq_len, d_v)
 
-# Causal mask (lower triangular)
+# Causal mask: True above the diagonal = future positions, which are blocked
 causal_mask = np.triu(np.ones((seq_len, seq_len)), k=1).astype(bool)
 
 output, weights = scaled_dot_product_attention(Q, K, V, mask=causal_mask)
@@ -319,12 +332,60 @@ print(f"\nFlash Attention output shape: {output_flash.shape}")
 - Scale by √d_k to prevent softmax from collapsing to one-hot with large dot products
 - Multi-head attention: different projection matrices per head give genuinely different "views," not just embedding slices
 - Causal masking sets future positions to -inf before softmax → enables parallel training of autoregressive models
-- Standard attention is O(n²) memory and compute - Flash Attention achieves same result in O(n) memory via SRAM tiling
+- Standard attention is O(n²) memory and compute - FlashAttention computes the same result in O(n) memory via SRAM tiling (compute stays O(n²))
 - GQA (Grouped-Query) shares K/V across head groups - standard in LLaMA-3, Gemma, Mistral for KV cache efficiency
+- Mixture-of-experts and multi-head latent attention (MLA), which compresses the KV cache further, are covered in [Modern Architectures](05-Modern-Architectures.mdx)
 
-**Quick recall Q&A:**
-- *Why does multi-head attention use separate W_Q/W_K/W_V per head?* To give each head a different linear projection of the full embedding, not just a slice - independent "views" of the input.
-- *What does Flash Attention optimize?* IO between GPU HBM and SRAM - not the math, just where it happens. Same output, O(n) memory.
-- *What is GQA?* Grouped-Query Attention - G groups of heads share K/V projections, reducing KV cache by h/G× with minimal quality loss.
-- *What does the causal mask do during training?* Forces position i to predict from only positions 0..i-1, while still processing the full sequence in parallel.
-- *Why scale Q·K by √d_k and not d_k?* The standard deviation of the dot product of two random d_k-dimensional unit vectors grows as √d_k, so dividing by √d_k normalizes variance to 1.
+## Check Yourself
+
+```quiz
+- q: "Why divide Q·Kᵀ by √d_k?"
+  options:
+    - "With unit-variance components the dot product has variance d_k; scaling restores variance ~1 so softmax doesn't saturate"
+    - "To make attention weights sum to 1"
+    - "To reduce memory use"
+    - "Because keys are unit vectors"
+  answer: 1
+- q: "In a causal decoder, which positions can token i attend to?"
+  options: ["Positions 0 to i, including itself", "Positions 0 to i-1 only", "All positions", "Only position i-1"]
+  answer: 1
+  explain: "It attends to itself and earlier tokens, and its output is used to predict token i+1."
+- q: "A model has 32 query heads and 8 KV heads (GQA). How much smaller is its KV cache than with full MHA?"
+  options: ["4×", "8×", "32×", "No smaller"]
+  answer: 1
+- q: "What does FlashAttention change?"
+  options:
+    - "It tiles the computation in on-chip SRAM so the n×n matrix never goes to HBM - same result, O(n) memory, less IO"
+    - "It approximates attention with low-rank matrices"
+    - "It reduces attention compute to O(n)"
+    - "It removes the softmax"
+  answer: 1
+- q: "Why can causal masking train on every position of a sequence in one forward pass?"
+  answer: "The mask stops each position from seeing later tokens, so all next-token predictions are valid simultaneously - one pass yields n training targets, while generation must still produce tokens one at a time."
+```
+
+## Exercises
+
+```exercise
+- title: Attention by hand
+  task: |
+    Two tokens with q1 = [1, 0], q2 = [0, 1], k1 = [1, 0], k2 = [1, 1], v1 = [1, 0], v2 = [0, 1], d_k = 2, causal mask. Compute the attention weights and outputs for both tokens.
+  solution: |
+    Token 1 can only attend to itself: weight 1, output v1 = [1, 0]. Token 2: scores q2·k1/√2 = 0 and q2·k2/√2 = 0.707; softmax of [0, 0.707] = [0.330, 0.670]; output = 0.330·[1,0] + 0.670·[0,1] = [0.330, 0.670].
+- title: Measure the quadratic wall
+  task: |
+    Time `F.scaled_dot_product_attention` for sequence lengths 1K, 2K, 4K, 8K and 16K on your GPU with the math backend and the flash (or efficient) backend. Plot time and peak memory against length on log-log axes.
+  hints: ["torch.cuda.max_memory_allocated() after torch.cuda.reset_peak_memory_stats()"]
+  solution: |
+    Both backends show time growing roughly 4× per doubling (O(n²) compute). Peak memory grows ~4× per doubling with the math backend (it materialises the n×n matrix) but ~2× with flash (O(n)), and the math backend runs out of memory first. The flash backend is also faster at long lengths because it avoids HBM round-trips.
+```
+
+## References
+
+- Vaswani et al., [Attention Is All You Need](https://arxiv.org/abs/1706.03762) (2017)
+- Dao et al., [FlashAttention](https://arxiv.org/abs/2205.14135) (2022); Dao, [FlashAttention-2](https://arxiv.org/abs/2307.08691) (2023); Shah et al., [FlashAttention-3](https://arxiv.org/abs/2407.08608) (2024)
+- Shazeer, [Fast Transformer Decoding: One Write-Head is All You Need (MQA)](https://arxiv.org/abs/1911.02150) (2019)
+- Ainslie et al., [GQA: Training Generalized Multi-Query Transformer Models](https://arxiv.org/abs/2305.13245) (2023)
+- Jiang et al., [Mistral 7B](https://arxiv.org/abs/2310.06825) (2023)
+
+*Last reviewed: 2026-09*
