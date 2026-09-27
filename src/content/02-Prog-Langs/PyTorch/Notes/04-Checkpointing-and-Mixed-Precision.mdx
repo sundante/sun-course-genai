@@ -4,6 +4,17 @@
 
 **Checkpointing** saves a model's (and optimizer's) state to disk so training can be paused and resumed exactly where it left off, while **mixed precision** trains using a mix of 16-bit and 32-bit floating point numbers to cut memory usage and speed up training with minimal accuracy loss.
 
+```objectives
+time: 40 min
+outcomes:
+  - Save and restore a fully resumable checkpoint (model, optimizer, scheduler, epoch, RNG state)
+  - Explain what autocast runs in reduced precision and what it keeps in float32
+  - Use GradScaler correctly for float16 and explain why bfloat16 usually doesn't need it
+  - Estimate the memory saved by mixed precision for a model
+prerequisites:
+  - "[Training Loop From Scratch](03-Training-Loop-From-Scratch.mdx)"
+```
+
 <div class="audience-biz" markdown="1">
 
 Checkpointing is like a video game save file for a model - if training crashes after 8 hours, or you just want to try the model as it stood at epoch 20, you can load that exact save point instead of starting over. Mixed precision is like using a smaller, faster notepad for most calculations while keeping a full-size notepad only for the parts where precision really matters - it lets you train bigger models faster on the same GPU without meaningfully hurting accuracy.
@@ -83,6 +94,8 @@ for epoch in range(start_epoch, num_epochs):
 
 `torch.save(model.state_dict(), ...)` is preferred over `torch.save(model, ...)` (pickling the whole object) because it's robust to refactors in the model's class definition, doesn't tie the checkpoint to exact file paths/class locations, and is the portable format expected by most downstream tooling. Always pass `map_location=device` when loading, so a checkpoint saved on GPU can still be loaded on a CPU-only machine.
 
+**Loading safely:** since PyTorch 2.6, `torch.load` defaults to `weights_only=True`, which refuses to unpickle arbitrary Python objects (pickles can execute code). Keep checkpoints to tensors and plain Python types - as above - and load untrusted weights only from `safetensors` files (see [PyTorch for LLMs](06-PyTorch-for-LLMs.mdx)).
+
 **Saving only the best model** (common pattern to avoid disk bloat from saving every epoch):
 
 ```python
@@ -146,14 +159,48 @@ Why this saves VRAM and speeds up training:
 - `GradScaler` prevents small gradients from underflowing to zero in `float16` by scaling the loss up before `backward()` and unscaling before `optimizer.step()`
 - Mixed precision roughly halves activation/gradient memory and speeds up compute on tensor-core GPUs, with minimal accuracy impact when done correctly
 
-**Q: Why save `model.state_dict()` instead of `torch.save(model, path)`?**
-A: `state_dict()` is just an ordered dict of tensor names to parameter/buffer values - portable across code refactors, Python versions, and even different (compatible) model implementations. Saving the whole model object pickles the class definition and file paths, which breaks if the source code changes even slightly.
+## Check Yourself
 
-**Q: What exactly does `GradScaler` do, step by step?**
-A: (1) Multiplies the loss by a scale factor before `.backward()`, so gradients throughout the network are scaled up proportionally and stay above `float16`'s minimum representable magnitude. (2) During `scaler.step(optimizer)`, it unscales the gradients back down before applying the optimizer update, and checks for `inf`/`NaN` values (which indicate the scale was too high) - skipping the step if found. (3) `scaler.update()` adjusts the scale factor up or down for the next iteration based on whether overflow was detected.
+```quiz
+- q: "Why does bfloat16 training usually not need a GradScaler?"
+  options: ["It has float32's exponent range, so small gradients don't underflow", "It has more mantissa bits than float16", "It is always computed in float32", "GradScaler doesn't support bfloat16"]
+  answer: 1
+- q: "Since PyTorch 2.6, what does torch.load do by default?"
+  options: ["Loads with weights_only=True, refusing arbitrary pickled objects", "Loads everything, including arbitrary Python objects", "Loads onto the CPU only", "Requires safetensors"]
+  answer: 1
+  explain: "weights_only=True blocks code execution from untrusted pickles; keep checkpoints to tensors and plain Python types, or use safetensors."
+- q: "Why save `model.state_dict()` instead of `torch.save(model, path)`?"
+  answer: "`state_dict()` is just an ordered dict of tensor names to parameter/buffer values - portable across code refactors, Python versions, and even different (compatible) model implementations. Saving the whole model object pickles the class definition and file paths, which breaks if the source code changes even slightly."
+- q: "What exactly does `GradScaler` do, step by step?"
+  answer: "(1) Multiplies the loss by a scale factor before `.backward()`, so gradients throughout the network are scaled up proportionally and stay above `float16`'s minimum representable magnitude. (2) During `scaler.step(optimizer)`, it unscales the gradients back down before applying the optimizer update, and checks for `inf`/`NaN` values (which indicate the scale was too high) - skipping the step if found. (3) `scaler.update()` adjusts the scale factor up or down for the next iteration based on whether overflow was detected."
+- q: "Why does `map_location=device` matter when loading a checkpoint?"
+  answer: "A checkpoint saved from a GPU tensor is serialized with its original device info. Without `map_location`, loading it on a machine without that same GPU (or a CPU-only machine) raises an error. Passing `map_location=device` (or `map_location=\"cpu\"`) tells PyTorch to remap all tensors to the target device during deserialization."
+- q: "Does mixed precision hurt model accuracy?"
+  answer: "In most cases, no - `autocast` keeps precision-sensitive operations (loss computation, normalization statistics, reductions) in `float32`, and `GradScaler` protects against gradient underflow. For most CNN/transformer training, final accuracy is statistically indistinguishable from full `float32` training, while training runs measurably faster and uses less memory."
+```
 
-**Q: Why does `map_location=device` matter when loading a checkpoint?**
-A: A checkpoint saved from a GPU tensor is serialized with its original device info. Without `map_location`, loading it on a machine without that same GPU (or a CPU-only machine) raises an error. Passing `map_location=device` (or `map_location="cpu"`) tells PyTorch to remap all tensors to the target device during deserialization.
+## Exercises
 
-**Q: Does mixed precision hurt model accuracy?**
-A: In most cases, no - `autocast` keeps precision-sensitive operations (loss computation, normalization statistics, reductions) in `float32`, and `GradScaler` protects against gradient underflow. For most CNN/transformer training, final accuracy is statistically indistinguishable from full `float32` training, while training runs measurably faster and uses less memory.
+```exercise
+- title: "Prove your checkpoint is resumable"
+  task: |
+    Train for 3 epochs, save a checkpoint, train 2 more epochs and record the losses. Then restart from the checkpoint in a fresh process and train 2 epochs. Make the two loss sequences match exactly.
+  hints: ["Save torch.get_rng_state(), torch.cuda.get_rng_state_all() and the DataLoader generator state, plus the scheduler state_dict"]
+  solution: |
+    Matching requires model, optimizer and scheduler state, the epoch, all RNG states (Python, NumPy, torch CPU and CUDA) and the sampler's generator; any missing piece changes shuffling or dropout masks and the curves diverge. Deterministic kernels (torch.use_deterministic_algorithms) may also be needed on GPU.
+- title: "Measure mixed precision"
+  task: |
+    Train the same model for 200 steps in float32, float16 with GradScaler, and bfloat16. Record peak memory (torch.cuda.max_memory_allocated), step time and final loss.
+  solution: |
+    Both 16-bit runs cut activation memory roughly in half and are faster on tensor-core GPUs; final losses are close. float16 without GradScaler may show gradients underflowing (loss stalls); bfloat16 trains stably without scaling.
+```
+
+## References
+
+- PyTorch documentation, [Automatic Mixed Precision package - torch.amp](https://docs.pytorch.org/docs/stable/amp.html) (2026)
+- PyTorch documentation, [torch.load (weights_only)](https://docs.pytorch.org/docs/stable/generated/torch.load.html) (2026)
+- PyTorch tutorials, [Saving and Loading Models](https://docs.pytorch.org/tutorials/beginner/saving_loading_models.html) (2026)
+- Micikevicius et al., [Mixed Precision Training](https://arxiv.org/abs/1710.03740) (2018)
+- Kalamkar et al., [A Study of BFLOAT16 for Deep Learning Training](https://arxiv.org/abs/1905.12322) (2019)
+
+*Last reviewed: 2026-09*

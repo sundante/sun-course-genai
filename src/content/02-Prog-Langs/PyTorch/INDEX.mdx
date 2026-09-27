@@ -1,16 +1,19 @@
 # 02 - PyTorch Fundamentals
 
-## What You Will Learn
+Tensors, autograd, data loading, the hand-written training loop, checkpointing, mixed precision and GPU-memory debugging - then the tools used to train LLMs (fused attention, `torch.compile`, bf16, DDP and FSDP2) and a small modern GPT built from scratch.
 
-- Tensor basics, `requires_grad`, and how the autograd computation graph is built and traversed
-- Why gradients accumulate by default and when to call `optimizer.zero_grad()`
-- Writing a custom `Dataset` (`__len__` / `__getitem__`) and configuring a `DataLoader` for batching, shuffling, and parallel loading
-- The canonical hand-written training loop: forward pass, loss, `backward()`, `optimizer.step()`, and the train/eval mode switch
-- Checkpointing model and optimizer state, resuming training, and using mixed precision (`torch.amp.autocast`, bf16, and `GradScaler` for fp16) to save VRAM and speed up training
-- Moving tensors between CPU/GPU, reading CUDA OOM errors, and debugging shape mismatches
-- The LLM toolkit: fused attention (SDPA, FlexAttention), `torch.compile`, bf16, `torchrun` with DDP and FSDP2, and safe/sharded checkpoints
-- Building and training a small modern GPT (RMSNorm, RoPE, GQA, SwiGLU) from scratch
-- Interview-ready answers on all PyTorch fundamentals topics with a dedicated Q&A bank
+```objectives
+scope: module
+time: 8-10 hours (notes + labs)
+outcomes:
+  - Build and debug a model in raw PyTorch - tensors, autograd, Dataset/DataLoader, the training and validation loop
+  - Checkpoint and resume training exactly, and train in mixed precision (bf16, or fp16 with GradScaler)
+  - Diagnose device, shape and out-of-memory errors and budget GPU memory for a training job
+  - Use the LLM toolkit - SDPA/FlexAttention, torch.compile, torchrun with DDP and FSDP2, safetensors and distributed checkpoints
+  - Build and train a small modern decoder (RMSNorm, RoPE, GQA, SwiGLU) from scratch
+prerequisites:
+  - "Python (classes, list comprehensions), NumPy, and basic calculus"
+```
 
 ## Chapter Map
 
@@ -22,7 +25,7 @@
 | 4 | [Checkpointing & Mixed Precision](Notes/04-Checkpointing-and-Mixed-Precision.mdx) | `state_dict()` save/load, resuming training, `autocast`, `GradScaler` | Intermediate |
 | 5 | [Debugging & GPU Memory](Notes/05-Debugging-and-GPU-Memory.mdx) | `.to(device)`, CUDA OOM errors, shape-mismatch debugging, `torch.cuda.memory_summary()` | Intermediate |
 | 6 | [PyTorch for LLMs](Notes/06-PyTorch-for-LLMs.mdx) | SDPA/FlexAttention, `torch.compile`, bf16, torchrun, DDP vs FSDP2, safetensors and distributed checkpoints, profiling and MFU | Advanced |
-| 7 | [Q&A Review Bank](Notes/07-Interview-QA-Bank.mdx) | 18 Q&A pairs across all topics | All levels |
+| 7 | [Q&A Review Bank](Notes/07-Interview-QA-Bank.mdx) | 29 Q&A pairs across all topics | All levels |
 
 ## Code Labs
 
@@ -43,7 +46,7 @@
 1. [Tensors & Autograd](Notes/01-Tensors-and-Autograd.mdx) - gradient accumulation and `.backward()` questions are very common
 2. [Training Loop From Scratch](Notes/03-Training-Loop-From-Scratch.mdx) - train/eval mode, why `zero_grad()` matters
 3. [Checkpointing & Mixed Precision](Notes/04-Checkpointing-and-Mixed-Precision.mdx) - AMP questions come up in production-focused interviews
-4. [Q&A Review Bank](Notes/07-Interview-QA-Bank.mdx) - drill all 18 questions
+4. [Q&A Review Bank](Notes/07-Interview-QA-Bank.mdx) - drill all 29 questions
 
 ### Path C: Production/Debugging Focus (Advanced)
 1. [Debugging & GPU Memory](Notes/05-Debugging-and-GPU-Memory.mdx) - CUDA OOM triage and shape-mismatch fixes
@@ -57,8 +60,8 @@
 
 ## Resources
 
-- [Q&A Review Bank](Notes/07-Interview-QA-Bank.mdx) - 18 Q&A pairs in this module
-- [Cross-topic Interview Questions](Notes/07-Interview-QA-Bank.mdx)
+- [Q&A Review Bank](Notes/07-Interview-QA-Bank.mdx) - 29 Q&A pairs in this module
+- [Module quiz](/quiz/prog-langs) - every *Check Yourself* question in this module
 - [Raw PyTorch Classifier Code Lab](CodeLabs/01-Raw-PyTorch-Classifier.mdx) - hands-on CNN trained end-to-end
 
 ## Key Cross-References

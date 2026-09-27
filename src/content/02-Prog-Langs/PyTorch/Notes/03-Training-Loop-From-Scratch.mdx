@@ -4,6 +4,17 @@
 
 The canonical PyTorch training loop is a hand-written `for epoch` / `for batch` nested loop that runs **forward pass → compute loss → `backward()` → `optimizer.step()` → `zero_grad()`** for every batch, with an explicit `model.eval()` pass over held-out data to track generalization.
 
+```objectives
+time: 35 min
+outcomes:
+  - Write the canonical training and validation loop and explain each step
+  - Explain exactly what model.train() and model.eval() change
+  - Compute correct epoch-level metrics when the last batch is smaller
+  - Detect overfitting from train and validation curves
+prerequisites:
+  - "[Dataset & DataLoader](02-Dataset-and-DataLoader.mdx)"
+```
+
 <div class="audience-biz" markdown="1">
 
 There's no hidden "train" button in PyTorch - you write the training loop yourself. That's intentional: it forces you to see exactly what happens on each pass through the data, which makes it much easier to debug when something goes wrong (loss not decreasing, model not learning, etc.). Once you've written it by hand a few times, wrapper libraries like `Trainer` classes make a lot more sense because you know what they're doing under the hood.
@@ -138,14 +149,43 @@ Forgetting `model.eval()` before validation/inference causes silently wrong resu
 - `model.eval()` changes `Dropout` (becomes identity) and `BatchNorm` (uses running stats instead of batch stats) - the two layers most commonly responsible for train/eval mismatch bugs
 - Track both train and validation loss per epoch to catch overfitting (train loss keeps falling, val loss starts rising)
 
-**Q: What's the single most common bug caused by forgetting `model.eval()`?**
-A: Inconsistent, seemingly-random evaluation metrics from run to run, because `Dropout` is still randomly zeroing activations and `BatchNorm` is computing statistics from whatever batch happens to be passed in - rather than using the stable running statistics accumulated during training.
+## Check Yourself
 
-**Q: Why is `optimizer.zero_grad()` called before `backward()` and not after `step()`?**
-A: Functionally either position works as long as it happens once per iteration before the next `backward()` call - the common convention is to call it at the top of the loop body so it's visually adjacent to the forward pass, making the loop easy to read top-to-bottom. What matters is that it happens exactly once per step, not the exact line position.
+```quiz
+- q: "Which two layer types change behaviour between model.train() and model.eval()?"
+  options: ["Dropout and BatchNorm", "Linear and Conv2d", "Embedding and LayerNorm", "ReLU and Softmax"]
+  answer: 1
+- q: "Training loss keeps falling while validation loss rises after epoch 5. What is the most likely explanation?"
+  options: ["Overfitting", "Underfitting", "A learning rate that is too low", "A data loader bug"]
+  answer: 1
+- q: "What's the single most common bug caused by forgetting `model.eval()`?"
+  answer: "Inconsistent, seemingly-random evaluation metrics from run to run, because `Dropout` is still randomly zeroing activations and `BatchNorm` is computing statistics from whatever batch happens to be passed in - rather than using the stable running statistics accumulated during training."
+- q: "Why is `optimizer.zero_grad()` called before `backward()` and not after `step()`?"
+  answer: "Functionally either position works as long as it happens once per iteration before the next `backward()` call - the common convention is to call it at the top of the loop body so it's visually adjacent to the forward pass, making the loop easy to read top-to-bottom. What matters is that it happens exactly once per step, not the exact line position."
+- q: "Why wrap the validation loop in `torch.no_grad()` even though you're not calling `backward()` there?"
+  answer: "Without it, PyTorch still builds the autograd graph for every operation in the forward pass, holding onto intermediate activations it would need for a backward pass that will never happen - wasting memory and compute for no benefit during evaluation."
+- q: "How do you compute an epoch-level average loss correctly when the last batch is smaller than the others?"
+  answer: "Multiply each batch's mean loss by its actual batch size (`loss.item() * batch_x.size(0)`), sum those across all batches, then divide by the total number of samples in the dataset - not by the number of batches, which would over-weight the last, possibly smaller, batch if divided naively."
+```
 
-**Q: Why wrap the validation loop in `torch.no_grad()` even though you're not calling `backward()` there?**
-A: Without it, PyTorch still builds the autograd graph for every operation in the forward pass, holding onto intermediate activations it would need for a backward pass that will never happen - wasting memory and compute for no benefit during evaluation.
+## Exercises
 
-**Q: How do you compute an epoch-level average loss correctly when the last batch is smaller than the others?**
-A: Multiply each batch's mean loss by its actual batch size (`loss.item() * batch_x.size(0)`), sum those across all batches, then divide by the total number of samples in the dataset - not by the number of batches, which would over-weight the last, possibly smaller, batch if divided naively.
+```exercise
+- title: "Add early stopping and a scheduler"
+  task: |
+    Extend the canonical loop with a learning-rate scheduler (cosine or step), gradient clipping, and early stopping that keeps the best checkpoint by validation loss with a patience of 3 epochs.
+  solution: |
+    Call scheduler.step() once per epoch (or per step for warmup/cosine-per-step schedules), clip with torch.nn.utils.clip_grad_norm_ after backward and before optimizer.step(), and track best_val_loss with a counter that resets on improvement; stop when the counter reaches the patience and reload the best state_dict.
+- title: "Find the bug"
+  task: |
+    A colleague's loop computes `accuracy = correct / len(train_loader)` and never calls `model.eval()`. List every consequence you can predict, then fix both.
+  solution: |
+    Accuracy is divided by the number of batches, so it is inflated by roughly the batch size; validation runs with dropout on and BatchNorm using batch statistics, so metrics are noisy and pessimistic. Divide by len(loader.dataset) and wrap validation in model.eval() plus torch.no_grad().
+```
+
+## References
+
+- PyTorch documentation, [torch.nn.Module (train/eval)](https://docs.pytorch.org/docs/stable/generated/torch.nn.Module.html) (2026)
+- PyTorch tutorials, [Optimizing Model Parameters](https://docs.pytorch.org/tutorials/beginner/basics/optimization_tutorial.html) (2026)
+
+*Last reviewed: 2026-09*

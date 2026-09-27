@@ -4,6 +4,17 @@
 
 Most PyTorch bugs fall into two buckets - **device mismatches** (a tensor on CPU meeting a tensor on GPU) and **shape mismatches** (tensors with incompatible dimensions being combined) - while **CUDA out-of-memory (OOM) errors** are a separate class of failure caused by activations, gradients, and optimizer state exceeding available VRAM.
 
+```objectives
+time: 40 min
+outcomes:
+  - Diagnose device and shape mismatch errors from their messages and fix them
+  - Break a training job's GPU memory into parameters, gradients, optimizer state and activations, and estimate each
+  - Apply OOM mitigations in order of cost - batch size, mixed precision, accumulation, checkpointing
+  - Use memory_summary and gradient inspection to separate fragmentation, leaks and disconnected parameters
+prerequisites:
+  - "[Checkpointing & Mixed Precision](04-Checkpointing-and-Mixed-Precision.mdx)"
+```
+
 <div class="audience-biz" markdown="1">
 
 When a PyTorch script crashes, the error almost always falls into one of three buckets: "these two pieces of data are stored in different places" (CPU vs. GPU), "these two pieces of data are shaped differently than expected" (like trying to add a list of 10 numbers to a list of 5), or "the GPU ran out of room to store everything training needs at once." Once you know which bucket an error belongs to, the fix is usually mechanical.
@@ -174,17 +185,48 @@ for name, param in model.named_parameters():
 - `torch.cuda.memory_summary()` shows allocated vs. reserved memory to distinguish fragmentation from genuine exhaustion
 - A parameter with `.grad is None` after `.backward()` means it wasn't connected to the loss in the computation graph - check `requires_grad` and that the tensor was actually used in the forward pass
 
-**Q: You get "Expected all tensors to be on the same device, but found at least two devices." What's the most common overlooked cause?**
-A: Forgetting to move the labels/targets to the GPU, not just the inputs - it's easy to remember `batch_x.to(device)` and forget `batch_y.to(device)` since the model only directly consumes `batch_x`.
+## Check Yourself
 
-**Q: What's the fastest way to isolate a shape-mismatch bug in a multi-layer model?**
-A: Add temporary `print(x.shape)` statements (or `assert` checks) after each layer in the forward pass, then run a single batch through it - the shape divergence point tells you exactly which layer's expected input doesn't match what the previous layer actually produced.
+```quiz
+- q: "Roughly how much memory do parameters + gradients + Adam states need for a 1B-parameter model in full float32 training?"
+  options: ["About 16 GB", "About 4 GB", "About 8 GB", "About 2 GB"]
+  answer: 1
+  explain: "4 bytes each for weights and gradients plus 8 bytes for Adam's two moments = 16 bytes per parameter; activations come on top."
+- q: "Memory grows every iteration until an OOM, even at a small batch size. What is the classic cause?"
+  options: ["Accumulating `loss` (a tensor) instead of `loss.item()` in a running total", "Too many DataLoader workers", "Using bfloat16", "Calling model.train()"]
+  answer: 1
+- q: "You get \"Expected all tensors to be on the same device, but found at least two devices.\" What's the most common overlooked cause?"
+  answer: "Forgetting to move the labels/targets to the GPU, not just the inputs - it's easy to remember `batch_x.to(device)` and forget `batch_y.to(device)` since the model only directly consumes `batch_x`."
+- q: "What's the fastest way to isolate a shape-mismatch bug in a multi-layer model?"
+  answer: "Add temporary `print(x.shape)` statements (or `assert` checks) after each layer in the forward pass, then run a single batch through it - the shape divergence point tells you exactly which layer's expected input doesn't match what the previous layer actually produced."
+- q: "Why does reducing batch size fix a CUDA OOM error?"
+  answer: "Activation memory (the largest and most controllable VRAM consumer) scales roughly linearly with batch size, since every sample in the batch needs its own set of intermediate tensors retained for the backward pass. Halving the batch size roughly halves activation memory."
+- q: "What does `torch.cuda.empty_cache()` actually do - does it free up \"more\" memory for training?"
+  answer: "It doesn't free memory that's actively in use; it returns memory that PyTorch's caching allocator is holding in reserve (from previously freed tensors) back to CUDA, reducing the \"reserved but not allocated\" gap shown in `memory_summary()`. It can help with fragmentation-caused OOMs but won't help if the model genuinely needs more memory than the GPU has."
+- q: "A parameter shows `param.grad is None` after `.backward()` - what are the two most likely causes?"
+  answer: "Either `requires_grad=False` on that parameter (it was frozen, e.g. for transfer learning), or the parameter simply wasn't used anywhere in the forward pass that led to the loss (a graph-connectivity bug, e.g. a layer defined in `__init__` but never called in `forward()`)."
+```
 
-**Q: Why does reducing batch size fix a CUDA OOM error?**
-A: Activation memory (the largest and most controllable VRAM consumer) scales roughly linearly with batch size, since every sample in the batch needs its own set of intermediate tensors retained for the backward pass. Halving the batch size roughly halves activation memory.
+## Exercises
 
-**Q: What does `torch.cuda.empty_cache()` actually do - does it free up "more" memory for training?**
-A: It doesn't free memory that's actively in use; it returns memory that PyTorch's caching allocator is holding in reserve (from previously freed tensors) back to CUDA, reducing the "reserved but not allocated" gap shown in `memory_summary()`. It can help with fragmentation-caused OOMs but won't help if the model genuinely needs more memory than the GPU has.
+```exercise
+- title: "Budget the memory"
+  task: |
+    For a 350M-parameter model trained with AdamW in bf16 mixed precision (fp32 master weights), estimate parameter, gradient and optimizer memory, then measure the real peak for a batch of 8 sequences of 1,024 tokens and attribute the rest to activations.
+  solution: |
+    Mixed-precision AdamW needs about 16 bytes per parameter for model state (fp32 master weights 4, fp32 moments 8, bf16 weights and grads about 4): roughly 5.6 GB for 350M parameters. The measured peak minus that is activations, which scale with batch × sequence length × layers × hidden size; gradient checkpointing reduces this share at the cost of extra compute.
+- title: "Find the leak"
+  task: |
+    Write a training loop that leaks memory on purpose (store `loss` tensors in a list), watch torch.cuda.memory_allocated grow, then fix it and confirm the curve is flat.
+  solution: |
+    Each stored loss keeps its whole autograd graph alive, so allocated memory grows linearly with steps. Storing loss.item() (a Python float) or loss.detach() releases the graph and memory stays flat.
+```
 
-**Q: A parameter shows `param.grad is None` after `.backward()` - what are the two most likely causes?**
-A: Either `requires_grad=False` on that parameter (it was frozen, e.g. for transfer learning), or the parameter simply wasn't used anywhere in the forward pass that led to the loss (a graph-connectivity bug, e.g. a layer defined in `__init__` but never called in `forward()`).
+## References
+
+- PyTorch documentation, [CUDA semantics (memory management)](https://docs.pytorch.org/docs/stable/notes/cuda.html) (2026)
+- PyTorch, [Understanding CUDA Memory Usage](https://docs.pytorch.org/docs/stable/torch_cuda_memory.html) (2026)
+- PyTorch documentation, [torch.utils.checkpoint](https://docs.pytorch.org/docs/stable/checkpoint.html) (2026)
+- Rajbhandari et al., [ZeRO: Memory Optimizations Toward Training Trillion Parameter Models](https://arxiv.org/abs/1910.02054) (2020)
+
+*Last reviewed: 2026-09*
