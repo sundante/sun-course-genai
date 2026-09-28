@@ -1,27 +1,43 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useSyncExternalStore } from "react";
 
 const STORAGE_KEY = "genai_disclaimer_v1";
 export const OPEN_DISCLAIMER_EVENT = "open-disclaimer-modal";
 
+function hasSeenDisclaimer() {
+  try {
+    return localStorage.getItem(STORAGE_KEY) !== null;
+  } catch {
+    return true; // storage unavailable - don't show the modal on every page
+  }
+}
+
+const noopSubscribe = () => () => {};
+
 export function DisclaimerModal() {
-  const [modalOpen, setModalOpen] = useState(false);
+  // Server render and hydration treat the disclaimer as seen; the browser then reads storage
+  const seen = useSyncExternalStore(noopSubscribe, hasSeenDisclaimer, () => true);
+  const [dismissed, setDismissed] = useState(false);
+  const [reopened, setReopened] = useState(false);
 
   useEffect(() => {
-    const seen = localStorage.getItem(STORAGE_KEY);
-    if (!seen) setModalOpen(true);
-
-    function handleOpen() { setModalOpen(true); }
+    function handleOpen() { setReopened(true); }
     window.addEventListener(OPEN_DISCLAIMER_EVENT, handleOpen);
     return () => window.removeEventListener(OPEN_DISCLAIMER_EVENT, handleOpen);
   }, []);
 
   function dismiss() {
-    localStorage.setItem(STORAGE_KEY, "1");
-    setModalOpen(false);
+    try {
+      localStorage.setItem(STORAGE_KEY, "1");
+    } catch {
+      // storage unavailable - the modal just closes for this page view
+    }
+    setDismissed(true);
+    setReopened(false);
   }
 
+  const modalOpen = reopened || (!seen && !dismissed);
   if (!modalOpen) return null;
 
   return (

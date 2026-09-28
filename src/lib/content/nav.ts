@@ -5,38 +5,51 @@ import type { NavItem, NavModule, NavigationTree, PageRef } from "@/types/conten
 
 const CONTENT_DIR = path.join(process.cwd(), "src/content");
 
+type NavYaml = { nav: NavEntry[] };
+type NavEntry = string | Record<string, string | NavEntry[]>;
+
+// Module title (as written in nav.yml) → URL slug. Slugs are kept stable across
+// restructures so existing /learn/<slug>/... URLs keep working where possible.
 const MODULE_SLUG_MAP: Record<string, string> = {
-  "LLM Models": "llm-models",
+  "LLM Foundations": "llm-models",
   "Prog Langs": "prog-langs",
+  "Pretraining at Scale": "pretraining",
+  "Post-Training & Reasoning": "post-training",
   "Fine-Tuning Lab": "fine-tuning-lab",
-  "Serving & Inference": "serving-and-inference",
+  "Evaluation & Benchmarks": "evaluation",
+  "Inference & Serving": "serving-and-inference",
   "Production Engineering": "production-engineering",
-  "Platform Breadth": "platform-breadth",
-  "Prompt Engineering": "prompt-engineering",
+  "Cloud Platforms": "platform-breadth",
+  "Prompt & Context Engineering": "prompt-engineering",
   "RAG": "rag",
-  "MCP": "mcp",
-  "AI Agents": "agents",
-  "Agentic AI": "agentic-ai",
+  "Agent Foundations": "agents",
+  "MCP & A2A": "mcp",
+  "Agent Patterns & Multi-Agent": "agentic-ai",
+  "Agent Frameworks": "agent-frameworks",
+  "Production Agents": "production-agents",
   "Agent Engineering": "agent-engineering",
+  "Capstones": "capstones",
   "Knowledge Check": "knowledge-check",
 };
 
-// Maps module slug → root directory prefix in content/
-export const MODULE_DIR_MAP: Record<string, string> = {
-  "llm-models": "01-LLM-Models",
-  "prog-langs": "02-Prog-Langs",
-  "fine-tuning-lab": "03-Fine-Tuning-Lab",
-  "serving-and-inference": "04-Serving-and-Inference",
-  "production-engineering": "05-Production-Engineering",
-  "platform-breadth": "06-Platform-Breadth",
-  "prompt-engineering": "07-Prompts",
-  "rag": "08-RAGs",
-  "mcp": "09-MCP",
-  "agents": "10-Agents",
-  "agentic-ai": "11-Agentic-AI",
-  "agent-engineering": "12-Agent-Engineering",
-  "knowledge-check": "",
-};
+/** A module's root content dir is the top-level folder shared by all of its pages
+ *  (e.g. "02-Prog-Langs"), or "" when its pages live in different top-level folders. */
+function moduleRootDir(filePaths: string[]): string {
+  const roots = new Set(filePaths.map((p) => (p.includes("/") ? p.split("/")[0] : "")));
+  return roots.size === 1 ? [...roots][0] : "";
+}
+
+function collectFilePaths(entries: NavEntry[]): string[] {
+  const out: string[] = [];
+  for (const entry of entries) {
+    if (typeof entry === "string") continue;
+    for (const value of Object.values(entry)) {
+      if (typeof value === "string") out.push(value);
+      else if (Array.isArray(value)) out.push(...collectFilePaths(value));
+    }
+  }
+  return out;
+}
 
 export function filePathToSlug(filePath: string, moduleRootDir: string): string {
   // Strip the module root dir prefix
@@ -67,9 +80,6 @@ function isStubFile(filePath: string): boolean {
   });
   return bodyLines.length < 8;
 }
-
-type NavYaml = { nav: NavEntry[] };
-type NavEntry = string | Record<string, string | NavEntry[]>;
 
 function parseItems(
   entries: NavEntry[],
@@ -112,21 +122,29 @@ export function getNavigationTree(): NavigationTree {
 
   const modules: NavModule[] = [];
   const flatPages: PageRef[] = [];
+  let track: string | undefined;
 
   for (const entry of parsed.nav) {
     if (typeof entry === "string") continue;
 
     for (const [title, value] of Object.entries(entry)) {
       if (title === "Home") continue;
+      // `- track: Name` starts an unnumbered group of modules
+      if (title === "track" && typeof value === "string") {
+        track = value;
+        continue;
+      }
 
       const moduleSlug = MODULE_SLUG_MAP[title];
-      if (!moduleSlug) continue;
+      if (!moduleSlug) {
+        throw new Error(`nav.yml module "${title}" has no slug in MODULE_SLUG_MAP (src/lib/content/nav.ts)`);
+      }
 
-      const moduleRootDir = MODULE_DIR_MAP[moduleSlug] ?? "";
       const entries = Array.isArray(value) ? value : [];
-      const items = parseItems(entries, moduleSlug, moduleRootDir, flatPages);
+      const rootDir = moduleRootDir(collectFilePaths(entries));
+      const items = parseItems(entries, moduleSlug, rootDir, flatPages);
 
-      modules.push({ title, slug: moduleSlug, items });
+      modules.push({ title, slug: moduleSlug, number: modules.length + 1, track, items });
     }
   }
 

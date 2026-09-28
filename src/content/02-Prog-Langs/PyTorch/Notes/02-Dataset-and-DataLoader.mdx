@@ -4,6 +4,17 @@
 
 A `Dataset` defines **how to access one example at a time**, and a `DataLoader` wraps a `Dataset` to handle **batching, shuffling, and parallel loading** so training code never has to manage those details itself.
 
+```objectives
+time: 35 min
+outcomes:
+  - Write a custom Dataset with lazy, per-sample loading and transforms
+  - Configure a DataLoader (batch_size, shuffle, num_workers, pin_memory, drop_last) for training and evaluation
+  - Write a collate_fn for variable-length samples
+  - Diagnose a data-loading bottleneck
+prerequisites:
+  - "[Tensors & Autograd](01-Tensors-and-Autograd.mdx)"
+```
+
 <div class="audience-biz" markdown="1">
 
 Think of a `Dataset` as a labeled filing cabinet - you can ask it "give me item #47" and it hands back one example. A `DataLoader` is the assistant who grabs handfuls of items from that cabinet, shuffles the order so the model doesn't learn the filing order by accident, and can even use several assistants at once (workers) to fetch items faster while the model is busy training on the previous handful.
@@ -172,14 +183,44 @@ loader = DataLoader(text_ds, batch_size=32, collate_fn=collate_variable_length)
 - `pin_memory=True` + `.to(device, non_blocking=True)` speeds up host-to-GPU transfer
 - Use a custom `collate_fn` whenever samples don't have a uniform shape (e.g. variable-length text)
 
-**Q: Why does `__getitem__` apply transforms instead of pre-processing the whole dataset once in `__init__`?**
-A: Two reasons - memory (loading every image decoded into RAM upfront doesn't scale) and randomness (data augmentation like random crop/flip needs a fresh random transform each time a sample is drawn, so every epoch sees slightly different versions of each image).
+## Check Yourself
 
-**Q: What's the tradeoff of increasing `num_workers`?**
-A: More workers can hide data-loading latency behind GPU compute, but each worker consumes CPU and memory, and too many can cause contention or "too many open files" errors. A common starting point is 4 workers per GPU, tuned empirically.
+```quiz
+- q: "GPU utilisation hovers at 30% during training and a profiler shows the model waiting for batches. What do you try first?"
+  options: ["Increase num_workers and enable pin_memory", "Increase the learning rate", "Switch shuffle off", "Increase batch_size to the maximum"]
+  answer: 1
+- q: "Which setting belongs on a validation DataLoader?"
+  options: ["shuffle=False", "shuffle=True", "drop_last=True always", "num_workers=0 always"]
+  answer: 1
+- q: "Why does `__getitem__` apply transforms instead of pre-processing the whole dataset once in `__init__`?"
+  answer: "Two reasons - memory (loading every image decoded into RAM upfront doesn't scale) and randomness (data augmentation like random crop/flip needs a fresh random transform each time a sample is drawn, so every epoch sees slightly different versions of each image)."
+- q: "What's the tradeoff of increasing `num_workers`?"
+  answer: "More workers can hide data-loading latency behind GPU compute, but each worker consumes CPU and memory, and too many can cause contention or \"too many open files\" errors. A common starting point is 4 workers per GPU, tuned empirically."
+- q: "Why use `drop_last=True` for training but not always for validation?"
+  answer: "Training often uses layers like `BatchNorm` that behave badly on a batch of size 1, and consistent batch size can matter for throughput/graph-compilation determinism. Validation typically wants every sample evaluated, so `drop_last=False` (the default) is usually kept there even if the last batch is smaller."
+- q: "What does `collate_fn` do and when do you need a custom one?"
+  answer: "It's the function that turns a list of individual `__getitem__` outputs into one batched tensor (or tuple of tensors). The default `collate_fn` works when every sample has the same shape (e.g. fixed-size images). You need a custom one when samples vary in size - most commonly variable-length text sequences, which need padding before they can be stacked into a single tensor."
+```
 
-**Q: Why use `drop_last=True` for training but not always for validation?**
-A: Training often uses layers like `BatchNorm` that behave badly on a batch of size 1, and consistent batch size can matter for throughput/graph-compilation determinism. Validation typically wants every sample evaluated, so `drop_last=False` (the default) is usually kept there even if the last batch is smaller.
+## Exercises
 
-**Q: What does `collate_fn` do and when do you need a custom one?**
-A: It's the function that turns a list of individual `__getitem__` outputs into one batched tensor (or tuple of tensors). The default `collate_fn` works when every sample has the same shape (e.g. fixed-size images). You need a custom one when samples vary in size - most commonly variable-length text sequences, which need padding before they can be stacked into a single tensor.
+```exercise
+- title: "Profile the input pipeline"
+  task: |
+    Time one epoch of a DataLoader over an image dataset with num_workers = 0, 2, 4 and 8, with and without pin_memory, iterating without a model. Then add a model on the GPU and see which setting keeps the GPU busy.
+  hints: ["Use time.perf_counter() around the loop; for the GPU case watch nvidia-smi or use torch.profiler"]
+  solution: |
+    Loading time usually drops sharply from 0 to a few workers and then flattens (CPU cores and disk become the limit). The right setting is the smallest number of workers that stops the GPU waiting; beyond that, extra workers only add memory and start-up cost.
+- title: "Bucket by length"
+  task: |
+    Write a sampler that groups variable-length text examples of similar length into the same batch, and compare padding tokens per batch against random batching.
+  solution: |
+    Sort indices by length within large random chunks, cut into batches, then shuffle the batches. Padding typically drops by more than half for skewed length distributions, which speeds up training proportionally - the same idea as length-grouped sampling in Hugging Face trainers.
+```
+
+## References
+
+- PyTorch documentation, [torch.utils.data](https://docs.pytorch.org/docs/stable/data.html) (2026)
+- PyTorch tutorials, [Datasets & DataLoaders](https://docs.pytorch.org/tutorials/beginner/basics/data_tutorial.html) (2026)
+
+*Last reviewed: 2026-09*

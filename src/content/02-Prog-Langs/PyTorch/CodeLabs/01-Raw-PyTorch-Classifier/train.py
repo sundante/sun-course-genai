@@ -23,11 +23,8 @@ from torchvision import datasets, transforms
 
 from model import SimpleCNN
 
-try:
-    from torch.cuda.amp import autocast, GradScaler
-    AMP_AVAILABLE = True
-except ImportError:  # very old torch versions
-    AMP_AVAILABLE = False
+# torch.amp is the device-agnostic AMP API (torch.cuda.amp is deprecated)
+from torch.amp import autocast, GradScaler
 
 
 def parse_args():
@@ -104,7 +101,7 @@ def evaluate(model, loader, loss_fn, device):
 def main():
     args = parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    use_amp = AMP_AVAILABLE and device.type == "cuda"
+    use_amp = device.type == "cuda"
     print(f"Using device: {device} | mixed precision: {use_amp}")
 
     train_loader, val_loader = get_dataloaders(args.data_dir, args.batch_size, args.num_workers)
@@ -112,7 +109,7 @@ def main():
     model = SimpleCNN(num_classes=10).to(device)
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
     loss_fn = nn.CrossEntropyLoss()
-    scaler = GradScaler(enabled=use_amp) if AMP_AVAILABLE else None
+    scaler = GradScaler("cuda", enabled=use_amp)
 
     start_epoch = 0
     best_val_acc = 0.0
@@ -129,7 +126,7 @@ def main():
             optimizer.zero_grad()
 
             if use_amp:
-                with autocast():
+                with autocast(device_type="cuda"):
                     outputs = model(batch_x)
                     loss = loss_fn(outputs, batch_y)
                 scaler.scale(loss).backward()

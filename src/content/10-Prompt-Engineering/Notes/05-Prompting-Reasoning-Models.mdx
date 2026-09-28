@@ -1,0 +1,181 @@
+# Prompting Reasoning Models
+
+Reasoning models generate a hidden or summarised chain of reasoning before their answer, so prompting them shifts from guiding the reasoning to specifying the goal, the constraints and the output - and to choosing how much reasoning to pay for.
+
+```objectives
+time: 40 min
+outcomes:
+  - Set the reasoning-effort controls of the major APIs and explain what they trade off
+  - Rewrite a prompt written for a non-reasoning model into one suited to a reasoning model
+  - Handle reasoning state correctly in multi-turn and tool-calling loops
+  - Explain why more reasoning is not always better and why visible reasoning is not a faithful explanation
+prerequisites:
+  - "[Core Techniques](02-Core-Techniques.mdx) - chain-of-thought"
+  - "[Reasoning Models & Test-Time Compute](../../04-Post-Training/Notes/04-Reasoning-Models-and-Test-Time-Compute.mdx) - how these models are trained"
+```
+
+## What Changed
+
+Reasoning models are trained with reinforcement learning to think at length before answering, and their accuracy on hard problems rises with the amount of reasoning they do (test-time compute). By 2026 most frontier models reason by default, and the old distinction between "chat models" and "reasoning models" has become a setting: how much to reason.
+
+| Prompting habit from non-reasoning models | With reasoning models |
+|---|---|
+| "Think step by step" | Redundant - the model already reasons |
+| Few-shot examples of *reasoning* | Often worse than stating the goal; examples of the *output format* still help |
+| Prescribing the procedure ("first list X, then check Y...") | Usually worse - give the goal, constraints and success criteria and let the model plan |
+| Tuning temperature | Often unavailable; tune **reasoning effort** instead |
+| "CRITICAL: YOU MUST..." in capitals | Newer models follow instructions closely and can over-apply shouted rules; state them plainly with the reason |
+| Assistant prefill to force format | Removed on several APIs; use [structured outputs](04-Structured-Outputs.mdx) |
+
+What did not change: clear task definitions, the right context, explicit output contracts and evaluation matter as much as ever.
+
+---
+
+## The Effort Dial
+
+Each provider exposes a control for how much the model reasons. Higher settings improve accuracy on hard tasks and cost more output tokens and latency.
+
+| Provider | Control | Values (model-dependent) |
+|---|---|---|
+| OpenAI | `reasoning={"effort": ...}` (Responses API), `reasoning_effort` (Chat Completions) | `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max` |
+| Anthropic | Adaptive thinking (`thinking={"type": "adaptive"}`, on by default on newer models) plus an `effort` setting | `low`, `medium`, `high`, `xhigh`, `max` |
+| Google Gemini | `thinking_level` in the generation config | `low`, `medium`, `high` |
+
+Older interfaces used a token budget instead of a level (Anthropic's `budget_tokens`, Gemini 2.5's `thinking_budget`); current models favour levels, because the model is better than a fixed number at judging how hard a given request is.
+
+```python
+# OpenAI Responses API
+resp = client.responses.create(model=MODEL, reasoning={"effort": "low"}, input=prompt)
+
+# Anthropic Messages API (adaptive thinking is the default on current models)
+resp = client.messages.create(model=MODEL, max_tokens=16000,
+                              output_config={"effort": "low"},
+                              messages=[{"role": "user", "content": prompt}])
+```
+
+Treat effort as a **hyperparameter to evaluate**, per task: run your eval set at two or three levels and plot accuracy against cost per item. Classification and extraction are often as accurate at the lowest level; planning, math, debugging and long agentic tasks benefit from more.
+
+Practical notes:
+
+- **Reasoning tokens are billed as output tokens** and count against the output limit. Set `max_tokens` high enough for thinking *plus* the answer, or you will get truncated outputs.
+- **Latency**: time-to-first-visible-token includes the thinking. Stream, and show progress (reasoning summaries) in interactive products.
+- **Model-specific rules**: some models reject certain combinations (for example, disabling thinking at the highest effort levels). Check the provider's model page.
+
+---
+
+## Writing the Prompt
+
+```text
+Before (written for a non-reasoning model)
+  You are an expert analyst. Think step by step.
+  Step 1: List every metric in the report.
+  Step 2: For each metric compare to last quarter.
+  Step 3: Decide which changes matter.
+  Step 4: Write the summary.
+
+After (for a reasoning model)
+  Goal: a 5-bullet summary of what changed this quarter, for the CFO.
+  What matters: changes over 5% in revenue, gross margin, churn or cash
+  burn, and anything the report itself flags as a risk.
+  Constraints: use only figures in the report; say "not reported" rather
+  than estimating.
+  Output: JSON {"bullets": [...], "risks": [...]}.
+  <report>...</report>
+```
+
+Guidelines:
+
+1. **State the goal and why it matters** - the model resolves ambiguity better when it knows the purpose.
+2. **Give success criteria and constraints**, not a procedure.
+3. **Provide all the context** the task needs (documents, definitions, prior decisions). Reasoning cannot recover missing facts - it can only hallucinate them more elaborately.
+4. **Specify the output contract** and enforce it with structured outputs.
+5. **Keep examples for format and style**, not for reasoning.
+6. **For agentic tasks, say when to stop** and what "done" means, and whether to ask or proceed when information is missing.
+
+---
+
+## Reasoning State in Multi-Turn and Tool Loops
+
+When a reasoning model calls a tool, its reasoning so far is part of the state it needs to continue. Each API has a mechanism for carrying it across turns, and dropping it degrades quality or raises errors:
+
+| Provider | What to carry forward |
+|---|---|
+| OpenAI | Reasoning items: reference them with `previous_response_id`, or pass them back (including their `encrypted_content` in stateless mode) with the tool results |
+| Anthropic | Pass the assistant turn's thinking blocks back unchanged along with the `tool_use` blocks and your `tool_result`s; on some newer models, editing earlier turns invalidates those blocks |
+| Gemini | Thought signatures, which the SDK carries automatically in stateful mode |
+
+Most APIs return a **summary** of the reasoning or an encrypted form, not the raw tokens. Don't build features that depend on reading raw reasoning.
+
+---
+
+## More Thinking Is Not Always Better
+
+- **Inverse scaling.** Gema et al. (2025) built tasks on which accuracy *falls* as reasoning length grows - the model gets distracted by irrelevant details, overfits to familiar framings or drifts. Measure accuracy at several effort levels rather than assuming the highest is best.
+- **Overthinking simple tasks** wastes tokens and latency; use low effort or a non-reasoning setting for routing, classification and extraction.
+- **Visible reasoning is not a faithful explanation.** Chen et al. (2025) found reasoning models often fail to mention hints that demonstrably changed their answers. Use reasoning summaries for debugging and user feedback, not as an audit trail of *why* the model decided something - log inputs, tool calls and outputs instead.
+
+---
+
+## Check Yourself
+
+```quiz
+- q: "You migrate a classification prompt from a non-reasoning model to a reasoning model. Which change is most likely to help?"
+  options:
+    - "Delete the 'think step by step' instructions and procedure, keep the label definitions and output schema, and try a low effort setting"
+    - "Add more worked reasoning examples"
+    - "Raise the temperature"
+    - "Add 'CRITICAL' before every rule"
+  answer: 1
+- q: "A reasoning model's answers are cut off mid-JSON although the answer itself is short. What is the likely cause?"
+  options:
+    - "max_tokens covers reasoning tokens too, and the budget was exhausted by thinking"
+    - "The schema is too long"
+    - "Reasoning models cannot produce JSON"
+    - "The input was too long"
+  answer: 1
+- q: "In a tool-calling loop you strip the thinking blocks from the assistant message before sending the tool results back. What happens?"
+  options:
+    - "Quality degrades or the API rejects the request, because the reasoning state needed to continue is lost"
+    - "Nothing - thinking blocks are only for display"
+    - "The model re-reads its reasoning from its cache automatically"
+    - "Latency improves with no side effects"
+  answer: 1
+- q: "Why shouldn't you treat a model's reasoning summary as the explanation for its decision in an audit?"
+  answer: "Studies of chain-of-thought faithfulness show reasoning models often omit factors that actually drove their answers (e.g. hints in the prompt). The summary is a useful debugging signal, not a faithful causal account - audits should rely on logged inputs, tool calls and outputs."
+```
+
+## Exercises
+
+```exercise
+- title: Effort sweep
+  task: |
+    Pick a reasoning model you can access and two tasks: 50 support-ticket classifications and 30 multi-step math problems. Run each at three effort levels. Record accuracy, mean output tokens (including reasoning) and p50 latency. Recommend a level per task.
+  solution: |
+    Expect classification to be flat across levels (choose the lowest) and math to improve with effort, with diminishing returns at the top - and output tokens rising several-fold. The recommendation should be per task, justified by accuracy per dollar, which is the point of treating effort as a hyperparameter.
+- title: Rewrite for a reasoning model
+  task: |
+    Take a long procedural prompt from one of your own projects (or the "before" example above) and rewrite it as goal, context, constraints, success criteria and output contract. Compare the two versions on at least 30 eval items.
+  solution: |
+    The rewrite is usually shorter and at least as accurate on a reasoning model. If the procedural version wins, look for domain knowledge hidden in the steps (e.g. "check the footnotes for restatements") and move it into the context or constraints rather than restoring the procedure.
+```
+
+## Study Notes
+
+**Must-know:**
+- Reasoning models think before answering; prompts specify goal, context, constraints and output rather than steps
+- Effort controls: OpenAI `reasoning.effort`, Anthropic adaptive thinking + `effort`, Gemini `thinking_level`; token budgets are the older style
+- Reasoning tokens are billed as output and count toward max_tokens
+- Carry reasoning state (reasoning items, thinking blocks, thought signatures) through tool loops
+- More reasoning can hurt (inverse scaling); tune effort per task on an eval set
+- Reasoning summaries are not faithful explanations
+
+## References
+
+- OpenAI, [Reasoning models guide](https://developers.openai.com/api/docs/guides/reasoning)
+- Anthropic, [Extended and adaptive thinking](https://platform.claude.com/docs/en/build-with-claude/extended-thinking)
+- Google, [Gemini thinking](https://ai.google.dev/gemini-api/docs/thinking)
+- Gema et al., [Inverse Scaling in Test-Time Compute](https://arxiv.org/abs/2507.14417) (2025)
+- Chen et al., [Reasoning Models Don't Always Say What They Think](https://arxiv.org/abs/2505.05410) (2025)
+- DeepSeek-AI, [DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning](https://arxiv.org/abs/2501.12948) (2025)
+
+*Last reviewed: 2026-09*

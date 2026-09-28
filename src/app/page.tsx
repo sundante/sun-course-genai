@@ -2,33 +2,13 @@ import Link from "next/link";
 import { getNavigationTree } from "@/lib/content/nav";
 import { ThemeToggle } from "@/components/course/ThemeToggle";
 import { CurriculumTiles } from "@/components/course/CurriculumTiles";
+import { getCourseStats } from "@/lib/content/stats";
 
 const LEARNING_PATHS = [
-  { label: "A", title: "Conceptual",     desc: "New to GenAI - start here for a guided conceptual overview of the full stack." },
-  { label: "B", title: "Interview Prep", desc: "Accelerated deep-dive through Q&A banks to ace GenAI engineering interviews." },
-  { label: "C", title: "Hands-On",       desc: "Code labs across 4 agent frameworks: LangChain, LangGraph, CrewAI, GCP ADK." },
-  { label: "D", title: "Full Sequence",  desc: "Complete curriculum from LLMs to Platform Breadth and PyTorch fundamentals - the recommended path." },
-];
-
-const FEATURES = [
-  { icon: "01", title: "180+ deep-dive notes",  desc: "Zero fluff, dual-audience (business and technical) explanations for every concept." },
-  { icon: "02", title: "370+ interview Q&A",     desc: "Pulled from real hiring loops, organized by module for targeted prep." },
-  { icon: "03", title: "Hands-on code labs",     desc: "LangChain, LangGraph, CrewAI and GCP ADK - ship real agents, not slides." },
-  { icon: "04", title: "Real benchmarks",        desc: "Base-vs-tuned comparisons with actual numbers, not just theory." },
-];
-
-const PATH_STEPS = [
-  { n: "1", label: "Foundations",     desc: "LLMs, Prompts, RAG, MCP" },
-  { n: "2", label: "Agentic Systems", desc: "Agents, multi-agent design" },
-  { n: "3", label: "Production Skills", desc: "Fine-tuning, serving, ops" },
-  { n: "4", label: "Platform Mastery", desc: "Cloud AI stacks, PyTorch" },
-];
-
-const STATS: [string, string][] = [
-  ["180+", "Deep-dive notes"],
-  ["12", "Modules"],
-  ["370+", "Interview Q&A"],
-  ["Free", "Always"],
+  { label: "A", title: "Conceptual",     desc: "New to GenAI - start with LLM Foundations, then Prompt & Context Engineering, RAG and Agent Foundations." },
+  { label: "B", title: "Interview Prep", desc: "Accelerated review through each module's Q&A bank and its graded quiz." },
+  { label: "C", title: "Hands-On",       desc: "Code labs from a raw PyTorch training loop to QLoRA fine-tuning, vLLM serving and multi-framework agents." },
+  { label: "D", title: "Full Sequence",  desc: "Every module in order, from how an LLM works to building and operating production agents - the recommended path." },
 ];
 
 const LANDING_NAV = [
@@ -48,11 +28,33 @@ function StarSvg() {
 
 export default function HomePage() {
   const { modules } = getNavigationTree();
+  const stats = getCourseStats();
+
+  const FEATURES = [
+    { icon: "01", title: `${stats.concepts} deep-dive notes`,   desc: "Zero fluff, dual-audience (business and technical) explanations for every concept." },
+    { icon: "02", title: `${stats.questions} review questions`, desc: "Interview-grade Q&A banks for every module, plus graded quizzes built from each page's checks." },
+    { icon: "03", title: `${stats.labs} hands-on code labs`,    desc: "PyTorch, QLoRA, vLLM, Helm, and agents in LangChain, LangGraph, CrewAI and Google ADK." },
+    { icon: "04", title: "Real benchmarks",                     desc: "Base-vs-tuned comparisons and load tests with actual numbers, not just theory." },
+  ];
+
+  // One step per track, listing the modules it contains
+  const PATH_STEPS = stats.tracks.map((track, i) => ({
+    n: String(i + 1),
+    label: track,
+    desc: modules.filter((mod) => mod.track === track).map((mod) => mod.title).join(", "),
+  }));
+
+  const STATS: [string, string][] = [
+    [String(stats.concepts), "Deep-dive notes"],
+    [String(stats.modules), "Modules"],
+    [String(stats.questions), "Review Q&A"],
+    ["Free", "Always"],
+  ];
 
   return (
     <div className="min-h-screen flex flex-col bg-sun-bg">
       {/* Header */}
-      <header className="bg-white border-b border-sun-yellow px-4 sm:px-6 h-14 flex items-center justify-between gap-3 sticky top-0 z-40">
+      <header className="bg-sun-bg border-b border-sun-yellow px-4 sm:px-6 h-14 flex items-center justify-between gap-3 sticky top-0 z-40">
         <a href="#top" className="font-bold text-sun-dark tracking-tight text-sm shrink-0">
           Learn GenAI
         </a>
@@ -158,8 +160,8 @@ export default function HomePage() {
       <section id="path" className="px-4 sm:px-6 pb-12 sm:pb-16 scroll-mt-20">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-xs font-bold uppercase tracking-widest text-sun-muted mb-4 text-center">Your Path</h2>
-          <div className="relative grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="hidden lg:block absolute top-4 left-[12.5%] right-[12.5%] h-px bg-glass-card-border" aria-hidden="true" />
+          <div className="relative grid grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="hidden lg:block absolute top-4 left-[10%] right-[10%] h-px bg-glass-card-border" aria-hidden="true" />
             {PATH_STEPS.map((step) => (
               <div key={step.n} className="relative flex flex-col items-center text-center gap-2">
                 <span className="flex items-center justify-center w-8 h-8 rounded-full bg-sun-yellow text-zinc-900 text-xs font-bold shrink-0 shadow-glass-sm z-10">
@@ -180,9 +182,11 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-5">
             <h2 className="text-xs font-bold uppercase tracking-widest text-sun-muted mb-2">Curriculum</h2>
-            <p className="text-2xl font-bold text-sun-dark tracking-tight">Eleven modules, start to finish</p>
+            <p className="text-2xl font-bold text-sun-dark tracking-tight">
+              {stats.modules} modules in {stats.tracks.length} tracks, start to finish
+            </p>
           </div>
-          <CurriculumTiles modules={modules} />
+          <CurriculumTiles modules={modules} stats={stats.byModule} />
         </div>
       </section>
 

@@ -1,0 +1,109 @@
+# Evaluation & Benchmarks - Q&A Review Bank
+
+> 16 Q&A pairs. Tags: `[Easy]` = conceptual recall, `[Medium]` = design decisions and trade-offs, `[Hard]` = quantitative reasoning or system design.
+
+```objectives
+time: 25 min
+outcomes:
+  - Answer each question from memory before revealing the answer
+  - Explain the reasoning behind each answer - the mechanism or trade-off - not only the fact
+  - Identify the chapters you are weakest on and revisit them before the module quiz
+prerequisites:
+  - "The concept notes of this module"
+```
+
+---
+
+**Q1** `[Easy]` Name a benchmark for each of: broad knowledge, hard science reasoning, competition math, real-world coding, and instruction following.
+
+> MMLU-Pro (or MMLU), GPQA Diamond, AIME (or MATH-500), SWE-bench Verified, IFEval.
+
+---
+
+**Q2** `[Medium]` What does it mean for a benchmark to be saturated, and what do you do about it?
+
+> Top models cluster near the ceiling or near the label-noise floor, so differences are within noise and the benchmark no longer separates models (MMLU, GSM8K, HumanEval). Compare on harder or fresher benchmarks that still discriminate, and prefer ones with a freshness mechanism.
+
+---
+
+**Q3** `[Medium]` How do log-likelihood and generative multiple-choice scoring differ?
+
+> Log-likelihood scoring picks the option whose text the model assigns the highest probability - no generation or parsing. Generative scoring lets the model produce an answer (often after reasoning) and extracts it with a regex or judge. They measure slightly different things and can differ by several points for the same model.
+
+---
+
+**Q4** `[Hard]` A model is sampled 10 times and 2 samples pass. Compute unbiased pass@1 and pass@3.
+
+> pass@1 = 2/10 = 0.2. pass@3 = 1 - C(8,3)/C(10,3) = 1 - 56/120 ≈ 0.533.
+
+---
+
+**Q5** `[Medium]` pass@k vs pass^k - when does each matter?
+
+> pass@k (at least one of k attempts succeeds) matters when you can verify and pick a success, such as generating code against tests. pass^k (all k attempts succeed, ≈ p^k) measures reliability and matters for agents that must succeed every time without a verifier - an 80% agent has pass^8 ≈ 17%.
+
+---
+
+**Q6** `[Medium]` How does benchmark contamination happen, and how would you detect it without training-data access?
+
+> Benchmark items, answers, solutions or paraphrases get into pretraining crawls, fine-tuning sets or synthetic data. Without data access, compare scores on fresh equivalent items (like GSM1k vs GSM8K) or perturbed versions (rephrased stems, shuffled options), use time-split benchmarks, and try membership-inference signals such as Min-K% Prob.
+
+---
+
+**Q7** `[Medium]` What are the known caveats of human-preference arenas?
+
+> Votes reward style (length, formatting, confidence) as well as correctness; the prompt mix reflects arena users rather than your domain; and selective private testing of many variants can inflate a provider's published ranking. Use arenas to shortlist, not to decide.
+
+---
+
+**Q8** `[Medium]` List four LLM-judge biases and a mitigation for each.
+
+> Position (evaluate both orders, count only consistent wins), verbosity (concision criteria, length-controlled comparisons), self-preference (judge from a different model family or an ensemble), and style/confidence (check correctness as a separate criterion).
+
+---
+
+**Q9** `[Medium]` How do you validate an LLM judge before trusting it?
+
+> Label a sample by hand (ideally two annotators), measure the judge's accuracy and Cohen's κ against the human majority and compare with human-human agreement, inspect the confusion matrix for dangerous error types, probe biases with order swaps and padding, and re-validate whenever the judge, rubric or output distribution changes.
+
+---
+
+**Q10** `[Medium]` Why decompose a quality rubric into binary criteria?
+
+> Narrow, concrete yes/no questions are judged more consistently (by models and humans), are easier to validate, and localize failures; a single 1-10 score blends criteria and drifts.
+
+---
+
+**Q11** `[Hard]` Your eval has 200 items and your system scores 80%. What is the approximate 95% confidence interval?
+
+> SE = sqrt(0.8 × 0.2 / 200) ≈ 0.028; 1.96 × SE ≈ 0.055, so roughly 74.5%-85.5%.
+
+---
+
+**Q12** `[Hard]` Why use a paired test to compare two systems, and which ones would you use?
+
+> Both systems run on the same items, so per-item differences cancel item difficulty; that detects much smaller real differences than comparing two independent intervals. Use a paired bootstrap on per-item score differences, or McNemar's test for pass/fail outcomes; resample by cluster when items share a source document.
+
+---
+
+**Q13** `[Medium]` How should you build a task-specific eval set?
+
+> Sample real inputs stratified by type, add every production failure and bug report, add deliberate edge cases (adversarial, multilingual, should-refuse, very long), write expected behaviour rather than one expected string, and split into a dev set for iteration and a held-out test set for reporting.
+
+---
+
+**Q14** `[Medium]` Why is needle-in-a-haystack insufficient for long-context evaluation?
+
+> Current models mostly pass single-needle retrieval at their advertised lengths, but still fail at multi-needle retrieval, multi-hop tracing and aggregation across the context. RULER and your own multi-part questions at several depths and lengths expose the effective context length.
+
+---
+
+**Q15** `[Medium]` What belongs in an LLM regression gate in CI?
+
+> A fast, representative subset of your eval (including critical slices and past failures) run on every prompt, model or pipeline change; fail the build when a critical slice drops beyond its confidence interval; run the full suite nightly or before release; and track results over time against a pinned baseline.
+
+---
+
+**Q16** `[Hard]` Two model reports show 71.2 and 73.0 on the same benchmark. List what you would check before believing the 1.8-point gap.
+
+> Number of items and resulting confidence interval; shots and prompt; chat template; thinking or effort setting; sampling and aggregation (pass@1 vs majority vote); answer-extraction rules; harness and version; whether a subset was used; tool access; and contamination risk for each model.

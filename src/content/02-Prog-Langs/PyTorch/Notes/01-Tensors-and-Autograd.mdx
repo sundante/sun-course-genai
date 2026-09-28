@@ -4,6 +4,17 @@
 
 A **tensor** is PyTorch's core data structure - a multi-dimensional array that can live on CPU or GPU - and **autograd** is the engine that automatically tracks every operation on tensors so it can compute gradients for you via `.backward()`.
 
+```objectives
+time: 40 min
+outcomes:
+  - Create tensors, move them between devices and reason about shape, dtype and memory sharing (view vs reshape, from_numpy)
+  - Explain how autograd builds a dynamic graph and computes gradients with reverse-mode differentiation
+  - Explain why gradients accumulate, and use that deliberately for gradient accumulation
+  - Choose between no_grad, detach and requires_grad=False for a situation
+prerequisites:
+  - "Python and basic calculus (derivatives, chain rule)"
+```
+
 <div class="audience-biz" markdown="1">
 
 Think of a tensor as a smart spreadsheet of numbers that PyTorch can move to a graphics card for speed. Autograd is like a flight recorder - it silently logs every calculation the model does, so that later, when you want to know "how do I need to adjust this number to reduce the error," PyTorch can look back at the recording and work out the answer automatically instead of you doing calculus by hand.
@@ -179,20 +190,51 @@ for i, (batch_x, batch_y) in enumerate(dataloader):
 - `optimizer.step()` reads `.grad` and updates parameters; it does not touch the graph itself
 - `.detach()` returns a tensor sharing data but excluded from the graph - useful for logging/metrics without leaking memory
 
-**Q: Why do gradients accumulate by default instead of being overwritten?**
-A: It's a deliberate design choice that enables gradient accumulation across multiple `backward()` calls (e.g. to simulate larger batch sizes, or when a loss is computed from multiple sub-losses called separately). The tradeoff is that a standard single-step loop must explicitly zero gradients each iteration.
+## Check Yourself
 
-**Q: What happens if you call `.backward()` twice on the same graph without `retain_graph=True`?**
-A: PyTorch frees intermediate buffers used for the backward pass by default (to save memory) after the first `.backward()` call, so a second call raises a runtime error. Pass `retain_graph=True` to `.backward()` if you genuinely need to backward through the same graph more than once.
+```quiz
+- q: "You run two iterations of forward pass + `loss.backward()` without calling `zero_grad()` in between. What does `w.grad` contain?"
+  options: ["The sum of both iterations' gradients", "Only the second iteration's gradient", "Only the first iteration's gradient", "An error is raised"]
+  answer: 1
+  explain: "Gradients accumulate into .grad, which is why the training loop clears them each step. (Calling backward twice on the *same* graph is different: it raises an error unless retain_graph=True.)"
+- q: "`y = w * x + b` with w=2, x=3, b=1 and `loss = (y - 10)**2`. What is `w.grad` after `loss.backward()`?"
+  options: ["-18", "-6", "6", "18"]
+  answer: 1
+  explain: "y = 7, dloss/dy = 2(y - 10) = -6, dy/dw = x = 3, so dloss/dw = -18."
+- q: "Why do gradients accumulate by default instead of being overwritten?"
+  answer: "It's a deliberate design choice that enables gradient accumulation across multiple `backward()` calls (e.g. to simulate larger batch sizes, or when a loss is computed from multiple sub-losses called separately). The tradeoff is that a standard single-step loop must explicitly zero gradients each iteration."
+- q: "What happens if you call `.backward()` twice on the same graph without `retain_graph=True`?"
+  answer: "PyTorch frees intermediate buffers used for the backward pass by default (to save memory) after the first `.backward()` call, so a second call raises a runtime error. Pass `retain_graph=True` to `.backward()` if you genuinely need to backward through the same graph more than once."
+- q: "What is the difference between `.detach()` and `torch.no_grad()`?"
+  answer: "`.detach()` creates a new tensor disconnected from the graph, while the original tensor(s) still track gradients if used elsewhere. `torch.no_grad()` is a context manager that disables graph construction for every operation inside it, regardless of `requires_grad` on the inputs - it's the right tool for validation/inference loops."
+- q: "Why does `model.parameters()` require gradients by default but a raw input tensor doesn't?"
+  answer: "`nn.Parameter` (what `nn.Linear`, `nn.Conv2d`, etc. use internally for weights/biases) sets `requires_grad=True` automatically because parameters are what training updates. Plain input data doesn't need gradients unless you're doing something unusual like adversarial example generation or input optimization."
+- q: "What does `loss.backward()` actually compute mathematically?"
+  answer: "It computes `d(loss)/d(param)` for every leaf parameter in the graph, using reverse-mode automatic differentiation - applying the chain rule from the scalar loss backward through every intermediate operation to each leaf."
+- q: "Can you call `.backward()` on a non-scalar tensor?"
+  answer: "Only if you pass a `gradient` argument matching its shape (the \"vector-Jacobian product\" seed). In practice, losses are reduced to a scalar (e.g. via `.mean()` or `.sum()`) before calling `.backward()`, which is why loss functions like `nn.MSELoss()` default to `reduction='mean'`."
+```
 
-**Q: What is the difference between `.detach()` and `torch.no_grad()`?**
-A: `.detach()` creates a new tensor disconnected from the graph, while the original tensor(s) still track gradients if used elsewhere. `torch.no_grad()` is a context manager that disables graph construction for every operation inside it, regardless of `requires_grad` on the inputs - it's the right tool for validation/inference loops.
+## Exercises
 
-**Q: Why does `model.parameters()` require gradients by default but a raw input tensor doesn't?**
-A: `nn.Parameter` (what `nn.Linear`, `nn.Conv2d`, etc. use internally for weights/biases) sets `requires_grad=True` automatically because parameters are what training updates. Plain input data doesn't need gradients unless you're doing something unusual like adversarial example generation or input optimization.
+```exercise
+- title: "Check autograd by hand"
+  task: |
+    For `f(a, b) = (a * b + a) ** 2` at a = 2, b = 3, compute df/da and df/db by hand, then verify with autograd. Then compute them with `torch.func.grad` as well.
+  solution: |
+    f = (ab + a)^2 = (6 + 2)^2 = 64. df/da = 2(ab + a)(b + 1) = 2·8·4 = 64; df/db = 2(ab + a)·a = 2·8·2 = 32. Autograd and torch.func.grad give the same values.
+- title: "Gradient accumulation equivalence"
+  task: |
+    Train a small linear model one step with batch size 64, and separately with 4 accumulated micro-batches of 16 (loss divided by 4). Compare the resulting gradients. When are they not identical?
+  solution: |
+    With a mean-reduced loss divided by accum_steps and no batch-dependent layers, the gradients match to floating-point tolerance. They differ with BatchNorm (statistics per micro-batch), with a loss that isn't a mean over samples, or when micro-batches have unequal sizes.
+```
 
-**Q: What does `loss.backward()` actually compute mathematically?**
-A: It computes `d(loss)/d(param)` for every leaf parameter in the graph, using reverse-mode automatic differentiation - applying the chain rule from the scalar loss backward through every intermediate operation to each leaf.
+## References
 
-**Q: Can you call `.backward()` on a non-scalar tensor?**
-A: Only if you pass a `gradient` argument matching its shape (the "vector-Jacobian product" seed). In practice, losses are reduced to a scalar (e.g. via `.mean()` or `.sum()`) before calling `.backward()`, which is why loss functions like `nn.MSELoss()` default to `reduction='mean'`.
+- PyTorch documentation, [Automatic differentiation package - torch.autograd](https://docs.pytorch.org/docs/stable/autograd.html) (2026)
+- PyTorch documentation, [Autograd mechanics](https://docs.pytorch.org/docs/stable/notes/autograd.html) (2026)
+- Baydin et al., [Automatic Differentiation in Machine Learning: a Survey](https://arxiv.org/abs/1502.05767) (2018)
+- Paszke et al., [PyTorch: An Imperative Style, High-Performance Deep Learning Library](https://arxiv.org/abs/1912.01703) (2019)
+
+*Last reviewed: 2026-09*

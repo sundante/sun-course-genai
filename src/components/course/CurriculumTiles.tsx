@@ -5,28 +5,39 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import type { NavItem, NavModule } from "@/types/content";
 
+import type { ModuleStats } from "@/lib/content/stats";
+
+// Hand-written copy only. Numbers, order, tracks and counts come from nav.yml
+// (via getNavigationTree / getCourseStats) so they cannot drift out of date.
 interface ModuleMeta {
-  num: string;
   subtitle: string;
   description: string;
-  notes: string;
-  qa: string;
 }
 
 const MODULE_META: Record<string, ModuleMeta> = {
-  "llm-models":              { num: "01", subtitle: "The Engine",       description: "How large language models work under the hood - transformers, attention, training, fine-tuning, and inference optimization.", notes: "12 notes", qa: "68+ Q&A" },
-  "prompt-engineering":      { num: "02", subtitle: "The Interface",    description: "The art and science of talking to models - from basics to advanced techniques and production prompt systems.", notes: "6 notes", qa: "65+ Q&A" },
-  "rag":                     { num: "03", subtitle: "The Memory",       description: "Retrieval-Augmented Generation - how to give LLMs access to your own knowledge and keep answers grounded.", notes: "12 notes", qa: "80+ Q&A" },
-  "mcp":                     { num: "04", subtitle: "The Protocol",     description: "Model Context Protocol - the emerging standard that lets AI models securely interact with tools, APIs, and data sources.", notes: "9 notes", qa: "40+ Q&A" },
-  "agents":                  { num: "05", subtitle: "The Actors",       description: "AI agents and frameworks - LangChain, LangGraph, CrewAI, and GCP ADK from simple to complex agent architectures.", notes: "8 notes", qa: "50+ Q&A" },
-  "agentic-ai":              { num: "06", subtitle: "The Systems",      description: "Full agentic AI systems - architectural patterns, multi-agent coordination, evaluation, and production deployment.", notes: "12 notes", qa: "60+ Q&A" },
-  "fine-tuning-lab":         { num: "07", subtitle: "The Specialist",   description: "Hands-on LoRA/QLoRA fine-tuning - the HuggingFace ecosystem, instruction data, training runs, and a real base-vs-tuned benchmark.", notes: "5 notes", qa: "20+ Q&A" },
-  "serving-and-inference":   { num: "08", subtitle: "The Delivery",     description: "Serving models in production - vLLM, paged attention, quantized inference, batching, and streaming latency.", notes: "5 notes", qa: "20+ Q&A" },
-  "production-engineering":  { num: "09", subtitle: "The Operations",   description: "Docker, Kubernetes and Helm for GPU inference, model lifecycle and rollout, and security & compliance controls.", notes: "5 notes", qa: "25+ Q&A" },
-  "platform-breadth":        { num: "10", subtitle: "The Landscape",    description: "AWS Bedrock, Databricks & Spark, and Azure AI Foundry - a working map across every major cloud AI stack.", notes: "5 notes", qa: "20+ Q&A" },
-  "prog-langs":              { num: "11", subtitle: "The Foundation",   description: "PyTorch fundamentals - tensors, autograd, the hand-written training loop, checkpointing, and mixed precision.", notes: "6 notes", qa: "20+ Q&A" },
-  "agent-engineering":       { num: "12", subtitle: "The Architecture", description: "Designing the system around the model - harness, loop, and graph engineering, plus context, evaluation, environment, memory/skill, and spec/vibe engineering.", notes: "8 notes", qa: "30+ Q&A" },
+  "llm-models":             { subtitle: "The Engine",       description: "How large language models work - tokens, the transformer, attention, model families, and the ways they fail." },
+  "prog-langs":             { subtitle: "The Toolkit",      description: "PyTorch fundamentals - tensors, autograd, the hand-written training loop, checkpointing, and mixed precision." },
+  "pretraining":            { subtitle: "The Forge",        description: "How base models are built - data pipelines, scaling laws, distributed training, and the GPU memory budget." },
+  "post-training":          { subtitle: "The Finishing",    description: "From base model to assistant - SFT, preference tuning, RLHF, GRPO and reasoning, LoRA and QLoRA." },
+  "fine-tuning-lab":        { subtitle: "The Specialist",   description: "Hands-on LoRA/QLoRA fine-tuning - the HuggingFace ecosystem, instruction data, training runs, and a real base-vs-tuned benchmark." },
+  "evaluation":             { subtitle: "The Yardstick",    description: "Measuring models honestly - benchmarks, contamination, LLM-as-judge, and building your own evaluation harness." },
+  "serving-and-inference":  { subtitle: "The Delivery",     description: "Serving models fast and cheaply - KV cache, vLLM, quantized inference, batching, streaming, and deployment." },
+  "production-engineering": { subtitle: "The Operations",   description: "Docker, Kubernetes and Helm for GPU inference, model lifecycle and rollout, and security & compliance controls." },
+  "platform-breadth":       { subtitle: "The Landscape",    description: "AWS Bedrock, Google Cloud's agent platform (formerly Vertex AI), Microsoft Foundry, and Databricks - a working map across the major cloud AI stacks." },
+  "prompt-engineering":     { subtitle: "The Interface",    description: "Talking to models well - prompting techniques, prompting mechanics, production prompt systems, and optimization." },
+  "rag":                    { subtitle: "The Memory",       description: "Retrieval-Augmented Generation - giving LLMs access to your own knowledge and keeping answers grounded." },
+  "agents":                 { subtitle: "The Actors",       description: "What agents are and how they work - the agent loop, tool use, memory, and planning." },
+  "mcp":                    { subtitle: "The Protocol",     description: "Model Context Protocol and A2A - connecting agents to tools, data and each other, with authorization and security." },
+  "agentic-ai":             { subtitle: "The Blueprints",   description: "Workflow and single-agent patterns, multi-agent architectures and engineering - and the evidence on when each helps." },
+  "agent-frameworks":       { subtitle: "The Workshop",     description: "LangGraph, OpenAI Agents SDK, Claude Agent SDK, Google ADK, CrewAI, Microsoft Agent Framework and PydanticAI - one agent built in each." },
+  "production-agents":      { subtitle: "The Systems",      description: "Shipping agents - architecture, security, durable execution, cost, evaluation and benchmarks, observability, and system designs." },
+  "agent-engineering":      { subtitle: "The Architecture", description: "Designing the system around the model - harnesses, loops and graphs, context, coding and computer-use agents, skills, verifiers and specs." },
+  "capstones":              { subtitle: "The Proof",        description: "Three end-to-end projects with rubrics - train and post-train a model, serve it against an SLO, and ship a production agent." },
 };
+
+function countLabel(n: number, singular: string, plural = `${singular}s`): string {
+  return `${n} ${n === 1 ? singular : plural}`;
+}
 
 /** Recursively find the "Concepts" group anywhere in a module's item tree
  *  (handles Prog Langs' one-extra-level-deep nesting) and return its leaves. */
@@ -41,14 +52,14 @@ function findConcepts(items: NavItem[]): NavItem[] | null {
   return null;
 }
 
-function DetailBody({ mod, meta }: { mod: NavModule; meta: ModuleMeta }) {
+function DetailBody({ mod, meta, stats }: { mod: NavModule; meta: ModuleMeta; stats?: ModuleStats }) {
   const overviewHref = mod.items[0]?.href ?? `/learn/${mod.slug}/index`;
   const concepts = findConcepts(mod.items) ?? [];
 
   return (
     <div>
       <div className="flex items-start justify-between gap-3 mb-2">
-        <span className="text-xs font-mono text-sun-muted">{meta.num}</span>
+        <span className="text-xs font-mono text-sun-muted">{String(mod.number).padStart(2, "0")}</span>
         <span className="text-xs font-semibold text-sun-amber bg-sun-yellow-dim px-2 py-0.5 rounded-full">
           {meta.subtitle}
         </span>
@@ -60,10 +71,14 @@ function DetailBody({ mod, meta }: { mod: NavModule; meta: ModuleMeta }) {
         {mod.title}
       </Link>
       <p className="text-xs text-sun-muted leading-relaxed mb-2.5">{meta.description}</p>
-      <div className="flex gap-2 mb-3">
-        <span className="text-xs bg-glass-panel-bg text-sun-muted rounded px-2 py-0.5">{meta.notes}</span>
-        <span className="text-xs bg-glass-panel-bg text-sun-muted rounded px-2 py-0.5">{meta.qa}</span>
-      </div>
+      {stats && (
+        <div className="flex flex-wrap gap-2 mb-3">
+          {stats.concepts > 0 && <span className="text-xs bg-glass-panel-bg text-sun-muted rounded px-2 py-0.5">{countLabel(stats.concepts, "note")}</span>}
+          {stats.labs > 0 && <span className="text-xs bg-glass-panel-bg text-sun-muted rounded px-2 py-0.5">{countLabel(stats.labs, "code lab")}</span>}
+          {stats.questions > 0 && <span className="text-xs bg-glass-panel-bg text-sun-muted rounded px-2 py-0.5">{stats.questions} Q&amp;A</span>}
+          {stats.concepts === 0 && <span className="text-xs bg-glass-panel-bg text-sun-wip rounded px-2 py-0.5">In development</span>}
+        </div>
+      )}
 
       {concepts.length > 0 && (
         <ul className="mb-2.5 space-y-0.5 border-t border-glass-card-border pt-2.5">
@@ -89,7 +104,7 @@ function DetailBody({ mod, meta }: { mod: NavModule; meta: ModuleMeta }) {
   );
 }
 
-export function CurriculumTiles({ modules }: { modules: NavModule[] }) {
+export function CurriculumTiles({ modules, stats }: { modules: NavModule[]; stats: Record<string, ModuleStats> }) {
   // Hover and click/tap are tracked separately: a real click is always preceded
   // by a synthetic mouseenter (both in browsers' hover-emulation on touch and in
   // Playwright's click()), so deriving "active" purely from one shared toggle
@@ -136,12 +151,18 @@ export function CurriculumTiles({ modules }: { modules: NavModule[] }) {
         {/* Vertical module list - shrinks to a rail on desktop once something is active */}
         <div className={`w-full transition-all duration-300 ease-out ${active ? "md:w-64 md:shrink-0" : "md:flex-1"}`}>
           <div className="rounded-xl border border-glass-card-border bg-glass-card-bg backdrop-blur-glass-sm shadow-glass-sm divide-y divide-glass-card-border overflow-hidden">
-            {displayModules.map((mod) => {
+            {displayModules.map((mod, i) => {
               const meta = MODULE_META[mod.slug];
+              const trackStart = mod.track && mod.track !== displayModules[i - 1]?.track;
               const isActive = active === mod.slug;
               const overviewHref = mod.items[0]?.href ?? `/learn/${mod.slug}/index`;
               return (
                 <div key={mod.slug}>
+                  {trackStart && (
+                    <div className="px-4 pt-3 pb-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-sun-amber bg-glass-panel-bg/50">
+                      {mod.track}
+                    </div>
+                  )}
                   <div
                     onMouseEnter={() => setHovered(mod.slug)}
                     className={`w-full flex items-center gap-1 pr-2 transition-colors ${
@@ -153,7 +174,7 @@ export function CurriculumTiles({ modules }: { modules: NavModule[] }) {
                       onFocus={() => setHovered(mod.slug)}
                       className="flex-1 min-w-0 text-left pl-4 py-2.5 flex items-center gap-3 group"
                     >
-                      <span className="text-xs font-mono text-sun-muted w-6 shrink-0">{meta.num}</span>
+                      <span className="text-xs font-mono text-sun-muted w-6 shrink-0">{String(mod.number).padStart(2, "0")}</span>
                       <span className="font-semibold text-sun-dark text-sm flex-1 truncate group-hover:text-sun-amber group-hover:underline">{mod.title}</span>
                       {!active && (
                         <span className="hidden md:inline text-xs font-semibold text-sun-amber bg-sun-yellow-dim px-2 py-0.5 rounded-full shrink-0">
@@ -189,7 +210,7 @@ export function CurriculumTiles({ modules }: { modules: NavModule[] }) {
                   {/* Mobile fallback - no hover available, so the detail renders inline on tap */}
                   {isActive && (
                     <div className="md:hidden border-t border-glass-card-border bg-glass-panel-bg px-4 py-4">
-                      <DetailBody mod={mod} meta={meta} />
+                      <DetailBody mod={mod} meta={meta} stats={stats[mod.slug]} />
                     </div>
                   )}
                 </div>
@@ -206,7 +227,7 @@ export function CurriculumTiles({ modules }: { modules: NavModule[] }) {
         >
           {activeModule && (
             <div className="h-full rounded-xl border border-sun-yellow bg-glass-card-bg backdrop-blur-glass-sm shadow-glass-md p-4">
-              <DetailBody mod={activeModule} meta={MODULE_META[activeModule.slug]} />
+              <DetailBody mod={activeModule} meta={MODULE_META[activeModule.slug]} stats={stats[activeModule.slug]} />
             </div>
           )}
         </div>

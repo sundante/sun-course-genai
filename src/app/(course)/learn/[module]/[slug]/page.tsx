@@ -8,6 +8,7 @@ import rehypeRaw from "rehype-raw";
 import { getAllPages, getPageWithNavigation } from "@/lib/content/loader";
 import { getNavigationTree } from "@/lib/content/nav";
 import { remarkRewriteMdLinks } from "@/lib/content/remarkRewriteMdLinks";
+import { remarkCourseFences } from "@/lib/content/remarkCourseFences";
 import { AudienceToggle } from "@/components/course/AudienceToggle";
 import { TableOfContents } from "@/components/course/TableOfContents";
 import { PageNav } from "@/components/course/PageNav";
@@ -36,12 +37,10 @@ export default async function CoursePage({ params }: Props) {
   if (!result) notFound();
 
   const { page, prev, next } = result;
-  const { flatPages } = getNavigationTree();
+  const { flatPages, modules } = getNavigationTree();
 
-  const moduleLabel = moduleSlug
-    .split("-")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
+  const mod = modules.find((m) => m.slug === moduleSlug);
+  const moduleLabel = mod ? `${String(mod.number).padStart(2, "0")} · ${mod.title}` : moduleSlug;
 
   const mdxOptions = {
     parseFrontmatter: false,
@@ -49,6 +48,8 @@ export default async function CoursePage({ params }: Props) {
       format: "md" as const,
       remarkPlugins: [
         remarkGfm,
+        // Fences first, so links inside quiz/objectives/exercise Markdown get rewritten too
+        remarkCourseFences() as never,
         remarkRewriteMdLinks(page.filePath, flatPages) as never,
       ],
       rehypePlugins: [
@@ -62,7 +63,7 @@ export default async function CoursePage({ params }: Props) {
 
   return (
     <div className="flex flex-col min-h-full">
-      <div className="bg-white border-b border-sun-yellow px-6 lg:px-8 py-3">
+      <div className="bg-sun-bg border-b border-sun-yellow px-6 lg:px-8 py-3">
         <p className="text-xs font-bold uppercase tracking-widest text-sun-amber mb-0.5">
           {moduleLabel}
         </p>
@@ -89,7 +90,7 @@ export default async function CoursePage({ params }: Props) {
       </div>
 
       {/* Sticky prev/next + disclaimer footer */}
-      <div className="sticky bottom-0 z-10 bg-white border-t border-sun-yellow">
+      <div className="sticky bottom-0 z-10 bg-sun-bg border-t border-sun-yellow">
         <div className="px-6 lg:px-8 py-3">
           <PageNav prev={prev} next={next} className="flex justify-between" />
         </div>

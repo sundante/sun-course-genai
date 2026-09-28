@@ -1,0 +1,99 @@
+# Production Engineering - Q&A Review Bank
+
+23 questions across the module. Try each one before revealing the answer.
+
+```objectives
+time: 35 min
+outcomes:
+  - "Answer each question from memory before revealing the answer, across: Docker & GPU Inference; Kubernetes & Helm; Model Lifecycle & Rollout; Security & Compliance; LLM Serving on Kubernetes, Supply Chain and Regulation"
+  - Explain the reasoning behind each answer - the mechanism or trade-off - not only the fact
+  - Identify the chapters you are weakest on and revisit them before the module quiz
+prerequisites:
+  - "The concept notes of this module"
+```
+
+## Docker & GPU Inference
+
+**Q: Can a plain `python:slim` image with pip-installed CUDA `torch` run GPU inference? What does the container actually need?**
+Yes, if the container runs with GPU access. The host provides the driver (`libcuda.so`), which the NVIDIA Container Toolkit injects at run time (`--gpus all`, or the device plugin in Kubernetes); the CUDA wheels bring their own CUDA user-space libraries. A CUDA base image (`nvidia/cuda`, or a pinned vendor image like `vllm/vllm-openai`) is needed when you compile CUDA code (flash-attn from source), when libraries expect system CUDA, or to standardise one CUDA/cuDNN/NCCL combination. If `torch.cuda.is_available()` is `False`, check GPU access first, then for a CPU-only wheel, then the driver version.
+
+**Q: What's the difference between a CUDA `-devel` and `-runtime` tag, and which belongs in production?**
+`-devel` includes the full toolkit (compiler, headers, static libs) needed to compile CUDA code; `-runtime` includes only the shared libraries needed to execute already-compiled CUDA binaries. Production images should ship on `-runtime` - smaller, with a reduced attack surface, since nothing needs to compile at deploy time.
+
+**Q: Why mount model weights at container start instead of `COPY`-ing them into the image?**
+Coupling weights to the image forces a full multi-GB rebuild and repush on every model update, and bloats registry storage. Mounting from a volume or object store decouples model version from code version - either can roll independently.
+
+---
+
+## Kubernetes & Helm
+
+**Q: Why must GPU resource requests equal GPU resource limits in a pod spec?**
+Unlike CPU/memory, GPUs aren't a divisible or overcommittable resource by default in Kubernetes - a pod gets a whole GPU or none. Setting a limit above the request implies overcommit, which the GPU device plugin doesn't support (MIG partitioning aside).
+
+**Q: What do taints and tolerations accomplish on a GPU node pool?**
+A taint on the GPU nodes repels any pod without a matching toleration, keeping ordinary CPU workloads off expensive GPU machines. Only pods that explicitly declare the toleration - typically GPU-serving pods - get scheduled there.
+
+**Q: Does the default HPA autoscale on GPU utilization out of the box?**
+No - the default HPA only watches CPU and memory metrics. GPU-aware autoscaling requires a custom metrics pipeline (e.g. DCGM exporter feeding Prometheus, surfaced to the HPA via the Prometheus Adapter, or KEDA). For LLM serving, though, GPU utilization is a weak signal - a batching server looks busy at any load - so scale on queue depth (`vllm:num_requests_waiting`) or latency instead.
+
+**Q: What's the difference between `helm template` and `helm install --dry-run`?**
+`helm template` renders the chart locally with zero cluster contact. `helm install --dry-run` renders and also validates the output against the live cluster's API, catching schema/admission errors that pure local templating would miss.
+
+---
+
+## Model Lifecycle & Rollout
+
+**Q: Contrast blue/green, canary, and champion-challenger rollout strategies.**
+Blue/green runs two full environments and cuts traffic over atomically - fast rollback, but no gradual signal. Canary ramps a new version's traffic share gradually (e.g. 5% → 25% → 100%), pausing or reverting on regression. Champion-challenger is an ongoing comparison pattern (not just a one-time rollout event) where a challenger must win on live-traffic metrics before being promoted.
+
+**Q: What does a model registry like MLflow actually provide, and what does it not provide?**
+It provides lineage and metadata tracking - training run, metrics, artifacts, promotion status (MLflow aliases such as `@champion` / `@challenger`, which replaced the deprecated Staging/Production/Archived stages). It does not move traffic or serve the model itself; deployment tooling reads from the registry to decide what to deploy.
+
+**Q: Why should rollback criteria be defined before launch rather than during an incident?**
+Under incident pressure, teams either under-react (hoping a regression self-resolves) or over-react (rolling back noise). Pre-agreed, quantitative thresholds - error rate, p95 latency, eval score - turn the in-incident decision into a lookup instead of a judgment call made under stress.
+
+**Q: Two weeks after a model promotion, an eval metric quietly regresses but nobody notices until a customer complaint. What process gap does this reveal?**
+The rollback criteria (or ongoing monitoring against them) weren't wired to alert automatically - the team likely defined thresholds but didn't operationalize continuous checking against them post-launch. A release-readiness process should include an observation window with active alerting, not just a go/no-go decision at launch time.
+
+---
+
+## Security & Compliance
+
+**Q: Give a concrete example of least-privilege IAM applied to an AI system.**
+The inference service's identity gets read-only access to the model weights bucket, not write access to the training data bucket; the eval pipeline's identity gets read access to eval datasets, not production database credentials. Each component's blast radius, if compromised, is limited to what it actually needs.
+
+**Q: Why are LLM-system tracing tools a distinct compliance risk compared to typical application logging?**
+Tracing tools (Langfuse, LangSmith) are built to capture full prompt/response content by default for debugging - and in an LLM system, that content routinely contains whatever sensitive data the user typed in. A normal app's logs rarely capture full request bodies by default; an LLM trace does, unless redaction is explicitly added.
+
+**Q: Name HIPAA's five technical safeguards.**
+Access control (unique user ID, auto-logoff, encryption at rest), audit controls (recording/examining activity on systems with PHI), integrity controls (confirming PHI hasn't been improperly altered), person or entity authentication (verifying who is requesting PHI), and transmission security (encryption in transit).
+
+**Q: What should an audit log for PHI access be able to answer?**
+Who accessed the PHI, when, and for what reason - sufficient for a regulator's after-the-fact review, which is a stricter bar than what's typically logged for engineering debugging alone.
+
+**Q: What's the difference between SAST and dependency scanning in a CI pipeline?**
+SAST analyzes your own codebase for vulnerability patterns without executing it; dependency scanning checks third-party packages (including ML libraries like `transformers`/`torch`) against known-CVE databases. Both should block merge on high-severity findings.
+
+**Q: What's the practical difference between claiming "we're HIPAA compliant" and naming the specific safeguards you implemented?**
+"HIPAA compliant" is a vague self-assessment that invites follow-up questions in an interview or audit. Naming the actual technical safeguards - access control, audit controls, integrity controls, person or entity authentication, transmission security (45 CFR §164.312) - and pointing to how each is implemented (e.g. "audit controls: every PHI access logged with user ID and timestamp, retained 6 years") is verifiable and reads as far more credible.
+
+## LLM Serving on Kubernetes, Supply Chain and Regulation
+
+**Q: Name four ways to share or allocate GPUs in Kubernetes and when to use each.**
+Whole GPUs via the device plugin (default for LLMs); MIG partitions for many small, isolated models; time-slicing for dev/test without isolation; and DRA resource claims (GA in Kubernetes 1.34) to request devices by attributes on heterogeneous fleets.
+
+**Q: What does the Gateway API Inference Extension add over a normal load balancer?**
+Model-aware routing for LLM pools: it picks a replica by queue length, KV-cache utilization or loaded LoRA adapter instead of round-robin, which matters because LLM requests vary enormously in cost and replicas differ in what they have cached.
+
+**Q: How do you reduce cold-start time for a 70B model?**
+Keep weights out of the image on fast local storage or stream them straight into GPU memory, pre-pull slim images, keep warm minimum capacity, and use FP8 or smaller checkpoints to cut the bytes to load. Load time is roughly weight size ÷ read bandwidth plus engine start-up.
+
+**Q: Which OWASP LLM Top 10 risks are most relevant to a RAG chatbot with tool access?**
+Prompt injection (LLM01) via retrieved content, sensitive information disclosure (LLM02), improper output handling (LLM05), excessive agency (LLM06) for its tools, vector and embedding weaknesses (LLM08) such as retrieving documents the user may not see, and unbounded consumption (LLM10).
+
+**Q: Why should you avoid loading pickled checkpoints from public hubs?**
+PyTorch .pt/.bin files are pickles and can execute arbitrary code when loaded. Use safetensors, `torch.load(..., weights_only=True)`, pinned and mirrored artifacts, and signature verification (e.g. OpenSSF model signing).
+
+**Q: When do the EU AI Act's high-risk obligations apply after the 2026 Digital Omnibus?**
+2 December 2027 for stand-alone Annex III high-risk systems and 2 August 2028 for AI embedded in Annex I regulated products; GPAI obligations applied from August 2025 and Article 50 transparency duties from 2 August 2026.
+

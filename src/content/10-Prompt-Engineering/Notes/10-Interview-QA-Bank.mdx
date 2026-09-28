@@ -1,0 +1,209 @@
+# Prompt & Context Engineering - Q&A Review Bank
+
+A consolidated review set for the module. Difficulty: `[Easy]` = recall, `[Medium]` = design decisions and trade-offs, `[Hard]` = system design, debugging and edge cases. Each answer points to the chapter that covers it in depth.
+
+```objectives
+time: 85 min
+outcomes:
+  - "Answer each question from memory before revealing the answer, across: Fundamentals; Techniques; Structured Outputs; Context, Caching and Cost; Production and Security; Reasoning Models and Optimization; More Techniques and Pitfalls"
+  - Explain the reasoning behind each answer - the mechanism or trade-off - not only the fact
+  - Identify the chapters you are weakest on and revisit them before the module quiz
+prerequisites:
+  - "The concept notes of this module"
+```
+
+---
+
+## Fundamentals
+
+**Q1: What is a prompt, and why is "the prompt is the program" a useful model?** `[Easy]`
+The prompt is the entire input for one call - instructions, examples, data, history and tool results; calls are stateless. Treating it as a function (template = body, input = arguments, output = return value, model = interpreter) brings software discipline: eval sets as tests, chaining as decomposition, and a model change treated as a new interpreter. See [Prompt Fundamentals](01-Prompt-Fundamentals.mdx).
+
+**Q2: What are the parts of a well-structured prompt?** `[Easy]`
+Instruction (what to do), context (what the model can't infer), delimited input data, and an output contract. Add parts to fix observed failures rather than piling on speculative rules.
+
+**Q3: What is a chat template and what happens if you use the wrong one?** `[Medium]`
+It converts a list of role-tagged messages into the special-token sequence the model was fine-tuned on (e.g. Llama 3 headers, ChatML). With the wrong template the input no longer resembles training data and quality drops silently - no error is raised. Use `tokenizer.apply_chat_template` with `add_generation_prompt=True`.
+
+**Q4: Can a user override the system prompt?** `[Medium]`
+Yes, sometimes. Role priority (the instruction hierarchy: system > developer > user > tool) is trained behaviour, not an enforced boundary - all roles become tokens read by the same attention layers. This is why prompt injection exists and why system prompts are not a security control.
+
+**Q5: What was assistant prefill used for, and what replaces it?** `[Medium]`
+Ending the messages with a partial assistant turn (e.g. `{`) forced the model to continue in a given format. Several hosted reasoning models now reject prefilled final turns; native structured outputs (schema-constrained decoding) are the replacement. With open models you control the raw template, so prefill still works.
+
+**Q6: Why do LLMs fail at counting letters in a word, and how do you fix it?** `[Medium]`
+They read subword tokens, so a word may be a single token with no visible letters. Ask the model to spell the word out first, or do character-level work in code.
+
+**Q7: Does temperature 0 guarantee identical outputs?** `[Medium]`
+No. On shared servers your request is batched with others; floating-point reductions can run in a different order, so logits differ slightly and near-ties flip. Batch-invariant kernels fix this at some speed cost. Many reasoning models also no longer expose temperature at all - effort is the control. For reproducibility, pin the model version and evaluate on sets.
+
+---
+
+## Techniques
+
+**Q8: Why does zero-shot prompting work on chat models but often fail on base models?** `[Easy]`
+Instruction tuning trained chat models on thousands of tasks phrased as instructions. A base model has only learned to continue text, so it may continue your instruction instead of following it. See [Core Techniques](02-Core-Techniques.mdx).
+
+**Q9: What do few-shot examples teach the model?** `[Medium]`
+Format, label space, input distribution and - for large models - the input-label mapping itself. Min et al. (2022) found wrong labels hurt surprisingly little for smaller models, but Wei et al. (2023) showed larger models follow flipped labels, overriding their priors. So label examples carefully.
+
+**Q10: Which biases affect few-shot prompts and how do you control them?** `[Medium]`
+Majority-label and recency bias (Zhao et al., 2021) and order sensitivity (Lu et al., 2022). Balance classes, vary or randomise order, prefer boundary cases, and evaluate several orderings.
+
+**Q11: Is "more than ~20 examples means fine-tune" still good advice?** `[Hard]`
+Not as a rule. Many-shot in-context learning (Agarwal et al., 2024) keeps improving with hundreds or thousands of examples on many tasks, and prompt caching makes a large fixed example block cheap. Compare many-shot with caching against fine-tuning on accuracy, latency and cost for your volume.
+
+**Q12: Why does chain-of-thought help, and on which tasks?** `[Medium]`
+Generated steps become context for later steps - working memory - and more tokens means more computation. A meta-analysis (Sprague et al., 2024) found gains concentrate on math and symbolic reasoning; on most other tasks the benefit is small while the token cost is paid every time.
+
+**Q13: Why is "think step by step" unnecessary with reasoning models?** `[Easy]`
+They are trained with RL to reason before answering. Prescribing steps often does worse than stating the goal, constraints and output contract. See [Prompting Reasoning Models](05-Prompting-Reasoning-Models.mdx).
+
+**Q14: In ReAct, who executes the tool, and what changed with native tool calling?** `[Medium]`
+Your code does. Originally the model wrote `Action: tool(args)` as text that the application parsed; native tool calling returns structured tool-call blocks validated against a JSON schema, removing parsing bugs and enabling parallel calls.
+
+**Q15: Does a persona like "You are a world-class doctor" improve accuracy?** `[Medium]`
+Evidence says not on average: across 162 personas, Zheng et al. (2024) found no consistent accuracy gain on factual questions, and the best persona was unpredictable. Personas change style and audience; accuracy comes from task definitions, context and examples.
+
+**Q16: When is self-consistency worth its cost?** `[Medium]`
+When answers are convergent (numbers, labels) and errors are expensive. It multiplies cost by N; the agreement rate doubles as a confidence signal. For free-form outputs use a selection method (universal self-consistency or a judge). See [Advanced Techniques](03-Advanced-Techniques.mdx).
+
+**Q17: What does Tree of Thoughts need to beat chain-of-thought?** `[Hard]`
+A reliable evaluator of partial solutions. With an LLM guessing scores, search can amplify errors; with verifiable states (tests, arithmetic, game rules) it shines - e.g. Game of 24 success rose from 4% to 74% in the original paper. It costs dozens of calls.
+
+**Q18: Why do self-refine loops sometimes make reasoning worse?** `[Hard]`
+Without external feedback, models change correct answers about as readily as wrong ones (Huang et al., 2024). Refinement works when the critique is grounded in something checkable: test failures, tool results, a rubric or a stronger reviewer.
+
+**Q19: What is the main risk in prompt chaining, and how do you control it?** `[Medium]`
+Error propagation. Validate each step's output against its own contract (schema, counts, cross-references to the source) and debug from the earliest failing step.
+
+---
+
+## Structured Outputs
+
+**Q20: JSON mode vs structured outputs?** `[Easy]`
+JSON mode guarantees valid JSON syntax; structured outputs guarantee the output matches your schema (keys, types, enums). Neither guarantees the values are correct. See [Structured Outputs](04-Structured-Outputs.mdx).
+
+**Q21: How does constrained decoding work?** `[Medium]`
+The schema or grammar compiles to an automaton; at each step, tokens that can't legally follow are masked to −∞ before sampling. FSM-based indexing (Outlines) and XGrammar/llguidance make the mask almost free, and forced tokens can even be emitted without sampling.
+
+**Q22: Your structured-output call returned unparseable text. Why?** `[Medium]`
+Truncation at the token limit (for reasoning models the limit includes thinking) or a refusal, which does not follow your schema. Check the stop reason and refusal fields before parsing.
+
+**Q23: Can constraints hurt answer quality, and how do you design around it?** `[Hard]`
+Tam et al. (2024) reported losses when strict formats force the answer before reasoning; others attributed most of the loss to schema and prompt design. Put a reasoning field before the answer field, describe fields in the prompt, or reason freely then extract in a second call. With reasoning models the thinking precedes the constrained output.
+
+**Q24: How do you get schema-constrained output from an open model in production?** `[Medium]`
+Serve it with vLLM (or SGLang) and pass a JSON schema via `response_format` on the OpenAI-compatible endpoint, or `StructuredOutputsParams` offline; the backend is XGrammar, llguidance or Outlines. The old `guided_json` parameters were removed in vLLM 0.12.
+
+---
+
+## Context, Caching and Cost
+
+**Q25: What is context engineering and how does it differ from prompt engineering?** `[Easy]`
+Prompt engineering is wording an instruction; context engineering is choosing every token in each call - instructions, tools, examples, retrieved knowledge, memory, history, tool results - usually assembled by code. See [Context Engineering](06-Context-Engineering.mdx).
+
+**Q26: What does the evidence say about long contexts?** `[Medium]`
+Quality depends on position (lost in the middle - with 20-30 documents, GPT-3.5-Turbo with the answer mid-context did worse than closed-book), effective context is often far below the advertised window (RULER), non-literal lookups degrade quickly (NoLiMa), and performance becomes less reliable as input grows (context rot). Relevance beats volume.
+
+**Q27: Name the four context strategies with an example of each.** `[Medium]`
+Write (a progress notes file outside the context), select (retrieve the top relevant chunks or memories; load tools on demand), compress (compact old turns; clear used tool results), isolate (a sub-agent reads 30 pages and returns a brief).
+
+**Q28: Where should the question go in a prompt with long documents?** `[Easy]`
+After the documents. Vendor guidance reports better answers with the query last, and it keeps the document prefix stable for caching.
+
+**Q29: How does prompt caching work and what breaks it?** `[Medium]`
+The server reuses KV state computed for an identical token prefix. Anything that changes early tokens - timestamps, user IDs, reordered tool definitions, rewritten history - invalidates everything after it. See [Prompt Caching & Cost](07-Prompt-Caching-and-Cost.mdx).
+
+**Q30: Compute the break-even for an explicit cache with a 1.25× write and 0.1× read.** `[Medium]`
+Two requests: uncached 2.0 vs cached 1.25 + 0.1 = 1.35. With a 2× (1-hour) write it takes three: 3.0 vs 2.2.
+
+**Q31: A team's LLM bill doubled after a "minor" prompt change. Where do you look?** `[Hard]`
+Cache hit rate (did something variable move into the prefix?), output tokens (did the change or a model update make responses or reasoning longer?), and context size (more retrieved chunks, bigger tool results). Log uncached input, cached input and output tokens per call to see which moved.
+
+**Q32: What cost levers exist besides caching?** `[Medium]`
+Batch APIs (~50% off for non-interactive work), routing easy requests to smaller models, lower reasoning effort where accuracy holds, shorter outputs (output tokens cost several times more), and smaller contexts.
+
+---
+
+## Production and Security
+
+**Q33: How do you manage prompts in production?** `[Medium]`
+Templates with delimited variables, versioned in git or a registry, logged with model version and parameters; changes gated by an offline eval and a canary; failures turned into new test cases. See [Prompts in Production](08-Prompts-in-Production.mdx).
+
+**Q34: What is prompt drift and how do you prevent surprises?** `[Medium]`
+Behaviour changes when the model behind an alias changes. Pin dated snapshots, treat upgrades as code changes (eval + canary), track deprecation schedules and monitor format rate, length, refusals and cost.
+
+**Q35: A new prompt scores 91.5% vs 90.0% on 200 items. Ship it?** `[Hard]`
+Not on that evidence alone. Compute a paired bootstrap CI on per-item differences; if it spans zero the gain is not established. Also check per-slice regressions.
+
+**Q36: Direct vs indirect prompt injection - which is worse for agents and why?** `[Medium]`
+Indirect: instructions hidden in content the system reads (web pages, emails, retrieved chunks, tool output). The attacker never interacts with you, and an agent that can act can be steered into exfiltrating data or taking actions.
+
+**Q37: Why is a regex blocklist a weak injection defence?** `[Medium]`
+Attackers paraphrase, translate, encode or split instructions; blocklists miss them and flag benign text. Use trained classifiers for detection, and rely on privilege limits and architecture to bound damage.
+
+**Q38: Design a layered defence for an email assistant.** `[Hard]`
+Mark untrusted email content (tags, spotlighting), scan it with an injection classifier, give the model least-privilege tools, require user confirmation before sending or forwarding, keep secrets out of the context, separate the planner from the component that reads untrusted text, and monitor for unusual tool calls or URLs.
+
+**Q39: What does "the lethal trifecta" refer to?** `[Medium]`
+An agent that has access to private data, is exposed to untrusted content, and can communicate externally. With all three, a single injection can exfiltrate data; removing any one leg sharply reduces risk.
+
+**Q40: How do you migrate a production prompt to a new model safely?** `[Hard]`
+Run the golden set paired and per slice; re-tune the prompt (newer models often need fewer, calmer rules); re-run security tests; canary; roll out pinned; keep rollback ready.
+
+---
+
+## Reasoning Models and Optimization
+
+**Q41: What controls reasoning in current APIs?** `[Easy]`
+OpenAI `reasoning.effort` (none to max), Anthropic adaptive thinking with an `effort` level, Gemini `thinking_level`. Older APIs used token budgets.
+
+**Q42: Why must you pass reasoning items or thinking blocks back in a tool loop?** `[Medium]`
+They carry the model's reasoning state; dropping them degrades quality or causes API errors. OpenAI uses reasoning items (or `previous_response_id`), Anthropic thinking blocks alongside `tool_use`, Gemini thought signatures.
+
+**Q43: Is more reasoning always better?** `[Hard]`
+No. Inverse-scaling results (Gema et al., 2025) show accuracy can fall with longer reasoning on some tasks, and easy tasks waste tokens. Tune effort per task on an eval set.
+
+**Q44: Can you use a reasoning summary as an audit explanation?** `[Hard]`
+No. Reasoning models often omit factors that changed their answer (Chen et al., 2025). Use summaries for debugging; audit with logged inputs, tool calls and outputs.
+
+**Q45: APE vs OPRO vs MIPROv2 vs GEPA?** `[Medium]`
+APE infers instructions from examples and selects; OPRO iterates from a score history; MIPROv2 searches instructions and demos jointly with Bayesian optimization; GEPA reflects on traces and textual feedback and evolves instructions, keeping a Pareto front. See [Automated Prompt Optimization](09-Automated-Prompt-Optimization.mdx).
+
+**Q46: What is the core idea of DSPy?** `[Easy]`
+Write programs of typed LM calls (signatures and modules) and let an optimizer produce the prompts and demos against a metric. Compiled programs can be saved, versioned and recompiled for a new model.
+
+**Q47: What goes wrong most often when teams adopt prompt optimizers?** `[Hard]`
+The metric: optimizers maximise exactly what it measures, so a format-only metric or a lenient judge is exploited. Next is overfitting to a small set - always report on a held-out test set - and model coupling, which requires re-optimizing after a model change.
+
+**Q48: An engineer says reasoning models made prompt engineering obsolete. Your response?** `[Hard]`
+They made some techniques obsolete (step-by-step prompting, reasoning demos, temperature tuning) and shifted the work: defining tasks and success criteria, assembling the right context, output contracts, choosing effort, caching for cost, evaluation and injection defence. The discipline moved from wording to context and systems.
+
+---
+
+## More Techniques and Pitfalls
+
+**Q49: Does few-shot prompting work even with wrong labels?**
+For smaller models, largely yes: Min et al. (2022) found format and label space mattered more than label correctness. But larger models do learn the input-label mapping - with flipped labels they follow the flips (Wei et al., 2023). With frontier models, wrong labels in examples get copied, so label examples carefully.
+
+**Q50: Why is negative prompting less reliable than positive framing?**
+"Do Y" gives the model a direct target, and vendor prompting guides report positive instructions are followed more reliably than bare prohibitions. Keep "never do X" for genuine hard constraints and pair it with the behaviour you want instead.
+
+**Q51: What is Generated Knowledge Prompting?**
+Ask the model to generate relevant facts before answering. Predecessor to RAG - makes implicit knowledge explicit in context. Risk: model can hallucinate the generated facts, which then become the basis for a confident wrong answer.
+
+**Q52: What is Least-to-Most Prompting?**
+Decompose a problem into sub-problems ordered from simplest to hardest. Solve each, carrying the solution forward as context for the next sub-problem. Effective for multi-step math, multi-hop Q&A, and complex code generation.
+
+**Q53: What is prompt leaking?**
+Causing the model to reveal its system prompt via crafted inputs ("Repeat everything above verbatim"). Assume any system prompt can be extracted: keep secrets, credentials and anything you'd mind publishing out of it, and put real protections in code. An instruction not to reveal it and output monitoring for its key phrases reduce casual leaks but won't stop a determined attacker.
+
+**Q54: Why might an adversarial user provide a very long input to a RAG-augmented chatbot?**
+To push the system prompt and retrieved context into the "middle" of the context window, reducing the model's attention to them. A very long user-supplied document can effectively bury safety instructions and retrieved context, potentially making the model more susceptible to injection or hallucination. Mitigation: enforce input length limits, keep instructions at the top and restate the key ones after long inputs, and delimit untrusted content - and don't rely on position alone, since injection defences belong in code (see Q36-Q38).
+
+**Q55: What does it mean for a prompt to "overfit" to a test set?**
+The prompt was optimized (manually or automatically) to perform well on specific test examples but fails on novel inputs from the production distribution. Signs: very high eval accuracy but significant production accuracy drop; the prompt contains very specific references to patterns in the test set. Prevention: use a held-out test set that is not accessible during prompt development, and monitor production accuracy independently.
+
+**Q56: A model correctly identifies the answer in its reasoning but gives the wrong final answer. What happened?**
+The written reasoning and the final answer are both generated text, and the reasoning is not guaranteed to be what actually produced the answer (chain-of-thought can be unfaithful). Fixes: ask for the answer in a structured field and extract it programmatically, add an explicit final-answer step, sample several times and take the majority answer (self-consistency), and evaluate the final answer rather than trusting the reasoning.

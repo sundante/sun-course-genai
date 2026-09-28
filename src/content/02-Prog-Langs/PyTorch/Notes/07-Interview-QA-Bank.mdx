@@ -1,0 +1,121 @@
+# Q&A Review Bank - PyTorch Fundamentals
+
+Quick-recall drills spanning Tensors & Autograd, Dataset/DataLoader, the Training Loop, Checkpointing/Mixed Precision, and Debugging/GPU Memory. Use this after completing the individual Notes files.
+
+## Tensors and Autograd
+
+**Q: What is the difference between a tensor with `requires_grad=True` and one without?**
+A: `requires_grad=True` tells autograd to track every operation performed on that tensor, building a computation graph so gradients can be computed via `.backward()`. Tensors without it are treated as constants - any operation involving them still builds a graph if other inputs require grad, but no gradient is computed for them specifically.
+
+**Q: Why must `optimizer.zero_grad()` be called every iteration in a standard training loop?**
+A: Because `.backward()` accumulates (adds to) `.grad` rather than overwriting it. Without clearing gradients each iteration, gradients from previous batches would keep adding to the current batch's gradients, corrupting the update direction.
+
+**Q: What's the difference between `.detach()` and wrapping code in `torch.no_grad()`?**
+A: `.detach()` returns a new tensor sharing the same underlying data but disconnected from the autograd graph - other tensors created from the original can still track gradients. `torch.no_grad()` is a context manager that prevents graph construction for everything inside it, regardless of `requires_grad` on the inputs.
+
+**Q: What is the difference between a PyTorch `Tensor` and a NumPy array?**
+A: A tensor is a NumPy-like multi-dimensional array with two additional capabilities: it can live on a GPU (`.to("cuda")`), and it can be tracked by autograd (`requires_grad=True`) to automatically compute gradients. `torch.from_numpy()` and `.numpy()` convert between them on CPU, sharing the same underlying memory.
+
+**Q: Why does PyTorch use dynamic (define-by-run) computation graphs instead of static graphs?**
+A: Dynamic graphs are built fresh on every forward pass using standard Python control flow (if/for/while), which makes debugging natural (you can put a breakpoint anywhere and inspect real tensors) and makes variable-length or conditional architectures (e.g. RNNs with variable sequence length, early-exit models) straightforward to express. The tradeoff historically was less opportunity for graph-level compiler optimization - which `torch.compile()` (added in PyTorch 2.0) now addresses by tracing and optimizing the graph just-in-time.
+
+**Q: What's the difference between `nn.Module` and a plain Python class?**
+A: `nn.Module` is PyTorch's base class for anything with learnable parameters. Subclassing it and registering layers as attributes (e.g. `self.fc = nn.Linear(...)`) automatically registers those layers' parameters with the module, so `model.parameters()` returns all of them for the optimizer, `model.to(device)` moves all of them, and `model.state_dict()` captures all of them for checkpointing.
+
+**Q: You need to freeze the first few layers of a pretrained model and only fine-tune the last few. How do you do this in raw PyTorch?**
+A: Set `requires_grad = False` on the parameters of the layers to freeze, and only pass the remaining trainable parameters to the optimizer:
+```python
+for param in model.backbone.parameters():
+    param.requires_grad = False
+
+optimizer = torch.optim.Adam(
+    filter(lambda p: p.requires_grad, model.parameters()), lr=1e-4
+)
+```
+Frozen layers still participate in the forward pass, but no gradient is computed or applied for them, and `model.eval()`-sensitive frozen BatchNorm layers should also typically stay in eval mode even during training to avoid corrupting their running statistics.
+
+**Q: What's the difference between `loss.item()` and just using `loss` directly when accumulating a running total across a training loop?**
+A: `loss` is still a tensor attached to the computation graph. Accumulating it directly into a running-total Python variable keeps every batch's graph alive for the lifetime of the loop (since the running total references all of them), causing a steadily growing memory leak. `.item()` extracts a plain Python float, detaching it from the graph entirely.
+
+---
+
+## Dataset and DataLoader
+
+**Q: What two methods must a custom `Dataset` implement, and what does each return?**
+A: `__len__(self)` returns the total number of samples (an integer). `__getitem__(self, idx)` returns a single sample - typically an `(input, label)` tuple - for the given index, applying any per-sample transforms at access time.
+
+**Q: When would you write a custom `collate_fn` for a `DataLoader`?**
+A: When samples in a batch don't share a uniform shape and can't be directly stacked into a tensor - the most common case is variable-length text sequences, which need padding to a common length before batching.
+
+**Q: What's the practical effect of setting `num_workers > 0` in a `DataLoader`?**
+A: Data loading and preprocessing happens in separate subprocesses in parallel with GPU computation, so the next batch is often ready by the time the GPU finishes the current one - reducing GPU idle time. Too many workers can add CPU/memory overhead without further benefit.
+
+---
+
+## Training Loop From Scratch
+
+**Q: Write out the five-step core of a PyTorch training iteration, in order.**
+A: (1) `optimizer.zero_grad()`, (2) forward pass to compute predictions, (3) compute the loss, (4) `loss.backward()`, (5) `optimizer.step()`.
+
+**Q: What's the practical consequence of forgetting to call `model.eval()` before running validation?**
+A: `Dropout` layers keep randomly zeroing activations and `BatchNorm` layers keep using the current (validation) batch's statistics instead of the stable running statistics learned during training - producing noisy, non-reproducible, and typically worse validation metrics, without necessarily raising an error.
+
+**Q: Why should the validation loop be wrapped in `torch.no_grad()`?**
+A: No backward pass happens during validation, so building and retaining the autograd graph (and the activations it needs) is pure wasted memory and compute.
+
+**Q: How do you correctly compute an average loss across an epoch when batch sizes vary (e.g. the last batch is smaller)?**
+A: Accumulate `loss.item() * batch_size` for each batch, sum across all batches, then divide by the total number of samples processed - not by the number of batches, which would incorrectly weight a smaller final batch the same as a full one.
+
+**Q: Your training loss is decreasing but validation loss starts increasing after a few epochs. What's happening and what would you check first?**
+A: Classic overfitting - the model is fitting noise/specifics of the training set rather than generalizable patterns. First checks: is `model.eval()` actually being called for validation (a missed `eval()` call can itself distort the val loss curve)? Then: add regularization (dropout, weight decay), reduce model capacity, add data augmentation, or use early stopping based on the validation metric.
+
+**Q: A colleague's training script computes accuracy as `correct / len(dataloader)` instead of `correct / len(dataset)`. What's the bug?**
+A: `len(dataloader)` returns the number of *batches*, not the number of samples. Dividing total correct predictions by the number of batches instead of the number of samples inflates the "accuracy" by roughly the batch size. It should be `correct / len(dataloader.dataset)`.
+
+**Q: Why might two runs of the same training script with the same code and hyperparameters produce different final accuracy?**
+A: Non-determinism from: unseeded RNGs (`torch.manual_seed`, `random.seed`, `numpy.random.seed`, and the `DataLoader`'s `worker_init_fn` for multi-worker shuffling), non-deterministic GPU kernels (some cuDNN algorithms are non-deterministic by default for performance - `torch.backends.cudnn.deterministic = True` trades some speed for reproducibility), and data loading order when `num_workers > 1` without careful seeding.
+
+---
+
+## Checkpointing and Mixed Precision
+
+**Q: What should a resumable training checkpoint contain, beyond just the model weights?**
+A: The optimizer's `state_dict()` (so momentum/adaptive learning rate state isn't reset), the current epoch number, and any tracked metrics needed to resume correctly (e.g. best validation loss so far, learning rate scheduler state).
+
+**Q: Why is `torch.save(model.state_dict(), path)` preferred over `torch.save(model, path)`?**
+A: `state_dict()` saves only the parameter/buffer tensors as a plain dict, which is portable across code refactors and Python/library versions. Saving the whole model object pickles class definitions and internal references, which breaks if the model's source code changes.
+
+**Q: What problem does `GradScaler` solve, and how?**
+A: In `float16` mixed-precision training, small gradient values can underflow to zero, effectively stopping learning for those parameters. `GradScaler` multiplies the loss by a scale factor before `.backward()` so gradients stay in a representable range, then unscales them before the optimizer update - and adjusts the scale factor dynamically to avoid overflow.
+
+**Q: What's the main benefit of mixed precision training beyond speed?**
+A: Reduced VRAM usage - activations and gradients stored in 16-bit instead of 32-bit roughly halve memory consumption, which lets you use a larger batch size or a bigger model on the same GPU.
+
+**Q: You load a checkpoint saved from a multi-GPU `DataParallel`-wrapped model into a single-GPU script and get a `state_dict` key mismatch error (`module.` prefix). How do you fix it?**
+A: `DataParallel` and `DistributedDataParallel` both wrap the model and prefix every parameter key with `module.` in the state dict. Strip the prefix before loading into a non-wrapped model:
+```python
+state_dict = {k.replace("module.", "", 1): v for k, v in checkpoint["model_state_dict"].items()}
+model.load_state_dict(state_dict)
+```
+
+**Q: What's the practical difference between `torch.save(model.state_dict(), path)` and `torch.jit.save()`/`torch.export`?**
+A: `state_dict()` saves only tensor weights - you still need the original Python model class definition available to reconstruct and load into. `torch.export` (the current path - TorchScript's `torch.jit.script`/`trace` is in maintenance mode) serializes the model's *computation graph itself*, producing an artifact that can be loaded and run without the original Python source - the standard path for production deployment (C++ runtimes, mobile, edge) where the training codebase isn't available at inference time.
+
+**Q: When would you choose `bfloat16` over `float16` for mixed precision training?**
+A: `bfloat16` has the same exponent range as `float32` (just less mantissa precision), so it's far less prone to the gradient underflow/overflow issues `float16` has - often removing the need for a `GradScaler` entirely. It's preferred when available (newer NVIDIA GPUs, TPUs) especially for large models where training stability at scale matters more than the extra precision `float16`'s larger mantissa offers.
+
+---
+
+## Debugging and GPU Memory
+
+**Q: A model runs fine on CPU but throws a device-mismatch error on GPU. What's the most common overlooked cause?**
+A: The labels/targets tensor wasn't moved to the GPU along with the input batch - it's easy to remember `.to(device)` for the model input but forget it for the target tensor used in the loss computation.
+
+**Q: What's the single most effective first step to fix a CUDA out-of-memory error?**
+A: Reduce the batch size - activation memory (usually the largest consumer of VRAM during training) scales roughly linearly with it, so even a modest reduction can resolve the OOM.
+
+**Q: How does gradient accumulation help when a GPU can't fit a large batch size?**
+A: It lets you run several smaller "micro-batches" through forward/backward without calling `optimizer.step()` or `zero_grad()` between them - gradients accumulate across the micro-batches, and a single `optimizer.step()` at the end applies an update equivalent to one large batch, without ever needing the full batch in memory at once.
+
+**Q: What does it mean if `torch.cuda.memory_summary()` shows a large gap between "reserved" and "allocated" memory?**
+A: It indicates memory fragmentation - PyTorch's caching allocator is holding freed-but-not-yet-returned memory blocks that are too fragmented to satisfy a new large allocation request, even though the total free memory looks sufficient. `torch.cuda.empty_cache()` can sometimes help in this specific case, though it won't help if the model genuinely needs more memory than is available.

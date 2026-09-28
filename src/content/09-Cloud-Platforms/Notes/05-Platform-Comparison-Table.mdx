@@ -1,0 +1,124 @@
+# Platform Comparison Table
+
+<div class="audience-biz" markdown="1">
+
+If you know one cloud's AI stack well, you already know most of the others - the concepts repeat, only the names change. This page is the cheat sheet: the same capability, named across Google Cloud (Gemini Enterprise Agent Platform, formerly Vertex AI), AWS (Bedrock), and Azure (Microsoft Foundry).
+
+</div>
+
+<div class="audience-tech" markdown="1">
+
+Useful in two situations: converting existing GCP-stack experience into credible AWS/Azure vocabulary for an interview, and reasoning about a multi-cloud or migration architecture where the underlying capability is the same but the API/product name isn't.
+
+</div>
+
+```objectives
+time: 20 min
+outcomes:
+  - Map a capability (model access, managed RAG, guardrails, agent runtime, data platform, MLOps) across Google Cloud, AWS and Azure
+  - Name one architectural difference that matters for each mapping, not just the product names
+  - Explain where GPU clouds and inference providers fit next to the hyperscalers
+prerequisites:
+  - "The four platform notes in this module"
+```
+
+---
+
+## Model Access, RAG, and Guardrails
+
+| Capability | Google Cloud (Agent Platform, formerly Vertex AI) | AWS (Bedrock) | Azure (Microsoft Foundry) |
+|---|---|---|---|
+| Model catalog and invocation | Model Garden endpoints | Converse / ConverseStream API | Foundry model deployments |
+| Managed RAG | RAG Engine / managed search | Knowledge Bases | Azure AI Search integration |
+| Safety/content filtering | Model Armor, safety filters | Guardrails for Bedrock | Azure AI Content Safety |
+| Managed agent runtime | Agent Runtime (formerly Agent Engine) + ADK | AgentCore | Foundry Agent Service |
+| Agent memory | Memory Bank | AgentCore Memory | Foundry Agent Service memory |
+| Model evaluation | Agent Platform evaluation | Bedrock Model Evaluation / AgentCore Evaluations | Foundry Evaluations |
+| Bring your own fine-tuned open model | Model Garden deploy / GKE | Custom Model Import | Foundry managed compute |
+
+## Data Platform
+
+| Capability | GCP | AWS | Azure |
+|---|---|---|---|
+| Data warehouse | BigQuery | Redshift | Fabric Warehouse / Synapse |
+| Unified lakehouse layer | BigLake | Lake Formation | OneLake (Fabric) |
+| Managed relational DB | Cloud SQL | RDS | Azure SQL Database |
+| Globally distributed relational (strong consistency) | Spanner | Aurora DSQL | No exact equivalent (Azure SQL Hyperscale scales up, not globally active-active) |
+| Globally distributed NoSQL | Firestore / Bigtable | DynamoDB (global tables) | Cosmos DB |
+| Managed Spark platform | Dataproc | EMR | Azure Databricks / Synapse Spark |
+
+## MLOps
+
+| Capability | GCP | AWS | Azure |
+|---|---|---|---|
+| Model registry | Model Registry (Vertex AI, now Agent Platform) | SageMaker Model Registry (or MLflow on Databricks) | Azure ML Model Registry |
+| Experiment tracking | Vertex AI Experiments | SageMaker Experiments (or MLflow) | Azure ML / MLflow-native in Fabric |
+| Pipeline orchestration | Vertex AI Pipelines | SageMaker Pipelines | Azure ML Pipelines |
+
+---
+
+## Beyond the Big Three: GPU Clouds and Inference Providers
+
+For self-hosted training and serving, many teams use specialist GPU clouds ("neoclouds") - such as CoreWeave, Lambda and Crusoe - which offer large GPU clusters, often with the newest hardware first. For hosted open-model inference, providers such as Together AI, Fireworks AI, Baseten and Modal serve open-weight models behind APIs or run your containers on GPUs. The trade-off versus the hyperscalers: often better GPU availability and price, less integrated data, security and governance tooling.
+
+---
+
+## How to Use This Table in an Interview
+
+<div class="audience-biz" markdown="1">
+
+Don't just recite the table - use it to show you understand *why* the concepts map, not just that they do. "Bedrock's Knowledge Bases and Vertex AI's RAG Engine solve the same retrieval problem - managed chunking, embedding, and indexing" is a stronger answer than naming both products with no connective explanation.
+
+</div>
+
+<div class="audience-tech" markdown="1">
+
+The strongest framing in a platform-breadth interview question is architectural, not lexical: name the capability first (e.g. "managed RAG"), then the products across clouds, then one concrete difference that actually matters (e.g. how much of the pipeline you own: Bedrock Knowledge Bases lets you choose the embedding model, chunking, parser and vector store, such as OpenSearch Serverless, Aurora PostgreSQL or S3 Vectors, while Google's RAG Engine manages its own index by default and can use an external store such as Vector Search instead). This demonstrates transferable understanding rather than memorized vocabulary.
+
+</div>
+
+---
+
+## Study Notes
+
+**Must-know for interviews:**
+- Managed RAG: RAG Engine (GCP) / Knowledge Bases (AWS) / Azure AI Search integration (Azure) - same problem, different defaults
+- Data warehouse: BigQuery / Redshift / Fabric Warehouse - Fabric's OneLake is architecturally distinct (single logical storage layer) from BigQuery/Redshift's more siloed models
+- Globally distributed relational with strong consistency: Spanner / Aurora DSQL; globally distributed NoSQL: Firestore / DynamoDB / Cosmos DB - several of these offer native vector search for RAG
+- The interview-winning move is naming the capability and one real architectural difference, not just reciting product names
+
+## Check Yourself
+
+```quiz
+- q: "What is the closest AWS counterpart to Google Spanner?"
+  options: ["DynamoDB global tables", "Aurora DSQL", "Redshift", "RDS for PostgreSQL"]
+  answer: 2
+  explain: "Aurora DSQL is a distributed SQL database with multi-Region strong consistency; DynamoDB is NoSQL."
+- q: "Why might a team run open-model inference on a provider like Together AI or Fireworks instead of a hyperscaler?"
+  options: ["Hyperscalers cannot serve open models", "Often better GPU availability and price for open models, at the cost of less integrated data, security and governance tooling", "They are required for fine-tuning", "They support the Converse API"]
+  answer: 2
+- q: "What's the AWS equivalent of Vertex AI's RAG Engine?"
+  answer: "Bedrock Knowledge Bases - managed chunking, embedding, and retrieval."
+- q: "What's the Azure equivalent of BigQuery?"
+  answer: "Microsoft Fabric's Warehouse, built on the OneLake unified storage layer - architecturally different from BigQuery in that all Fabric workload types share one logical storage layer."
+- q: "Which AWS service is the closest match to Google Spanner?"
+  answer: "Aurora DSQL - a distributed, PostgreSQL-compatible SQL database with multi-Region strong consistency (GA May 2025). DynamoDB and Cosmos DB are NoSQL stores with different data models and consistency options, so they are not like-for-like."
+```
+
+## Exercises
+
+```exercise
+- title: "Answer a platform-breadth question"
+  task: |
+    Write a 4-5 sentence answer to: "You've built agents on Google Cloud. How would you build the same thing on Azure?" Use the capability-first framing from this note.
+  solution: |
+    Example: "The capabilities are the same, so I'd map them one by one. Model access moves from Model Garden to Foundry model deployments, and the agent runtime from Agent Runtime to the Foundry Agent Service - my ADK or framework code could also run on Azure Container Apps. Retrieval moves from RAG Engine to Azure AI Search, which gives me hybrid search with semantic ranking. Safety screening goes from Model Armor to Azure AI Content Safety, and I'd re-run the agent's evaluation suite, because model and filter behaviour change. The real work is identity and data: Entra ID roles per component, and where the data already lives."
+```
+
+## References
+
+- Google Cloud, [Introducing Gemini Enterprise Agent Platform](https://cloud.google.com/blog/products/ai-machine-learning/introducing-gemini-enterprise-agent-platform) (2026)
+- AWS, [Amazon Aurora DSQL is now generally available](https://aws.amazon.com/about-aws/whats-new/2025/05/amazon-aurora-dsql-generally-available) (2025)
+- Microsoft, [Ignite 2025: Microsoft Foundry](https://azure.microsoft.com/en-us/blog/actioning-agentic-ai-5-ways-to-build-with-news-from-microsoft-ignite-2025/) (2025)
+
+*Last reviewed: 2026-09*

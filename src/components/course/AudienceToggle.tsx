@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useSyncExternalStore } from "react";
 
 export type AudienceMode = "all" | "tech" | "biz";
 
@@ -24,34 +24,72 @@ export function applyAudienceMode(m: AudienceMode) {
   }
 }
 
+function readStoredMode(): AudienceMode {
+  try {
+    const stored = localStorage.getItem(AUDIENCE_STORAGE_KEY);
+    return stored === "tech" || stored === "biz" ? stored : "all";
+  } catch {
+    return "all";
+  }
+}
+
+// The mode lives in localStorage; re-read it when this tab or another tab changes it
+function subscribeToMode(onChange: () => void) {
+  window.addEventListener(AUDIENCE_CHANGED_EVENT, onChange);
+  window.addEventListener("storage", onChange);
+  return () => {
+    window.removeEventListener(AUDIENCE_CHANGED_EVENT, onChange);
+    window.removeEventListener("storage", onChange);
+  };
+}
+
+// Whether this is the first visit, decided once per page load (before the effect marks it seen)
+let firstVisit: boolean | undefined;
+function isFirstVisit() {
+  if (firstVisit === undefined) {
+    try {
+      firstVisit = !localStorage.getItem(HIGHLIGHT_SEEN_KEY);
+    } catch {
+      firstVisit = false;
+    }
+  }
+  return firstVisit;
+}
+
+const noopSubscribe = () => () => {};
+
 export function AudienceToggle() {
-  const [mode, setMode] = useState<AudienceMode>("all");
+  const mode = useSyncExternalStore(subscribeToMode, readStoredMode, () => "all" as AudienceMode);
+  const firstVisitHint = useSyncExternalStore(noopSubscribe, isFirstVisit, () => false);
   const [saved, setSaved] = useState(false);
-  const [highlight, setHighlight] = useState(false);
+  const [hintDone, setHintDone] = useState(false);
+  const highlight = firstVisitHint && !hintDone;
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const stored = localStorage.getItem(AUDIENCE_STORAGE_KEY) as AudienceMode | null;
-    if (stored && ["all", "tech", "biz"].includes(stored)) {
-      setMode(stored);
-      applyAudienceMode(stored);
-    }
+    applyAudienceMode(mode);
+  }, [mode]);
 
-    if (!localStorage.getItem(HIGHLIGHT_SEEN_KEY)) {
+  useEffect(() => {
+    if (!firstVisitHint) return;
+    try {
       localStorage.setItem(HIGHLIGHT_SEEN_KEY, "1");
-      setHighlight(true);
-      const t = setTimeout(() => setHighlight(false), 7000);
-      return () => clearTimeout(t);
+    } catch {
+      // storage unavailable - the hint may show again next visit
     }
-  }, []);
+    const t = setTimeout(() => setHintDone(true), 7000);
+    return () => clearTimeout(t);
+  }, [firstVisitHint]);
 
   function handleSelect(m: AudienceMode) {
-    setMode(m);
     applyAudienceMode(m);
-    localStorage.setItem(AUDIENCE_STORAGE_KEY, m);
+    try {
+      localStorage.setItem(AUDIENCE_STORAGE_KEY, m);
+    } catch {
+      // storage unavailable - the choice applies to this page only
+    }
     window.dispatchEvent(new CustomEvent(AUDIENCE_CHANGED_EVENT, { detail: { mode: m } }));
     setSaved(true);
-    setHighlight(false);
+    setHintDone(true);
     setTimeout(() => setSaved(false), 1800);
   }
 

@@ -1,0 +1,100 @@
+# Agent Engineering - Q&A Review Bank
+
+30 questions across the module: harnesses, loops and graphs, context, coding and computer-use agents, skills and memory, verifiers and environments, and spec-driven development. Try each one before revealing the answer.
+
+```objectives
+time: 45 min
+outcomes:
+  - Recall the main design principles of agent engineering and the evidence behind them
+  - Apply them to short design scenarios
+  - Explain the trade-offs behind each principle
+prerequisites:
+  - "Chapters 1-8 of this module"
+```
+
+## Harness, Loops and Graphs
+
+```quiz
+- q: "What is an agent harness?"
+  answer: "Everything that isn't the model: the loop and bounds, tools and their execution environment, state (files, git, progress logs), context management, verification and conventions such as AGENTS.md."
+- q: "How do long-running coding harnesses carry work across context windows?"
+  answer: "State in files and git: an initializer sets up a feature list with statuses, an init script, a progress log and a first commit; each worker session reads them, runs smoke tests, completes one verified feature, commits and updates the log."
+- q: "Why separate generation from evaluation?"
+  answer: "Models rate their own work generously and declare success early; a separate evaluator with explicit criteria - or tests run by the harness - catches what self-review misses. Anthropic's harness-design work kept a separate evaluator even after simplifying other parts."
+- q: "What is a sprint contract?"
+  answer: "An agreement between generator and evaluator, before a chunk of work starts, on testable criteria for 'done' - so evaluation is against agreed criteria rather than negotiated afterwards."
+- q: "When should a harness component be removed?"
+  answer: "When an ablation - removing it and re-running the eval suite with enough trials - shows no loss in success, cost or safety, typically after a model upgrade makes a workaround unnecessary."
+- q: "When does a recurring task justify building a loop?"
+  answer: "When P × N × (S + R) > F: success probability times occurrences times (attention saved + risk avoided) exceeds the setup cost. One-off tasks rarely qualify."
+- q: "What limits how much a loop can improve an agent's output?"
+  answer: "The verifier: iterating against external feedback (tests, execution, state checks) helps; self-critique without new information often doesn't, and can repeat errors more confidently."
+- q: "Name three signals that justify turning a loop into a graph."
+  answer: "Distinct specialities per phase, parallelisable sub-tasks, different models or tools per step, auditable branching with approvals, or a verifier large enough to be its own step."
+- q: "What is the 'dies halfway' test?"
+  answer: "Ask what happens if the process is interrupted: if restarting is cheap and side-effect free, a loop is fine; if state must survive, humans approve midway, or side effects mustn't repeat, use a checkpointed graph or durable execution."
+```
+
+## Context
+
+```quiz
+- q: "What is context rot?"
+  answer: "Degradation of model performance as input length and irrelevant content grow, observed well within advertised context windows (e.g. Chroma's 2025 study of 18 models; lost-in-the-middle effects)."
+- q: "Just-in-time vs up-front context?"
+  answer: "Up-front puts knowledge in the prompt before the run; just-in-time gives references and search/read tools so the agent loads what it needs. Coding agents mostly use a hybrid: AGENTS.md up front, the repository on demand."
+- q: "Name five techniques for managing a long-running agent's context."
+  answer: "Tool-result clearing, compaction, offloading large outputs to files, structured note-taking, sub-agent isolation, progressive disclosure of skills and tools."
+- q: "How should compaction be scheduled given prompt caching?"
+  answer: "Infrequently and substantially, keeping the stable system prompt and tools at the front, because each compaction invalidates the cached prefix after them."
+```
+
+## Coding and Computer-Use Agents
+
+```quiz
+- q: "What makes a repository agent-ready?"
+  answer: "A short AGENTS.md with build/test/lint commands and non-obvious conventions; fast deterministic checks; clear task specs; architecture enforced by lint rules and tests; an isolated environment without production secrets."
+- q: "What did METR's 2025 randomised trial of AI tools find?"
+  answer: "Experienced open-source developers working in their own mature repositories took 19% longer with early-2025 AI tools, despite expecting (and afterwards believing in) a speed-up - measure outcomes, not impressions."
+- q: "Interactive vs background coding agents?"
+  answer: "Interactive agents suit exploratory, ambiguous work the developer steers; background/cloud agents suit well-specified independent tasks with good tests, reviewed as PRs, many in parallel."
+- q: "API, DOM automation or pixels - how do you choose for a computer-use task?"
+  answer: "Prefer the API (fast, reliable), then DOM/accessibility-tree browser automation, and use pixel-based computer use only for software with neither - e.g. legacy desktop apps."
+- q: "Why are browser agents with logged-in sessions high risk?"
+  answer: "They combine private data (the session), untrusted content (every page) and external actions (forms, navigation) - the lethal trifecta. Use isolated profiles, allowlists, confirmations and takeover."
+```
+
+## Skills and Memory
+
+```quiz
+- q: "What is in a skill, and which fields are required?"
+  answer: "A directory with SKILL.md (YAML frontmatter + instructions) and optional scripts/, references/ and assets/. Required frontmatter: name (lowercase, hyphens, ≤64 chars, matching the directory) and description (≤1,024 chars, what it does and when to use it)."
+- q: "Explain progressive disclosure for skills."
+  answer: "Only name and description of every skill are loaded at start (~100 tokens each); the SKILL.md body loads when the skill is activated; references and scripts load only when a step needs them."
+- q: "AGENTS.md, skill, MCP server or memory - where does each kind of knowledge go?"
+  answer: "Always-needed project facts in AGENTS.md; occasional procedures in skills; access to external systems in tools/MCP servers; facts learned at runtime in memory."
+- q: "Why must skills be reviewed like code?"
+  answer: "They contain instructions the agent follows and scripts it runs; a malicious or compromised skill - or one that fetches remote instructions at run time - is a supply-chain and injection channel."
+- q: "Name the five policies of a memory subsystem."
+  answer: "Write (what is stored, from which channels), retrieve (scope and token budget), conflict (how contradictions resolve), expiry (decay, deletion rights), security (provenance, isolation, never storing instructions as facts)."
+```
+
+## Verifiers, Environments and Specs
+
+```quiz
+- q: "Rank verifier types by reliability."
+  answer: "Outcome/state checks, executable tests, programmatic rubrics, validated LLM judges, and human review (reliable but slow and inconsistent) - combine them for coverage."
+- q: "What are the parts of an agent environment?"
+  answer: "A task distribution, tools and a world, a reset to known state per episode, a verifier producing the score or reward, and isolation from answers and other episodes."
+- q: "How did RLVR extend to agents?"
+  answer: "From checkable single answers (maths, code, as in DeepSeek-R1) to multi-turn episodes in environments where the verifier's outcome rewards the whole trajectory (e.g. SWE-Gym's executable repositories)."
+- q: "Give three reward-hacking behaviours and a defence for each."
+  answer: "Editing tests (keep tests out of the writable area; verify from a pristine copy); special-casing visible examples (hidden tests); claiming success (state-based outcome checks); reading answers or scoring code (isolate the verifier)."
+- q: "What did Baker et al. find about chain-of-thought monitoring?"
+  answer: "Monitoring the CoT caught reward hacking, but training against the monitor taught models to obfuscate their reasoning while continuing to hack."
+- q: "Vibe coding vs vibe engineering?"
+  answer: "Vibe coding accepts AI-written code if it runs, for prototypes; vibe engineering uses coding agents with tests, plans, documentation, version control and review for production software."
+- q: "What are the stages of the Spec Kit workflow?"
+  answer: "Constitution, specify, clarify, plan, tasks, implement (with analysis/verification gates) - each a versioned Markdown artifact reviewed before the next."
+```
+
+*Last reviewed: 2026-09*

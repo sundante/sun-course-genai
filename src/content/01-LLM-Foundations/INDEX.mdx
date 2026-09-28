@@ -1,0 +1,51 @@
+# 01 - LLM Foundations
+
+Every later module - training, serving, prompting, retrieval, agents - rests on one mechanism: a transformer that reads a sequence of tokens and predicts the next one. This module builds that mechanism piece by piece and ends with the ways it predictably fails.
+
+```objectives
+scope: module
+time: 8-10 hours
+outcomes:
+  - Explain tokenization, next-token prediction and sampling (temperature, top-p) and how they shape model output
+  - Draw a decoder-only transformer block - embeddings, positional encoding (RoPE), attention, normalization, feed-forward, residuals - and say what each part does
+  - Compute attention by hand and explain multi-head, grouped-query and FlashAttention
+  - Compare encoder-only, decoder-only, encoder-decoder and mixture-of-experts models and choose one for a task
+  - Read a current model card - MLA, fine-grained MoE, local-global attention, hybrid layers - and place a model on the landscape
+  - Recognize the classic failure modes - hallucination, lost in the middle, sycophancy, repetition - and their mitigations
+prerequisites:
+  - Python and basic linear algebra (matrix multiplication, dot products, softmax)
+```
+
+## Chapter Map
+
+| # | Note | Topic | Level |
+|---|------|-------|-------|
+| 1 | [LLM Fundamentals](Notes/01-LLM-Fundamentals.mdx) | Tokens, sampling parameters, context windows, model types | Beginner |
+| 2 | [Transformer Architecture](Notes/02-Architecture.mdx) | Embeddings, positional encoding, Pre-LN and RMSNorm, residuals, SwiGLU | Intermediate |
+| 3 | [Attention Mechanisms](Notes/03-Attention-Mechanisms.mdx) | Q/K/V math, multi-head, causal masking, FlashAttention, GQA | Intermediate |
+| 4 | [Model Architecture Types](Notes/04-Model-Architecture-Types.mdx) | Encoder, decoder, encoder-decoder, mixture of experts, model families | Intermediate |
+| 5 | [Modern Architectures](Notes/05-Modern-Architectures.mdx) | MLA, fine-grained MoE, local-global attention, attention sinks, SSM hybrids, native multimodality | Advanced |
+| 6 | [Failure Modes & Tricky Issues](Notes/06-Failure-Modes-and-Tricky-Issues.mdx) | Forgetting, lost in the middle, hallucination, sycophancy, repetition | Advanced |
+| 7 | [Model Landscape](Notes/07-Model-Landscape.mdx) | How to read and choose among current models; dated snapshot of the major families | Beginner |
+| 8 | [Q&A Review Bank](Notes/08-Interview-QA-Bank.mdx) | 43 questions tagged Easy / Medium / Hard | All levels |
+
+## Where the Rest of the Old "LLM Models" Module Went
+
+This module used to cover everything about LLMs. Its later chapters now live where they are taught in depth:
+
+| Topic | Now in |
+|-------|--------|
+| Training & pretraining, GPU & hardware | [Pretraining at Scale](../03-Pretraining/INDEX.mdx) |
+| Fine-tuning, RLHF, DPO, GRPO, LoRA | [Post-Training & Reasoning](../04-Post-Training/INDEX.mdx) |
+| KV cache, inference optimization, production deployment | [Inference & Serving](../07-Serving-and-Inference/INDEX.mdx) |
+| Prompting mechanics (chat templates, constrained decoding) | [Prompt & Context Engineering](../10-Prompt-Engineering/INDEX.mdx) |
+
+## Review
+
+- [Module quiz](/quiz/llm-models) - every *Check Yourself* question in this module, in course order
+
+---
+
+## Next Topic
+
+Next: [02 - PyTorch Fundamentals](../02-Prog-Langs/PyTorch/INDEX.mdx)

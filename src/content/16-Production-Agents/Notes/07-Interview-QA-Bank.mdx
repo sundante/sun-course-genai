@@ -1,0 +1,104 @@
+# Production Agents - Q&A Review Bank
+
+32 questions across architecture, security, durability, cost, evaluation and observability. Try each one before revealing the answer.
+
+```objectives
+time: 45 min
+outcomes:
+  - Recall the key design rules for production agents in each area
+  - Apply them to short design scenarios
+  - Explain the trade-offs behind each rule
+prerequisites:
+  - "Chapters 1-6 of this module"
+```
+
+## Architecture and Reliability
+
+```quiz
+- q: "Name the layers of a production agent system."
+  answer: "Interface (auth, limits, task ids), durable orchestrator (loop/workflow, bounds, approvals), model gateway (routing, fallbacks, caching, budgets), tool layer (scoped credentials, policy checks, sandbox), state and memory, human review with audit, telemetry."
+- q: "Which failures should an agent harness retry, and which not?"
+  answer: "Retry transient failures (timeouts, 429s, 5xx) with backoff and jitter. Return invalid-argument errors to the model as tool results. Don't retry permanent errors or refusals; escalate or fall back."
+- q: "Why do retries require idempotency keys on writes?"
+  answer: "A step can fail after its side effect happened but before the result was recorded; retrying without a key repeats the side effect (a double refund). A key derived from run and step ids lets the target detect the duplicate."
+- q: "What should happen when a run hits its step or cost bound?"
+  answer: "Stop cleanly, persist progress, return a partial result with an explicit status such as limit_reached, and emit a metric - never silently truncate or claim completion."
+- q: "What makes a human approval gate effective rather than ceremonial?"
+  answer: "Rules in code decide when it triggers; the reviewer sees the exact action and consequences; unanswered requests escalate and cancel rather than auto-approve; decisions are audited; and the approval rate stays meaningful (watch for rubber-stamping)."
+```
+
+## Security
+
+```quiz
+- q: "State the lethal trifecta and the structural fix."
+  answer: "Private data + exposure to untrusted content + external communication in one context enables exfiltration. Remove one leg per context: isolate untrusted-content processing, scope data access, gate or allowlist external communication."
+- q: "Why is prompt-injection resistance in the model not sufficient?"
+  answer: "It is probabilistic and attacks adapt; one success can leak data or cause an irreversible action. The MCP lab saw the same instruction ignored 30/30 in a description yet obeyed 7/30 in a tool result."
+- q: "Name the six injection-resistant design patterns."
+  answer: "Action-selector, plan-then-execute, LLM map-reduce, dual LLM, code-then-execute (CaMeL), context minimisation."
+- q: "What does CaMeL add to the dual LLM pattern?"
+  answer: "The privileged model writes a program that an interpreter executes, so untrusted data can't change control flow, and values carry capabilities (provenance) checked against security policies at each tool call. It reported 77% of AgentDojo tasks solved with provable security vs 84% undefended."
+- q: "List five risks from the OWASP Top 10 for Agentic Applications."
+  answer: "Any five of: agent goal hijack, tool misuse and exploitation, identity and privilege abuse, agentic supply chain, unexpected code execution, memory and context poisoning, insecure inter-agent communication, cascading failures, human-agent trust exploitation, rogue agents."
+- q: "How should credentials be handled for an agent that runs code?"
+  answer: "No long-lived secrets inside the sandbox; inject credentials at an egress proxy or tool layer; use per-user, short-lived, audience-scoped tokens; egress allowlists; the agent never holds more authority than its user."
+```
+
+## Durable Execution
+
+```quiz
+- q: "What does durable execution record, and what does it enable?"
+  answer: "Each step's inputs and results in a durable log; after a crash the workflow replays, completed steps return recorded results, and execution continues - plus long waits (approvals, timers, signals) without holding a process."
+- q: "What is the determinism rule?"
+  answer: "Workflow (orchestration) code must make the same decisions on replay; anything non-deterministic - model calls, tool calls, time, randomness, I/O - must run inside recorded steps."
+- q: "Compare Temporal, Restate and DBOS in one line each."
+  answer: "Temporal: separate server, workflows plus activities, signals, very mature. Restate: server journaling durable handlers, awakeables, keyed virtual objects. DBOS: a library with workflow and step decorators storing state in your Postgres."
+- q: "Is a LangGraph checkpointer durable execution?"
+  answer: "Partly: it persists state between steps so a thread can resume. A durable-execution engine adds step retries, timers, signals, worker scheduling and deterministic replay; teams often combine them."
+- q: "How do you keep a long agent's workflow history manageable?"
+  answer: "Store large payloads externally and record references; use continue-as-new (or equivalent) with a compact summary; avoid thousands of tiny steps."
+```
+
+## Cost and Latency
+
+```quiz
+- q: "Why does an agent's input-token cost grow faster than its number of turns?"
+  answer: "Each turn re-sends the growing conversation, so input ≈ turns × prefix + a term quadratic in turns from accumulated tool calls and results."
+- q: "Three rules for prompt caching in an agent loop?"
+  answer: "Keep the prefix (tools, system prompt) stable and free of timestamps; put the cache breakpoint at the end of the conversation each turn; don't add or reorder tools mid-conversation."
+- q: "Name four ways to shrink context growth."
+  answer: "Tools that return less (fields, summaries, pagination, caps); clearing or compacting old tool results; tool search instead of all tool definitions; programmatic tool calling; sub-agents that return summaries."
+- q: "Routing vs cascades?"
+  answer: "Routing picks one model per request up front (a classifier). A cascade tries a cheap model first and escalates when a check fails - only as good as its check."
+- q: "Why track cost per successful task rather than cost per request?"
+  answer: "A cheaper model with a lower success rate can cost more per resolved task, and failures carry downstream costs (escalations, retries, user harm)."
+- q: "Name four latency levers for agents."
+  answer: "Parallel tool calls, streaming answers and progress, fewer turns (coarser tools, workflows), cached prefill for long prefixes, speculative tool calls; report p95/p99."
+```
+
+## Evaluation and Observability
+
+```quiz
+- q: "What is trajectory evaluation and why is it needed alongside outcome checks?"
+  answer: "It grades the path - which tools were called, with what arguments, how many steps, whether the agent looped or did something unsafe - not just the final answer or state. An agent can reach the right outcome through a wasteful or risky path (hallucinated arguments that happened not to fail, redundant calls), and trajectory metrics such as tool-selection accuracy, argument validity and steps-to-completion catch it. Use state-based outcome checks as the primary grade and trajectory checks as diagnostics and guardrails."
+- q: "How does LLM-as-judge differ for single-turn evaluation and trajectory evaluation?"
+  answer: "A single-turn judge rates one output against a rubric. A trajectory judge must understand the task, the available tools and each step's context to decide whether each call was right and the path efficient - harder, so it needs a stronger judge, a more detailed rubric, and validation against human-labelled trajectories. Prefer deterministic step checks (argument validation, repeated-call detection) where possible and use the judge for what code can't check."
+- q: "Regression vs capability suites?"
+  answer: "Regression suites sit near 100% and block releases when they regress; capability suites are deliberately hard and show whether changes genuinely improve the agent. Tasks graduate from capability to regression."
+- q: "How do you validate an LLM judge?"
+  answer: "Label a sample of outputs by hand, run the judge on the same outputs, measure agreement (accuracy, kappa), refine the rubric until agreement approaches human-human agreement, and re-validate when the judge model or rubric changes."
+- q: "What do τ-bench's pass^k results show?"
+  answer: "Agents that succeed on a task once often fail it on other trials: success fell sharply as k grew (below 25% at pass^8 in retail), so single-trial success overstates reliability."
+- q: "Name four questions to ask about a public agent benchmark score."
+  answer: "Which harness/scaffold; how many attempts or how much test-time compute; contamination risk; cost and time per task; relevance to your tasks."
+- q: "What are the three core span types in the OpenTelemetry GenAI conventions for agents?"
+  answer: "invoke_agent for the agent run, chat for model calls, execute_tool for tool calls - with attributes such as model, token usage, finish reasons, agent name, tool name and call id."
+- q: "What must you record on every run to tie a regression to a change?"
+  answer: "Prompt version, model and response-model version, tool-set version and framework version, along with the outcome and cost."
+- q: "Walk through debugging 'the agent said it refunded but didn't'."
+  answer: "Find the trace; check for a refund_item execute_tool span (missing or errored); read the final chat span's context to confirm a claimed action; check versions for a recent change; fix in the harness (state check or templated confirmation); add the case to the regression suite."
+- q: "Which signals indicate a possible prompt-injection campaign in production?"
+  answer: "Rising policy-guard blocks on write tools, injection-classifier hits, new egress destinations, unusual tool-call volumes or first-time actions - all visible from tool spans and security metrics."
+```
+
+*Last reviewed: 2026-09*

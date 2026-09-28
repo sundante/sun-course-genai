@@ -52,7 +52,7 @@ flowchart TD
 1. **Custom Dataset/DataLoader usage** - `torchvision.datasets.MNIST` wrapped by a standard `DataLoader` with `batch_size`, `shuffle`, and `num_workers` configured explicitly (see [Dataset & DataLoader](../../Notes/02-Dataset-and-DataLoader.mdx))
 2. **A hand-written training loop** - explicit `model.train()`/`model.eval()` switching, `optimizer.zero_grad()` → forward → loss → `backward()` → `optimizer.step()`, with a separate validation pass every epoch (see [Training Loop From Scratch](../../Notes/03-Training-Loop-From-Scratch.mdx))
 3. **Checkpointing** - `model.state_dict()` + `optimizer.state_dict()` saved every N epochs, resumable via `--resume` (see [Checkpointing & Mixed Precision](../../Notes/04-Checkpointing-and-Mixed-Precision.mdx))
-4. **Mixed precision** - `torch.cuda.amp.autocast()` + `GradScaler`, automatically disabled on CPU-only machines so the script still runs correctly without a GPU
+4. **Mixed precision** - `torch.amp.autocast("cuda")` + `GradScaler`, automatically disabled on CPU-only machines so the script still runs correctly without a GPU
 5. **Device-agnostic code** - runs on CPU or GPU without modification (`.to(device)` used consistently)
 
 ## Files

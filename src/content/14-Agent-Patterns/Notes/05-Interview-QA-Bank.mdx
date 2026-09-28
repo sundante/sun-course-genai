@@ -1,0 +1,159 @@
+# Agent Patterns & Multi-Agent - Q&A Review Bank
+
+A consolidated review set for the module, grouped by chapter. Difficulty: `[Easy]` = recall, `[Medium]` = design decisions and trade-offs, `[Hard]` = system design, debugging and edge cases.
+
+```objectives
+time: 60 min
+outcomes:
+  - "Answer each question from memory before revealing the answer, across: Workflow Patterns; Single-Agent Patterns; Multi-Agent Architectures; Multi-Agent Engineering; Patterns Under Measurement (Lab)"
+  - Explain the reasoning behind each answer - the mechanism or trade-off - not only the fact
+  - Identify the chapters you are weakest on and revisit them before the module quiz
+prerequisites:
+  - "The concept notes of this module"
+```
+
+---
+
+## Workflow Patterns
+
+**Q1: Name the five workflow patterns.** `[Easy]`
+Prompt chaining, routing, parallelization (sectioning and voting), orchestrator-workers, evaluator-optimizer. See [Workflow Patterns](01-Workflow-Patterns.mdx).
+
+**Q2: What is a gate in prompt chaining, and why use programmatic gates?** `[Easy]`
+A check between steps that stops or repairs bad intermediate output. Programmatic gates (schema validation, tests, length checks) are cheap, deterministic and prevent errors from compounding down the chain.
+
+**Q3: How do you evaluate a router?** `[Medium]`
+As its own component: labelled inputs, a confusion matrix, per-route precision and recall, a fallback route for low confidence, and monitoring of the production route distribution.
+
+**Q4: Sectioning vs voting?** `[Easy]`
+Sectioning splits a task into independent parts run in parallel; voting runs the same task several times and aggregates. Sectioning cuts latency; voting buys reliability when errors are independent.
+
+**Q5: When does best-of-n help, and when doesn't it?** `[Medium]`
+It helps when a reliable selector exists - tests, a schema, a checker. When the same model picks its favourite, gains are small because the selector shares the generator's blind spots.
+
+**Q6: Orchestrator-workers vs sectioning?** `[Medium]`
+In sectioning the sub-tasks are fixed in advance by code; in orchestrator-workers a model decides the decomposition at run time, which suits inputs whose structure isn't known ahead of time.
+
+**Q7: When does an evaluator-optimizer loop work?** `[Medium]`
+When the evaluator adds information the generator lacked - test results, validator errors, a rubric, sources - and the loop is bounded (2-3 rounds), keeping the best output rather than the last.
+
+**Q8: A majority vote of 3 samples from an 80%-accurate classifier - what accuracy, and why is reality usually worse?** `[Hard]`
+0.8³ + 3 × 0.8² × 0.2 = 0.896 if errors are independent. Samples from one model share systematic errors (the same misreading of hard inputs), so errors are correlated and the gain shrinks.
+
+**Q9: How do you estimate a workflow's cost and latency before building?** `[Medium]`
+Draw the call graph with tokens and model per node. Cost is the sum over nodes times expected loop iterations; latency is the longest path through the graph (parallel branches count once).
+
+---
+
+## Single-Agent Patterns
+
+**Q10: Why is a single agent the default?** `[Easy]`
+One context (no information lost between agents), one trace to debug, lowest token cost. Add structure only for observed limits. See [Single-Agent Patterns](02-Single-Agent-Patterns.mdx).
+
+**Q11: Where should action rules be enforced?** `[Medium]`
+In code at the tool boundary (ownership, limits, recipients), and also stated in the prompt. Lab 12 found tool-enforced rules held in every prompt variant while a prompt-only rule failed in all of them.
+
+**Q12: Why not gate on the model's self-reported confidence?** `[Medium]`
+It is poorly calibrated. Use external signals: verifier scores, test results, agreement across samples, retrieval coverage or a trained classifier.
+
+**Q13: What is a sub-agent used as a tool, and what does it cost?** `[Medium]`
+The main agent calls a model invocation that runs its own loop in a fresh context and returns a condensed result. It isolates context (exploration noise stays out) at the cost of more total tokens and of anything the sub-agent doesn't return.
+
+**Q14: Rank verification feedback sources by strength.** `[Medium]`
+Execution (tests, type checkers, validators) > environment state (re-reading the record) > an independent evaluator with new information (a rubric, sources) > the same model re-reading its own output.
+
+**Q15: What goes in a handoff to a human?** `[Easy]`
+A structured summary: the user's goal, verification status, actions taken and results, failures and reasons, relevant ids, a suggested next step.
+
+---
+
+## Multi-Agent Architectures
+
+**Q16: When do multiple agents help?** `[Medium]`
+On wide tasks - many independent lines of work that each need their own context - when the value justifies several times the tokens. They hurt on deep, sequential or shared-context tasks and when the single-agent baseline is already strong. See [Multi-Agent Architectures](03-Multi-Agent-Architectures.mdx).
+
+**Q17: Quote three numbers from Anthropic's multi-agent research system.** `[Medium]`
++90.2% over a single Opus 4 agent on their breadth-first research eval; token usage explained 80% of performance variance on BrowseComp; multi-agent runs used about 15× the tokens of chat (single agents about 4×).
+
+**Q18: What is Cognition's argument against multi-agent systems?** `[Medium]`
+Share full context and traces, because actions carry implicit decisions; parallel agents with partial context make conflicting decisions. They recommend a single-threaded agent with compression for long tasks.
+
+**Q19: What did Kim et al. find about scaling agent systems?** `[Hard]`
+Task structure decides: up to +80.8% on decomposable financial reasoning but −70% on sequential planning; diminishing returns once single-agent performance is high; architectures without centralised verification amplify errors more.
+
+**Q20: Name the three MAST failure categories with an example each.** `[Medium]`
+System design issues (unaware of termination conditions), inter-agent misalignment (information withholding, ignoring another agent's input), task verification (premature termination, no or incorrect verification).
+
+**Q21: Handoffs vs orchestrator-subagents?** `[Easy]`
+Handoffs transfer control to one active agent at a time with a context summary; an orchestrator keeps control, delegates sub-tasks (often in parallel) and synthesises results.
+
+**Q22: Is multi-agent debate better than a single agent?** `[Hard]`
+Early work (Du et al., 2023) showed gains, but controlled comparisons found a strong single-agent prompt matched multi-agent discussion (Wang et al., 2024) and debate wasn't reliably better than self-consistency at equal budget (Smit et al., 2024). Compare at equal tokens before adopting it.
+
+**Q23: What do role-based systems like MetaGPT and ChatDev contribute?** `[Medium]`
+Mainly a chained workflow of agents with structured intermediate artefacts (specs, designs, tests) and checks between stages; the value comes from the artefacts and verification more than from the personas.
+
+**Q24: Choose an architecture for a bank's customer assistant covering cards, loans and fraud.** `[Hard]`
+Handoffs or routing from a triage agent to specialists, each with a small, scoped tool set; fraud escalates to humans; structured handoff summaries; limits on handoff count; per-agent guardrails and audit logs.
+
+---
+
+## Multi-Agent Engineering
+
+**Q25: What is the "game of telephone" in multi-agent systems and the fix?** `[Medium]`
+Detail is lost when every result is paraphrased back through the lead agent. Sub-agents write outputs to an artifact store and return references; the orchestrator reads what it needs. See [Multi-Agent Engineering](04-Multi-Agent-Engineering.mdx).
+
+**Q26: What must a good delegation contain?** `[Easy]`
+Objective, why it matters, output format, preferred sources and tools, what is out of scope, and an effort budget.
+
+**Q27: Compare communication mechanisms.** `[Medium]`
+Function return (simple; orchestrator waits), structured messages (typed handoffs), shared state (needs owners and merge rules), events (async and scalable; harder to debug), A2A (across ownership boundaries; outputs untrusted).
+
+**Q28: What is a task ledger?** `[Medium]`
+Structured orchestrator state recording facts, hypotheses, the plan with owners and status, and progress; used to detect stalls and re-plan, it survives compaction and is readable by humans (Magentic-One uses task and progress ledgers).
+
+**Q29: How do you avoid breaking long-running agents when you deploy?** `[Hard]`
+Checkpoint and make work resumable; run old and new versions side by side and shift traffic gradually (rainbow deployments) so in-flight runs finish on their original version; version prompts and tools with the run.
+
+**Q30: How should an orchestrator scale effort?** `[Medium]`
+By query complexity, stated in its prompt and enforced by budgets: simple fact-finding with one agent and a few tool calls; comparisons with a handful of sub-agents; complex research with many sub-agents with divided responsibilities.
+
+**Q31: How do you evaluate a multi-agent system?** `[Medium]`
+End result first (state checks or a validated rubric judge: factual accuracy, citation accuracy, completeness, source quality, tool efficiency), then orchestration quality and sub-agent outputs, always with cost and latency next to quality; start with ~20 real queries and keep human review.
+
+**Q32: Why trace every agent under one trace id?** `[Easy]`
+To find which agent introduced an error and what it was told, and to attribute tokens, latency and failures across the system.
+
+---
+
+## Patterns Under Measurement (Lab)
+
+**Q33: Why use hidden tests for grading but visible tests for feedback in the lab?** `[Medium]`
+Feedback must come from information the system would really have (the docstring examples); grading on separate hidden tests prevents strategies from being scored on the very checks they optimised against. See the [lab](../CodeLabs/01-Patterns-Under-Measurement.mdx).
+
+**Q34: Which lab strategy isolates the effect of external feedback?** `[Medium]`
+Comparing `self_refine` (a review round with no new information) and `test_feedback` (a revision round driven by failing examples) - both add calls after the same first attempt; only one adds information.
+
+**Q35: What does best-of-n with a visible-test selector measure?** `[Medium]`
+The value of sampling plus an external verifier: if any of n samples passes the visible tests, it is likely (not certainly) to pass the hidden ones. The gap between visible and hidden pass rates shows how well the visible tests cover the specification.
+
+---
+
+## More Review Questions
+
+**Q36: When would you choose Pipeline over Orchestrator-Subagent?**
+Pipeline when: the task decomposition is fixed and known upfront, stages have a clear sequential dependency (output of A is always input to B), and modularity is important (you want to swap stages independently). Orchestrator-Subagent when: the plan needs to be dynamic (the orchestrator decides what to do next based on intermediate results), some stages can run in parallel, or you need to handle failures by replanning rather than halting.
+
+**Q37: What are the tradeoffs of hierarchical vs flat orchestration?**
+Hierarchical: better isolation (a team-level failure doesn't propagate to the manager), natural for very large tasks, mirrors human organizational structure. But: more latency (each layer adds a round-trip), harder to debug (failures surface only after propagating up), and more complex to build. Flat (single orchestrator): simpler, faster, easier to debug. But: doesn't scale to many agents; the orchestrator becomes a bottleneck. Choose hierarchical only when task scale or isolation requirements justify the complexity.
+
+**Q38: What are hybrid patterns and give an example?**
+Real systems combine multiple patterns. Common example: Orchestrator-Subagent + Parallel - the orchestrator fans out to parallel subagents for independent subtasks, waits for all results, then synthesizes. Another: Pipeline + Reflexion - a pipeline where the writing stage includes an internal critique loop before passing to the next stage. Hybrid patterns are the rule, not the exception, in production systems.
+
+**Q39: You have a multi-agent task that's producing a wrong final answer. How do you debug it?**
+(1) Get the full trajectory: pull the complete trace from your observability tool. (2) Find the first wrong step - don't start from the error, start from the beginning. (3) Check tool call arguments at that step: were they grounded in context or hallucinated? (4) Check whether the tool result was correctly interpreted. (5) If the issue is in an LLM reasoning step, inspect the full context that was provided at that step. (6) Replay from checkpoint: use the framework's checkpointing (with the recorded model responses, since sampling varies) to reproduce the failure. (7) Fix the root cause - improved tool description, better prompt, input validation - and verify the fix by replaying.
+
+**Q40: What are the most common failure modes in production agentic systems?**
+(1) Cascading failure: agent A produces bad output → agent B uses it → errors compound silently. Fix: validate outputs between agents. (2) Infinite loops: reflection/retry cycle with no termination. Fix: always set max_iterations. (3) Context drift: agent loses track of the original goal as context accumulates. Fix: pin goal in system message; use task ledger. (4) Prompt injection via external content: external data overrides agent instructions. Fix: structural defences - least-privilege tools, isolating untrusted content, approvals for consequential actions, policy checks in code (see Production Agents: Agent Security). (5) Hallucinated tool arguments: agent invents parameter values not in context. Fix: validate arguments, log every tool call. (6) HITL timeout: no human responds, task is stuck. Fix: define timeout policy and escalation path.
+
+*Last reviewed: 2026-09*

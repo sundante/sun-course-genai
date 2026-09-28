@@ -1,0 +1,233 @@
+# RAG - Q&A Review Bank
+
+A consolidated review set for the module, grouped by chapter. Difficulty: `[Easy]` = recall, `[Medium]` = design decisions and trade-offs, `[Hard]` = system design, debugging and edge cases.
+
+```objectives
+time: 90 min
+outcomes:
+  - "Answer each question from memory before revealing the answer, across: Fundamentals; Embeddings and Vector Search; Documents and Chunking; Retrieval and Reranking; Grounded Generation; Evaluation; Advanced Patterns; Agentic RAG and Long Context; System Design and Production; Cloud Platforms"
+  - Explain the reasoning behind each answer - the mechanism or trade-off - not only the fact
+  - Identify the chapters you are weakest on and revisit them before the module quiz
+prerequisites:
+  - "The concept notes of this module"
+```
+
+---
+
+## Fundamentals
+
+**Q1: What is RAG and what problems does it address?** `[Easy]`
+Retrieve relevant passages from a corpus you control and have the model answer from them with citations. It addresses knowledge cutoffs, private data, hallucination (partially) and verifiability, by separating knowledge (an updatable index) from behaviour (model weights). See [RAG Fundamentals](01-RAG-Fundamentals.mdx).
+
+**Q2: Describe the two pipelines of a RAG system.** `[Easy]`
+Indexing (offline, incremental): parse, clean, chunk, enrich, embed, index with metadata. Query (online): rewrite (optional), retrieve (hybrid, filtered), rerank, assemble context, generate a cited answer.
+
+**Q3: What happens if queries are embedded with a different model than the corpus?** `[Medium]`
+Vectors from different models live in different spaces, so similarities are meaningless: retrieval returns plausible-looking wrong chunks with no error. Changing the embedding model requires re-embedding the corpus into a new index.
+
+**Q4: RAG or fine-tuning for a support bot whose policies change weekly?** `[Medium]`
+RAG: facts change weekly and need citations; fine-tuning injects facts unreliably and would need retraining each week. Fine-tune (or prompt) for tone and format if needed, and retrieve for knowledge.
+
+**Q5: Name three question types RAG over documents handles poorly and the better tool.** `[Medium]`
+Aggregations over structured data (SQL tool), computation (code execution), and whole-corpus synthesis ("themes across 10,000 reports" - GraphRAG global search, map-reduce or agentic research).
+
+---
+
+## Embeddings and Vector Search
+
+**Q6: How are embedding models trained, and why do some need query/passage prefixes?** `[Medium]`
+Contrastively: pull a query toward its relevant passage and away from in-batch and hard negatives. Queries and passages differ in form, so many models are trained with role-specific prefixes or task types; omitting them costs recall. See [Embeddings & Vector Search](02-Embeddings-and-Vector-Search.mdx).
+
+**Q7: How do you choose an embedding model?** `[Medium]`
+Shortlist from the MTEB/MMTEB retrieval leaderboard filtered by language, length, licence and cost; then evaluate candidates on 100-300 labelled domain queries (recall@k, nDCG@10). Leaderboard differences often reverse on domain data.
+
+**Q8: Cosine, dot product or L2?** `[Easy]`
+Use what the model was trained with. For unit-length vectors, dot product equals cosine, and L2 ranks identically (‖q − d‖² = 2 − 2cos).
+
+**Q9: Compare HNSW, IVF-PQ and DiskANN.** `[Hard]`
+HNSW: in-memory graph, high recall and low latency, memory-hungry, incremental inserts. IVF-PQ: clusters plus compressed codes, compact, needs training, recall tuned by nprobe and rescoring. DiskANN: graph on SSD with compressed vectors in RAM, billion-scale on one node at higher latency.
+
+**Q10: How much RAM do 10M 768-dimensional float32 vectors need, and how do you cut it?** `[Medium]`
+10M × 768 × 4 bytes ≈ 30.7 GB plus index overhead (~2.6 GB of HNSW links at M = 32). int8 is 4× smaller (~99% quality with rescoring), binary 32× smaller (~96% with rescoring), PQ at 96 bytes per vector 32× smaller; Matryoshka truncation combines with all of them.
+
+**Q11: What is Matryoshka Representation Learning?** `[Medium]`
+Training so that prefixes of the embedding are themselves good embeddings - you can truncate 3,072 dimensions to 256-512 with little loss (then re-normalise), trading a bit of quality for large storage and speed savings.
+
+**Q12: Why is filtered vector search hard?** `[Hard]`
+Post-filtering the top-k can leave too few results; pre-filtering can disconnect an HNSW graph so traversal misses valid neighbours. Engines use filter-aware traversal (ACORN-style), partitioning by common filters (tenant), or exact search when a filter is very selective.
+
+---
+
+## Documents and Chunking
+
+**Q13: Why do many "retrieval failures" start at parsing?** `[Medium]`
+Flattened tables, interleaved columns, repeated headers and unOCR'd scans put garbage or nothing into the index. Use layout-aware parsers, keep tables whole, caption figures or retrieve page images, and spot-check parsed output per document type. See [Document Processing & Chunking](03-Document-Processing-and-Chunking.mdx).
+
+**Q14: What's a good default chunking strategy?** `[Easy]`
+Structure-aware splitting on headings, then recursive 256-512-token chunks with 10-20% overlap and the heading path prepended - then tune on a retrieval eval. Semantic chunking hasn't shown consistent gains.
+
+**Q15: Explain parent-child retrieval.** `[Medium]`
+Index small child chunks for precise matching; return their larger parent sections to the model for context. It decouples the retrieval unit from the context unit.
+
+**Q16: What is contextual retrieval and what did it achieve?** `[Medium]`
+An LLM writes a 50-100-token context for each chunk from the full document (e.g. which company and quarter); it's prepended before embedding and BM25 indexing. Anthropic reported 35% fewer retrieval failures with contextual embeddings, 49% with contextual BM25 too, and 67% with reranking.
+
+**Q17: What is late chunking?** `[Hard]`
+Embed the whole document with a long-context embedding model first, then pool token embeddings per chunk span, so each chunk vector reflects surrounding context - no LLM calls, but it needs token-level outputs.
+
+**Q18: What metadata should you capture at ingest?** `[Medium]`
+Source, URL, page and section path (citations); doc id, version and content hash (updates, dedup, reproducibility); dates (freshness, conflicts); ACL groups and tenant (access control); type, language and product (filters).
+
+---
+
+## Retrieval and Reranking
+
+**Q19: Explain BM25's k1 and b.** `[Medium]`
+k1 controls term-frequency saturation (repeated terms add diminishing, hyperbolically saturating credit); b controls length normalisation (the same count is weaker evidence in a longer document). See [Retrieval & Reranking](04-Retrieval-and-Reranking.mdx).
+
+**Q20: When does BM25 beat dense retrieval?** `[Easy]`
+Exact identifiers and rare terms (codes, SKUs, CVEs, names), and domains the embedding model wasn't trained on - in the code lab, BM25 beat a small general-purpose dense model on scientific claims.
+
+**Q21: What are SPLADE and ColBERT?** `[Hard]`
+SPLADE: learned sparse vectors with term weights and expansion terms, served from an inverted index. ColBERT: one vector per token with MaxSim late interaction, near cross-encoder quality at retrieval time; ColBERTv2/PLAID compress it.
+
+**Q22: Why RRF, and what is k?** `[Medium]`
+Scores from different retrievers aren't comparable, so fuse ranks: Σ 1/(k + rank). k = 60 damps the top ranks so agreement across retrievers beats a single first place.
+
+**Q23: Does hybrid retrieval always help?** `[Hard]`
+It reliably raises recall at depth, but equal-weight fusion can dilute a much stronger retriever at the top: in the code lab, with a strong dense model, RRF slightly lowered nDCG@10 while raising Recall@100. Weight toward the stronger retriever or rerank the fused set.
+
+**Q24: Why rerank, and why not use the cross-encoder for everything?** `[Medium]`
+Cross-encoders read query and passage together and judge relevance far better, but nothing can be precomputed, so they only scale to a shortlist. Retrieve 20-100 for recall, rerank to 5-10.
+
+**Q25: An off-the-shelf reranker lowered your nDCG. Why?** `[Hard]`
+Domain mismatch - e.g. a web-search-trained reranker on scientific or legal text. Evaluate rerankers in-domain; try larger general or LLM rerankers, or fine-tune one.
+
+**Q26: When do HyDE and multi-query help, and what do they cost?** `[Medium]`
+HyDE helps short queries against long technical documents but a wrong hypothetical answer retrieves the wrong documents; multi-query helps ambiguous queries at N× retrieval cost. Add them only against measured failure categories.
+
+---
+
+## Grounded Generation
+
+**Q27: Name four ways answers fail after successful retrieval.** `[Medium]`
+Context ignored, misled by a wrong source, embellished beyond the context, distracted by irrelevant passages - plus bad citations, blended conflicts and wrong abstention. See [Grounded Generation & Citations](05-Grounded-Generation-and-Citations.mdx).
+
+**Q28: How readily do models adopt wrong retrieved content?** `[Hard]`
+Very: ClashEval found models adopted incorrect retrieved content over their own correct prior more than 60% of the time. Retrieval precision and source quality are generation-quality issues.
+
+**Q29: How should you assemble retrieved context?** `[Medium]`
+Threshold by reranker score, deduplicate, fit a token budget best-first, tag each passage with id, source and date, put documents before the question, and ask for quotes before the answer.
+
+**Q30: Citation recall vs citation precision?** `[Medium]`
+Recall: is each statement fully supported by the passages it cites? Precision: does each cited passage actually support its statement? Both are checked with NLI models or LLM judges (ALCE).
+
+**Q31: How do you make a RAG system abstain correctly?** `[Hard]`
+A calibrated retrieval-score threshold before generation, an explicit abstain instruction, and eval items that are unanswerable - measuring both false answers and false refusals, which trade off against each other.
+
+---
+
+## Evaluation
+
+**Q32: Compute MRR and nDCG@10 when the single relevant document is ranked 3rd.** `[Easy]`
+MRR = 1/3; nDCG@10 = (1/log₂4)/(1/log₂2) = 0.5. See [RAG Evaluation](06-RAG-Evaluation.mdx).
+
+**Q33: Define groundedness, answer relevance and context recall.** `[Easy]`
+Groundedness: share of answer claims supported by the retrieved context. Answer relevance: does the answer address the question? Context recall: does the retrieved context contain what the reference answer needs?
+
+**Q34: Can a grounded answer be wrong?** `[Medium]`
+Yes - if the source is wrong or outdated. Track correctness separately and fix sources with versioning and recency filters.
+
+**Q35: How do you build a RAG test set with no production traffic yet?** `[Medium]`
+Generate questions from chunks with an LLM, rewrite them to sound like users, and add unanswerable, multi-hop, identifier and conflict cases; tag by slice; replace with real queries as they arrive. Synthetic questions echo chunk wording and overstate retrieval quality.
+
+**Q36: Context recall is high but faithfulness is low. Diagnosis?** `[Medium]`
+Generation: the evidence is there but not used. Try quote-then-answer prompting, fewer and better-ordered passages, stricter instructions or a stronger model.
+
+**Q37: Why validate LLM-judged RAG metrics?** `[Hard]`
+Judges have biases and blind spots (partial support, paraphrase). Compare to 50-100 human labels (agreement, kappa), keep the judge model fixed across comparisons, and pin library versions.
+
+---
+
+## Advanced Patterns
+
+**Q38: Self-RAG vs CRAG?** `[Medium]`
+Self-RAG fine-tunes the generator to emit reflection tokens (Retrieve, IsRel, IsSup, IsUse) that control retrieval and selection. CRAG adds a retrieval grader that labels results correct, ambiguous or incorrect and refines them or falls back to web search - it works with any generator. See [Advanced RAG Patterns](07-Advanced-RAG-Patterns.mdx).
+
+**Q39: What is Speculative RAG?** `[Hard]`
+A small specialist model drafts several answers in parallel from different subsets of retrieved documents; a larger model verifies and selects the best - improving quality and latency when many documents are retrieved.
+
+**Q40: Describe GraphRAG's indexing and its two main query modes.** `[Hard]`
+LLM extraction of entities and relationships, a knowledge graph, hierarchical Leiden communities and an LLM summary per community. Local search expands from query entities; global search map-reduces over community summaries for corpus-wide questions.
+
+**Q41: How do LazyGraphRAG and LightRAG reduce GraphRAG's cost?** `[Hard]`
+LazyGraphRAG defers summarisation to query time and indexes with cheap NLP extraction (Microsoft reports indexing at 0.1% of GraphRAG's cost). LightRAG uses a lighter graph with dual-level retrieval and supports incremental updates.
+
+**Q42: When would you use ColPali?** `[Medium]`
+For visually rich documents - slides, charts, forms, scans - where layout carries meaning. It embeds page images as patch vectors and scores with MaxSim, with no OCR; the generator must be multimodal.
+
+---
+
+## Agentic RAG and Long Context
+
+**Q43: When is agentic RAG worth its cost?** `[Medium]`
+When each search depends on the last (multi-hop), questions have several parts, or sources differ by sub-question. For single-hop lookups a pipeline is faster and cheaper - route between them. See [Agentic & Deep-Research RAG](08-Agentic-and-Deep-Research-RAG.mdx).
+
+**Q44: What makes an agentic retrieval loop reliable?** `[Hard]`
+Precise tool descriptions, passage ids for citation, search and token budgets the model knows about, stop and "report what's missing" instructions, parallel calls for independent needs, context hygiene, and injection defences for fetched content.
+
+**Q45: How are deep-research systems structured?** `[Medium]`
+A lead agent plans and delegates to parallel sub-agents with isolated contexts, merges findings, fills gaps and writes a report with a citation pass. Anthropic found performance tracks tokens spent; multi-agent runs used about 15× the tokens of chat.
+
+**Q46: Long context, RAG or CAG?** `[Hard]`
+Cached long context (CAG) when a stable corpus fits well within the window and queries are frequent; RAG for large, changing, per-user or access-controlled corpora and high-volume lookups; hybrids (Self-Route, retrieve-then-read-whole-documents) in between. See [Long Context vs RAG vs CAG](09-Long-Context-RAG-and-CAG.mdx).
+
+**Q47: At a 0.1× cached-token price, when does cached long context cost the same per query as RAG?** `[Medium]`
+When the corpus is about 10× the RAG context size - e.g. an 8K-token RAG context vs an ~80K-token cached corpus (ignoring output tokens).
+
+**Q48: Why is self-hosted CAG memory-intensive?** `[Hard]`
+KV cache per token = 2 × layers × KV heads × head dim × bytes - about 256 KB for a 64-layer, 8-KV-head, 128-dim bf16 model, so a 400K-token corpus needs ~105 GB. Use FP8 KV, offloading (e.g. LMCache) or a smaller corpus.
+
+---
+
+## System Design and Production
+
+**Q49: Walk through the latency budget of a RAG request.** `[Medium]`
+Auth and routing (tens of ms), optional rewrite (hundreds), embedding and hybrid retrieval (~50-100 ms), reranking (30-300 ms), LLM time to first token (0.3-1.5 s) and generation (seconds, streamed). The LLM dominates. See [RAG System Design](10-RAG-System-Design.mdx).
+
+**Q50: How do you design multi-tenant access control?** `[Hard]`
+Per-tenant index, namespaces or shared index plus mandatory filters; apply the filter server-side from the authenticated identity; fail closed; mirror and re-sync source ACLs; key caches by tenant and permissions; run cross-tenant probes in evals.
+
+**Q51: What's risky about a semantic answer cache?** `[Hard]`
+False hits between near-identical questions with different answers ("refund for Enterprise" vs "for Starter"), stale answers after document updates, and cross-tenant leakage if keys omit tenant and permissions. Use conservative thresholds, short TTLs and partitioned caches - or exact caches plus prompt caching.
+
+**Q52: How do you change the embedding model with zero downtime?** `[Medium]`
+Build a new index alongside, evaluate, switch queries and the query-embedding model together via an alias, keep the old index for rollback.
+
+**Q53: How do you keep an index fresh?** `[Medium]`
+Event-driven ingestion: on change, delete the document's chunks by id and insert new ones through idempotent queue workers with a dead-letter queue; monitor freshness per source; batch for slow-changing content.
+
+**Q54: What should you monitor in production?** `[Medium]`
+Latency by stage, errors, empty-retrieval rate, reranker score distribution, tokens and cache hit rate, sampled groundedness, user feedback, "don't know" rate by topic, freshness per source and cost per request. See [RAG in Production](11-RAG-in-Production.mdx).
+
+**Q55: What is corpus poisoning and how do you defend against it?** `[Hard]`
+Planting documents crafted to be retrieved for target questions and to steer answers; PoisonedRAG showed a handful of passages per question achieving ~90% attack success. Control write access to indexed sources, apply trust tiers and review to user-contributed content, and watch for new documents that dominate retrieval.
+
+**Q56: Why treat embeddings as sensitive?** `[Medium]`
+Inversion attacks (vec2text) reconstruct much of the original text from embeddings - 92% of 32-token inputs exactly in the original study. Protect vectors like the documents themselves.
+
+**Q57: Your RAG answers from an outdated policy. Walk through the diagnosis.** `[Hard]`
+Check whether the new version is indexed (freshness metrics, ingestion logs); whether the old version was deleted (delete-by-doc-id); whether both are retrieved and the prompt lacks a "prefer newest" rule with dates in the context; and whether a cache served the old answer (cache keys and TTLs).
+
+---
+
+## Cloud Platforms
+
+**Q58: Name the managed RAG offerings on each major cloud.** `[Easy]`
+Google: Vertex AI Search, RAG Engine, Vector Search, Google Search grounding (Gemini Enterprise Agent Platform). AWS: Bedrock Managed Knowledge Base and Knowledge Bases (OpenSearch, Aurora, Neptune GraphRAG, S3 Vectors). Azure: AI Search with hybrid and semantic ranking, agentic retrieval and Foundry IQ. See [Managed RAG on Cloud Platforms](12-Managed-RAG-on-Cloud-Platforms.mdx).
+
+**Q59: What must a managed RAG service expose for you to evaluate it properly?** `[Medium]`
+Retrieved chunks with ids and scores (not just answers), so you can compute recall@k and nDCG on your golden set and separate retrieval from generation failures.
+
+**Q60: What changed in Google's SDKs that breaks older RAG code?** `[Medium]`
+`vertexai.generative_models` and `vertexai.language_models` were removed in June 2026 in favour of the `google-genai` SDK, and RAG Engine access is moving from `vertexai.rag` to the `agentplatform` client.

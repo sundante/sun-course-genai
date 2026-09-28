@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 export const THEME_STORAGE_KEY = "theme";
 
@@ -25,18 +25,24 @@ function MoonIcon() {
   );
 }
 
-export function ThemeToggle() {
-  const [mounted, setMounted] = useState(false);
-  const [dark, setDark] = useState(false);
+// The "dark" class on <html> is the source of truth (set before paint by the theme script);
+// watch it so every toggle instance stays in sync
+function subscribeToTheme(onChange: () => void) {
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+  return () => observer.disconnect();
+}
 
-  useEffect(() => {
-    setDark(document.documentElement.classList.contains("dark"));
-    setMounted(true);
-  }, []);
+const isDark = () => document.documentElement.classList.contains("dark");
+const noopSubscribe = () => () => {};
+
+export function ThemeToggle() {
+  // false during server render and hydration, true once running in the browser
+  const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false);
+  const dark = useSyncExternalStore(subscribeToTheme, isDark, () => false);
 
   function handleToggle() {
     const next = !dark;
-    setDark(next);
     applyTheme(next);
     try {
       localStorage.setItem(THEME_STORAGE_KEY, next ? "dark" : "light");

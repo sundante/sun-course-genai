@@ -1,0 +1,111 @@
+# Q&A Review Bank
+
+27 questions spanning the full hands-on fine-tuning workflow: HuggingFace tooling, LoRA/QLoRA configuration, instruction data and training runs, and benchmarking. Use this as a final drill after working through the four Notes files.
+
+```objectives
+time: 40 min
+outcomes:
+  - "Answer each question from memory before revealing the answer, across: HuggingFace Ecosystem; LoRA & QLoRA Hands-On; Instruction Data & Training Runs; Benchmarking Base vs Tuned"
+  - Explain the reasoning behind each answer - the mechanism or trade-off - not only the fact
+  - Identify the chapters you are weakest on and revisit them before the module quiz
+prerequisites:
+  - "The concept notes of this module"
+```
+
+---
+
+## HuggingFace Ecosystem
+
+**Q: Why does loading a mismatched tokenizer and model checkpoint not raise an error?**
+A: Tokenization always succeeds mechanically - it maps text to some valid vocabulary IDs regardless of which model those IDs were originally trained against. The model then computes on token IDs it was never trained to expect, producing degraded or incoherent output silently, with no exception raised anywhere in the pipeline.
+
+**Q: What problem does `apply_chat_template` solve, and why does it matter for fine-tuning specifically?**
+A: It formats a list of role-tagged messages into the exact string format (special tokens, turn markers) a given instruction-tuned model expects, since this format varies by model family. For fine-tuning, if your training data isn't formatted with the same chat template the model will see at inference time, the model learns a distribution that doesn't match how it's actually prompted in production - a common and hard-to-diagnose cause of a fine-tune that "ignores instructions."
+
+**Q: Why do many base (non-instruction-tuned) models ship without a `pad_token`, and what's the standard fix?**
+A: Base models are typically trained purely on next-token prediction over continuous text, with no need for a dedicated padding token during pretraining. The standard fix is `tokenizer.pad_token = tokenizer.eos_token` - safe because padded positions are excluded from the loss via the attention mask, so the model never trains on the pad token's presence.
+
+**Q: You're about to fine-tune an open model you've never used before. What are the first three things you check on its model card before writing any code?**
+A: License (can you fine-tune and redistribute/commercially use the result), whether it's gated (requires accepting terms before `from_pretrained` will succeed), and its chat template/tokenizer compatibility with the training pipeline you're about to build. Skipping these is a common source of wasted setup time - discovering a license restriction or a gated-access block after writing a training script is avoidable.
+
+**Q: Why does `AutoModelForCausalLM.from_pretrained("some-model")` work identically across totally different model architectures?**
+A: The `Auto*` classes read `config.json` in the model's repo to resolve the correct concrete architecture class (e.g. `Qwen2ForCausalLM`, `LlamaForCausalLM`) automatically. This is what lets a fine-tuning script stay architecture-agnostic - swapping the base model is usually a one-line change as long as the code only calls the `Auto*` interface.
+
+---
+
+## LoRA & QLoRA Hands-On
+
+**Q: What's the practical effect of increasing LoRA rank `r` from 8 to 64?**
+A: Trainable parameter count and adapter capacity increase roughly linearly with `r`, which can improve quality on more complex fine-tuning tasks - but it also increases VRAM/compute cost and raises overfitting risk on small datasets. Most tasks (style, format, narrow-domain behavior) are well served by `r=8-16`; broader behavior changes may justify `r=32-64`.
+
+**Q: What is `prepare_model_for_kbit_training()` for, and what breaks if you skip it in a QLoRA setup?**
+A: It casts normalization layers to FP32 for numerical stability, enables input gradients on the embedding layer (required for gradient checkpointing to work through frozen quantized layers), and disables `use_cache` during training. Skipping it is a common cause of a QLoRA run that trains without errors but fails to actually converge - gradients don't flow correctly through the quantized base model.
+
+**Q: Why can't you cleanly merge a QLoRA adapter directly back into its 4-bit quantized base model?**
+A: The base weights are stored in a lossy quantized format (NF4), so merging directly would compound quantization error into the merged result. The standard approach is to reload the base model in full precision (BF16/FP16), merge the adapter there, and optionally re-quantize the merged model afterward for serving.
+
+**Q: When would you choose to keep a LoRA adapter unmerged rather than merging it into the base model?**
+A: When serving multiple fine-tuned variants from the same base model - multi-tenant deployments, A/B testing different fine-tunes, or per-customer customization. Keeping adapters separate (a few MB each) avoids duplicating the much larger base model per variant, at the cost of a small inference-time overhead from the extra low-rank matmul.
+
+**Q: A teammate proposes `target_modules=["q_proj"]` only, to save training time. What's the tradeoff?**
+A: Fewer target modules means fewer trainable parameters and faster/cheaper training, but also less capacity to adapt behavior - the original LoRA paper adapted only `q_proj` and `v_proj`, but the QLoRA paper found that adapting all linear layers (attention and MLP projections) was needed to match full fine-tuning quality - which is why most current recipes use `target_modules="all-linear"`. Adapting a single projection is a cheap first experiment, not a default.
+
+**Q: Why does `lora_alpha` matter even though it doesn't change the number of trainable parameters?**
+A: `lora_alpha` scales the adapter's contribution to the output (`output = base + (alpha/r) * B*A`), effectively controlling how strongly the LoRA update influences generation relative to the frozen base weights - it's closer to a learning-rate-like knob on the adapter's influence than a capacity knob.
+
+**Q: Explain the LoRA math. How many parameters does LoRA add for a linear layer of size 4096×4096 at rank r=16?**
+A: LoRA approximates the weight update as ΔW ≈ BA where B ∈ ℝ^{4096×16} and A ∈ ℝ^{16×4096}. Parameters: `16×4096 + 4096×16 = 2 × 4096 × 16 = 131,072`. Full weight matrix: `4096 × 4096 = 16,777,216`. Reduction: 128×. Initialization: B = zeros, A = random Gaussian → ΔW = BA = 0 at start, so training begins from exactly the base model's behavior.
+
+**Q: What is QLoRA and what enables it to fine-tune 7B models on a single 24GB GPU?**
+A: QLoRA combines two innovations: (1) **NF4 quantization** of the base model weights (4-bit NormalFloat - bins at equal normal distribution probability intervals) → 4 GB for 7B weights instead of 14 GB. (2) **BF16 LoRA adapters** on top of the frozen NF4 base → ~0.3 GB adapters. Total VRAM: ~5–6 GB for weights + activations, fitting on an RTX 4090 (24 GB). Double quantization further reduces the quantization constant storage. The base model is frozen (no gradient through NF4 weights); only the BF16 adapters are updated.
+
+---
+
+## Instruction Data & Training Runs
+
+**Q: What does setting a label token to `-100` actually do during training, mechanically?**
+A: `-100` is PyTorch's `CrossEntropyLoss` default `ignore_index`. Any position in `labels` set to `-100` is skipped entirely during loss computation - it contributes exactly zero to both the loss value and the resulting gradient, which is the concrete mechanism behind masking prompt tokens out of SFT loss.
+
+**Q: Training loss decreases smoothly and ends near zero - is that always a good sign?**
+A: No. Loss dropping to near-zero very quickly is a common symptom of the learning rate being too high or the dataset being too small/repetitive, causing the model to memorize training examples rather than learn a generalizable pattern. Train loss alone can't distinguish this from healthy convergence - a held-out validation loss is needed to catch it.
+
+**Q: What's the difference between how a hand-written PEFT training loop and a full fine-tuning loop are constructed?**
+A: Structurally they're the same five-step loop (forward → loss → `zero_grad()` → `backward()` → `step()`). The difference is what the optimizer tracks: in PEFT, the optimizer is constructed only over parameters with `requires_grad=True` (the small LoRA adapter), while the base model's parameters stay frozen and receive no gradient updates at all.
+
+**Q: You see training loss oscillating without a clear downward trend - what are the two most likely fixes to try first?**
+A: Lower the learning rate, and/or increase the effective batch size via `gradient_accumulation_steps`. Both stabilize the gradient signal per optimizer step, which is the usual root cause of loss that bounces around instead of trending down.
+
+**Q: Why is overfitting a bigger risk in instruction fine-tuning than in typical large-scale ML training?**
+A: Instruction fine-tuning datasets are often small - hundreds to low tens-of-thousands of examples - compared to pretraining-scale corpora. A model can begin memorizing a small dataset within a single epoch, so overfitting signatures (train loss down, val loss up) can appear much earlier than practitioners used to larger-scale training might expect.
+
+**Q: Why is loss masking (`labels = -100` on prompt tokens) necessary for instruction fine-tuning specifically, more so than for other supervised tasks?**
+A: Instructions vary widely in phrasing across examples with no single "correct" pattern to learn - training on them would waste gradient signal pushing the model toward memorizing instruction phrasing rather than optimizing output quality. Masking ensures every gradient update is driven purely by how well the model completes the task, not by how well it predicts the next word of an arbitrary instruction.
+
+**Q: How do you handle task interference in multi-head fine-tuning?**
+A: Three main approaches: (1) **LoRA per task**: freeze the shared backbone, train separate LoRA adapters per task - the tasks share no trainable parameters, so they cannot interfere with each other's weights (each adapter can still degrade general behaviour when it is active). (2) **Gradient surgery (PCGrad)**: project each task's gradient onto the perpendicular of conflicting gradients from other tasks before summing - reduces destructive interference. (3) **Task-specific learning rates**: use a small LR for the shared encoder (slow drift) and larger LR for task heads (fast adaptation). Also: balanced sampling (prevent one task dominating the batch) and auxiliary losses.
+
+---
+
+## Benchmarking Base vs Tuned
+
+**Q: Why must the eval set be split off before training starts, and never touched during training?**
+A: If the model sees eval examples during training (directly, or indirectly through hyperparameter tuning decisions), the eval score no longer measures generalization - it measures memorization of data the model has already seen, giving a falsely optimistic quality signal that won't hold up on real production traffic.
+
+**Q: Why report both a task-specific metric (like ROUGE) and an LLM-as-judge score instead of just one?**
+A: Task metrics are objective and cheap but brittle - they penalize correct answers phrased differently from the reference. LLM-as-judge scores capture semantic/holistic quality (helpfulness, tone, correctness) more like a human reviewer would, but introduce their own model bias and variance. Reporting both triangulates a more trustworthy quality signal than either alone.
+
+**Q: Why exclude the first `model.generate()` call from a latency benchmark?**
+A: The first generation call on a freshly loaded model pays a one-time cost for CUDA kernel compilation and memory allocator warm-up that subsequent calls don't repeat. Including it in the average understates the model's true steady-state throughput, sometimes significantly.
+
+**Q: Give one concrete signal from a benchmark that should make you choose RAG over fine-tuning for a given problem.**
+A: If the fine-tuned model's errors are factual - wrong or outdated information - rather than stylistic or format errors, that's a sign the actual gap is missing knowledge, not missing behavior/style. Fine-tuning reliably changes behavior and output format but does not reliably or durably inject new factual knowledge the way retrieval-augmented generation does.
+
+**Q: A fine-tune shows a large quality improvement on its own training-adjacent eval set, but a smaller improvement on a broader, independently sourced set of test prompts. Which number do you trust for a shipping decision?**
+A: The broader, independently sourced set - an eval set too similar to the training distribution will systematically overstate the model's real-world quality gain. This is exactly why the held-out eval set needs to represent production traffic diversity, not just be technically "unseen during training."
+
+**Q: Given a benchmark showing the fine-tuned model matches base-model latency and VRAM but with a modest quality bump, and low request volume in production - what's the actual deployment recommendation, and why?**
+A: At low volume, the operational overhead of maintaining a fine-tuned model (re-training on data drift, versioning, redeployment) often outweighs a modest quality gain that a well-crafted prompt might capture just as well. The recommendation depends on whether few-shot prompting alone can close most of that quality gap - if so, skip the fine-tune; if the delta over prompting is large and consistent, the fine-tune is justified even at lower volume.
+
+**Q: If a fine-tuned support-bot model gives more confident-sounding but occasionally factually wrong answers about current company policy, what does the benchmark methodology need to catch this, and what's the fix?**
+A: The LLM-as-judge and task-metric scores alone won't reliably catch factual drift unless the eval set specifically includes policy-sensitive questions with verifiable reference answers. The underlying fix isn't more fine-tuning data - it's pairing the model with RAG so current policy documents are retrieved and grounded at inference time, since fine-tuning does not durably encode facts that change over time.
+

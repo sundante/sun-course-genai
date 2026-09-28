@@ -1,0 +1,70 @@
+# 09 - Cloud Platforms
+
+The managed AI stacks of the three hyperscalers and Databricks - model access, managed RAG, guardrails, agent runtimes, data platforms and MLOps - and how to translate experience on one into credible vocabulary on the others.
+
+```objectives
+scope: module
+time: 3-4 hours
+outcomes:
+  - Describe the model-access, RAG, guardrail and agent-runtime services of AWS Bedrock, Microsoft Foundry and Google's Gemini Enterprise Agent Platform
+  - Map any of these capabilities across clouds and name one architectural difference that matters
+  - Explain the Databricks lakehouse - medallion architecture, Delta Lake, Unity Catalog, MLflow - and its GenAI services
+  - Choose between a managed service and a self-managed path (GKE, GPU clouds, inference providers) for a workload
+prerequisites:
+  - "[RAG Fundamentals](../11-RAG/Notes/01-RAG-Fundamentals.mdx) and [Model Lifecycle & Rollout](../08-Production-Engineering/Notes/03-Model-Lifecycle-and-Rollout.mdx)"
+```
+
+## What You Will Learn
+
+- AWS Bedrock: Converse API for unified model access, Knowledge Bases for managed RAG, Guardrails, AgentCore, and cost/customization levers (batch, prompt caching, provisioned throughput, Custom Model Import)
+- Databricks and Spark: the medallion architecture, Delta Lake, Unity Catalog, MLflow, GenAI services, and DBU cost levers
+- Microsoft Foundry (formerly Azure AI Foundry): model catalog, Foundry Agent Service, evaluations, Microsoft Fabric vs BigQuery, Azure SQL/Cosmos DB
+- Google Cloud's Gemini Enterprise Agent Platform (formerly Vertex AI): Model Garden, ADK, Agent Runtime, Memory Bank, governance
+- How to translate experience on one cloud into credible vocabulary on the others
+- A reusable Google Cloud ↔ AWS ↔ Azure comparison table, plus where GPU clouds and inference providers fit
+
+## Chapter Map
+
+| # | File | Topic | Difficulty |
+|---|------|-------|-----------|
+| 1 | [AWS Bedrock](Notes/01-AWS-Bedrock.mdx) | Converse API, Knowledge Bases, Guardrails, AgentCore | Intermediate |
+| 2 | [Databricks & Spark](Notes/02-Databricks-and-Spark.mdx) | Medallion architecture, Delta Lake, Unity Catalog, MLflow, PySpark, DBU pricing | Intermediate |
+| 3 | [Microsoft Foundry](Notes/03-Microsoft-Foundry.mdx) | Model catalog, Foundry Agent Service, Fabric vs BigQuery, Azure SQL, Cosmos DB | Intermediate |
+| 4 | [Google Cloud Agent Platform](Notes/04-Google-Cloud-Agent-Platform.mdx) | Vertex AI's successor: Model Garden, ADK, Agent Runtime, Memory Bank, governance, GKE/TPU paths | Intermediate |
+| 5 | [Platform Comparison Table](Notes/05-Platform-Comparison-Table.mdx) | Google Cloud ↔ AWS ↔ Azure mapping across models, agents, data and MLOps; GPU clouds | All levels |
+| 6 | [Q&A Review Bank](Notes/06-Interview-QA-Bank.mdx) | 19 Q&A pairs across all topics | All levels |
+
+## Recommended Learning Paths
+
+### Path A: Cloud-by-Cloud
+1. [AWS Bedrock](Notes/01-AWS-Bedrock.mdx)
+2. [Databricks & Spark](Notes/02-Databricks-and-Spark.mdx)
+3. [Microsoft Foundry](Notes/03-Microsoft-Foundry.mdx)
+4. [Google Cloud Agent Platform](Notes/04-Google-Cloud-Agent-Platform.mdx)
+5. [Platform Comparison Table](Notes/05-Platform-Comparison-Table.mdx) - tie it together
+
+### Path B: Interview Preparation (Accelerated)
+1. [Platform Comparison Table](Notes/05-Platform-Comparison-Table.mdx) - the fastest path to sounding fluent across clouds
+2. [Q&A Review Bank](Notes/06-Interview-QA-Bank.mdx) - drill the specifics
+3. Whichever single-cloud note matches the role you're interviewing for
+
+### Path C: Databricks-Specific Roles
+1. [Databricks & Spark](Notes/02-Databricks-and-Spark.mdx)
+2. Cross-reference [Model Lifecycle & Rollout](../08-Production-Engineering/Notes/03-Model-Lifecycle-and-Rollout.mdx) - MLflow is the concrete tool behind that note's registry concept
+
+## Resources
+
+- [Q&A Review Bank](Notes/06-Interview-QA-Bank.mdx) - 19 Q&A pairs in this module
+- [Module quiz](/quiz/platform-breadth) - every *Check Yourself* question in this module
+
+## Key Cross-References
+
+- Managed RAG concepts these platforms wrap → [RAG Fundamentals](../11-RAG/Notes/01-RAG-Fundamentals.mdx)
+- Guardrail patterns Bedrock/Azure implement → [Production Agents: Evaluation and Benchmarks](../16-Production-Agents/Notes/05-Agent-Evaluation-and-Benchmarks.mdx)
+- Registry concept MLflow implements concretely → [Model Lifecycle & Rollout](../08-Production-Engineering/Notes/03-Model-Lifecycle-and-Rollout.mdx)
+
+---
+
+## Next Topic
+
+Previous: [08 - Production Engineering](../08-Production-Engineering/INDEX.mdx) · Next: [10 - Prompt & Context Engineering](../10-Prompt-Engineering/INDEX.mdx)
