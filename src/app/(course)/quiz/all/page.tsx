@@ -18,7 +18,7 @@ export default function QuizAllPage() {
 
   return (
     <div className="flex flex-col min-h-full">
-      <div className="bg-white border-b border-sun-yellow px-6 lg:px-8 py-3">
+      <div className="bg-sun-bg border-b border-sun-yellow px-6 lg:px-8 py-3">
         <p className="text-xs font-bold uppercase tracking-widest text-sun-amber mb-0.5">Practice</p>
         <h1 className="text-base font-bold text-sun-dark tracking-tight leading-tight">
           Module quizzes · {total} questions

@@ -245,7 +245,7 @@ function DecisionWizard() {
   return (
     <div className="not-prose rounded-xl border border-glass-card-border bg-glass-card-bg backdrop-blur-glass-sm shadow-glass-sm p-5 my-6">
       <h3 className="text-[15px] font-bold text-sun-dark mb-1">Should you use an AI Agent?</h3>
-      <p className="text-[13px] text-sun-muted mb-4">Answer the five questions below. The more "Yes" answers, the stronger the case for an agent.</p>
+      <p className="text-[13px] text-sun-muted mb-4">Answer the five questions below. The more &ldquo;Yes&rdquo; answers, the stronger the case for an agent.</p>
 
       <div className="space-y-3">
         {QUESTIONS.map((q, i) => (
@@ -417,7 +417,7 @@ function ComplexityGuide() {
   return (
     <div className="not-prose my-6">
       <h3 className="text-[15px] font-bold text-sun-dark mb-1">Choosing Complexity & Agent Type</h3>
-      <p className="text-[13px] text-sun-muted mb-4">Match your problem's characteristics to the right tier.</p>
+      <p className="text-[13px] text-sun-muted mb-4">Match your problem&apos;s characteristics to the right tier.</p>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {COMPLEXITY_GUIDE.map((tier) => (

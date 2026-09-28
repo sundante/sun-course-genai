@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronDown, ChevronRight, PanelLeftClose, PanelLeftOpen } from "lucide-react";
@@ -68,10 +68,12 @@ function NavSection({ item }: { item: NavItem }) {
   const hasChildren = item.children && item.children.length > 0;
   const [open, setOpen] = useState(() => containsPath(item.children ?? [], pathname));
 
-  useEffect(() => {
-    const shouldOpen = containsPath(item.children ?? [], pathname);
-    setOpen(shouldOpen);
-  }, [pathname, item.children]);
+  // Re-sync open state when the route changes (adjusting state during render, not in an effect)
+  const [openedFor, setOpenedFor] = useState(pathname);
+  if (openedFor !== pathname) {
+    setOpenedFor(pathname);
+    setOpen(containsPath(item.children ?? [], pathname));
+  }
 
   if (!hasChildren) return <NavLeaf item={item} />;
 
@@ -99,10 +101,12 @@ function ModuleSection({ mod }: { mod: NavModule }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(() => containsPath(mod.items, pathname));
 
-  useEffect(() => {
-    const shouldOpen = containsPath(mod.items, pathname);
-    setOpen(shouldOpen);
-  }, [pathname, mod.items]);
+  // Re-sync open state when the route changes (adjusting state during render, not in an effect)
+  const [openedFor, setOpenedFor] = useState(pathname);
+  if (openedFor !== pathname) {
+    setOpenedFor(pathname);
+    setOpen(containsPath(mod.items, pathname));
+  }
 
   return (
     <div className="mb-1">
@@ -188,7 +192,7 @@ export function Sidebar({ nav, mobile = false }: Props) {
 
   return (
     <aside
-      className={`hidden lg:flex flex-col border-r border-sun-yellow h-[calc(100vh-3.5rem)] sticky top-14 overflow-hidden transition-all duration-200 bg-white ${
+      className={`hidden lg:flex flex-col border-r border-sun-yellow h-[calc(100vh-3.5rem)] sticky top-14 overflow-hidden transition-all duration-200 bg-sun-bg ${
         collapsed ? "w-12" : "w-64"
       }`}
     >
@@ -208,7 +212,7 @@ export function Sidebar({ nav, mobile = false }: Props) {
           <div className="flex-1 overflow-y-auto px-4 pb-5">
             <ModuleList modules={nav.modules} />
           </div>
-          <div className="px-4 py-2.5 border-t border-sun-yellow bg-white">
+          <div className="px-4 py-2.5 border-t border-sun-yellow bg-sun-bg">
             <p className="text-[10px] text-sun-wip leading-snug">
               <span className="font-semibold">WIP</span> pages are under active development - content is coming soon.
             </p>

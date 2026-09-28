@@ -54,7 +54,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col bg-sun-bg">
       {/* Header */}
-      <header className="bg-white border-b border-sun-yellow px-4 sm:px-6 h-14 flex items-center justify-between gap-3 sticky top-0 z-40">
+      <header className="bg-sun-bg border-b border-sun-yellow px-4 sm:px-6 h-14 flex items-center justify-between gap-3 sticky top-0 z-40">
         <a href="#top" className="font-bold text-sun-dark tracking-tight text-sm shrink-0">
           Learn GenAI
         </a>

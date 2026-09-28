@@ -63,7 +63,7 @@ export default async function CoursePage({ params }: Props) {
 
   return (
     <div className="flex flex-col min-h-full">
-      <div className="bg-white border-b border-sun-yellow px-6 lg:px-8 py-3">
+      <div className="bg-sun-bg border-b border-sun-yellow px-6 lg:px-8 py-3">
         <p className="text-xs font-bold uppercase tracking-widest text-sun-amber mb-0.5">
           {moduleLabel}
         </p>
@@ -90,7 +90,7 @@ export default async function CoursePage({ params }: Props) {
       </div>
 
       {/* Sticky prev/next + disclaimer footer */}
-      <div className="sticky bottom-0 z-10 bg-white border-t border-sun-yellow">
+      <div className="sticky bottom-0 z-10 bg-sun-bg border-t border-sun-yellow">
         <div className="px-6 lg:px-8 py-3">
           <PageNav prev={prev} next={next} className="flex justify-between" />
         </div>

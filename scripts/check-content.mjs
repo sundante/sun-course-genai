@@ -112,15 +112,30 @@ for (const file of mdxFiles) {
   }
 }
 
+// Text fields must parse as strings: an unquoted "Label: rest" line becomes a YAML map and
+// renders as "[object Object]"
+function isText(v) {
+  return typeof v === "string" || typeof v === "number";
+}
+
+function badText(list, name) {
+  const i = (list ?? []).findIndex((v) => !isText(v));
+  return i === -1 ? null : `${name} ${i + 1} is not a string (quote it if it contains ": ")`;
+}
+
 function fenceProblem(lang, data) {
   if (lang === "objectives") {
     if (!Array.isArray(data?.outcomes) || !data.outcomes.length) return "`outcomes` must be a non-empty list";
-    return null;
+    return badText(data.outcomes, "outcome") ?? badText(data.prerequisites, "prerequisite");
   }
   if (lang === "quiz") {
     if (!Array.isArray(data) || !data.length) return "expected a non-empty list of questions";
     for (const [i, q] of data.entries()) {
       if (!q?.q) return `question ${i + 1} has no \`q\``;
+      const text = badText([q.q, ...(q.explain === undefined ? [] : [q.explain])], `question ${i + 1} text`)
+        ?? badText(q.options, `question ${i + 1} option`)
+        ?? (Array.isArray(q.options) ? null : badText([q.answer], `question ${i + 1} answer`));
+      if (text) return text;
       if (Array.isArray(q.options)) {
         if (!Number.isInteger(q.answer) || q.answer < 1 || q.answer > q.options.length) {
           return `question ${i + 1}: \`answer\` must be the 1-based number of the correct option`;
@@ -133,7 +148,13 @@ function fenceProblem(lang, data) {
   }
   const items = Array.isArray(data) ? data : [data];
   const missing = items.findIndex((item) => !item?.task);
-  return missing === -1 ? null : `exercise ${missing + 1} has no \`task\``;
+  if (missing !== -1) return `exercise ${missing + 1} has no \`task\``;
+  for (const [i, item] of items.entries()) {
+    const fields = [item.task, ...(item.title === undefined ? [] : [item.title]), ...(item.solution === undefined ? [] : [item.solution])];
+    const text = badText(fields, `exercise ${i + 1} field`) ?? badText(item.hints, `exercise ${i + 1} hint`);
+    if (text) return text;
+  }
+  return null;
 }
 
 // Em dashes in content and site source
