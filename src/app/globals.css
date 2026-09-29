@@ -46,6 +46,15 @@
   --glass-shadow-lg: none;
   --glass-glow-yellow: 0 0 0 1px var(--sun-yellow-bdr), 0 0 24px rgba(255, 218, 71, 0.25);
 
+  /* Course map (/map): day parchment, brown ink */
+  --map-paper:      #f5ead3;
+  --map-paper-edge: #e2cfa6;
+  --map-ink:        #4a3520;
+  --map-ink-soft:   #8a6c47;
+  --map-route:      #7a5a36;
+  --map-accent:     #FFDA47;
+  --map-on-accent:  #2b1d0e; /* text on the accent, both themes */
+
   --shadcn-background: 0 0% 100%;
   --shadcn-foreground: 0 0% 7%;
   --shadcn-card: 0 0% 100%;
@@ -99,6 +108,15 @@
   --glass-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.50), 0 4px 12px rgba(0, 0, 0, 0.30);
   --glass-glow-yellow: 0 0 0 1px var(--sun-yellow-bdr), 0 0 28px rgba(255, 218, 71, 0.18);
 
+  /* Course map (/map): night map, amber ink on dark paper */
+  --map-paper:      #1d1811;
+  --map-paper-edge: #3a2f20;
+  --map-ink:        #e0c283;
+  --map-ink-soft:   #a8894f;
+  --map-route:      #c9a45e;
+  --map-accent:     #FFDA47;
+  --map-on-accent:  #2b1d0e; /* text on the accent, both themes */
+
   --shadcn-background: 0 0% 7%;
   --shadcn-foreground: 0 0% 96%;
   --shadcn-card: 0 0% 10%;
@@ -147,6 +165,15 @@
   --color-glass-modal-bg:     var(--glass-modal-bg);
   --color-glass-modal-border: var(--glass-modal-border);
   --color-glass-scrim:        var(--glass-scrim);
+
+  /* Course map tokens (bg-map-paper, text-map-ink, border-map-ink-soft, ...) */
+  --color-map-paper:      var(--map-paper);
+  --color-map-paper-edge: var(--map-paper-edge);
+  --color-map-ink:        var(--map-ink);
+  --color-map-ink-soft:   var(--map-ink-soft);
+  --color-map-route:      var(--map-route);
+  --color-map-accent:     var(--map-accent);
+  --color-map-on-accent:  var(--map-on-accent);
 
   /* shadow-glass-sm/md/lg + shadow-glass-glow utilities */
   --shadow-glass-sm:   var(--glass-shadow-sm);
@@ -246,6 +273,11 @@ body {
   text-decoration-color: var(--sun-amber);
 }
 
+/* Anchor jumps (TOC, search results) land below the sticky audience bar */
+.prose :is(h1, h2, h3, h4, h5, h6) {
+  scroll-margin-top: 4rem;
+}
+
 .prose h2 {
   border-bottom: 1px solid var(--sun-yellow-bdr);
   color: var(--sun-amber);
@@ -335,4 +367,26 @@ body[data-audience="biz"]  .audience-tech { display: none; }
 /* derived from this value. Kept for components that reference it directly.*/
 :root {
   --radius: 0.5rem;
+}
+
+/* Course map landmarks (CourseMap.tsx): SVG links with hover, focus and selected states */
+.map-landmark {
+  cursor: pointer;
+  outline: none;
+}
+.map-landmark .lm-body {
+  fill: var(--map-paper);
+  transition: fill 150ms;
+}
+.map-landmark:hover .lm-body {
+  fill: var(--map-paper-edge);
+}
+.map-landmark[aria-current="true"] .lm-body {
+  fill: var(--map-accent);
+}
+.map-landmark .lm-focus {
+  stroke: transparent;
+}
+.map-landmark:focus-visible .lm-focus {
+  stroke: var(--map-accent);
 }

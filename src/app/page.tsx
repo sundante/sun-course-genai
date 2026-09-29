@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getNavigationTree } from "@/lib/content/nav";
+import { Search } from "@/components/course/Search";
 import { ThemeToggle } from "@/components/course/ThemeToggle";
 import { CurriculumTiles } from "@/components/course/CurriculumTiles";
 import { getCourseStats } from "@/lib/content/stats";
@@ -68,8 +69,12 @@ export default function HomePage() {
               {item.label}
             </a>
           ))}
+          <Link href="/map" className="text-sun-dark hover:text-sun-amber transition-colors">
+            Course Map
+          </Link>
         </nav>
         <div className="flex items-center gap-2">
+          <Search />
           <ThemeToggle />
           <a
             href="https://github.com/sundante/sun-course-genai"

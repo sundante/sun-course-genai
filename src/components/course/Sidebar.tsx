@@ -213,6 +213,9 @@ export function Sidebar({ nav, mobile = false }: Props) {
             <ModuleList modules={nav.modules} />
           </div>
           <div className="px-4 py-2.5 border-t border-sun-yellow bg-sun-bg">
+            <Link href="/map" className="block text-xs font-semibold text-sun-dark hover:text-sun-amber transition-colors mb-1.5">
+              Open the course map
+            </Link>
             <p className="text-[10px] text-sun-wip leading-snug">
               <span className="font-semibold">WIP</span> pages are under active development - content is coming soon.
             </p>

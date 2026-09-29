@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Menu } from "lucide-react";
+import Link from "next/link";
+import { Map as MapIcon, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Sidebar } from "./Sidebar";
 import type { NavigationTree } from "@/types/content";
@@ -17,13 +18,22 @@ export function MobileNav({ nav }: Props) {
     <>
       <div className="lg:hidden flex items-center justify-between px-5 py-3 border-b border-sun-yellow bg-sun-bg">
         <span className="text-sm font-medium text-sun-muted">Contents</span>
-        <button
-          onClick={() => setOpen(true)}
-          className="flex items-center gap-2 text-sm font-semibold text-sun-dark hover:text-sun-amber transition-colors"
-        >
-          <Menu className="h-4 w-4" />
-          Menu
-        </button>
+        <div className="flex items-center gap-5">
+          <Link
+            href="/map"
+            className="flex items-center gap-2 text-sm font-semibold text-sun-dark hover:text-sun-amber transition-colors"
+          >
+            <MapIcon className="h-4 w-4" />
+            Map
+          </Link>
+          <button
+            onClick={() => setOpen(true)}
+            className="flex items-center gap-2 text-sm font-semibold text-sun-dark hover:text-sun-amber transition-colors"
+          >
+            <Menu className="h-4 w-4" />
+            Menu
+          </button>
+        </div>
       </div>
 
       <Sheet open={open} onOpenChange={setOpen}>
