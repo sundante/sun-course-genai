@@ -6,6 +6,25 @@ import { getNavigationTree, getPrevNext } from "./nav";
 
 const CONTENT_DIR = path.join(process.cwd(), "src/content");
 
+/** Heading markdown -> the rendered text rehype-slug slugs. Code spans keep their
+ *  content verbatim (`requires_grad`), and `_` only counts as emphasis at word
+ *  edges, so snake_case survives outside code spans too. */
+export function headingText(raw: string): string {
+  return raw
+    .split(/(`[^`]*`)/)
+    .map((part, i) =>
+      i % 2
+        ? part.slice(1, -1)
+        : part
+            .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+            .replace(/<[^>]+>/g, "")
+            .replace(/\*+/g, "")
+            .replace(/(^|\W)_+|_+(?=\W|$)/g, "$1")
+    )
+    .join("")
+    .trim();
+}
+
 export function extractToc(markdown: string): TocItem[] {
   const toc: TocItem[] = [];
   // One slugger per page, matching rehype-slug's per-file instance, so generated
@@ -27,7 +46,7 @@ export function extractToc(markdown: string): TocItem[] {
     const match = line.match(/^(#{1,3})\s+(.+)/);
     if (!match) continue;
     const level = match[1].length;
-    const text = match[2].replace(/[*_`]/g, "").trim();
+    const text = headingText(match[2]);
     const id = slugger.slug(text);
     toc.push({ id, text, level });
   }

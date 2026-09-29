@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { SITE_URL } from "@/lib/site";
 import { DisclaimerModal } from "@/components/course/DisclaimerModal";
 import { AudienceSync } from "@/components/course/AudienceSync";
 
@@ -17,7 +18,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://learngenai.sunmintz.com"),
+  metadataBase: new URL(SITE_URL),
   title: "Learn GenAI",
   description: "A structured, practical curriculum from foundational LLMs to fully autonomous Agentic systems.",
 };

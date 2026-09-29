@@ -79,6 +79,25 @@ Reference implementation: `src/content/07-Serving-and-Inference/Notes/01-KV-Cach
 - Generate all assets (HTML pages, dashboards, diagrams, standalone UI mockups, etc.) with **light mode as the default look**, regardless of the viewer's system `prefers-color-scheme`
 - Always include an explicit on-page toggle (e.g. via a `data-theme` attribute) to switch to dark mode - never ship a dark-only or light-only asset, and never let system preference silently override the light default
 
+## Site UI Conventions
+
+The site's own design system. Current component inventory lives in `vibes/status.md` > "What's Built".
+
+- **Tokens**: colors and glass values are plain CSS custom properties in `:root` / `.dark` (`src/app/globals.css`), aliased into Tailwind utilities via `@theme inline`. Add new tokens the same way - a token missing from `@theme inline` gets no utility, and Tailwind v4 drops the class silently
+- **Use tokens in components, never hard-coded colors**: `bg-sun-bg`, `bg-sun-surface`, `text-sun-dark`, `text-sun-muted`, `bg-glass-nav-bg`, etc. Hard-coded `bg-white` is what left the dark-mode chrome white (status.md Known Issue 12)
+- **Palette**: `--sun-yellow` (`#FFDA47`) is the accent and stays the same in both themes (only surfaces and text swap); `--sun-coral` is the sparing secondary accent; `--sun-wip` is the WIP/disabled gray
+- **Glass tokens** come in elevation tiers (`nav`, `panel`, `card`, `modal`, plus `scrim` for modal backdrops) with a `shadow-glass-sm/md/lg/glow` scale. Use them on chrome (header, sidebar, bottom bar, TOC, modals), not on article prose. The `blur-glass-*` scale is currently `0px` (flat surfaces) - change it in `globals.css`, never per component
+- **Dark mode** is hand-rolled, with no theming library: an inline `<head>` script in `layout.tsx` reads `localStorage.theme` before hydration, and `ThemeToggle` flips the `.dark` class on `<html>`. Light is the default, and `prefers-color-scheme` is never read
+- **Layout**: stock Tailwind breakpoints only. `lg:` is the cutover - persistent `Sidebar` + `TableOfContents` above it, `MobileNav` drawer and no TOC below it. Render the TOC only when the page has headings
+- **Prose**: style MDX through `@tailwindcss/typography`'s `.prose` plus `--tw-prose-*` / `.prose` overrides in `globals.css`. Don't build custom table/callout/image components
+- **MDX surface stays small**: `MdxComponents.tsx` overrides only `pre` and switches on the code language class (`mermaid`, `agent-navigator`); course fences go through `remarkCourseFences.ts`. A new interactive element = a new fence language, not a component
+- **Audience split**: wrap prose in `<div class="audience-biz">` / `<div class="audience-tech">`; CSS hides them from `body[data-audience]`, which `AudienceToggle` / `AudienceSync` set and persist. No React component per block
+- **Navigation behavior**: prev/next is computed across the whole flattened nav (it crosses module boundaries); sidebar sections auto-expand to reveal the active page. WIP status is automatic (`isStubFile()` in `nav.ts`, fewer than 8 body lines) - never hand-flag a page as WIP
+- **TOC and search anchors**: `extractToc()` in `loader.ts` and the search index (`searchIndex.ts`) both skip fenced code, turn heading markdown into text with the shared `headingText()`, and slug it with `github-slugger`, so ids match `rehype-slug` exactly (including `-1`, `-2` duplicate suffixes). Change heading handling only in `headingText()`, never per caller
+- **Course map** (`/map`, `CourseMap.tsx`) is drawn from `nav.yml` by `src/lib/content/courseMap.ts` (`getCourseMap()` + the pure `layoutWide()` / `layoutTall()`), so new modules and tracks appear on it automatically. Landmark names are the subtitles in `src/lib/content/moduleMeta.ts` - give a new module an entry there (it also controls the home page tile). Its colors are the `--map-*` tokens (day parchment / night map); never hard-code ink colors in the SVG. `sitemap.ts` / `robots.ts` also derive from `nav.yml`, on `SITE_URL` in `src/lib/site.ts`
+- **Search** is a build-time index (`src/lib/content/searchIndex.ts` -> static route `src/app/search-index.json/route.ts`) searched in the browser by `Search.tsx` (MiniSearch). New content is indexed on build with no extra step
+- **Don't build speculatively**: search, auth, progress tracking, code sandboxes and tests are backlog items in `vibes/status.md`; build them only when there's a concrete need
+
 ## Diagrams & Visual Explanations
 
 - For architecture, pipeline, flow, state-machine, lifecycle, or comparison content, prefer a **Mermaid diagram** over prose-only explanations or ASCII-art box diagrams - not just black markdown windows with text content
@@ -89,6 +108,8 @@ Reference implementation: `src/content/07-Serving-and-Inference/Notes/01-KV-Cach
   - `stateDiagram-v2` - lifecycles / state machines (e.g. connection states, session states)
   - `sequenceDiagram` - protocol or call flows between actors/services
   - `mindmap` - taxonomies / component breakdowns
+- **Node conventions** (as in the reference files): lead key node and subgraph labels with one representative emoji (🧠 LLM/reasoning, 🔧 tools, 📋 planning, 💾 memory, 🛡️ guardrails, ✅ result); quote labels (`A["🧠 LLM"]`); group related nodes with `subgraph ID["emoji Title"]`; leave emoji off `mindmap` root branches
+- `MermaidDiagram.tsx` falls back to showing the raw fence text in a bordered `<pre>` if a diagram fails to parse - a diagram that renders as text means broken syntax, not a missing dependency
 - Colors are handled by the shared warm/earth-tone theme in `MermaidDiagram.tsx` (`themeVariables` cScale palette) - only add per-node `style` overrides when distinguishing categories/stages within one diagram, matching the reference files above; don't hand-roll a new palette
 - **Still use a table, not a diagram**, for genuinely tabular attribute comparisons (e.g. Framework Comparison, PEFT Methods Comparison, Model Family Comparison) - tables read better than diagrams when the content is a grid of attributes x options
 - **ASCII is fine** for conventional directory-tree listings (e.g. `src/`, file trees) - these are a documentation convention, not a diagram substitute

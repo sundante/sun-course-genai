@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Search } from "./Search";
 import { ThemeToggle } from "./ThemeToggle";
 
 function StarIcon() {
@@ -45,6 +46,7 @@ export function Header() {
 
         <div className="flex-1" />
 
+        <Search />
         <ThemeToggle />
 
         <a
@@ -81,6 +83,9 @@ export function Header() {
         </div>
 
         <div className="hidden sm:flex items-center gap-1 border-l border-sun-yellow-bdr pl-3 ml-1">
+          <Link href="/map" className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "text-xs")}>
+            Map
+          </Link>
           <Link href="/quiz/all" className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "text-xs")}>
             Quiz
           </Link>

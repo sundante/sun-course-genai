@@ -14,6 +14,7 @@ import { TableOfContents } from "@/components/course/TableOfContents";
 import { PageNav } from "@/components/course/PageNav";
 import { DisclaimerNote } from "@/components/course/DisclaimerNote";
 import { mdxComponents } from "@/components/course/MdxComponents";
+import { VisitTracker } from "@/components/course/VisitTracker";
 
 interface Props {
   params: Promise<{ module: string; slug: string }>;
@@ -63,6 +64,7 @@ export default async function CoursePage({ params }: Props) {
 
   return (
     <div className="flex flex-col min-h-full">
+      <VisitTracker href={page.href} title={page.title} module={page.module} />
       <div className="bg-sun-bg border-b border-sun-yellow px-6 lg:px-8 py-3">
         <p className="text-xs font-bold uppercase tracking-widest text-sun-amber mb-0.5">
           {moduleLabel}
