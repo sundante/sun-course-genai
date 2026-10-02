@@ -3,9 +3,9 @@
 **URL:** https://learngenai.sunmintz.com
 **Stack:** Next.js 16.2.9 (App Router, static export) - TypeScript (strict) - Tailwind CSS 4 - MDX (`next-mdx-remote/rsc`) - shadcn/ui - Mermaid
 **Deploy:** Static export (`out/`) -> manual GitHub Actions FTP push -> Hostinger, served at `sunmintz.com/learngenai/`
-**Last updated:** 2026-09-29
-**Last commit at time of writing:** `c9b2cd9` (2026-09-22 - "Updated Flow and content direction", renumbered content folders to the current 01-12 layout) - `dev` branch; Phase 0 of the course redesign is committed on top of it (see Changelog)
-**Content inventory verified (2026-09-27):** `find src/content -name '*.mdx' | wc -l` -> **174 files** (after Phase 5's Q&A dedupe and capstones; 183 after Phase 4, down from 201 after the Phase 4 agents-track merges: framework stub pages, old labs and duplicate agent-engineering notes removed, all with legacy redirects)
+**Last updated:** 2026-10-02
+**Last commit at time of writing:** `ed5b565` (2026-09-29 - "Added search and Webmap") - `dev` branch; the readiness-gaps work (2026-10-02/03, phases 1-5) is staged on top of it but **not yet committed** (see Changelog)
+**Content inventory verified (2026-10-03):** `find src/content -name '*.mdx' | wc -l` -> **206 files** (after readiness-gaps Phases 4-5: +3 lab pages; 203 after Phase 3; 194 after Phase 2; 185 after Phase 1; 174 after Phase 5's Q&A dedupe and capstones; 183 after Phase 4, down from 201 after the Phase 4 agents-track merges: framework stub pages, old labs and duplicate agent-engineering notes removed, all with legacy redirects)
 
 > This file is the raw source of truth for project status. It is updated as part of
 > every successful build/coding session (see **Changelog** at the bottom). The
@@ -124,7 +124,7 @@ Remote root should look like:
 - `AudienceOnboardingModal`, `DisclaimerModal`, `DisclaimerNote`
 - `TableOfContents` - sticky, IntersectionObserver-based active heading tracking, independently scrollable
 - `PageNav` - prev/next footer
-- `CourseMap` (`/map`, "The Course Atlas") - an illustrated, map-style sitemap: day parchment / night map via the `--map-*` tokens, title cartouche, tracks as double-ruled regions, the 19 modules as numbered landmarks named by their `moduleMeta.ts` subtitles, a dotted learning route that snakes through them in order (kept clear of labels), compass rose and legend. Data and layout come from `src/lib/content/courseMap.ts` (derived from `nav.yml`; `layoutWide()` for desktop, `layoutTall()` for a vertical strip map below `md`). Selecting a landmark (a `#slug` link, so `/map#rag` deep-links and back/forward work) opens a note card beside it on desktop or a bottom `Sheet` on mobile with the description, counts and every page. "You are here": `VisitTracker` on lesson pages stores the last page opened (`localStorage` `genai_last_visit`) and the map pins footprints on that module plus a "Continue" link. Below the map, a "Map index" lists every page as plain links (accessible, no-JS, crawlable). Linked from the course header ("Map"), the mobile nav bar, the sidebar footer and the home page header. EB Garamond is loaded for map labels on this page only
+- `CourseMap` (`/map`, "The Course Atlas") - an illustrated, map-style sitemap: day parchment / night map via the `--map-*` tokens, title cartouche, tracks as double-ruled regions, the 20 numbered modules (plus the Knowledge Check hall) as landmarks named by their `moduleMeta.ts` subtitles, a dotted learning route that snakes through them in order (kept clear of labels), compass rose and legend. Data and layout come from `src/lib/content/courseMap.ts` (derived from `nav.yml`; `layoutWide()` for desktop, `layoutTall()` for a vertical strip map below `md`). Selecting a landmark (a `#slug` link, so `/map#rag` deep-links and back/forward work) opens a note card beside it on desktop or a bottom `Sheet` on mobile with the description, counts and every page. "You are here": `VisitTracker` on lesson pages stores the last page opened (`localStorage` `genai_last_visit`) and the map pins footprints on that module plus a "Continue" link. Below the map, a "Map index" lists every page as plain links (accessible, no-JS, crawlable). Linked from the course header ("Map"), the mobile nav bar, the sidebar footer and the home page header. EB Garamond is loaded for map labels on this page only
 - `src/app/sitemap.ts` / `robots.ts` - `out/sitemap.xml` (home, map, quiz index, each module quiz with questions, every lesson page; trailing-slash URLs on `SITE_URL` from `src/lib/site.ts`) and `out/robots.txt` pointing to it
 - `Search` - header button (course `Header` and the home page's own header) opening a Radix dialog; ⌘K / Ctrl K toggles, `/` opens. On first open it fetches `/search-index.json` (~1.8 MB, ~570 KB gzipped) and builds a MiniSearch index in the browser (~140 ms): prefix match on the word being typed, typo tolerance on words over 4 letters, heading/title boosts, AND across terms. Results show module › page, the section heading (`###` sections prefixed with their `##` parent) and a highlighted snippet; arrow keys + Enter jump straight to the section anchor. The index comes from `src/lib/content/searchIndex.ts` via the static route `src/app/search-index.json/route.ts`: one entry per page intro and per `##`/`###` section, fence prose (objectives, quiz questions, exercise tasks - not answers or solutions), and code blocks reduced to distinct identifiers in a hidden field so `LoraConfig` still finds the lab. Mermaid is skipped. New content is indexed automatically on build
 - `UnderDevelopment` - animated placeholder for WIP/stub pages
@@ -132,33 +132,35 @@ Remote root should look like:
 - `MdxComponents` - custom component overrides for MDX rendering
 - `src/components/ui/` - shadcn/ui primitives: button, sheet, card, badge, progress, separator
 
-### Course Content - 174 `.mdx` files across 17 modules in 5 tracks (+ Knowledge Check)
+### Course Content - 206 `.mdx` files across 19 modules in 6 tracks (+ Capstones and Knowledge Check)
 
 Restructured 2026-09-26 (redesign Phase 1). Order, numbering and tracks come from `src/content/nav.yml`; per-module overviews list chapters and planned additions.
 
 | # | Track | Module (slug) | Dir | Contents today |
 | --- | --- | --- | --- | --- |
-| 01 | Foundations | LLM Foundations (`llm-models`) | `01-LLM-Foundations/` | 5 notes (fundamentals, architecture, attention, model types, failure modes) + Q&A bank |
-| 02 | Foundations | Prog Langs / PyTorch (`prog-langs`) | `02-Prog-Langs/PyTorch/` | 5 notes + Q&A bank + MNIST lab |
-| 03 | Building Models | Pretraining at Scale (`pretraining`) | `03-Pretraining/` | 2 notes (moved from 01); new chapters planned |
-| 04 | Building Models | Post-Training & Reasoning (`post-training`) | `04-Post-Training/` | 1 note (moved from 01); new chapters planned |
-| 05 | Building Models | Fine-Tuning Lab (`fine-tuning-lab`) | `05-Fine-Tuning-Lab/` | 4 notes + Q&A bank + QLoRA lab |
-| 06 | Building Models | Evaluation & Benchmarks (`evaluation`) | `06-Evaluation/` | Overview only - chapters planned |
-| 07 | Serving & Production | Inference & Serving (`serving-and-inference`) | `07-Serving-and-Inference/` | 6 notes (2 moved from 01) + Q&A bank + FastAPI/vLLM lab |
-| 08 | Serving & Production | Production Engineering (`production-engineering`) | `08-Production-Engineering/` | 4 notes + Q&A bank + Helm lab |
-| 09 | Serving & Production | Cloud Platforms (`platform-breadth`) | `09-Cloud-Platforms/` | 4 notes + Q&A bank |
-| 10 | Building Apps | Prompt & Context Engineering (`prompt-engineering`) | `10-Prompt-Engineering/` | 9 notes + Q&A bank (56) + 1 lab (Prompt Evals & Structured Outputs) |
-| 11 | Building Apps | RAG (`rag`) | `11-RAG/` | 12 notes + Q&A bank (60) + 1 lab (Retrieval Evaluation) + 2 system designs |
-| 12 | Agents | Agent Foundations (`agents`) | `12-Agent-Foundations/` | 8 notes (one memory taxonomy) + Q&A bank (48) + Agent Loop from Scratch lab (shop env, pass^k; run on Qwen3-8B/4B) |
-| 13 | Agents | MCP & A2A (`mcp`) | `13-MCP-and-A2A/` | 7 notes (MCP 2026-07-28, auth, security, A2A v1.0) + Q&A bank (41) + MCP Server & Agent lab (poisoning measured, A2A end to end) |
-| 14 | Agents | Agent Patterns & Multi-Agent (`agentic-ai`) | `14-Agent-Patterns/` | 4 notes + Q&A bank (40) + Patterns Under Measurement lab (HumanEval, hidden tests, paired CIs) |
-| 15 | Agents | Agent Frameworks (`agent-frameworks`) | `15-Agent-Frameworks/` | 8 notes (choosing + 7 frameworks) + Q&A bank (31) + One Agent, Many Frameworks lab (7 frameworks, pinned per-framework requirements) |
-| 16 | Agents | Production Agents (`production-agents`) | `16-Production-Agents/` | 6 notes (architecture, security, durable execution, cost, evals/benchmarks, observability) + Q&A bank (32) + 4 system designs |
-| 17 | Agents | Agent Engineering (`agent-engineering`) | `17-Agent-Engineering/` | 8 notes (harness, loops/graphs, context, coding agents, computer use, skills/memory, verifiers/RL, spec-driven) + Q&A bank (30) + Minimal Coding Harness lab |
-| 18 | Capstones | Capstones (`capstones`) | `18-Capstones/` | 3 projects (train & post-train, serve with an SLO, production agent) with deliverables and rubrics |
-| - | Review | Knowledge Check (`knowledge-check`) | `Interview-Questions/INDEX.mdx` | Hub linking every module's Q&A bank and `/quiz/<module>` page |
+| 01 | Foundations | LLM Foundations (`llm-models`) | `01-LLM-Foundations/` | 8 notes (fundamentals, tokenization, architecture, attention, model types, modern architectures, failure modes, model landscape) + Q&A bank (47) |
+| 02 | Foundations | Prog Langs (`prog-langs`) | `02-Prog-Langs/{Python-and-Systems,PyTorch}/` | Python & Systems: 4 notes (Python for AI engineering, API design for LLM services, Git workflows for ML, Linux & the GPU box) + Q&A bank (16); PyTorch: 6 notes + Q&A bank + 2 labs |
+| 03 | Foundations | Math for ML (`math-for-ml`) | `03-Math-for-ML/` | 4 notes (linear algebra, probability & information theory, calculus & optimization, statistics for evaluation) + Q&A bank (16) + Attention & Backprop by Hand lab (NumPy, verified vs finite differences and torch autograd) |
+| 04 | Building Models | Pretraining at Scale (`pretraining`) | `04-Pretraining/` | 8 notes (overview, GPU memory, data curation, scaling laws, distributed training, stability/optimizers, accelerators, CUDA concepts & GPU profiling) + Q&A bank (35) + Profile and Fuse lab (CPU path verified; Triton path not GPU-run) |
+| 05 | Building Models | Post-Training & Reasoning (`post-training`) | `05-Post-Training/` | 4 notes (SFT/PEFT, preference optimization, RL for LLMs, reasoning models) + Q&A bank |
+| 06 | Building Models | Fine-Tuning Lab (`fine-tuning-lab`) | `06-Fine-Tuning-Lab/` | 4 notes + Q&A bank + QLoRA lab |
+| 07 | Building Models | Evaluation & Benchmarks (`evaluation`) | `07-Evaluation/` | 5 notes (benchmarks, contamination, LLM-as-judge, own evals, safety & red-teaming) + Q&A bank (21) + Eval Harness lab + Red-Team Harness lab (Qwen3-0.6B + Qwen3Guard, run end to end on MPS) |
+| 08 | Serving & Production | Inference & Serving (`serving-and-inference`) | `08-Serving-and-Inference/` | 6 notes (2 moved from 01) + Q&A bank + FastAPI/vLLM lab |
+| 09 | Serving & Production | Production Engineering (`production-engineering`) | `09-Production-Engineering/` | 8 notes (Docker, K8s/Helm, lifecycle, security, LLM serving on K8s, observability/SLOs/incidents, cloud networking & IAM, infrastructure as code) + Q&A bank (33) + Helm lab + Terraform Private Endpoint & SLO Alerts lab (tofu test with mocks + promtool tests) |
+| 10 | Serving & Production | Cloud Platforms (`platform-breadth`) | `10-Cloud-Platforms/` | 4 notes + Q&A bank |
+| 11 | Building Apps | Prompt & Context Engineering (`prompt-engineering`) | `11-Prompt-Engineering/` | 9 notes + Q&A bank (56) + 1 lab (Prompt Evals & Structured Outputs) |
+| 12 | Building Apps | RAG (`rag`) | `12-RAG/` | 13 notes (incl. enterprise data integration) + Q&A bank (64) + 1 lab (Retrieval Evaluation) + 2 system designs |
+| 13 | Agents | Agent Foundations (`agents`) | `13-Agent-Foundations/` | 8 notes (one memory taxonomy) + Q&A bank (48) + Agent Loop from Scratch lab (shop env, pass^k; run on Qwen3-8B/4B) |
+| 14 | Agents | MCP & A2A (`mcp`) | `14-MCP-and-A2A/` | 7 notes (MCP 2026-07-28, auth, security, A2A v1.0) + Q&A bank (41) + MCP Server & Agent lab (poisoning measured, A2A end to end) |
+| 15 | Agents | Agent Patterns & Multi-Agent (`agentic-ai`) | `15-Agent-Patterns/` | 4 notes + Q&A bank (40) + Patterns Under Measurement lab (HumanEval, hidden tests, paired CIs) |
+| 16 | Agents | Agent Frameworks (`agent-frameworks`) | `16-Agent-Frameworks/` | 8 notes (choosing + 7 frameworks) + Q&A bank (31) + One Agent, Many Frameworks lab (7 frameworks, pinned per-framework requirements) |
+| 17 | Agents | Production Agents (`production-agents`) | `17-Production-Agents/` | 6 notes (architecture, security, durable execution, cost, evals/benchmarks, observability) + Q&A bank (32) + 4 system designs |
+| 18 | Agents | Agent Engineering (`agent-engineering`) | `18-Agent-Engineering/` | 8 notes (harness, loops/graphs, context, coding agents, computer use, skills/memory, verifiers/RL, spec-driven) + Q&A bank (30) + Minimal Coding Harness lab |
+| 19 | Field Engineering | Solutions Architecture & Communication (`solutions-architecture`) | `19-Solutions-Architecture/` | 5 notes (discovery, qualification & ROI, architecture docs & ADRs, communicating to audiences, PoC to production) + Q&A bank (16) + 1 system design (AP invoice processing) |
+| 20 | Capstones | Capstones (`capstones`) | `20-Capstones/` | 3 projects (train & post-train, serve with an SLO, production agent) with deliverables and rubrics; every submission now includes an architecture doc with ADRs and a business outcome |
+| - | Review | Knowledge Check (`knowledge-check`) | `Interview-Questions/` | Hub linking every module's Q&A bank and `/quiz/<module>` page + Readiness Self-Assessment (14-domain 0-3 rubric mapped to modules and capstones) |
 
-**Most recently active area:** redesign Phase 5 (2026-09-27/28) - the note template on every concept note, lab, module INDEX, Q&A bank and system design; module quizzes at `/quiz/<module>`; one Q&A bank per module; capstones. The redesign is complete; its checklist was deleted and the outcome is in the Changelog.
+**Most recently active area:** readiness gaps (2026-10-02/03) - the course was extended to cover the 14-domain GenAI-engineer self-assessment: new modules Math for ML (03) and Solutions Architecture & Communication (19, new Field Engineering track), a Python & Systems section in Prog Langs, 9 new concept notes across existing modules, 4 new labs, a Readiness Self-Assessment page, and capstone requirements for architecture docs and business outcomes. Its checklist was deleted when complete; the outcome is in the Changelog.
 
 **Naming convention:** zero-padded numeric prefixes (`01-`, `02-`, ...) at module and file level; `INDEX.mdx` per module overview; `Notes/`, `SystemDesigns/`, `CodeLabs/`, `Resources/`, `Implementation/` as topic subfolders. See root `CLAUDE.md` for the renumbering rule when files are deleted.
 
@@ -174,6 +176,7 @@ Restructured 2026-09-26 (redesign Phase 1). Order, numbering and tracks come fro
 - [ ] **Wire lint/build into CI** - currently only a manual deploy workflow exists; nothing runs `npm run lint` or `next build` automatically on push/PR, so regressions can reach `main` unchecked
 
 ### Content
+- [x] ~~**Readiness-rubric gaps**~~ - **DONE 2026-10-03**: all 14 domains of the self-assessment covered (5 phases; checklist deleted - see Changelog)
 - [ ] More system-design case studies (only RAG and Agentic AI modules have them so far)
 - [ ] Runnable code labs - embed via CodeSandbox / StackBlitz instead of static code blocks
 - [ ] Video embeds for visual/architecture concepts
@@ -210,6 +213,8 @@ Restructured 2026-09-26 (redesign Phase 1). Order, numbering and tracks come fro
 
 ## 5. Handover Notes (read this first if picking up a new session)
 
+**Readiness gaps (2026-10-03): complete.** 19 teaching modules in 6 tracks plus Capstones and the Knowledge Check hub (with the Readiness Self-Assessment); every self-assessment domain is covered in full. Not yet verified: a GPU run of the Triton path in the Profile and Fuse lab, and a real (non-mocked) `tofu plan` of the Terraform lab. The work is staged but uncommitted.
+
 **Redesign status (2026-09-28): complete.** All six phases (0-5) of the full-course redesign are done - 17 teaching modules in 5 tracks plus Capstones and the Knowledge Check hub, every page on the note template. The tracking checklist has been deleted; see the Changelog. Original context: A three-angle audit (LLM training/serving, agentic AI, pedagogy) found factual errors, 2024-era content, heavy duplication and no pedagogy scaffolding. The approved plan restructures the course into 17 modules in 5 tracks and is tracked phase by phase in `vibes/course-redesign-checklist.md` - read that first. Phases 0 (correctness & hygiene), 1 (fence components, nav-derived home page, 17-module restructure), 2 (LLM-track content, modules 01-09) 3 (Prompt & Context Engineering, RAG) and 4 (agents track, modules 12-17) are done; Phase 5 (pedagogy layer: template everywhere, capstones, Q&A dedupe, quiz pages) is next. Research tip: verify library APIs by installing them in a scratch venv and inspecting signatures - several documented-looking imports (LangChain v0 retrievers, `vertexai.generative_models`, vLLM `guided_*`) no longer exist.
 
 **Earlier state (2026-08-10):** As of 2026-08-10, two large bodies of work landed in the same extended session and are **committed to `dev` locally but not yet pushed to `origin` or merged to `main`** (commit `69f4c46`, "New course tranche + sidebar reorg") - plus a second, larger batch of changes on top of that (the full glass UI redesign, Sections 5-11) that is **still uncommitted** as of this writing. Check `git status`/`git log` before assuming what's actually on disk vs. committed:
@@ -242,8 +247,11 @@ src/
     (course)/
       layout.tsx                      header + sidebar shell
       learn/[module]/[slug]/page.tsx  course content pages (dark title banner, sticky glass footer nav)
-      quiz/all/page.tsx               quiz stub (renders UnderDevelopment)
-      quiz/[module]/page.tsx          quiz stub (renders UnderDevelopment)
+      quiz/all/page.tsx               every module's quiz with question counts
+      quiz/[module]/page.tsx          a module's Check Yourself questions, from the pages' quiz fences
+    map/page.tsx                      the Course Atlas (/map)
+    search-index.json/route.ts        build-time search index (static)
+    sitemap.ts, robots.ts             derived from nav.yml and SITE_URL
   components/
     ui/                               shadcn primitives - button, badge (additive `glass` variant), card, progress,
                                       separator (restyled glass-by-default, zero live consumers), sheet (mobile drawer)
@@ -256,27 +264,23 @@ src/
       nav.ts                          navigation tree from nav.yml (tracks, module numbers), MODULE_SLUG_MAP, isStubFile() WIP detection
       stats.ts                        note/lab/Q&A counts for the home page
       remarkCourseFences.ts           ```objectives / ```quiz / ```exercise fences -> CourseFences.tsx / Quiz.tsx
-      legacy-redirects.json           old -> new /learn/ URLs for pages moved in the restructure
+      legacy-redirects.json           old -> new /learn/ URLs for every moved or renumbered page (165 entries)
+      moduleMeta.ts                   per-module subtitle + description (home tiles, map landmarks)
+      courseMap.ts                    /map data + layout; quizzes.ts quiz collection; searchIndex.ts search index
       loader.ts                       reads .mdx files, extracts TOC
       remarkRewriteMdLinks.ts         build-time cross-link rewriting
   types/
     content.ts                        NavItem, NavModule, NavigationTree, PageRef, PageContent, TocItem, QuizCard
-  content/                            165 .mdx source files across 12 modules (compiled to HTML at build time)
-    nav.yml
-    01-LLM-Models/
-    02-Prog-Langs/PyTorch/            nested one level deeper - future language modules are siblings here
-    03-Fine-Tuning-Lab/
-    04-Serving-and-Inference/
-    05-Production-Engineering/
-    06-Platform-Breadth/
-    07-Prompts/
-    08-RAGs/
-    09-MCP/
-    10-Agents/
-    11-Agentic-AI/
-    12-Agent-Engineering/
-    Interview-Questions/
-    All_Questions.mdx
+  content/                            206 .mdx source files: 19 teaching modules in 6 tracks + Capstones + Knowledge Check
+    nav.yml                           single source of truth for order, tracks and titles
+    01-LLM-Foundations/  02-Prog-Langs/{Python-and-Systems,PyTorch}/  03-Math-for-ML/
+    04-Pretraining/  05-Post-Training/  06-Fine-Tuning-Lab/  07-Evaluation/
+    08-Serving-and-Inference/  09-Production-Engineering/  10-Cloud-Platforms/
+    11-Prompt-Engineering/  12-RAG/
+    13-Agent-Foundations/  14-MCP-and-A2A/  15-Agent-Patterns/  16-Agent-Frameworks/
+    17-Production-Agents/  18-Agent-Engineering/
+    19-Solutions-Architecture/  20-Capstones/
+    Interview-Questions/              Knowledge Check hub + Readiness Self-Assessment
 
 scripts/
   check-content.mjs                   `npm run check:content` - broken links, em dashes, numbering gaps, nav coverage, fence YAML
@@ -284,7 +288,6 @@ scripts/
 vibes/                                project tracking & active plans
   status.md                          this file - the sole live source of truth
   status.html                        polished collapsible status view (regenerated on demand, not auto-synced)
-  GLASS-UI-REDESIGN.md               glassmorphism/dark-mode redesign plan - COMPLETE, all 11 sections shipped
 
 .github/workflows/deploy.yml          auto (push to main) + manual FTP deploy to Hostinger
 ```
@@ -342,3 +345,8 @@ vibes/                                project tracking & active plans
 - **2026-09-28** - Retired `vibes/design-system-playbook.md`. Its still-accurate rules moved to `CLAUDE.md`: a new "Site UI Conventions" section (tokens via `@theme inline`, palette, glass tiers, hand-rolled dark mode, layout breakpoints, prose, MDX surface, audience split, nav/WIP/TOC behavior, no speculative features) plus Mermaid node conventions and fallback rendering under "Diagrams". Its numbering, `nav.yml`, punctuation and tracking rules were already in CLAUDE.md. Stale claims were dropped rather than copied: glass blur (now `0px`), letter abbreviations in the collapsed rail (now module numbers), and `AudienceOnboardingModal` (removed). What's Built and Project Structure updated to match.
 - **2026-09-29** - **Full-text search shipped** (Backlog: Search). Header search dialog (`Search.tsx`, MiniSearch, new dependency `minisearch`) over a build-time per-section index at `/search-index.json` (`searchIndex.ts` + a `force-static` route handler, so the static export writes it to `out/`). Fixed two bugs found along the way: (1) `extractToc()` stripped every `_` from heading text, so headings with `requires_grad`/`state_dict`/`create_agent` in code spans got TOC links that didn't match the rendered ids (4 broken links). `extractToc()` and the search index now share `headingText()` in `loader.ts`. (2) Anchor jumps landed under the sticky audience bar; prose headings now have `scroll-margin-top`. Verified: typecheck, lint, build, `check:content`; all 1,677 search anchors and all 3,696 in-page links in `out/` resolve to real ids. Headless Chrome walkthrough on the built site (⌘K and `/` open, typing, typo query, arrow keys, Enter navigates to the section with the heading visible, Escape, no-results state; light/dark x desktop/mobile), no page errors.
 - **2026-09-29** - **Course map + sitemap.xml shipped** (plan: `~/.claude/plans/can-we-plan-to-streamed-duckling.md`). New `/map` page ("The Course Atlas", `CourseMap.tsx` + `courseMap.ts`), `VisitTracker` for the "You are here" pin, `sitemap.ts` / `robots.ts`, `--map-*` tokens, `SITE_URL` constant; `MODULE_META` moved from `CurriculumTiles.tsx` to `src/lib/content/moduleMeta.ts` (shared with the map; Knowledge Check's landmark copy lives in `courseMap.ts` so it gets no home tile). One change from the plan: module details open as a note card beside the landmark instead of a side panel, which would have shrunk the map and its labels. Verified: typecheck, lint, build, `check:content`; `sitemap.xml` valid, all 190 URLs and all 173 map-page links resolve to built pages. Headless Chrome walkthrough on the built site (light/dark x desktop/mobile): landmark click, `#slug` deep link, Escape closes, Tab + Enter, card stays inside the map, mobile bottom sheet, pin appears after visiting a lesson and disappears when storage is cleared, no horizontal scroll at 390px, no page errors.
+- **2026-10-02** - Gap analysis of the course against the 14-domain readiness rubric (6 domains partial, 3 missing, capstones lack a business-outcome requirement); created `vibes/readiness-gaps-checklist.md` (5 phases, 0 done). Decisions: Math for ML goes after Prog Langs; the rubric becomes a static self-assessment page. No content changes yet
+- **2026-10-02** - **Readiness gaps Phase 1 complete** (checklist: `vibes/readiness-gaps-checklist.md`). New Readiness Self-Assessment page (Knowledge Check); new module 18 Solutions Architecture & Communication (`solutions-architecture`, new `Field Engineering` track: INDEX, 5 notes, Q&A bank, AP-invoice system design), Capstones moved `18-Capstones` -> `19-Capstones` (URLs unchanged, slugs come from titles); new notes 06/05 Safety Evaluation & Red-Teaming and 08/06 LLM Observability, SLOs & Incident Response (Q&A banks renumbered to 06/07 with redirects, +4 questions each); capstone rubrics gain an architecture/ADR + business-outcome criterion (weights rebalanced to 100). Also fixed a stale redirect target (`/learn/knowledge-check/all-questions` pointed at a non-existent `interview-questions-index`). Sources checked: OTel GenAI metric names, SRE Workbook burn rates, all arXiv IDs, Llama Guard 4, Promptfoo acquisition, RAND/Gartner/MIT NANDA. `check:content` 185 files 0/0, `build` and `lint` green; dev-server pass: every Mermaid diagram on the 12 new/changed pages renders (no raw fallbacks), `/quiz/solutions-architecture` shows 20 questions from 5 pages, audience toggle works, all 152 redirect targets exist in `out/`
+- **2026-10-02** - **Readiness gaps Phase 2 complete** (checklist: `vibes/readiness-gaps-checklist.md`). New module 03 Math for ML (`math-for-ml`, Foundations track: INDEX, 4 notes, Q&A bank, Attention & Backprop by Hand lab - NumPy forward/backward verified against finite differences, worst rel. error 1.3e-7, and torch 2.14 autograd to 1e-16). Every later module folder renumbered (`03-Pretraining` ... `19-Capstones` -> `04-` ... `20-`) with a scripted sweep of folder paths, footer link texts, H1s and prose refs (`Lab 12` -> `Lab 13`, `Module 14` -> `Module 15`, `modules 01-06` -> `01-07`); module URLs unchanged. New notes 01/02 Tokenization (LLM Foundations 02-08 renumbered to 03-09, 7 redirects) and 04/08 CUDA Concepts & GPU Profiling (Pretraining Q&A bank 08 -> 09, redirect); 04/01's 76-line tokenizer table trimmed to a summary + link; Q&A banks 01 (43 -> 47) and 04 (30 -> 34). Self-assessment domains 3, 5 and 8 flipped to Full. Fixed a pre-existing broken Mermaid diagram in 13/02 (a `;` inside a sequence message). Verified: `check:content` 194 files 0/0, lint, build (220 pages), all 160 redirect targets exist, Mermaid parser (jsdom) passes all 208 diagrams in the course; `/quiz/math-for-ml` = 24 questions. Browser pass not done this session (extension disconnected)
+- **2026-10-03** - **Readiness gaps Phase 3 complete** (checklist: `vibes/readiness-gaps-checklist.md`). New Python & Systems sub-area in Prog Langs (`02-Prog-Langs/Python-and-Systems/`, listed before PyTorch: INDEX, Python for AI Engineering, API Design for LLM Services, Git Workflows for ML, Linux & the GPU Box, Q&A bank); new 09/07 Cloud Networking & IAM for AI and 09/08 Infrastructure as Code (ProdEng Q&A bank 07 -> 09, +5 questions); new 12/10 Enterprise Data Integration (RAG notes 10-13 -> 11-14, +4 bank questions); 5 redirects (165 total, plus re-pointed older targets). Self-assessment: all 14 domains now Full. Verified: asyncio fan-out, FastAPI service (idempotency, 422, SSE, 429 + Retry-After problem+json), Pydantic/pytest snippets and the permission-aware retrieval sketch all run on Python 3.12; pre-commit config passes `pre-commit validate-config`; AWS (PrivateLink endpoint, IAM, Pod Identity) and GCP (L4 node pool) HCL pass `tofu validate`/`fmt` with OpenTofu 1.13.1 (AWS provider 6.67, Google 8.5); Rego policy passes `opa check` and returns the expected denials with OPA 1.21. `check:content` 203 files 0/0, lint, build (229 pages), 165 redirects resolve, 214/214 Mermaid diagrams parse. Browser pass still not done (extension disconnected)
+- **2026-10-03** - **Readiness gaps Phases 4 and 5 complete - the readiness-gaps effort is finished; `vibes/readiness-gaps-checklist.md` deleted per its own rule.** Phase 4 labs: 04/CodeLabs/01 Profile and Fuse (torch.profiler on a small GPT step; SwiGLU+RMSNorm tail eager vs torch.compile vs Triton; CPU path run on Apple M4 / torch 2.14.1: compile 2.14x, 95% CI 2.11-2.16; Triton/CUDA path not GPU-run); 07/CodeLabs/02 Red-Team Harness (Qwen3-0.6B support bot with a canary secret, 42 attacks in 7 classes x 3 samples, 30 benign, configs baseline / hardened prompt / + Qwen3Guard-Gen-0.6B / + literal output filter; full run 157 s on MPS, reproduced exactly: ASR 68.3% -> 29.4% -> 19.8% -> 0%, paired-bootstrap CIs all excluding 0, over-refusal 10% -> 80% for the hardened prompt; graders unit-tested); 09/CodeLabs/02 Terraform Private Endpoint & SLO Alerts (Bedrock interface endpoint + scoped policies + Pod Identity role; `tofu test` 4/4 with mocked AWS provider on OpenTofu 1.13.1 / AWS provider 6.67; burn-rate rules `promtool check/test rules` SUCCESS on promtool 3.15.0, plus a mutation check that fails as expected). Phase 5: self-assessment links every new lab; lab questions added to banks 04 (35), 07 (21), 09 (33); all 20 banks' stated counts audited against actual counts (all match); home lab blurb updated; status.md project structure, table and handover refreshed. Final verification: `check:content` 206 files 0/0, lint, build (232 pages), 165 redirects resolve, Mermaid parser passes every diagram; headless-Chrome pass over 22 new or changed pages shows every diagram rendered with no raw-text fallback (two first-load misses were cold-cache timing and rendered on reload), and screenshots of the home page, course map, a note and a lab look correct (home: 19 modules in 6 tracks, 131 notes, 657 review questions, 18 labs). Not verified: Triton on a GPU, a real `tofu plan`

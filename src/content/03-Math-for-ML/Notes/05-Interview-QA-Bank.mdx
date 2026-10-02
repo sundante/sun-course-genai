@@ -1,0 +1,109 @@
+# Math for ML - Q&A Review Bank
+
+> 16 Q&A pairs. Tags: `[Easy]` = conceptual recall, `[Medium]` = applying an idea, `[Hard]` = quantitative reasoning.
+
+```objectives
+time: 30 min
+outcomes:
+  - "Answer each question from memory before revealing the answer, across: linear algebra; probability and information theory; calculus and optimization; statistics for evaluation"
+  - Explain the reasoning behind each answer - the mechanism or derivation - not only the fact
+  - Identify the chapters you are weakest on and revisit them before the module quiz
+prerequisites:
+  - "The concept notes of this module"
+```
+
+---
+
+**Q1** `[Easy]` What is the shape of the attention score matrix for batch B, h heads and sequence length T, and why does it matter?
+
+> `(B, h, T, T)`. It grows with the square of the sequence length, which is why attention's memory and compute are quadratic in context length and why FlashAttention avoids materializing it.
+
+---
+
+**Q2** `[Medium]` Roughly how many parameters does one transformer layer with model width d and a classic 4x FFN have?
+
+> About 12d²: 4d² for the Q, K, V and output projections, and 8d² for the two FFN matrices (d → 4d → d), ignoring biases and norms. GPT-2 small: 12 layers x 12 x 768² ≈ 85M, plus 39M of embeddings ≈ 124M.
+
+---
+
+**Q3** `[Medium]` How many FLOPs does it take to train an N-parameter model on D tokens, and where does the estimate come from?
+
+> About 6ND: a forward pass costs about 2N FLOPs per token (one multiply-add per parameter), and the backward pass about twice that (input gradients and weight gradients).
+
+---
+
+**Q4** `[Medium]` Why can LoRA train so few parameters, and how many does it train for rank r on a d_out x d_in matrix?
+
+> It learns a low-rank update ΔW = BA instead of a full ΔW, relying on the finding that fine-tuning needs few degrees of freedom (low intrinsic dimension). It trains r(d_out + d_in) parameters - e.g. 131,072 for r = 16 on a 4096 x 4096 matrix, 0.78% of it.
+
+---
+
+**Q5** `[Easy]` What does SVD give you, and what does the Eckart-Young theorem say?
+
+> W = UΣVᵀ: orthonormal rotations U and V and non-negative singular values on Σ's diagonal. Keeping the top r singular values and vectors gives the best rank-r approximation of W.
+
+---
+
+**Q6** `[Easy]` Why is cross-entropy the training loss for language models?
+
+> Training maximizes the likelihood of the data; the log-likelihood of a sequence is a sum of log next-token probabilities, and its negative average is the cross-entropy between the one-hot targets and the model's distribution.
+
+---
+
+**Q7** `[Medium]` A model's loss is 2.3 nats per token. What are its perplexity and bits per token, and why can't you compare it directly with a model using a different tokenizer?
+
+> Perplexity = e^2.3 ≈ 10; bits = 2.3 / ln 2 ≈ 3.3 per token. Tokens carry different amounts of text in different tokenizers, so compare bits per byte instead.
+
+---
+
+**Q8** `[Medium]` What is the difference between forward and reverse KL, and where does KL appear in post-training?
+
+> Forward KL(p ‖ q) makes q cover all of p's modes (maximum likelihood, distillation); reverse KL(q ‖ p) makes q concentrate on modes it can match. RLHF penalizes β·KL(π ‖ π_ref) to keep the policy near the SFT model, and DPO's loss is derived from that same KL-regularized objective.
+
+---
+
+**Q9** `[Hard]` A detector has 90% recall and a 2% false-positive rate. Attacks are 0.5% of traffic. What fraction of alerts are real attacks?
+
+> True alerts: 0.005 x 0.9 = 0.0045. False alerts: 0.995 x 0.02 = 0.0199. Precision = 0.0045 / 0.0244 ≈ 18%. Low base rates make most alerts false even for accurate detectors.
+
+---
+
+**Q10** `[Easy]` What is the gradient of softmax + cross-entropy with respect to the logits?
+
+> p - y: predicted probabilities minus the one-hot target.
+
+---
+
+**Q11** `[Medium]` Why does backpropagation cost about twice a forward pass regardless of the number of parameters?
+
+> Reverse-mode autodiff traverses the graph once from the loss, reusing each downstream gradient; each layer performs about two matrix multiplies in the backward pass (input gradient and weight gradient) versus one in the forward pass.
+
+---
+
+**Q12** `[Hard]` Using L(θ) = (λ/2)θ², explain why too large a learning rate makes training diverge.
+
+> Gradient descent gives θ ← (1 - ηλ)θ, which shrinks only if |1 - ηλ| < 1, i.e. η < 2/λ. Larger steps overshoot and grow each iteration. In a network the sharpest curvature direction sets this limit.
+
+---
+
+**Q13** `[Medium]` What does AdamW change compared with Adam plus L2 regularization, and how much memory does mixed-precision AdamW training need per parameter?
+
+> AdamW applies weight decay directly to the weights instead of through the gradient, so it isn't rescaled by Adam's adaptive denominator. Memory is about 16 bytes per parameter: BF16 weights and gradients (4 bytes) plus FP32 master weights and two FP32 moment estimates (12 bytes).
+
+---
+
+**Q14** `[Medium]` What is the 95% confidence interval for 80% accuracy on 200 items, and how many items halve it?
+
+> SE = √(0.8 x 0.2 / 200) ≈ 2.8 points, so ±5.5 points. Halving it needs 4x the items - 800 - because the width shrinks with √n.
+
+---
+
+**Q15** `[Hard]` Two models are evaluated on the same 500 items. Model B alone is right on 30 items, model A alone on 15. Is the difference significant?
+
+> McNemar's test: χ² = (|30 - 15| - 1)² / 45 ≈ 4.36 > 3.84, p ≈ 0.04 - significant at the 5% level. Only the 45 disagreements matter; the items both get right or wrong carry no information about the difference.
+
+---
+
+**Q16** `[Medium]` Give the unbiased pass@k estimator and compute pass@5 for 3 correct out of 10 samples.
+
+> pass@k = 1 - C(n - c, k) / C(n, k). For n = 10, c = 3, k = 5: 1 - C(7,5)/C(10,5) = 1 - 21/252 ≈ 0.92.

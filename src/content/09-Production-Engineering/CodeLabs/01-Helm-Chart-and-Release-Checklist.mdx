@@ -1,0 +1,103 @@
+# Code Lab - 01: Helm Chart & Release Checklist
+
+← **Back to Overview:** [Production Engineering](../INDEX.mdx)
+
+This lab packages the [Serving & Inference](../../08-Serving-and-Inference/INDEX.mdx) FastAPI + vLLM endpoint as a real deployable artifact - a Dockerfile, a Helm chart with autoscaling, and a one-page release-readiness checklist you could hand to a team on day one of an on-call rotation.
+
+```objectives
+time: 2 hours
+outcomes:
+  - Build a multi-stage GPU inference image that mounts weights at run time instead of copying them in
+  - Package the service as a Helm chart with GPU limits, taints and tolerations, probes sized for model load time, and a queue-depth HPA
+  - Validate the chart with `helm lint`, `helm template` and `--dry-run` before deploying
+  - Turn rollout and rollback policy into a release-readiness checklist a team can follow
+prerequisites:
+  - "[Docker for GPU Inference](../Notes/01-Docker-for-GPU-Inference.mdx), [Kubernetes & Helm](../Notes/02-Kubernetes-and-Helm.mdx) and [Model Lifecycle & Rollout](../Notes/03-Model-Lifecycle-and-Rollout.mdx)"
+  - "The [FastAPI + vLLM Endpoint](../../08-Serving-and-Inference/CodeLabs/01-FastAPI-vLLM-Endpoint.mdx) lab's `serve.py`"
+```
+
+## Lab Overview
+
+| Property | Detail |
+|---|---|
+| **Patterns** | GPU Dockerfile, Helm templating, queue-depth HPA autoscaling |
+| **Deploys** | The Module 08 FastAPI + vLLM serving endpoint |
+| **Complexity** | Intermediate |
+| **Files** | `Dockerfile`, `helm-chart/`, `release-readiness-checklist.md` |
+
+## What's Inside
+
+```
+01-Helm-Chart-and-Release-Checklist/
+  README.mdx                        - architecture, what this demonstrates, how to run it
+  Dockerfile                        - multi-stage GPU inference image
+  helm-chart/
+    Chart.yaml
+    values.yaml                     - image, replica count, GPU resources, autoscaling bounds
+    templates/
+      deployment.yaml
+      service.yaml
+      hpa.yaml
+  release-readiness-checklist.md    - the standalone "first 90 days" artifact
+```
+
+## Prerequisites
+
+- Docker with `nvidia-container-toolkit` for local GPU testing (optional - `helm lint`/`--dry-run` don't need a GPU)
+- `helm` v3 and `kubectl` pointed at any cluster (a local `kind`/`minikube` cluster is enough to validate)
+
+## Getting Started
+
+```bash
+cd 01-Helm-Chart-and-Release-Checklist
+helm lint helm-chart/
+helm install --dry-run vllm-serving helm-chart/ -f helm-chart/values.yaml
+```
+
+## What to Read Alongside
+
+- [Docker for GPU Inference](../Notes/01-Docker-for-GPU-Inference.mdx)
+- [Kubernetes & Helm](../Notes/02-Kubernetes-and-Helm.mdx)
+- [Model Lifecycle & Rollout](../Notes/03-Model-Lifecycle-and-Rollout.mdx) - the checklist operationalizes this note
+
+## Check Yourself
+
+```quiz
+- q: "Why does the chart scale on vLLM's waiting-request count rather than GPU utilization?"
+  options: ["GPU utilization is high whenever the server is busy, so it cannot tell a comfortable load from a growing queue", "GPU utilization cannot be exported to Prometheus", "The HPA does not support Pods metrics", "Queue depth is cheaper to scrape"]
+  answer: 1
+  explain: "A continuously batching server keeps the GPU busy at moderate load too. Waiting requests rise exactly when users start to feel latency."
+- q: "What does the startup probe protect against?"
+  answer: "A model that takes minutes to load would fail liveness checks and be restarted in a loop. The startup probe suspends liveness and readiness checks until `/health` first succeeds (here up to 60 x 10 s)."
+- q: "Why is the model mounted from a PersistentVolumeClaim rather than copied into the image?"
+  options: ["Kubernetes cannot pull images larger than 10 GB", "So model and code versions roll independently and a code change doesn't re-push gigabytes of weights", "PVCs are faster than local disk", "Helm cannot template image tags"]
+  answer: 2
+```
+
+## Exercises
+
+```exercise
+- title: Deploy a canary with the chart
+  task: |
+    Using this chart, describe how you would run a 10% canary of a new model version next to the current one, and how you would roll it back.
+  hints: ["Two releases, one Service?", "What does the Service select on?"]
+  solution: |
+    Install a second release (`helm install vllm-canary ...`) with the new `MODEL_PATH` or image tag and 1 replica, next to 9 replicas of the stable release, and point one Service at a pod label both releases share (the chart's Service selects on the release name, so add a shared label through `values.yaml`) - traffic then splits roughly by replica count (about 10%). For precise percentages, use a Gateway API `HTTPRoute` with weighted backends or a service mesh instead. Roll back by uninstalling the canary release (or scaling it to zero); promote by upgrading the stable release to the new version and removing the canary.
+- title: Size the HPA target
+  task: |
+    Load tests (module 08 lab) show that one replica meets the SLO (p95 TTFT < 500 ms) up to 24 concurrent requests, and that above about 4 waiting requests p95 TTFT exceeds the SLO. Choose `targetWaitingRequestsPerPod`, `minReplicas` and `maxReplicas` for a peak of 120 concurrent requests and an overnight floor of 10.
+  solution: |
+    - Target about 2-3 waiting requests per pod: below the point where TTFT breaks, leaving headroom for the minutes a new replica needs to load.
+    - Peak: 120 / 24 = 5 replicas at the limit; add headroom for a replica failing or loading - `maxReplicas: 7`.
+    - Floor: 10 concurrent needs 1 replica; keep `minReplicas: 2` for availability during node failure or rollout.
+    - Scale-up must lead demand because cold starts take minutes - consider pre-scaling on a schedule before known peaks.
+```
+
+## References
+
+- Helm, [Chart best practices](https://helm.sh/docs/chart_best_practices/) (2026)
+- Kubernetes, [Configure liveness, readiness and startup probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/) (2026)
+- vLLM, [Production metrics](https://docs.vllm.ai/en/latest/usage/metrics.html) - `vllm:num_requests_waiting` (2026)
+- Prometheus, [Prometheus Adapter for Kubernetes metrics APIs](https://github.com/kubernetes-sigs/prometheus-adapter) (2026)
+
+*Last reviewed: 2026-09*

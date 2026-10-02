@@ -1,0 +1,41 @@
+# 07 - Evaluation & Benchmarks
+
+Every decision about a model - which one to deploy, whether a fine-tune helped, whether a new checkpoint regressed - is only as good as the evaluation behind it. This module covers how LLMs are measured: public benchmarks and what they actually test, contamination, model-graded evaluation and its biases, long-context evaluation, building an evaluation harness of your own, and safety evaluation and red-teaming.
+
+```objectives
+scope: module
+time: 6-7 hours
+outcomes:
+  - Read a model card's benchmark table critically - what each benchmark measures, and how saturation and contamination distort it
+  - Design a task-specific evaluation set and pick metrics for it
+  - Use an LLM as a judge while controlling for position, verbosity and self-preference bias
+  - Run a standard evaluation harness against a base and a fine-tuned model and interpret the difference
+  - Red-team a model or application and report attack success rate and over-refusal with the attacker budget stated
+prerequisites:
+  - "[LLM Foundations](../01-LLM-Foundations/INDEX.mdx)"
+  - "[Fine-Tuning Lab](../06-Fine-Tuning-Lab/INDEX.mdx) - its base-vs-tuned benchmark is the starting point for this module's lab"
+```
+
+## Chapter Map
+
+| # | Page | Topic | Level |
+|---|------|-------|-------|
+| 1 | [What Benchmarks Measure](Notes/01-What-Benchmarks-Measure.mdx) | Knowledge, reasoning, math, code, agentic, instruction-following, factuality and long-context benchmarks; scoring; pass@k vs pass^k; saturation | Beginner |
+| 2 | [Contamination & Leaderboards](Notes/02-Contamination-and-Leaderboards.mdx) | How contamination happens, detection (n-gram, Min-K%, canaries, GSM1k-style variants), time-split evals, arenas and their caveats | Intermediate |
+| 3 | [LLM-as-Judge](Notes/03-LLM-as-Judge.mdx) | Pointwise vs pairwise, rubrics, biases and mitigations, validating a judge against humans | Intermediate |
+| 4 | [Building Your Own Evals](Notes/04-Building-Your-Own-Evals.mdx) | Eval sets from real traffic, metrics per task, confidence intervals and paired tests, long-context evals, CI regression gates | Advanced |
+| 5 | [Safety Evaluation & Red-Teaming](Notes/05-Safety-Evaluation-and-Red-Teaming.mdx) | Harm taxonomies, attack classes, manual and automated red-teaming (garak, PyRIT, promptfoo), ASR and over-refusal, guard models, safety benchmarks | Advanced |
+| 6 | [Q&A Review Bank](Notes/06-Interview-QA-Bank.mdx) | 21 questions across the module | All levels |
+
+## Code Labs
+
+- [Eval Harness - Base vs Tuned](CodeLabs/01-Eval-Harness.mdx) - run lm-evaluation-harness on two models and compare them with paired bootstrap confidence intervals.
+- [Red-Team Harness](CodeLabs/02-Red-Team-Harness.mdx) - attack a small assistant holding a canary secret with 42 attacks in 7 classes, measure four defence layers (hardened prompt, Qwen3Guard input guard, output filter) by ASR, ASR@k and over-refusal with Wilson intervals and paired bootstrap. Runs on a laptop in minutes.
+
+Agent-level evaluation (trajectories, pass^k, public agent benchmarks) continues in [Production Agents](../17-Production-Agents/Notes/05-Agent-Evaluation-and-Benchmarks.mdx).
+
+---
+
+## Next Topic
+
+Previous: [06 - Fine-Tuning Lab](../06-Fine-Tuning-Lab/INDEX.mdx) · Next: [08 - Inference & Serving](../08-Serving-and-Inference/INDEX.mdx)

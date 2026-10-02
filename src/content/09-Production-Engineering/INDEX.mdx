@@ -1,0 +1,87 @@
+# 09 - Production Engineering
+
+Taking a serving stack to production: GPU container images, Kubernetes and Helm for GPU workloads, model registries and safe rollouts, security and compliance for AI systems, the Kubernetes-native tooling for serving LLMs at scale, and operating LLM services with SLOs and incident response.
+
+```objectives
+scope: module
+time: 9-11 hours (notes + lab)
+outcomes:
+  - Build GPU inference images and explain where the driver, CUDA libraries and framework each come from
+  - Deploy a model server on Kubernetes with correct GPU scheduling, probes and queue-depth autoscaling, packaged as a Helm chart
+  - Plan a rollout with a registry, a strategy (blue/green, canary, shadow, champion-challenger) and quantified rollback criteria
+  - Secure an AI system - IAM, secrets, PHI/PII redaction, OWASP LLM Top 10, model supply chain - and place it on the EU AI Act timeline
+  - Choose Kubernetes-native LLM serving tools (GPU sharing and DRA, KServe, LeaderWorkerSet, llm-d, inference gateways) for a workload
+  - Define SLIs and SLOs for an LLM service, alert on error-budget burn, and run incidents and blameless postmortems
+  - Lay out private networking, workload identity and data perimeters for AI workloads, and manage them as reviewed, policy-checked infrastructure as code
+prerequisites:
+  - "[Inference & Serving](../08-Serving-and-Inference/INDEX.mdx) and its [FastAPI + vLLM lab](../08-Serving-and-Inference/CodeLabs/01-FastAPI-vLLM-Endpoint.mdx)"
+```
+
+## What You Will Learn
+
+- Dockerfiles for GPU inference: where the driver and CUDA libraries come from, `-devel` vs `-runtime`, multi-stage builds, why weights shouldn't be baked into the image
+- Core Kubernetes objects for model serving: Deployment, Service, Ingress, HorizontalPodAutoscaler
+- GPU scheduling: node pools, taints/tolerations, why GPU requests must equal limits
+- Helm charts: templating deployments across environments, `helm template` vs `--dry-run`
+- Model lifecycle: registries (MLflow), blue/green vs canary vs champion-challenger rollout, rollback criteria decided before launch
+- Security and compliance for AI systems: IAM least privilege, secrets management, PHI/PII in traces and eval datasets, SAST/dependency scanning, HIPAA's five technical safeguards
+- Building a release-readiness checklist you'd introduce in a first 90 days
+- Kubernetes for LLMs: GPU sharing and DRA, multi-node replicas, model-aware routing, queue-depth autoscaling, cold starts
+- LLM-specific security (OWASP LLM Top 10), model supply-chain hygiene, and the EU AI Act timeline
+- Operating LLM services: SLIs for latency, goodput, quality, safety and cost; error budgets and burn-rate alerts; incident response and postmortems
+- Cloud networking and IAM for AI: private endpoints, egress control, workload identity, data perimeters, landing zones
+- Infrastructure as code with Terraform/OpenTofu: state, modules, GPU node pools, CI plans, drift and policy as code
+
+## Chapter Map
+
+| # | File | Topic | Difficulty |
+|---|------|-------|-----------|
+| 1 | [Docker for GPU Inference](Notes/01-Docker-for-GPU-Inference.mdx) | Driver vs CUDA libraries, base-image choice, multi-stage builds, weight mounting | Intermediate |
+| 2 | [Kubernetes & Helm](Notes/02-Kubernetes-and-Helm.mdx) | Deployment/Service/Ingress/HPA, GPU scheduling, Helm charts | Advanced |
+| 3 | [Model Lifecycle & Rollout](Notes/03-Model-Lifecycle-and-Rollout.mdx) | Registries, blue/green, canary, champion-challenger, rollback criteria | Advanced |
+| 4 | [Security & Compliance](Notes/04-Security-and-Compliance.mdx) | IAM, secrets, PHI/PII handling, SAST, HIPAA safeguards, OWASP LLM Top 10, model supply chain, EU AI Act timeline | Advanced |
+| 5 | [LLM Serving on Kubernetes](Notes/05-LLM-Serving-on-Kubernetes.mdx) | GPU Operator, MIG / time-slicing / DRA, KServe, LeaderWorkerSet, Gateway API Inference Extension, llm-d, queue-depth autoscaling, cold starts | Advanced |
+| 6 | [LLM Observability, SLOs & Incident Response](Notes/06-LLM-Observability-SLOs-and-Incident-Response.mdx) | SLIs for LLM services, SLOs and error budgets, burn-rate alerting, OpenTelemetry GenAI signals, LLM-specific incidents, incident roles and runbooks, blameless postmortems | Advanced |
+| 7 | [Cloud Networking & IAM for AI](Notes/07-Cloud-Networking-and-IAM-for-AI.mdx) | VPCs and subnets, private endpoints to Bedrock / Vertex AI / Azure OpenAI, egress control, workload identity, data perimeters, landing zones | Advanced |
+| 8 | [Infrastructure as Code](Notes/08-Infrastructure-as-Code.mdx) | Terraform vs OpenTofu, plan/apply, remote state and locking, GPU node pools as code, modules and environments, drift, policy as code, GitOps boundary | Advanced |
+| 9 | [Q&A Review Bank](Notes/09-Interview-QA-Bank.mdx) | 33 Q&A pairs across all topics | All levels |
+
+## Recommended Learning Paths
+
+### Path A: Deployment Fundamentals
+1. [Docker for GPU Inference](Notes/01-Docker-for-GPU-Inference.mdx) - package the service
+2. [Kubernetes & Helm](Notes/02-Kubernetes-and-Helm.mdx) - run it in production
+3. [Helm Chart & Release Checklist](CodeLabs/01-Helm-Chart-and-Release-Checklist.mdx) - build the real artifact
+4. [Terraform Private Endpoint & SLO Alerts](CodeLabs/02-Terraform-Private-Endpoint-and-SLO-Alerts.mdx) - private access and error-budget alerts, tested offline
+
+### Path B: Interview Preparation (Accelerated)
+1. [Kubernetes & Helm](Notes/02-Kubernetes-and-Helm.mdx) - GPU scheduling questions are common at Director/Principal level
+2. [Model Lifecycle & Rollout](Notes/03-Model-Lifecycle-and-Rollout.mdx) - canary vs champion-challenger is a frequent distinction to defend
+3. [Security & Compliance](Notes/04-Security-and-Compliance.mdx) - HIPAA safeguards named precisely
+4. [LLM Observability, SLOs & Incident Response](Notes/06-LLM-Observability-SLOs-and-Incident-Response.mdx) - error budgets and burn-rate math come up in SRE-flavoured rounds
+5. [Q&A Review Bank](Notes/09-Interview-QA-Bank.mdx) - drill all questions
+
+### Path C: Regulated/Healthcare Roles
+1. [Security & Compliance](Notes/04-Security-and-Compliance.mdx)
+2. [Model Lifecycle & Rollout](Notes/03-Model-Lifecycle-and-Rollout.mdx) - rollback discipline matters more under regulatory review
+3. Cross-reference [Prior Authorization](../17-Production-Agents/SystemDesigns/02-Prior-Authorization.mdx) for a worked PHI-handling example
+
+## Resources
+
+- [Q&A Review Bank](Notes/09-Interview-QA-Bank.mdx) - 33 Q&A pairs in this module
+- [Module quiz](/quiz/production-engineering) - every *Check Yourself* question in this module
+- [Helm Chart & Release Checklist Code Lab](CodeLabs/01-Helm-Chart-and-Release-Checklist.mdx) - image, chart with queue-depth autoscaling, release checklist
+- [Terraform Private Endpoint & SLO Alerts Code Lab](CodeLabs/02-Terraform-Private-Endpoint-and-SLO-Alerts.mdx) - a private Bedrock endpoint and least-privilege workload role tested with `tofu test` and mock providers, plus burn-rate alert rules unit-tested with `promtool` - all offline
+
+## Key Cross-References
+
+- Serving the model that gets deployed here → [Inference & Serving](../08-Serving-and-Inference/INDEX.mdx)
+- Registry promotion evidence → [Fine-Tuning Lab: Benchmarking Base vs Tuned](../06-Fine-Tuning-Lab/Notes/04-Benchmarking-Base-vs-Tuned.mdx)
+- Tracing and eval-gate infrastructure → [Production Agents: Evaluation and Benchmarks](../17-Production-Agents/Notes/05-Agent-Evaluation-and-Benchmarks.mdx)
+- PHI-handling worked examples → [Prior Authorization](../17-Production-Agents/SystemDesigns/02-Prior-Authorization.mdx), [Smart Diagnostic Assistant](../17-Production-Agents/SystemDesigns/03-Smart-Diagnostic-Assistant-1.mdx)
+
+---
+
+## Next Topic
+
+Previous: [08 - Inference & Serving](../08-Serving-and-Inference/INDEX.mdx) · Next: [10 - Cloud Platforms](../10-Cloud-Platforms/INDEX.mdx)

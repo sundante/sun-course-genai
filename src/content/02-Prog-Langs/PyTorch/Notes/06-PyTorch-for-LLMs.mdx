@@ -94,7 +94,7 @@ What to watch:
 | fp32 | 8 / 23 | Wide | No | Master weights, optimizer state, reductions |
 | fp16 | 5 / 10 | Narrow (max ~65,504) | Yes (`GradScaler`) | Older GPUs without bf16 |
 | bf16 | 8 / 7 | Same as fp32 | No | Default for LLM training on A100/H100-class GPUs |
-| fp8 (E4M3 / E5M2) | 4/3 or 5/2 | Narrow | Per-tensor or per-block scaling | Large-scale training and inference on H100+ (see [Pretraining at Scale](../../../03-Pretraining/INDEX.mdx)) |
+| fp8 (E4M3 / E5M2) | 4/3 or 5/2 | Narrow | Per-tensor or per-block scaling | Large-scale training and inference on H100+ (see [Pretraining at Scale](../../../04-Pretraining/INDEX.mdx)) |
 
 ```python
 with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
@@ -119,7 +119,7 @@ Autocast keeps precision-sensitive operations (softmax, norms, losses) in fp32. 
 
 ### FSDP2 - shard everything
 
-When it doesn't fit (mixed-precision Adam needs ~16 bytes per parameter - see [GPU & Hardware](../../../03-Pretraining/Notes/02-GPU-and-Hardware.mdx)), **fully sharded data parallelism** splits parameters, gradients and optimizer state across GPUs and gathers each layer's full weights only while that layer runs. PyTorch's current API is `fully_shard` (FSDP2), which represents each parameter as a sharded `DTensor`:
+When it doesn't fit (mixed-precision Adam needs ~16 bytes per parameter - see [GPU & Hardware](../../../04-Pretraining/Notes/02-GPU-and-Hardware.mdx)), **fully sharded data parallelism** splits parameters, gradients and optimizer state across GPUs and gathers each layer's full weights only while that layer runs. PyTorch's current API is `fully_shard` (FSDP2), which represents each parameter as a sharded `DTensor`:
 
 ```python
 from torch.distributed.fsdp import fully_shard, MixedPrecisionPolicy
@@ -137,7 +137,7 @@ optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)  # created after shar
 | Memory per GPU | Full model + grads + optimizer | ~1/N of each, plus one layer's full weights at a time |
 | Communication | All-reduce gradients | All-gather params (forward/backward) + reduce-scatter grads |
 | When | Model state fits on one GPU | It doesn't, or you want larger batches |
-| Composes with | - | Tensor / context parallelism via `DeviceMesh` (see [Pretraining at Scale](../../../03-Pretraining/INDEX.mdx)) |
+| Composes with | - | Tensor / context parallelism via `DeviceMesh` (see [Pretraining at Scale](../../../04-Pretraining/INDEX.mdx)) |
 
 ---
 
