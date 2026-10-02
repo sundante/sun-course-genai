@@ -1,0 +1,222 @@
+# Pretraining: Overview, Tokenization and Objectives
+
+Pretraining turns a randomly initialised network into a base model by training it to predict text over trillions of tokens. This chapter gives the big picture of a pretraining run and covers two foundations the rest of the module builds on - how text becomes tokens, and which training objective each architecture uses - then points to the chapters that go deep on data, scaling, distributed training and stability.
+
+```objectives
+time: 45 min
+outcomes:
+  - Describe the stages from pretraining to an aligned assistant, and the scale (tokens, GPU-hours, cost) of a modern pretraining run
+  - Train and apply a BPE tokenizer, and explain how the tokenizer and its vocabulary size shape data budgets, sequence length and embedding size
+  - Write the loss for causal LM, masked LM and span corruption, and explain label shifting and padding masks
+  - Map each part of a pretraining run to the chapter that covers it in depth
+prerequisites:
+  - "[LLM Fundamentals](../../01-LLM-Foundations/Notes/01-LLM-Fundamentals.mdx) and [Model Architecture Types](../../01-LLM-Foundations/Notes/05-Model-Architecture-Types.mdx)"
+```
+
+## Pre-Training
+
+### Concept
+
+Pretraining is the large-scale phase where a model learns general language understanding from massive unlabeled text corpora. It requires enormous compute and data but is done only once - the resulting base model is then fine-tuned for specific tasks.
+
+**The three stages of an LLM's life:**
+```mermaid
+flowchart LR
+    A["1️⃣ Pretraining"] --> B["🏗️ Base model<br/>knows language, world knowledge,<br/>no instruction following"]
+    B --> C["2️⃣ Fine-tuning"] --> D["🎯 Instruction-tuned model<br/>follows instructions, behaves as assistant"]
+    D --> E["3️⃣ Alignment (RLHF / DPO)"] --> F["✅ Safe, helpful, honest<br/>reduced harmful outputs"]
+```
+
+**Scale of pretraining:**
+- Llama 3 8B: ~15 trillion tokens (15T), ~1.3M H100 GPU-hours (Meta model card; the 70B took ~6.4M)
+- Frontier closed models do not publish token counts or compute; open reports (Llama 3, DeepSeek-V3, Qwen3) are the reliable reference points
+- Rule of thumb: at roughly $2-4 per H100-hour, **1M GPU-hours costs ~$2M-$4M** in cloud compute (a frontier run is tens of millions of GPU-hours)
+
+---
+
+## Tokenization
+
+Before training, all text is converted to token ids with a tokenizer trained on (a sample of) the pretraining corpus - today almost always **byte-level BPE** or a SentencePiece BPE/Unigram model, with vocabularies from 32K to 256K. The tokenizer is frozen from then on: the embedding and output layers are sized to its vocabulary, and every later stage (post-training, serving, evaluation) must use exactly the same one.
+
+Pretraining-specific consequences:
+
+- **Data budgets are counted in tokens**, so the same corpus is "bigger" under a smaller vocabulary; compare datasets and scaling-law fits in tokens of the same tokenizer, or in bytes.
+- **Vocabulary size is a model-design choice**: a larger vocabulary shortens sequences (more text per context window and per FLOP) but adds `V x d` parameters to each of the embedding and output layers.
+- **Language and code coverage** in the tokenizer's training mix decides how efficiently those domains are encoded - Llama 3 moved from a 32K SentencePiece vocabulary to a 128K `tiktoken`-based one largely for better multilingual and code compression.
+
+How BPE, WordPiece and Unigram work, vocabulary trade-offs, the token tax on non-English text, numbers, glitch tokens and special tokens are covered in [Tokenization](../../01-LLM-Foundations/Notes/02-Tokenization.mdx).
+
+---
+
+## Training Objectives
+
+### Concept
+
+**Causal Language Modeling (CLM) - Decoder-only:**
+```
+Input:   "The cat sat on the mat"
+Targets: "cat sat on the mat <EOS>"
+Loss:    CrossEntropy(logits, targets) averaged over all non-padding positions
+```
+
+The model sees tokens 0..t-1 and predicts token t. This is why causal masking is applied during training - the model must predict each position without seeing future tokens. The loss is the average cross-entropy over all predicted positions in the sequence.
+
+**Masked Language Modeling (MLM) - Encoder-only (BERT):**
+```
+Input:   "The [MASK] sat on the [MASK]"
+Targets: "cat" and "mat"
+Loss:    CrossEntropy only on masked positions
+```
+
+15% of tokens are replaced: 80% with [MASK], 10% with a random token, 10% kept unchanged (this mix helps the model generalize beyond just masked positions).
+
+**Span Corruption - Encoder-Decoder (T5):**
+```
+Input:   "The <X> on the mat. The <Y> is fluffy."  (spans replaced by sentinels)
+Target:  "<X> cat sat <Y> cat"
+Loss:    CrossEntropy on the decoder's output
+```
+
+---
+
+### Code
+
+```python
+# Minimal CLM training loop (conceptual)
+import torch
+from transformers import AutoTokenizer, AutoModelForCausalLM
+from torch.optim import AdamW
+from torch.optim.lr_scheduler import CosineAnnealingLR
+
+model_name = "gpt2"  # small, runnable locally
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name)
+
+tokenizer.pad_token = tokenizer.eos_token
+
+# Sample training data
+texts = [
+    "The transformer architecture revolutionized NLP.",
+    "Scaling laws predict model performance from compute.",
+]
+
+def tokenize(texts, max_length=64):
+    return tokenizer(
+        texts, 
+        truncation=True, 
+        padding="max_length", 
+        max_length=max_length,
+        return_tensors="pt"
+    )
+
+optimizer = AdamW(model.parameters(), lr=1e-4, weight_decay=0.01)
+scheduler = CosineAnnealingLR(optimizer, T_max=100)
+
+model.train()
+for step in range(10):
+    batch = tokenize(texts)
+    input_ids = batch["input_ids"]
+    attention_mask = batch["attention_mask"]
+    
+    # Labels = input_ids shifted by 1 (CLM: predict next token)
+    # HuggingFace handles the shift internally when labels == input_ids
+    labels = input_ids.clone()
+    labels[attention_mask == 0] = -100  # ignore padding in loss
+
+    outputs = model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
+    loss = outputs.loss
+
+    optimizer.zero_grad()
+    loss.backward()
+    torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)  # gradient clipping
+    optimizer.step()
+    scheduler.step()
+
+    print(f"Step {step}: loss={loss.item():.4f}")
+
+# BPE tokenizer training demo (HuggingFace `tokenizers`)
+from tokenizers import Tokenizer
+from tokenizers.models import BPE
+from tokenizers.trainers import BpeTrainer
+from tokenizers.pre_tokenizers import Whitespace
+
+tokenizer_bpe = Tokenizer(BPE(unk_token="[UNK]"))
+tokenizer_bpe.pre_tokenizer = Whitespace()
+trainer = BpeTrainer(vocab_size=1000, special_tokens=["[UNK]", "[CLS]", "[PAD]", "[MASK]"])
+# trainer.train(["corpus.txt"])  # train on your corpus
+print("BPE tokenizer configured (needs corpus file to actually train)")
+```
+
+---
+
+## The Rest of a Pretraining Run
+
+The other ingredients each have a chapter in this module:
+
+| Topic | Key ideas | Chapter |
+|---|---|---|
+| **Data** | Web-scale extraction, language ID, exact and MinHash near-deduplication, classifier-based quality filtering (FineWeb-Edu, DCLM), PII removal, mixtures and annealing - Llama 3's final mix was roughly 50% general knowledge, 25% maths and reasoning, 17% code, 8% multilingual | [Data Curation & Mixtures](03-Data-Curation-and-Mixtures.mdx) |
+| **Scale** | Loss falls as a power law in parameters, data and compute; Chinchilla's compute-optimal ratio is ~20 tokens per parameter; modern models train far beyond it because smaller models are cheaper to serve (Llama 3 8B saw ~15T tokens) | [Scaling Laws & Compute Budgets](04-Scaling-Laws-and-Compute-Budgets.mdx) |
+| **Parallelism** | Data, tensor, pipeline, context and expert parallelism; ZeRO/FSDP sharding; mixed-precision Adam needs ~16 bytes per parameter of model state - 8× the bf16 weights - before activations | [Distributed Training at Scale](05-Distributed-Training-at-Scale.mdx) and [GPU & Hardware](02-GPU-and-Hardware.mdx) |
+| **Stability** | Warmup plus cosine or warmup-stable-decay schedules, gradient clipping, loss-spike handling, QK-norm, z-loss, optimizer choices (AdamW, Muon) | [Training Stability & Optimizers](06-Training-Stability-and-Optimizers.mdx) |
+| **Hardware** | GPU generations, interconnects, MFU | [Accelerators & Interconnects](07-Accelerators-and-Interconnects.mdx) |
+
+Two memory techniques appear in every run and are worth knowing here: **mixed precision** (bf16 compute with fp32 master weights) and **gradient checkpointing** (discard most activations in the forward pass and recompute them during backward - roughly one extra forward pass, about 30% more compute, for a large cut in activation memory).
+
+---
+
+## Study Notes
+
+- Pretraining = next-token (or masked/span) prediction over trillions of tokens; post-training turns the base model into an assistant
+- Llama 3 8B: ~15T tokens and ~1.3M H100 GPU-hours; 1M GPU-hours is roughly $2-4M at cloud prices
+- BPE builds a vocabulary by repeatedly merging the most frequent adjacent pair; byte-level BPE never needs an unknown token
+- Larger vocabularies (Llama 3's 128K, OpenAI's o200k) shorten sequences, especially for code and non-English text
+- CLM: cross-entropy on every next token, labels shifted by the framework, padding masked with -100; MLM: 15% of tokens selected (80/10/10); T5: sentinel span corruption
+- Data, scaling, parallelism, stability and hardware each have their own chapter
+
+## Check Yourself
+
+```quiz
+- q: "Why did Llama 3 move from a 32K SentencePiece vocabulary to a 128K tiktoken-based BPE vocabulary?"
+  options:
+    - "Larger vocabularies encode text in fewer tokens, especially non-English text and code, lowering compute per document"
+    - "SentencePiece cannot handle bytes"
+    - "Smaller vocabularies cause more hallucination"
+    - "tiktoken is the only open-source tokenizer"
+  answer: 1
+- q: "In Hugging Face causal-LM training, what should `labels` be set to at padding positions?"
+  options: ["-100, so they are ignored by the loss", "0", "The pad token id", "The EOS token id"]
+  answer: 1
+- q: "In BERT's masked-LM objective, what happens to the 15% of selected tokens?"
+  answer: "80% are replaced with [MASK], 10% with a random token, and 10% are left unchanged - so the model can't rely on seeing [MASK] to know where to predict, which also matches fine-tuning inputs that contain no [MASK] tokens."
+- q: "A 1B-parameter model is trained on 20B tokens. Roughly how many training FLOPs is that?"
+  options: ["1.2 × 10²⁰", "2 × 10¹⁹", "1.2 × 10¹⁸", "6 × 10²¹"]
+  answer: 1
+  explain: "Training compute ≈ 6 × N × D = 6 × 10⁹ × 2 × 10¹⁰ = 1.2 × 10²⁰ FLOPs."
+```
+
+## Exercises
+
+```exercise
+- title: Train a tokenizer and measure it
+  task: |
+    Train byte-level BPE tokenizers with vocabulary sizes 8K, 32K and 128K on the same 100 MB text sample (Hugging Face `tokenizers`). For a held-out English sample, a Python file and a non-English sample, report tokens per 1,000 characters for each.
+  solution: |
+    Tokens per character fall as the vocabulary grows, with diminishing returns for English and larger gains for code and non-English text (if they are in the training sample). The trade-off: a larger vocabulary means a larger embedding and output matrix (vocab × d_model each) and rarer tokens with fewer training examples each.
+- title: BPE by hand
+  task: |
+    Run BPE merges by hand on the corpus "low low low lower lowest newest newest" until you have made four merges. Show the merge list and the final segmentation of "lowest".
+  solution: |
+    Word counts: low ×3, lower ×1, lowest ×1, newest ×2. Merge 1: (l, o) with 5 occurrences (tied with (o, w) - ties are broken by the implementation's ordering). Merge 2: (lo, w) -> low, 5. Merge 3: (e, s) -> es, 3 (lowest + newest ×2; tied with (s, t)). Merge 4: (es, t) -> est, 3. Final segmentations: low = [low], lower = [low, e, r], lowest = [low, est], newest = [n, e, w, est].
+```
+
+## References
+
+- Sennrich et al., [Neural Machine Translation of Rare Words with Subword Units (BPE)](https://arxiv.org/abs/1508.07909) (2016)
+- Kudo and Richardson, [SentencePiece](https://arxiv.org/abs/1808.06226) (2018)
+- Devlin et al., [BERT](https://arxiv.org/abs/1810.04805) (2019); Raffel et al., [T5](https://arxiv.org/abs/1910.10683) (2020)
+- Grattafiori et al., [The Llama 3 Herd of Models](https://arxiv.org/abs/2407.21783) (2024)
+- Chen et al., [Training Deep Nets with Sublinear Memory Cost (gradient checkpointing)](https://arxiv.org/abs/1604.06174) (2016)
+- Meta, [Llama 3 model card](https://github.com/meta-llama/llama3/blob/main/MODEL_CARD.md) (2024)
+
+*Last reviewed: 2026-09*

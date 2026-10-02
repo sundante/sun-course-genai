@@ -1,0 +1,109 @@
+# Python & Systems - Q&A Review Bank
+
+> 16 Q&A pairs. Tags: `[Easy]` = conceptual recall, `[Medium]` = design decisions and trade-offs, `[Hard]` = debugging or system design.
+
+```objectives
+time: 30 min
+outcomes:
+  - "Answer each question from memory before revealing the answer, across: Python engineering; API design; Git workflows; Linux and GPU operations"
+  - Explain the reasoning behind each answer - the mechanism or trade-off - not only the fact
+  - Identify the chapters you are weakest on and revisit them before the module quiz
+prerequisites:
+  - "The concept notes of this section"
+```
+
+---
+
+**Q1** `[Easy]` What is the difference between pyproject.toml dependencies and a lockfile, and which do applications commit?
+
+> pyproject.toml declares acceptable version ranges; the lockfile records the exact resolved versions (and hashes). Applications commit both and install from the lockfile everywhere; libraries publish ranges so users can resolve them together.
+
+---
+
+**Q2** `[Medium]` How do you run thousands of model calls concurrently without hitting the provider's rate limit?
+
+> asyncio (or a thread pool) with a semaphore capping in-flight calls, a timeout on each call, and retries on 429/5xx/timeouts with exponential backoff and full jitter, honouring Retry-After. Use TaskGroup so failures aren't silently lost, and write results incrementally so a crash resumes.
+
+---
+
+**Q3** `[Medium]` Why validate model outputs with Pydantic instead of trusting the JSON?
+
+> Model output is untrusted data: fields can be missing, mistyped or out of range. Validating at the boundary fails loudly with a precise error you can retry or route to review, and the same model provides the JSON Schema for structured-output APIs.
+
+---
+
+**Q4** `[Easy]` When do you use processes rather than asyncio or threads in Python?
+
+> For CPU-bound pure-Python work, because the GIL lets only one thread run Python bytecode at a time in the standard build. I/O-bound work like model API calls is well served by asyncio or threads.
+
+---
+
+**Q5** `[Medium]` How should code that calls LLMs be tested?
+
+> Two layers: fast deterministic unit and integration tests with fake or recorded model responses on every commit (including error paths - malformed output, timeouts, 429s), and evals with real models on representative data, run on a schedule and before releases, reported with confidence intervals.
+
+---
+
+**Q6** `[Medium]` When would you choose SSE, WebSockets or an asynchronous job API for an LLM feature?
+
+> SSE for one-way streaming to humans (chat, drafting); WebSockets for two-way, low-latency sessions (realtime voice, interruptible agents); async jobs (202 + status URL or webhook) for work that takes minutes or runs in batch.
+
+---
+
+**Q7** `[Hard]` List three things that commonly break SSE streaming in production and their fixes.
+
+> Buffering proxies (disable buffering on streaming routes), idle-connection timeouts during long thinking pauses (send keep-alive comments, raise timeouts), and errors after the 200 status (send error events in the stream). Also abort upstream generation when the client disconnects.
+
+---
+
+**Q8** `[Medium]` How do idempotency keys work, and when are they needed?
+
+> The client sends a unique key per logical operation; the server stores it before doing the work, returns 409 for a duplicate while the first is in flight, replays the stored response for a duplicate after completion, and expires keys after a retention window. Needed for POSTs that cost money or have side effects, because clients retry after timeouts.
+
+---
+
+**Q9** `[Medium]` What should an overloaded LLM API return, and why not just queue everything?
+
+> 503 with Retry-After once a bounded queue is full. Unbounded queues accept work that will time out anyway, raising latency for everyone; shedding load early with a retry hint keeps the service responsive and avoids retry storms.
+
+---
+
+**Q10** `[Easy]` What belongs in Git, and what doesn't, in an LLM project?
+
+> Git: code, configs, prompts, small eval sets, lockfiles, Dockerfiles, IaC. Not Git: datasets (DVC or snapshots), model weights (registry or Hub), notebook outputs (strip them) and secrets (secret manager).
+
+---
+
+**Q11** `[Medium]` What does it take to make "the model scored 71.4%" reproducible?
+
+> The code commit (clean tree), data and eval-set versions, the full resolved config, environment (lockfile hash, image digest, CUDA and driver), seeds, base model revision and checkpoint ids, and eval harness settings - logged automatically to an experiment tracker whose run id accompanies the number.
+
+---
+
+**Q12** `[Hard]` A secret was pushed to a public repo. What do you do, in order?
+
+> Revoke and rotate the credential immediately; then remove it from history with git filter-repo and force-push, asking collaborators to re-clone; then add secret scanning (pre-commit gitleaks, host push protection). Rewriting history without rotating fixes nothing.
+
+---
+
+**Q13** `[Easy]` What is the difference between SIGTERM and SIGKILL, and why does it matter for training?
+
+> SIGTERM asks a process to exit and can be caught; SIGKILL kills immediately and can't be caught. Preemption and orchestrators send SIGTERM first, so training code should catch it, checkpoint and exit cleanly.
+
+---
+
+**Q14** `[Medium]` What does the CUDA version in nvidia-smi mean, and how do you check what PyTorch uses?
+
+> It is the highest CUDA version the installed driver supports, not an installed toolkit. PyTorch bundles its own runtime: check `torch.version.cuda`. The driver must be new enough for that version (minor-version compatibility within a major release has limits).
+
+---
+
+**Q15** `[Hard]` DataLoader workers crash with "bus error" in Docker, and later the job is killed with no Python traceback. What are the likely causes?
+
+> The bus error is too little shared memory for worker IPC - run with --ipc=host or a larger --shm-size. A kill with no traceback is often the host OOM killer (check `dmesg -T | grep -i "out of memory"`), or SIGKILL from the orchestrator after a memory limit - reduce workers, prefetch or batch size, or raise the limit.
+
+---
+
+**Q16** `[Medium]` What do you do when dmesg shows repeated Xid 79 or Xid 48 on one GPU?
+
+> Treat it as hardware: Xid 79 means the GPU has fallen off the bus, Xid 48 is an uncorrectable double-bit ECC error. Drain the GPU or node, reset it, and report to the provider or vendor if it recurs - don't keep retrying jobs on it.

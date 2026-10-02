@@ -1,0 +1,162 @@
+# Agents in Practice
+
+Where agents earn their cost today, how to pick a first use case, and how requirements change between a personal assistant and an enterprise deployment - reliability, security, observability, cost governance and human oversight. This chapter is the bridge from the mechanics of this module to the production modules later in the track.
+
+```objectives
+time: 40 min
+outcomes:
+  - Identify the properties that make a task a good agent use case, and apply them to candidate projects
+  - Contrast personal and enterprise agent requirements across reliability, security, observability and cost
+  - Choose a human-in-the-loop pattern for a given risk level
+  - Choose between buying an agent product, a managed agent platform, a framework and a hand-written loop
+prerequisites:
+  - "[What Are AI Agents](01-What-Are-AI-Agents.mdx) - the workflow-or-agent test"
+```
+
+## What Makes a Good Agent Use Case
+
+The use cases where agents work well in production share four properties:
+
+| Property | Why it matters | Strong example |
+|---|---|---|
+| **Unpredictable path** | If the steps are fixed, a workflow is cheaper and more reliable | Debugging: what to inspect next depends on what you found |
+| **Verifiable outcome** | You can check success automatically and the agent can check its own progress | Code: tests and type checks; support: ticket state in the system of record |
+| **Recoverable or gated actions** | Mistakes can be undone, or irreversible steps wait for approval | Version control; draft-then-approve emails |
+| **Enough value per task** | Agent episodes cost many model calls; the task must be worth minutes and cents-to-dollars | A resolved support case, a merged fix, a research brief |
+
+Coding agents became the flagship use case because they have all four. Customer support and research are next: support has a system of record and policies to check against; research has sources to cite and verify.
+
+Use the navigator to test a problem of your own against these questions, browse use cases by domain and see which complexity tier fits:
+
+```agent-navigator
+```
+
+### Use cases by domain
+
+| Domain | Good agent tasks | Usually better as a workflow | Main risk to design for |
+|---|---|---|---|
+| **Software** | Fix a failing test; implement a scoped feature; migrate an API across a repo; review a diff | Formatting, generating boilerplate from a template | Destructive commands; secrets in context - sandbox and require approval for shell |
+| **Customer support** | Resolve account and order issues through tools under a policy | Ticket classification and routing; FAQ answers with RAG | Policy violations (refunds, identity) - enforce rules in tools |
+| **Research & analysis** | Multi-source investigations, due diligence, literature reviews ([Deep-Research RAG](../../12-RAG/Notes/08-Agentic-and-Deep-Research-RAG.mdx)) | Summarising a known set of documents | Unsupported claims - require citations; prompt injection from web pages |
+| **Data** | Exploratory analysis with code execution; answering questions over a warehouse | Scheduled reports; known queries | Wrong joins that look plausible - show the query and checks |
+| **Documents & operations** | Handling exceptions in document pipelines; reconciling mismatches | Extraction to a schema; the happy path | Silent wrong fields - validation and sampling review |
+| **Regulated (health, finance, legal)** | Assembling evidence for a human decision (prior authorisation packets, compliance screens) | Deterministic rule checks | Decisions without accountable humans - keep humans as decision-makers |
+| **Personal** | Inbox triage, scheduling, travel research | Reminders, simple automations | Acting on your behalf with your credentials - scope permissions tightly |
+
+### Choosing the first project
+
+Pick a task that is **frequent, bounded and checkable**: a high-volume support intent with clear policy, a class of maintenance changes in a codebase, or a research brief with a fixed template. Build the evaluation set first ([Agent Evaluation Basics](08-Agent-Evaluation-Basics.mdx)), launch at the Approver autonomy level, and widen autonomy only on evidence.
+
+---
+
+## Personal vs Enterprise Agents
+
+The same agent loop serves both, but the surrounding requirements differ by orders of magnitude.
+
+| Dimension | Personal / prototype | Enterprise production |
+|---|---|---|
+| **Reliability** | Works most of the time; the user notices and retries | Measured pass^k on a representative test set; regression tests on every change |
+| **Identity & access** | The user's own credentials | Per-user delegated authorisation (OAuth), least-privilege tool scopes, tenant isolation |
+| **Security** | Trust the inputs | Assume prompt injection from any tool output; sandbox execution; approval for side effects |
+| **Observability** | Print statements | Traces of every step (OpenTelemetry), cost and latency dashboards, searchable transcripts |
+| **Auditability** | None | Who asked, what the agent did, which data it read, who approved - retained per policy |
+| **Cost governance** | Personal API bill | Per-episode budgets, per-team quotas, model routing, caching |
+| **Data governance** | Personal choice | Data residency, retention limits, PII handling, contractual terms with model providers |
+| **Change management** | Edit the prompt | Versioned prompts and tools, evaluation gates, staged rollout |
+| **Failure handling** | Try again | Durable execution, idempotent tools, escalation to humans |
+
+Most of these are the subject of [Production Agents](../../17-Production-Agents/INDEX.mdx); the point here is to scope them early. An agent demo that works for its author is typically a small fraction of the engineering needed to run it for thousands of users.
+
+---
+
+## Human-in-the-Loop Patterns
+
+| Pattern | How it works | Use when |
+|---|---|---|
+| **Approve actions** | The agent pauses before specified tools (payments, sends, deletes); a person approves, edits or rejects | Irreversible or externally visible actions |
+| **Approve the plan** | The agent proposes a plan; execution starts after approval | Long tasks where early course-correction saves effort |
+| **Review the output** | The agent produces a draft; a person finalises it | Communications, documents, code changes (pull requests) |
+| **Escalate on uncertainty** | The agent hands off when confidence is low, policy is unclear or the user asks for a human | Support and regulated domains |
+| **Sample and audit** | Actions proceed; a sample is reviewed after the fact | Low-risk, high-volume actions with good monitoring |
+
+Implementing approval requires the loop to **pause and resume** - persist the task state, notify a person, and continue the same episode when they respond. Frameworks provide this as interrupts (LangGraph `interrupt()`, OpenAI Agents SDK tool approvals) on top of checkpointing ([Agent Memory](05-Agent-Memory.mdx)).
+
+Design approvals so people actually read them: show the specific action and its arguments, the reason, and the consequence; batch low-risk approvals; and track approval rates - a gate approved 100% of the time is a candidate for automation, and one approved rarely signals a broken agent.
+
+---
+
+## Build or Buy
+
+| Option | You get | You own | Choose when |
+|---|---|---|---|
+| **Agent product** (coding agents, support-agent products, deep-research assistants) | A finished agent and UI | Configuration, data connections, policy | The use case is standard and the product fits |
+| **Managed agent platform** (cloud agent runtimes and hosted agent APIs) | Hosted loop, sessions, tool execution, often memory and tracing | Instructions, tools, evaluation | You want a custom agent without running infrastructure |
+| **Framework** (LangGraph, OpenAI Agents SDK, Google ADK, …) | Loop, state, interrupts, multi-agent primitives | Deployment, operations, tools | You need control and portability ([Agent Frameworks](../../16-Agent-Frameworks/INDEX.mdx)) |
+| **Hand-written loop** | Exactly what you write | Everything | Small agents, unusual control flow, or learning |
+
+### Anti-patterns
+
+- **Agent-washing a workflow** - a fixed sequence dressed up as an agent, paying agent cost for workflow behaviour.
+- **One agent with every tool** - poor tool selection and maximum blast radius; scope tools to the task.
+- **Prompt-only policy** - rules the model is asked to follow but nothing enforces.
+- **No evaluation set** - changes shipped on the strength of a few demos.
+- **Autonomy before evidence** - moving to Observer level without measured reliability and monitoring.
+
+---
+
+## Check Yourself
+
+```quiz
+- q: "Which property most distinguishes coding from many other agent use cases?"
+  options:
+    - "Outcomes are automatically verifiable (tests) and changes are reversible (version control)"
+    - "Code is shorter than documents"
+    - "Coding tasks need fewer tool calls"
+    - "Developers accept any output"
+  answer: 1
+- q: "An agent's approval gate for sending customer emails has been approved 100% of the time over 5,000 requests. What does that suggest?"
+  options:
+    - "It may be safe to move that action to sample-and-audit, after checking the emails are genuinely correct"
+    - "The approvers should be removed from the company"
+    - "The agent should be given more tools"
+    - "Nothing - approval rates carry no information"
+  answer: 1
+  explain: "It might also mean reviewers rubber-stamp - check a sample before relaxing the gate."
+- q: "What does implementing an 'approve actions' pattern require from the agent loop?"
+  answer: "The ability to pause mid-episode and resume later: persist task state (checkpoint), surface the pending action with its arguments to a person, and continue the same episode with their decision - approve, edit or reject."
+```
+
+## Exercises
+
+```exercise
+- title: Score three candidates
+  task: |
+    Score three candidate agent projects from your organisation (or invented ones) 1-5 on the four use-case properties: unpredictable path, verifiable outcome, recoverable or gated actions, value per task. Recommend one as a first project and describe its evaluation set and launch autonomy level.
+  solution: |
+    A strong first project scores high on verifiability and recoverability even if its value per task is moderate. The recommendation should name the success check (for example "ticket closed with correct status and no policy violation"), a test set size (100-300 real cases), and Approver-level launch with the specific tools gated.
+- title: Enterprise gap analysis
+  task: |
+    Take the lab's customer-service agent. List what would have to be added, component by component, to run it for a real retailer's customers. Order the list by risk.
+  solution: |
+    Highest risk first: identity verification that isn't just "the email in the message" (authenticated session), refunds gated by amount and approval, prompt-injection-safe handling of any free text, audit logging of every write, per-episode cost bounds, tracing, an evaluation set drawn from real conversations with regression gates, escalation to human agents, data retention rules, durable execution for long-running cases.
+```
+
+## Study Notes
+
+- Good agent use cases: unpredictable path, verifiable outcome, recoverable or gated actions, enough value per task
+- Coding fits all four; support and research follow
+- First project: frequent, bounded, checkable; build the eval set first; launch at Approver level
+- Enterprise adds identity and delegated auth, injection-aware security, tracing, audit, cost governance, data governance, change management, durable execution
+- HITL patterns: approve actions, approve the plan, review output, escalate, sample and audit - all need pause/resume
+- Build or buy: product → managed platform → framework → hand-written loop
+- Anti-patterns: agent-washed workflows, every tool in one agent, prompt-only policy, no eval set, autonomy before evidence
+
+## References
+
+- Anthropic, [Building Effective Agents](https://www.anthropic.com/engineering/building-effective-agents) (Dec 2024)
+- OpenAI, [A Practical Guide to Building Agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf) (2025)
+- Feng, McDonald and Zhang, [Levels of Autonomy for AI Agents](https://arxiv.org/abs/2506.12469) (2025)
+- Yao et al., [τ-bench](https://arxiv.org/abs/2406.12045) (2024)
+- OWASP, [Top 10 for LLM Applications and Agentic AI](https://genai.owasp.org/) (2025)
+
+*Last reviewed: 2026-09*

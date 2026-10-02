@@ -1,0 +1,52 @@
+# Lab 09-02 - multi-window, multi-burn-rate SLO alerts for an LLM gateway (Google SRE Workbook pattern).
+# SLO: 99.5% of requests succeed (non-5xx) over 30 days -> error budget 0.5%.
+# Burn-rate thresholds: page at 14.4x (2% of budget in 1 h) and 6x (5% in 6 h); ticket at 1x (10% in 3 d).
+groups:
+  - name: llm-gateway-slo-recording
+    rules:
+      - record: slo:request_errors:ratio_rate5m
+        expr: sum(rate(llm_gateway_requests_total{code=~"5.."}[5m])) / sum(rate(llm_gateway_requests_total[5m]))
+      - record: slo:request_errors:ratio_rate30m
+        expr: sum(rate(llm_gateway_requests_total{code=~"5.."}[30m])) / sum(rate(llm_gateway_requests_total[30m]))
+      - record: slo:request_errors:ratio_rate1h
+        expr: sum(rate(llm_gateway_requests_total{code=~"5.."}[1h])) / sum(rate(llm_gateway_requests_total[1h]))
+      - record: slo:request_errors:ratio_rate6h
+        expr: sum(rate(llm_gateway_requests_total{code=~"5.."}[6h])) / sum(rate(llm_gateway_requests_total[6h]))
+      - record: slo:request_errors:ratio_rate3d
+        expr: sum(rate(llm_gateway_requests_total{code=~"5.."}[3d])) / sum(rate(llm_gateway_requests_total[3d]))
+
+  - name: llm-gateway-slo-alerts
+    rules:
+      - alert: LLMGatewayErrorBudgetFastBurn
+        expr: |
+          slo:request_errors:ratio_rate1h > (14.4 * 0.005)
+          and
+          slo:request_errors:ratio_rate5m > (14.4 * 0.005)
+        for: 2m
+        labels:
+          severity: page
+        annotations:
+          summary: "LLM gateway is burning error budget at >14.4x (2% of the monthly budget per hour)"
+          runbook: "https://runbooks.example.internal/llm-gateway/error-budget"
+      - alert: LLMGatewayErrorBudgetSlowBurn
+        expr: |
+          slo:request_errors:ratio_rate6h > (6 * 0.005)
+          and
+          slo:request_errors:ratio_rate30m > (6 * 0.005)
+        for: 15m
+        labels:
+          severity: page
+        annotations:
+          summary: "LLM gateway is burning error budget at >6x (5% of the monthly budget in 6 hours)"
+          runbook: "https://runbooks.example.internal/llm-gateway/error-budget"
+      - alert: LLMGatewayErrorBudgetTicket
+        expr: |
+          slo:request_errors:ratio_rate3d > (1 * 0.005)
+          and
+          slo:request_errors:ratio_rate6h > (1 * 0.005)
+        for: 1h
+        labels:
+          severity: ticket
+        annotations:
+          summary: "LLM gateway will exhaust its monthly error budget at the current error rate"
+          runbook: "https://runbooks.example.internal/llm-gateway/error-budget"

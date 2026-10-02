@@ -24,7 +24,7 @@ When you ask it something, it doesn't search a database or look facts up. It gen
 
 **What this means in practice:**
 
-- LLMs are generative, not retrieval-based - they can confidently state things that are wrong (hallucination). If you need reliable facts, pair the LLM with a retrieval system (see [RAG](../../11-RAG/INDEX.mdx)).
+- LLMs are generative, not retrieval-based - they can confidently state things that are wrong (hallucination). If you need reliable facts, pair the LLM with a retrieval system (see [RAG](../../12-RAG/INDEX.mdx)).
 - "Large" means trained on a lot of data with a lot of parameters - more scale generally means better results, but also more cost.
 - An LLM is not a knowledge base with citations. It encodes patterns, not verified facts.
 
@@ -46,7 +46,7 @@ The correct mental model: **an LLM is a compressed probabilistic model of human 
 **Why "large"?** The term is relative. In 2018, BERT-large (340M parameters) was "large." By 2024, the baseline is 7B–70B+ parameters. What scale provides:
 - More parameters → more capacity to memorize patterns and relationships
 - More training tokens → better generalization and knowledge coverage
-- The relationship is governed by scaling laws (see [Training and Pretraining](../../03-Pretraining/Notes/01-Training-and-Pretraining.mdx))
+- The relationship is governed by scaling laws (see [Training and Pretraining](../../04-Pretraining/Notes/01-Training-and-Pretraining.mdx))
 
 **Autoregressive generation:** At inference time, the model generates one token at a time, appending each new token to the context and re-running the forward pass. This is why generation is slow - you cannot parallelize sequential token production.
 
@@ -139,6 +139,8 @@ print(f"LLaMA-3 count: {len(llama_tok.encode(sample))}")
 
 </div>
 
+How tokenizers are built, vocabulary trade-offs, the cost of non-English text and the full list of tokenization failures are in [Tokenization](02-Tokenization.mdx).
+
 ---
 
 ### Context Window
@@ -153,7 +155,7 @@ Every AI model has a working memory limit called the **context window**. Think o
 - **Cost scales with size.** The AI has to compare every piece of information against every other piece - so a larger context window costs significantly more to run. This is why large-context API calls are priced higher.
 - **Memory doesn't persist between sessions.** Each new conversation starts blank. The AI has no memory of past conversations unless you explicitly provide them in the prompt.
 
-Context window sizes vary widely - from a few thousand words (small chatbots) to around a million tokens (current frontier models - see the [Model Landscape](07-Model-Landscape.mdx)). Bigger isn't always better; very long contexts can cause the model to lose focus on information buried in the middle.
+Context window sizes vary widely - from a few thousand words (small chatbots) to around a million tokens (current frontier models - see the [Model Landscape](08-Model-Landscape.mdx)). Bigger isn't always better; very long contexts can cause the model to lose focus on information buried in the middle.
 
 </div>
 
@@ -168,7 +170,7 @@ The context window is the maximum number of tokens an LLM can attend to in one r
 - **Memory:** the KV cache grows **linearly** with context (O(n) per sequence) and dominates GPU memory at long lengths; FlashAttention removes the O(n²) attention *memory* but not the O(n²) compute
 - **Quality:** models only generalise reliably to lengths they were trained on; extending context needs position-encoding changes (RoPE scaling) plus long-context training
 
-**How context windows grew (for current numbers see the [Model Landscape](07-Model-Landscape.mdx)):**
+**How context windows grew (for current numbers see the [Model Landscape](08-Model-Landscape.mdx)):**
 
 | Era | Representative models | Context window |
 |-----|----------------------|----------------|
@@ -177,7 +179,7 @@ The context window is the maximum number of tokens an LLM can attend to in one r
 | 2024 | Llama 3.1 (128K), GPT-4o (128K), Gemini 1.5 Pro (1M) | 128K-1M |
 | 2025-2026 | Frontier closed models; Llama 4 Scout (10M advertised) | ~1M standard at the frontier |
 
-**The dirty secret:** A large context window ≠ uniform retrieval quality. The "lost in the middle" problem (see [Failure Modes](06-Failure-Modes-and-Tricky-Issues.mdx)) means models attend poorly to tokens buried in the middle of very long contexts. Putting the most important information at the beginning or end of the context is a practical mitigation.
+**The dirty secret:** A large context window ≠ uniform retrieval quality. The "lost in the middle" problem (see [Failure Modes](07-Failure-Modes-and-Tricky-Issues.mdx)) means models attend poorly to tokens buried in the middle of very long contexts. Putting the most important information at the beginning or end of the context is a practical mitigation.
 
 **Context is shared between input and output.** A 128K window with a 100K-token prompt leaves only 28K tokens for the response.
 
@@ -266,7 +268,7 @@ P(token_i) = softmax(logits / T)[i]
 | 1.5–2.0 | Very random, often incoherent | Brainstorming, diversity sampling |
 
 **Tricky Q:** *Is temperature=0 identical to greedy decoding?*  
-Mathematically yes - as T→0, softmax concentrates all mass on the argmax, and implementations special-case `temperature=0` as `argmax` (literal `softmax(logits/0)` would divide by zero). But it is **not guaranteed to be deterministic** in practice: batched GPU inference changes floating-point reduction order with batch composition, so near-tied logits can flip between runs (see [Prompt Fundamentals](../../10-Prompt-Engineering/Notes/01-Prompt-Fundamentals.mdx)).
+Mathematically yes - as T→0, softmax concentrates all mass on the argmax, and implementations special-case `temperature=0` as `argmax` (literal `softmax(logits/0)` would divide by zero). But it is **not guaranteed to be deterministic** in practice: batched GPU inference changes floating-point reduction order with batch composition, so near-tied logits can flip between runs (see [Prompt Fundamentals](../../11-Prompt-Engineering/Notes/01-Prompt-Fundamentals.mdx)).
 
 **Top-p (Nucleus Sampling):** Consider only the smallest set of tokens whose cumulative probability ≥ `p`, then renormalize and sample from that nucleus.
 
@@ -354,7 +356,7 @@ LLMs are categorized by their training architecture and objective. Three core ty
 **Mixture of Experts (MoE) - a fourth category:**
 Not a separate architecture but a modification: instead of one dense FFN per layer, use N "expert" FFNs and a router that selects 1–2 experts per token. Result: large total parameters but only a fraction active per token (Mixtral-8x7B: 47B total, ~13B active).
 
-Full architecture deep dive: see [Transformer Architecture](02-Architecture.mdx) and [Model Architecture Types](04-Model-Architecture-Types.mdx).
+Full architecture deep dive: see [Transformer Architecture](03-Architecture.mdx) and [Model Architecture Types](05-Model-Architecture-Types.mdx).
 
 </div>
 

@@ -1,0 +1,89 @@
+# promtool test rules slo-rules.test.yaml - synthetic traffic of 100 requests per minute.
+rule_files:
+  - slo-rules.yaml
+
+evaluation_interval: 1m
+
+tests:
+  # 1. An outage-like 10% error rate: the fast-burn page fires once both windows exceed 7.2%.
+  - interval: 1m
+    input_series:
+      - series: 'llm_gateway_requests_total{code="200"}'
+        values: '0+90x120'
+      - series: 'llm_gateway_requests_total{code="500"}'
+        values: '0+10x120'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: LLMGatewayErrorBudgetFastBurn
+        exp_alerts:
+          - exp_labels:
+              severity: page
+            exp_annotations:
+              summary: "LLM gateway is burning error budget at >14.4x (2% of the monthly budget per hour)"
+              runbook: "https://runbooks.example.internal/llm-gateway/error-budget"
+      - eval_time: 10m
+        alertname: LLMGatewayErrorBudgetTicket
+        exp_alerts: []          # still inside its 1 h 'for' window
+
+  # 2. A 4% error rate: below the fast-burn threshold (14.4 x 0.5% = 7.2%), above the slow-burn
+  #    threshold (6 x 0.5% = 3%), so only the slow-burn page fires, after its 15 min 'for'.
+  - interval: 1m
+    input_series:
+      - series: 'llm_gateway_requests_total{code="200"}'
+        values: '0+96x120'
+      - series: 'llm_gateway_requests_total{code="500"}'
+        values: '0+4x120'
+    alert_rule_test:
+      - eval_time: 60m
+        alertname: LLMGatewayErrorBudgetFastBurn
+        exp_alerts: []
+      - eval_time: 60m
+        alertname: LLMGatewayErrorBudgetSlowBurn
+        exp_alerts:
+          - exp_labels:
+              severity: page
+            exp_annotations:
+              summary: "LLM gateway is burning error budget at >6x (5% of the monthly budget in 6 hours)"
+              runbook: "https://runbooks.example.internal/llm-gateway/error-budget"
+
+  # 3. A healthy 0.2% error rate: no alerts at all.
+  - interval: 1m
+    input_series:
+      - series: 'llm_gateway_requests_total{code="200"}'
+        values: '0+998x240'
+      - series: 'llm_gateway_requests_total{code="500"}'
+        values: '0+2x240'
+    alert_rule_test:
+      - eval_time: 4h
+        alertname: LLMGatewayErrorBudgetFastBurn
+        exp_alerts: []
+      - eval_time: 4h
+        alertname: LLMGatewayErrorBudgetSlowBurn
+        exp_alerts: []
+      - eval_time: 4h
+        alertname: LLMGatewayErrorBudgetTicket
+        exp_alerts: []
+
+  # 4. A slow leak at 1% for 8 hours: no page, but the ticket fires (the 3-day window sees only these
+  #    8 hours of data, so its ratio is also 1%).
+  - interval: 1m
+    input_series:
+      - series: 'llm_gateway_requests_total{code="200"}'
+        values: '0+99x480'
+      - series: 'llm_gateway_requests_total{code="500"}'
+        values: '0+1x480'
+    alert_rule_test:
+      - eval_time: 8h
+        alertname: LLMGatewayErrorBudgetFastBurn
+        exp_alerts: []
+      - eval_time: 8h
+        alertname: LLMGatewayErrorBudgetSlowBurn
+        exp_alerts: []
+      - eval_time: 8h
+        alertname: LLMGatewayErrorBudgetTicket
+        exp_alerts:
+          - exp_labels:
+              severity: ticket
+            exp_annotations:
+              summary: "LLM gateway will exhaust its monthly error budget at the current error rate"
+              runbook: "https://runbooks.example.internal/llm-gateway/error-budget"

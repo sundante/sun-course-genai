@@ -13,6 +13,7 @@ type NavEntry = string | Record<string, string | NavEntry[]>;
 const MODULE_SLUG_MAP: Record<string, string> = {
   "LLM Foundations": "llm-models",
   "Prog Langs": "prog-langs",
+  "Math for ML": "math-for-ml",
   "Pretraining at Scale": "pretraining",
   "Post-Training & Reasoning": "post-training",
   "Fine-Tuning Lab": "fine-tuning-lab",
@@ -28,6 +29,7 @@ const MODULE_SLUG_MAP: Record<string, string> = {
   "Agent Frameworks": "agent-frameworks",
   "Production Agents": "production-agents",
   "Agent Engineering": "agent-engineering",
+  "Solutions Architecture & Communication": "solutions-architecture",
   "Capstones": "capstones",
   "Knowledge Check": "knowledge-check",
 };
