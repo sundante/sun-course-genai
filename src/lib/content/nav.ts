@@ -75,9 +75,11 @@ function isStubFile(filePath: string): boolean {
   if (!fs.existsSync(fullPath)) return true;
   const content = fs.readFileSync(fullPath, "utf-8");
   const lines = content.split("\n");
-  // Count lines with actual body content (not headings, HR, empty, or table rows)
+  // Count body prose and glossary definitions. Navigation tables alone are not
+  // substantive content, but a bold term followed by its definition is.
   const bodyLines = lines.filter((l) => {
     const t = l.trim();
+    if (/^\|\s*\*\*[^|]+\*\*\s*\|\s*[^|]+\|$/.test(t)) return true;
     return t.length > 0 && !t.startsWith("#") && !t.startsWith("---") && !t.startsWith("|") && !t.startsWith(">");
   });
   return bodyLines.length < 8;

@@ -1,0 +1,29 @@
+# Appendix - Prompt & Context Engineering
+
+## What We Learned
+
+- Specify the task, constraints, evidence and output format using the model's message structure.
+- Use examples, decomposition, tool use or verification when they improve measured performance.
+- Constrained output formats enforce structure; semantic correctness still needs validation.
+- Manage context with retrieval, compression, offloading and stable cacheable prefixes.
+- Version prompts, evaluate changes and optimize on training/dev cases while keeping a held-out test.
+
+## Key Acronyms, Concepts & Jargon
+
+| Term | Short meaning |
+|---|---|
+| **Zero-shot / few-shot** | Instructions without examples / instructions with example demonstrations. |
+| **ICL** | In-Context Learning: adapting behavior from examples in the prompt without weight updates. |
+| **CoT / ReAct** | Chain of Thought / Reasoning and Acting: intermediate reasoning / reasoning interleaved with tools. |
+| **ToT / self-consistency** | Tree of Thoughts / choosing among multiple sampled reasoning paths. |
+| **Prompt chaining** | Passes one model step's output into the next step. |
+| **Instruction hierarchy** | Rules for resolving conflicting instructions by source priority. |
+| **JSON Schema** | Specifies the expected structure and types of JSON data. |
+| **Constrained decoding** | Restricts allowed next tokens to enforce an output grammar or schema. |
+| **Context engineering** | Selects and organizes instructions, evidence, history and tool results. |
+| **Prompt caching** | Reuses computation for a matching prompt prefix. |
+| **Prompt injection** | Attempts to turn untrusted content into controlling instructions. |
+| **DSPy** | Framework for declarative model programs and metric-driven optimization. |
+| **Prompt optimization / overfitting** | Search for better prompt behavior / tailoring it too closely to development cases. |
+
+[Back to section overview](INDEX.mdx)
