@@ -1,0 +1,29 @@
+# Appendix - LLM Foundations
+
+## What We Learned
+
+- Tokenization turns text into IDs; vocabulary choices affect length, cost and failure modes.
+- A transformer combines embeddings, position, attention and feed-forward layers to predict tokens.
+- Causal masking supports parallel training; generation still proceeds token by token.
+- Encoder, decoder, MoE and hybrid designs trade capability against compute and memory.
+- Choose models using task evaluations; test hallucination, context loss and sycophancy.
+
+## Key Acronyms, Concepts & Jargon
+
+| Term | Short meaning |
+|---|---|
+| **LLM** | Large Language Model: a model that learns patterns in token sequences. |
+| **BPE** | Byte Pair Encoding: builds tokens by repeatedly merging frequent adjacent pairs. |
+| **Token / context window** | A model input unit / the token budget available to a request. |
+| **Temperature / top-p** | Controls sampling sharpness / limits sampling to a probability mass. |
+| **Q/K/V** | Query, Key, Value: attention matches queries to keys and combines values. |
+| **RoPE** | Rotary Position Embeddings: rotations that encode token position in attention. |
+| **RMSNorm / FFN** | Root Mean Square Normalization / Feed-Forward Network: normalize activations / transform each token. |
+| **MHA / MQA / GQA** | Multi-Head / Multi-Query / Grouped-Query Attention: independent / shared / grouped K/V heads. |
+| **FlashAttention** | Exact attention computed with less intermediate memory and data movement. |
+| **MoE** | Mixture of Experts: routes tokens to a subset of expert networks. |
+| **MLA / SSM** | Multi-head Latent Attention / State-Space Model: compressed attention state / recurrent sequence state. |
+| **Hallucination / sycophancy** | Unsupported output / agreeing with the user over correctness. |
+| **Lost in the middle** | Reduced use of relevant information buried inside a long context. |
+
+[Back to section overview](INDEX.mdx)

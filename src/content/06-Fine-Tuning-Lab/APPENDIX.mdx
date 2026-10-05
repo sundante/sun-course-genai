@@ -1,0 +1,28 @@
+# Appendix - Fine-Tuning & PEFT Lab
+
+## What We Learned
+
+- Use matching model/tokenizer revisions and chat templates throughout the training pipeline.
+- Configure LoRA or QLoRA to fit memory limits; decide whether to merge or serve adapters separately.
+- Curate instruction and preference data; mask prompt/padding tokens where the objective requires it.
+- Run SFT, DPO or GRPO and inspect loss, rewards and held-out behavior.
+- Compare base and tuned models on quality, latency, memory and cost before adopting the tune.
+
+## Key Acronyms, Concepts & Jargon
+
+| Term | Short meaning |
+|---|---|
+| **HF Hub** | Hugging Face Hub: versioned storage and sharing for models and datasets. |
+| **Transformers / datasets** | Libraries for model/tokenizer loading / dataset processing. |
+| **PEFT / TRL** | Parameter-Efficient Fine-Tuning / Transformer Reinforcement Learning: adaptation / post-training tooling. |
+| **LoRA / QLoRA** | Low-Rank Adaptation / Quantized LoRA: small trainable updates / quantized-base adaptation. |
+| **Rank / alpha** | Adapter update size / its scaling parameter. |
+| **NF4** | NormalFloat 4: a 4-bit format used to quantize base weights in QLoRA. |
+| **Chat template** | Formats conversation roles and separators into the model's expected token sequence. |
+| **Loss masking** | Excludes selected tokens, such as prompts or padding, from the training objective. |
+| **SFT / DPO / GRPO** | Supervised Fine-Tuning / Direct Preference Optimization / Group Relative Policy Optimization. |
+| **Adapter merge** | Combines learned adapter updates with base weights for deployment. |
+| **Held-out set** | Data reserved for validation or testing rather than fitting the model. |
+| **Overfitting / quality delta** | Learning training-specific patterns / measured change from the baseline. |
+
+[Back to section overview](INDEX.mdx)

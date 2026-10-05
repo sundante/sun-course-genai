@@ -1,0 +1,30 @@
+# Appendix - Inference & Serving
+
+## What We Learned
+
+- Prefill processes the prompt; decode generates tokens while reusing cached keys and values.
+- Paged KV storage, prefix caching and continuous batching improve capacity and utilization.
+- Quantization and speculative decoding need workload-specific speed and quality validation.
+- Measure queueing, first-token and per-token latency under realistic concurrency.
+- Tune routing, parallelism and deployment around goodput and explicit service targets.
+
+## Key Acronyms, Concepts & Jargon
+
+| Term | Short meaning |
+|---|---|
+| **KV cache** | Key-Value cache: saves attention state so earlier tokens need not be recomputed. |
+| **Prefill / decode** | Prompt processing / subsequent token generation. |
+| **PagedAttention** | Stores KV state in blocks to reduce wasted memory and support sharing. |
+| **Continuous batching** | Adds and removes requests as generation proceeds. |
+| **Prefix caching** | Reuses cached computation for an identical leading token sequence. |
+| **Quantization** | Stores or computes values at lower precision to reduce resource use. |
+| **GPTQ / AWQ** | Post-training weight quantization / Activation-aware Weight Quantization methods. |
+| **Speculative decoding** | Proposes tokens cheaply, then verifies them with the target model. |
+| **TTFT / TPOT / ITL** | Time To First Token / Time Per Output Token / Inter-Token Latency. |
+| **Throughput / goodput** | Work completed per time / work completed within the specified targets. |
+| **Concurrency / batch size** | Requests in flight / requests processed together in a model step. |
+| **p95 / p99** | Latency thresholds below which 95% / 99% of observations fall. |
+| **SLO / SSE** | Service Level Objective / Server-Sent Events: service target / HTTP streaming format. |
+| **Disaggregated serving** | Runs prefill and decode on separate resources. |
+
+[Back to section overview](INDEX.mdx)
