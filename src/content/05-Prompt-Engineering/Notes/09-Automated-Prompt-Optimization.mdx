@@ -1,0 +1,193 @@
+# Automated Prompt Optimization
+
+Automated prompt optimization treats prompt text and few-shot examples as parameters to search over, scoring candidates with a metric on a training set - replacing manual trial and error with a reproducible optimization loop.
+
+```objectives
+time: 55 min
+outcomes:
+  - Describe the generate-evaluate-select loop shared by APE, OPRO, MIPROv2 and GEPA, and what distinguishes each
+  - Write a DSPy program with a signature, a module and a metric, and compile it with an optimizer
+  - Choose between few-shot bootstrapping, instruction search, reflective evolution and fine-tuning for a pipeline
+  - Avoid overfitting the optimizer to a small training set
+prerequisites:
+  - "[Core Techniques](02-Core-Techniques.mdx)"
+  - "[Building Your Own Evals](../../04-Evaluation/Notes/04-Building-Your-Own-Evals.mdx) - metrics and held-out sets"
+```
+
+## The Loop
+
+Every method in this note is a variation on the same loop. What differs is how candidates are proposed.
+
+```mermaid
+flowchart LR
+    P["🧪 Propose candidates<br/>instructions, examples"] --> E["📏 Evaluate<br/>metric on a training batch"]
+    E --> S["🏆 Select / update<br/>keep the best, learn from scores<br/>or from failure traces"]
+    S --> P
+    S --> V["✅ Validate on held-out data<br/>before shipping"]
+
+    style P fill:#e8e0d4,stroke:#c8b89a
+    style E fill:#d8dfe8,stroke:#b0bac8
+    style S fill:#dde4dc,stroke:#b0c4b0
+    style V fill:#ddd8e4,stroke:#b8b0c8
+```
+
+| Method | How it proposes | Signal it learns from |
+|---|---|---|
+| **APE** (Zhou et al., 2023) | An LLM infers candidate instructions from input-output examples | Scores; pick the best (one round, optionally resampled around the winner) |
+| **OPRO** (Yang et al., 2024) | An optimizer LLM reads a history of (prompt, score) pairs and proposes a better prompt | The score trajectory |
+| **DSPy bootstrapping** | Runs the program on training inputs and keeps traces that pass the metric as few-shot demos | Which demos lead to passing outputs |
+| **MIPROv2** (Opsahl-Ong et al., 2024) | Proposes instructions grounded in the program, the data and bootstrapped demos, then searches instruction × demo combinations with Bayesian optimization | Scores on minibatches |
+| **GEPA** (Agrawal et al., 2025) | Reads full execution traces and textual feedback, *reflects* on what went wrong, and evolves instructions; keeps a Pareto front of candidates that win on different examples | Scores **and** natural-language feedback |
+| **TextGrad** (Yuksekgonul et al., 2025) | Treats LLM-written critiques as "textual gradients" and back-propagates them through a computation graph | Critiques of outputs |
+
+GEPA's authors report that reflective prompt evolution can match or beat reinforcement-learning fine-tuning (GRPO) on several tasks with far fewer rollouts, and outperforms MIPROv2 - evidence that for many pipelines, optimizing the prompt is a cheaper first move than training weights.
+
+---
+
+## DSPy: Programs, Not Prompts
+
+DSPy (Khattab et al., 2024) separates **what** each LM call should do from **how** it is prompted. You declare *signatures* (typed inputs and outputs), compose *modules* into a program, and let an *optimizer* write the actual prompts and choose examples against your metric.
+
+```python
+import dspy
+
+dspy.configure(lm=dspy.LM("openai/<model>"))  # any LiteLLM-style "provider/model" string
+
+class TicketClassifier(dspy.Signature):
+    """Classify a customer-support ticket."""
+    ticket: str = dspy.InputField()
+    category: str = dspy.OutputField(desc="billing | bug | account_access | feature_request")
+
+classify = dspy.ChainOfThought(TicketClassifier)   # adds a reasoning field before the output
+print(classify(ticket="I was charged twice this month.").category)
+```
+
+A multi-step program is ordinary Python; retrieval is just a function you call:
+
+```python
+class SupportAnswer(dspy.Module):
+    def __init__(self, search):
+        self.search = search                                         # any retriever function
+        self.answer = dspy.ChainOfThought("context, question -> answer")
+
+    def forward(self, question):
+        context = self.search(question, k=5)
+        return self.answer(context=context, question=question)
+```
+
+### Optimizing it
+
+```python
+trainset = [dspy.Example(ticket=t, category=c).with_inputs("ticket") for t, c in train_pairs]
+valset   = [dspy.Example(ticket=t, category=c).with_inputs("ticket") for t, c in val_pairs]
+
+def metric(gold, pred, trace=None):
+    return gold.category == pred.category
+
+optimizer = dspy.MIPROv2(metric=metric, auto="light")       # "light" | "medium" | "heavy" budget
+optimized = optimizer.compile(classify, trainset=trainset, valset=valset)
+optimized.save("ticket_classifier.json")                     # instructions + demos, versionable
+
+# Reflective evolution: the metric can return feedback text as well as a score
+def metric_with_feedback(gold, pred, trace=None, pred_name=None, pred_trace=None):
+    ok = gold.category == pred.category
+    feedback = "correct" if ok else f"expected {gold.category}, got {pred.category}"
+    return dspy.Prediction(score=float(ok), feedback=feedback)
+
+gepa = dspy.GEPA(metric=metric_with_feedback, auto="light",
+                 reflection_lm=dspy.LM("openai/<strong-model>"))
+evolved = gepa.compile(classify, trainset=trainset, valset=valset)
+```
+
+| DSPy optimizer | What it changes | When to use |
+|---|---|---|
+| `BootstrapFewShot` / `BootstrapFewShotWithRandomSearch` | Few-shot demos | Small data (tens of examples), quick wins |
+| `MIPROv2` | Instructions and demos jointly | Hundreds of examples, multi-module programs |
+| `GEPA` | Instructions, driven by traces and textual feedback | When you can explain failures in words; sample-efficient |
+| `BootstrapFinetune` | The model weights, from the program's own successful traces | High volume, stable task, a smaller model you can fine-tune |
+
+### When DSPy fits
+
+| Situation | Fit |
+|---|---|
+| Multi-step pipeline (retrieve, reason, extract) with a clear metric | Strong |
+| You need to move a pipeline to a cheaper model and re-tune it | Strong - recompile against the new model |
+| A single simple prompt, no labelled data | Weak - write it by hand |
+| No programmatic or judge-based metric exists | Weak - write the metric first; it is usually the hard part |
+| You need exact, human-readable control of every prompt | Mixed - compiled prompts can be inspected, saved and reviewed, but they are generated |
+
+---
+
+## Pitfalls
+
+- **The metric is the specification.** An optimizer maximises exactly what you measure. A metric that checks only format will produce well-formatted wrong answers; a lenient LLM judge will be gamed. Validate the metric on hand-labelled examples first.
+- **Overfitting.** With a few dozen training examples, optimizers find prompts that fit those examples. Keep a held-out test set the optimizer never sees and report results on it - never on the training or validation set used during search.
+- **Model coupling.** An optimized prompt is tuned to one model. Re-run optimization (not just evaluation) when you change models.
+- **Cost.** Optimization runs hundreds or thousands of LM calls. Use the budget presets, cache LM calls, and use a cheaper model for trial runs.
+
+---
+
+## Check Yourself
+
+```quiz
+- q: "What is the main difference between OPRO and GEPA?"
+  options:
+    - "OPRO learns from a history of prompt scores; GEPA also reads execution traces and textual feedback and reflects on failures"
+    - "OPRO fine-tunes weights; GEPA does not"
+    - "GEPA only works with few-shot examples"
+    - "OPRO requires no metric"
+  answer: 1
+- q: "Your DSPy-optimized prompt scores 94% on the validation set used during optimization and 81% on new production data. What is the most likely cause?"
+  options:
+    - "Overfitting to a small or unrepresentative optimization set"
+    - "The model's temperature changed"
+    - "DSPy does not support classification"
+    - "The prompt was too short"
+  answer: 1
+- q: "In DSPy, what does the optimizer need from you that a hand-written prompt doesn't?"
+  options:
+    - "A metric and labelled (or judge-scorable) examples"
+    - "A GPU"
+    - "The exact prompt text"
+    - "A vector database"
+  answer: 1
+- q: "When would BootstrapFinetune be a better choice than instruction optimization?"
+  answer: "When the task is stable and high-volume and you can fine-tune a smaller model: the program's successful traces become training data, moving the behaviour into weights so each call needs a shorter prompt and a cheaper model."
+```
+
+## Exercises
+
+```exercise
+- title: Optimize the lab classifier
+  task: |
+    Port the code lab's ticket classifier to DSPy. Split the 60 tickets into 20 train / 12 validation / 28 test. Compare zero-shot `dspy.Predict`, `BootstrapFewShot` and `MIPROv2(auto="light")` on the test set with bootstrap confidence intervals. Use a local model through an OpenAI-compatible server (e.g. vLLM or Ollama) or any API model.
+  hints: ["dspy.LM accepts api_base= for a local OpenAI-compatible endpoint."]
+  solution: |
+    Expect bootstrapped demos to help a small model noticeably and MIPROv2 to add little beyond that on such a small, simple task - with wide intervals on 28 test items. The honest conclusion is usually "not distinguishable at this sample size"; the value of the exercise is the workflow and the held-out discipline.
+- title: Write a metric that can't be gamed
+  task: |
+    For a RAG answer-generation step, write a DSPy metric that rewards answers that are correct *and* supported by the retrieved context, and returns textual feedback for GEPA. Describe how you would check the metric itself before optimizing.
+  solution: |
+    Combine an exact/semantic match against the reference answer with a groundedness check (an LLM judge asked whether each claim is supported by the context), returning feedback such as "claim X not supported by context". Before optimizing, score 50 hand-labelled outputs with the metric and compare to human judgements; fix disagreements (e.g. the judge accepting unsupported claims) before letting an optimizer exploit them.
+```
+
+## Study Notes
+
+**Must-know:**
+- All methods: propose → evaluate on a metric → select; validate on held-out data
+- APE (infer instructions), OPRO (score history), MIPROv2 (instruction + demo search with Bayesian optimization), GEPA (reflective evolution from traces and feedback), TextGrad (textual gradients)
+- DSPy: signatures + modules + metric + optimizer; compiled programs can be saved and versioned
+- The metric is the spec; overfitting and model coupling are the main risks
+- Prompt optimization is often a cheaper first step than RL fine-tuning
+
+## References
+
+- Zhou et al., [Large Language Models Are Human-Level Prompt Engineers (APE)](https://arxiv.org/abs/2211.01910) (ICLR 2023)
+- Yang et al., [Large Language Models as Optimizers (OPRO)](https://arxiv.org/abs/2309.03409) (ICLR 2024)
+- Khattab et al., [DSPy: Compiling Declarative Language Model Calls into Self-Improving Pipelines](https://arxiv.org/abs/2310.03714) (ICLR 2024)
+- Opsahl-Ong et al., [Optimizing Instructions and Demonstrations for Multi-Stage Language Model Programs (MIPRO)](https://arxiv.org/abs/2406.11695) (EMNLP 2024)
+- Agrawal et al., [GEPA: Reflective Prompt Evolution Can Outperform Reinforcement Learning](https://arxiv.org/abs/2507.19457) (2025)
+- Yuksekgonul et al., [Optimizing generative AI by backpropagating language model feedback (TextGrad)](https://www.nature.com/articles/s41586-025-08661-4) (Nature, 2025)
+- [DSPy documentation](https://dspy.ai/)
+
+*Last reviewed: 2026-09*

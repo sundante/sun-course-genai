@@ -6,10 +6,10 @@ import { CurriculumTiles } from "@/components/course/CurriculumTiles";
 import { getCourseStats } from "@/lib/content/stats";
 
 const LEARNING_PATHS = [
-  { label: "A", title: "Conceptual",     desc: "New to GenAI - start with LLM Foundations, then Prompt & Context Engineering, RAG and Agent Foundations." },
-  { label: "B", title: "Interview Prep", desc: "Accelerated review through each module's Q&A bank and its graded quiz." },
-  { label: "C", title: "Hands-On",       desc: "Code labs from a raw PyTorch training loop to QLoRA fine-tuning, vLLM serving and multi-framework agents." },
-  { label: "D", title: "Full Sequence",  desc: "Every module in order, from how an LLM works to building and operating production agents - the recommended path." },
+  { label: "A", title: "App & Agent Builder", desc: "Build on top of models - Foundation Models, Evaluation and Prompt & Context Engineering, then the agent fundamentals and the Building with LLMs & Agents track." },
+  { label: "B", title: "Interview Prep",      desc: "Accelerated review through each module's Q&A bank and its graded quiz." },
+  { label: "C", title: "Hands-On",            desc: "Code labs from a raw PyTorch training loop to QLoRA fine-tuning, vLLM serving and multi-framework agents." },
+  { label: "D", title: "Full Sequence",       desc: "Every module in order: math and systems foundations, then large language models, AI agents, building products with both, running them in production, and the industry frontier - the recommended path." },
 ];
 
 const LANDING_NAV = [
@@ -121,7 +121,7 @@ export default function HomePage() {
           </p>
           <div className="mt-7 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
-              href="/learn/llm-models/index"
+              href="/learn/python-and-systems/index"
               className="inline-flex items-center justify-center text-sm font-semibold bg-sun-yellow text-zinc-900 hover:bg-sun-yellow-dk rounded-lg px-6 py-2.5 shadow-glass-sm transition-colors w-full sm:w-auto"
             >
               Start Learning →
@@ -133,6 +133,12 @@ export default function HomePage() {
               Practice Quiz
             </Link>
           </div>
+          <p className="mt-4 text-sm text-sun-muted">
+            Not sure where to start?{" "}
+            <Link href="/learn/review/01-readiness-self-assessment" className="font-semibold text-sun-amber hover:underline">
+              Take the readiness self-assessment
+            </Link>
+          </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-sm text-sun-muted">
             {STATS.map(([stat, label], i) => (
               <span key={label} className="inline-flex items-center gap-2">
@@ -221,7 +227,7 @@ export default function HomePage() {
             100% free, always up to date, built from production experience - not a rehash of documentation.
           </p>
           <Link
-            href="/learn/llm-models/index"
+            href="/learn/python-and-systems/index"
             className="inline-flex items-center justify-center text-sm font-semibold bg-sun-yellow text-zinc-900 hover:bg-sun-yellow-dk rounded-lg px-6 py-2.5 transition-colors"
           >
             Start Learning →

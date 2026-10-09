@@ -1,0 +1,25 @@
+# Summary & Key Terms - Agent Building Blocks
+
+## What We Learned
+
+- Build the model-tool-observation loop with validated arguments and correctly linked results.
+- Design tools for the model: clear names and descriptions, strict schemas, informative errors, idempotent writes.
+- Separate working context, durable task state and long-term memory.
+- Use planning and reflection where they improve task outcomes, and keep durable plans in the harness.
+
+## Key Acronyms, Concepts & Jargon
+
+| Term | Short meaning |
+|---|---|
+| **Tool / function calling** | A model requests a structured operation; application code executes it. |
+| **Tool-call ID** | Connects a tool result to the model request that produced it. |
+| **Strict schema** | Constrained decoding that guarantees tool arguments match the JSON Schema. |
+| **Tool search** | Loading tool definitions on demand instead of sending every tool on every call. |
+| **Working memory / task state** | Current context / persisted progress needed to continue a task. |
+| **Episodic / semantic / procedural memory** | Past experiences / stored facts / reusable procedures. |
+| **Memory poisoning** | Untrusted content written to memory that steers later runs. |
+| **ReAct** | Reasoning and Acting: alternates reasoning, actions and observations. |
+| **Plan-and-execute** | Creates a plan, executes steps and revises from feedback. |
+| **Reflection** | The agent critiques its own output; helps mainly when it gets new information such as test results. |
+
+[Back to module overview](INDEX.mdx)

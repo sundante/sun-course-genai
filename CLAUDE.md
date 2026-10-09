@@ -8,9 +8,11 @@ All content files under `src/content/` use zero-padded numeric prefixes (`01-`, 
 
 - When files are deleted, **renumber the remaining files** so there are no gaps (e.g. if `01` and `02` are deleted, rename `03→01`, `04→02`, etc.)
 - Keep `nav.yml` in sync with any file renames - it is the single source of truth for navigation
-- Module folders are numbered in nav order (`01-LLM-Foundations` ... `20-Capstones`); a new top-level module needs a title -> slug entry in `MODULE_SLUG_MAP` (`src/lib/content/nav.ts`) - the build throws if one is missing. The module's content folder is derived from its pages, so there is no second map to update
+- Module folders are numbered in nav order (`01-Python-and-Systems` ... `22-Review`); a new top-level module needs a title -> slug entry in `MODULE_SLUG_MAP` (`src/lib/content/nav.ts`) - the build throws if one is missing. The module's content folder is derived from its pages, so there is no second map to update
 - Moving or renaming a page changes its URL. Add the old -> new `/learn/...` path to `src/lib/content/legacy-redirects.json`; the 404 page forwards old URLs from that map (static export has no server-side redirects)
-- Run `npm run check:content` after any content change: broken links, em dashes, numbering gaps, pages missing from `nav.yml`, invalid fence YAML
+- Every module has the same nav shape: `Overview`, concept group(s) (`Concepts`, or named groups like `Core Pipeline` in large modules), `Code Labs`, `Case Studies` (the `SystemDesigns/` folder), and `Review` (`Q&A Review Bank` + `Summary & Key Terms`). Stats and home tiles treat every section except Code Labs / Case Studies / Projects / Review as concepts (`src/lib/content/navSections.ts`)
+- Order follows the declared prerequisites: an `objectives` prerequisite may only link to an earlier page, unless it says "optional" or "later"
+- Run `npm run check:content` after any content change: broken links, em dashes, numbering gaps, pages missing from `nav.yml`, invalid fence YAML, prerequisites that point ahead in the course
 
 ## Note Template & Course Fences
 
@@ -52,7 +54,7 @@ prerequisites:
     Markdown solution, hidden until clicked
 ```
 
-Reference implementation: `src/content/08-Serving-and-Inference/Notes/01-KV-Cache-and-Inference-Optimization.mdx`.
+Reference implementation: `src/content/16-Inference-and-Serving/Notes/01-KV-Cache-and-Inference-Optimization.mdx`.
 
 ## Punctuation
 
@@ -62,7 +64,7 @@ Reference implementation: `src/content/08-Serving-and-Inference/Notes/01-KV-Cach
 ## Sidebar Numbering
 
 - **Module-level** headings (e.g. "01. LLM Foundations") - rendered in `Sidebar.tsx > ModuleSection`, number is `NavModule.number` (1-based nav.yml order, computed in `nav.ts`)
-- **Track labels** (Foundations, Building Models, Serving & Production, Building Apps, Agents, Field Engineering, Capstones, Review) - `- track: Name` entries in `nav.yml`, rendered unnumbered above the first module of each track (`Sidebar.tsx > ModuleList`, `CurriculumTiles.tsx`)
+- **Track labels** (Conceptual & Mathematical Foundations, Large Language Models, Fundamentals of AI Agents, Building with LLMs & Agents, Production & Operations, Industry Standards & Frontier, Capstones & Review) - `- track: Name` entries in `nav.yml`, rendered unnumbered above the first module of each track (`Sidebar.tsx > ModuleList`, `CurriculumTiles.tsx`)
 - **Sub-concept leaf items** (e.g. "01 What Are AI Agents") - rendered in `Sidebar.tsx > NavLeaf`, index passed from `.map((child, i) => ...)` inside `NavSection`
 - Section group labels (Concepts, Code Labs, etc.) are **not** numbered - they are structural groupings only
 
@@ -102,7 +104,7 @@ The site's own design system. Current component inventory lives in `vibes/status
 
 - For architecture, pipeline, flow, state-machine, lifecycle, or comparison content, prefer a **Mermaid diagram** over prose-only explanations or ASCII-art box diagrams - not just black markdown windows with text content
 - Mermaid already works with **zero setup** - ` ```mermaid ` fenced code blocks in any `.mdx` file are auto-rendered by `MermaidDiagram.tsx` via `MdxComponents.tsx`; no new dependency or wiring is needed
-- **House style to imitate:** `src/content/13-Agent-Foundations/Notes/01-What-Are-AI-Agents.mdx`, `02-Anatomy-of-an-AI-Agent.mdx`, `05-Agent-Memory.mdx` - emoji-labeled nodes, explicit per-node `style X fill:#... stroke:#...` overrides layered on the base theme, one `mindmap` for a component taxonomy. Match this look and feel; don't invent a new visual style per page.
+- **House style to imitate:** `src/content/09-Agent-Fundamentals/Notes/01-What-Are-AI-Agents.mdx`, `02-Anatomy-of-an-AI-Agent.mdx`, and `10-Agent-Building-Blocks/Notes/02-Agent-Memory.mdx` - emoji-labeled nodes, explicit per-node `style X fill:#... stroke:#...` overrides layered on the base theme, one `mindmap` for a component taxonomy. Match this look and feel; don't invent a new visual style per page.
 - Pick the diagram type to match the content, not habit:
   - `flowchart LR` / `flowchart TD` - pipelines, architectures, decision flows
   - `stateDiagram-v2` - lifecycles / state machines (e.g. connection states, session states)
@@ -113,4 +115,4 @@ The site's own design system. Current component inventory lives in `vibes/status
 - Colors are handled by the shared warm/earth-tone theme in `MermaidDiagram.tsx` (`themeVariables` cScale palette) - only add per-node `style` overrides when distinguishing categories/stages within one diagram, matching the reference files above; don't hand-roll a new palette
 - **Still use a table, not a diagram**, for genuinely tabular attribute comparisons (e.g. Framework Comparison, PEFT Methods Comparison, Model Family Comparison) - tables read better than diagrams when the content is a grid of attributes x options
 - **ASCII is fine** for conventional directory-tree listings (e.g. `src/`, file trees) - these are a documentation convention, not a diagram substitute
-- Skip diagram conversion for `Interview-Questions/*.mdx` and `All_Questions.mdx` - Q&A prose format, not diagram-shaped content
+- Skip diagram conversion for the Q&A review banks (`Notes/*-Interview-QA-Bank.mdx`) and `22-Review/` - Q&A prose format, not diagram-shaped content

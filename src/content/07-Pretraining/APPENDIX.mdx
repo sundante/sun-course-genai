@@ -1,0 +1,30 @@
+# Summary & Key Terms - Pretraining at Scale
+
+## What We Learned
+
+- Pretraining learns broad patterns; curate, deduplicate, decontaminate and mix data before training.
+- Budget model size, tokens and compute together; deployment costs can justify extra training.
+- GPU memory includes weights, gradients, optimizer state and activations.
+- Combine parallelism strategies to fit the model and match communication to hardware links.
+- Stabilize runs with schedules, clipping and checkpoints; profile compute, memory and communication.
+
+## Key Acronyms, Concepts & Jargon
+
+| Term | Short meaning |
+|---|---|
+| **CLM / MLM** | Causal / Masked Language Modeling: predict the next token / selected hidden tokens. |
+| **Deduplication / decontamination** | Remove repeated data / evaluation overlap from training data. |
+| **MinHash / LSH** | Similarity sketch / Locality-Sensitive Hashing: find likely near-duplicate documents. |
+| **Scaling law** | Empirical relationship between loss, model size, data and compute. |
+| **DP / TP / PP** | Data / Tensor / Pipeline Parallelism: split batches / layer computations / model stages. |
+| **CP / EP** | Context / Expert Parallelism: split sequences / distribute MoE experts. |
+| **ZeRO / FSDP** | Zero Redundancy Optimizer / Fully Sharded Data Parallel: shard training state. |
+| **MFU** | Model FLOPs Utilization: useful model compute relative to accelerator peak compute. |
+| **HBM / SRAM** | High Bandwidth Memory / Static RAM: accelerator main memory / fast on-chip memory. |
+| **PCIe / NVLink** | Peripheral Component Interconnect Express / NVIDIA GPU interconnect: device communication links. |
+| **BF16 / FP8** | Brain Floating Point 16 / 8-bit Floating Point: lower-precision numerical formats. |
+| **CUDA / kernel fusion** | NVIDIA's GPU computing platform / combining operations to cut launches and memory traffic. |
+| **Roofline model** | Estimates performance limits from compute capacity and memory bandwidth. |
+| **Gradient clipping / warmup** | Caps gradient size / gradually raises the initial learning rate. |
+
+[Back to module overview](INDEX.mdx)

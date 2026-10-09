@@ -159,7 +159,8 @@ function MapSvg({
       {/* Regions: double-ruled panels with the track name on a ribbon */}
       {regions.map((r) => {
         const label = r.track.toUpperCase();
-        const labelW = label.length * 8.2 + 24;
+        // ~9.4px per uppercase glyph at 11.5px with 0.18em tracking; too small and long track names spill past the ribbon
+        const labelW = label.length * 9.4 + 24;
         const labelX = r.labelAt === "start" ? r.x + 16 : r.x + r.w - 16 - labelW;
         return (
           <g key={r.track} pointerEvents="none">

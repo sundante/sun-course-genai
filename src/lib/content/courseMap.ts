@@ -12,7 +12,7 @@ export interface MapPage {
 }
 
 export interface MapSection {
-  /** Nav group label ("Concepts", "PyTorch Fundamentals · Code Labs"); "" for top-level pages */
+  /** Nav group label ("Concepts", "Core Pipeline", "Code Labs"); "" for top-level pages */
   title: string;
   pages: MapPage[];
 }
@@ -35,9 +35,9 @@ export interface MapRegion {
   modules: MapModule[];
 }
 
-// Knowledge Check has no home page tile, so it has no MODULE_META entry
+// The review hub has no home page tile, so it has no MODULE_META entry
 const EXTRA_META: Record<string, ModuleMeta> = {
-  "knowledge-check": {
+  "review": {
     subtitle: "The Review Hall",
     description: "Every module's Q&A review bank and quiz in one place - recall the key ideas without the notes open and find weak spots fast.",
   },
@@ -68,7 +68,7 @@ export function getCourseMap(): MapRegion[] {
       subtitle: meta.subtitle,
       description: meta.description,
       href: secs[0]?.pages[0]?.href ?? "/",
-      kind: mod.slug === "capstones" ? "capstone" : mod.slug === "knowledge-check" ? "review" : "module",
+      kind: mod.slug === "capstones" ? "capstone" : mod.slug === "review" ? "review" : "module",
       stats: getModuleStats(mod),
       sections: secs,
     });

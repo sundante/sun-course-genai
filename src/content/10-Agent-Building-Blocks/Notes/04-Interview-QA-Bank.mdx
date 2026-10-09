@@ -1,0 +1,90 @@
+# Agent Building Blocks - Q&A Review Bank
+
+A consolidated review set for the module, grouped by chapter. Difficulty: `[Easy]` = recall, `[Medium]` = design decisions and trade-offs, `[Hard]` = system design, debugging and edge cases.
+
+```objectives
+time: 30 min
+outcomes:
+  - "Answer each question from memory before revealing the answer, across: Tool Use; Memory; Planning & Reasoning"
+  - Explain the reasoning behind each answer - the mechanism or trade-off - not only the fact
+  - Identify the chapters you are weakest on and revisit them before the module quiz
+prerequisites:
+  - "The concept notes of this module"
+```
+
+---
+
+## Tool Use
+
+**Q1: Who executes a tool call?** `[Easy]`
+Your code. The model only proposes a call (name, arguments, id); the harness validates, executes and returns the result. Server tools (web search, code execution) are executed by the provider. See [Tool Use & Function Calling](01-Tool-Use-and-Function-Calling.mdx).
+
+**Q2: What does strict mode guarantee, and what doesn't it?** `[Medium]`
+Arguments that match the JSON Schema (via constrained decoding). It does not guarantee the values are correct - an id can be well-formed and wrong - so tools must still validate meaning, ownership and state.
+
+**Q3: How do you express an optional parameter in OpenAI strict mode?** `[Medium]`
+Every property must be in `required` and objects need `additionalProperties: false`; make the optional field nullable, e.g. `"type": ["string", "null"]`.
+
+**Q4: What belongs in a tool description?** `[Medium]`
+What it does and when to call it; preconditions; where each argument's value comes from ("never guess ids"); what it returns; and which neighbouring tool to use instead for related requests.
+
+**Q5: Design a good tool error.** `[Medium]`
+Say what failed, why, whether retrying can help, and what to do instead: "Order O1003 is shipped; only pending orders can be cancelled. Offer a return after delivery." Mark it as an error (`is_error` on Claude). Retry transient errors in the harness before the model sees them.
+
+**Q6: Why do write tools need idempotency keys?** `[Medium]`
+Harnesses and agents retry after timeouts. A key derived from the episode and step makes a retried call return the original result instead of duplicating the side effect.
+
+**Q7: Your agent has 150 tools and picks the wrong ones. What do you do?** `[Hard]`
+Consolidate overlapping tools around tasks; namespace them; use deferred loading with tool search so only relevant definitions are loaded; split tool groups across sub-agents or a router; measure selection accuracy before and after. Anthropic reported tool search raising MCP-eval accuracy from 49% to 74% on Opus 4.
+
+**Q8: What is programmatic tool calling and when does it help?** `[Hard]`
+The model writes code that calls tools inside a sandbox; intermediate results stay in the sandbox and only the final output returns to the context. It helps when chaining many calls or filtering large intermediate data (Anthropic reported 37% fewer tokens on complex research tasks).
+
+**Q9: Is forcing a tool call with tool_choice portable?** `[Medium]`
+No. Some newer models reject forced tool choice. Prefer `auto` plus an explicit instruction and a check that a call was made; use structured outputs when the forced call only existed to extract JSON.
+
+---
+
+## Memory
+
+**Q10: Give the course's memory taxonomy.** `[Easy]`
+Parametric (weights) vs external. External by scope: working memory (this call's context), task state (this thread, checkpointed), long-term (across sessions). Long-term by kind (CoALA): semantic (facts), episodic (experiences), procedural (how-to). See [Agent Memory](02-Agent-Memory.mdx).
+
+**Q11: Compare hot-path and background memory writing.** `[Medium]`
+Hot path: the agent calls memory tools during the conversation (Letta, Claude's memory tool) - immediate, but adds latency and depends on the agent's judgement. Background: a separate process extracts memories after the conversation (Mem0, LangMem) - no user-facing latency, consistent extraction, but memories lag.
+
+**Q12: How does Mem0 keep its memory store consistent?** `[Medium]`
+For each extracted candidate fact it retrieves similar existing memories and chooses ADD, UPDATE, DELETE or NOOP, instead of appending contradictory facts.
+
+**Q13: What problem do Zep's temporal knowledge graphs solve?** `[Medium]`
+Facts that change over time: each fact carries a validity interval, so a superseded fact is marked invalid rather than deleted, supporting temporal questions and preserving history.
+
+**Q14: What techniques manage working memory in a long episode?** `[Medium]`
+Trimming, truncating or paginating tool outputs, context editing (clearing stale tool results), compaction (summarising history), offloading large results to files or state, and a pinned task summary.
+
+**Q15: What is memory poisoning and how do you defend against it?** `[Hard]`
+Getting false facts or instructions stored so they influence future episodes - via documents, web pages or crafted queries (AgentPoison, MINJA). Defend by treating memories as data not instructions, storing provenance, validating before writing, gating procedural-memory updates, and namespacing per user.
+
+**Q16: A user asks to be forgotten. What must you delete?** `[Hard]`
+Everything derived from them in every store: semantic and episodic memories, vector-index entries, graph nodes and edges, summaries and consolidated memories, caches, and logs per retention policy - keyed by user namespace.
+
+---
+
+## Planning & Reasoning
+
+**Q17: How do reasoning models change agent planning?** `[Medium]`
+They reason internally, including between tool calls, so prompting for visible "Thought:" lines is unnecessary; use effort settings and keep reasoning items in the history. The harness still owns durable plans (todo lists in state) for compaction, approval and resume. See [Planning & Reasoning](03-Planning-and-Reasoning.mdx).
+
+**Q18: Compare ReAct and plan-and-execute.** `[Medium]`
+ReAct interleaves reasoning and actions step by step - adaptive but myopic on long tasks and re-reads the full history each step. Plan-and-execute writes an explicit plan, executes it (often with a cheaper model) and re-plans on failure - reviewable and efficient, but brittle if early findings should change later steps.
+
+**Q19: What do ReWOO and LLMCompiler add?** `[Medium]`
+ReWOO plans all tool calls up front with placeholders, so observations aren't fed back to the planner each step (fewer tokens). LLMCompiler plans a dependency graph and runs independent calls in parallel (lower latency).
+
+**Q20: When does reflection help an agent?** `[Hard]`
+When driven by an external failure signal (tests, validation, environment reward) as in Reflexion, or by an evaluator with different information (a rubric, sources). Asking a model to re-check its own reasoning with nothing new is unreliable (Huang et al., 2024).
+
+**Q21: When should an agent re-plan?** `[Medium]`
+On a non-retryable failure, a result contradicting a plan assumption, a changed goal, or stalled progress - not after every step.
+
+---

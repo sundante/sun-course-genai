@@ -1,0 +1,76 @@
+# 08 - Post-Training & Fine-Tuning
+
+A pretrained base model continues text; it does not follow instructions, refuse harmful requests, or reason step by step on demand. Post-training adds those behaviours: supervised fine-tuning on demonstrations, preference optimization, and reinforcement learning - including the RL-with-verifiable-rewards recipe behind today's reasoning models. The second half of the module does it by hand with the Hugging Face stack: LoRA and QLoRA configuration, instruction data with masked losses, reading loss curves, and benchmarking a fine-tune against its base - then the full SFT, DPO and GRPO sequence with TRL.
+
+```objectives
+scope: module
+time: 14-18 hours (notes + labs, plus GPU time)
+outcomes:
+  - Explain the post-training pipeline from SFT to preference tuning to RL, and what each stage changes in the model
+  - Compare RLHF with PPO, DPO-family methods and GRPO by what they need (reward model, critic, online samples) and what they cost
+  - Describe how RL with verifiable rewards produces long chain-of-thought reasoning
+  - Configure and run LoRA and QLoRA fine-tunes with masked instruction data, and diagnose runs from loss curves
+  - Benchmark a fine-tune against base and prompted baselines on quality, latency, VRAM and cost, and run SFT, DPO and GRPO with TRL
+prerequisites:
+  - "[Foundation Models](../03-Foundation-Models/INDEX.mdx) and [PyTorch Fundamentals](../06-PyTorch/INDEX.mdx)"
+  - "[Pretraining at Scale](../07-Pretraining/INDEX.mdx) - especially the training memory math"
+```
+
+## Chapter Map
+
+### Methods
+
+| # | Note | Topic | Level |
+|---|------|-------|-------|
+| 1 | [SFT & Parameter-Efficient Fine-Tuning](Notes/01-Fine-Tuning-and-Alignment.mdx) | When to fine-tune, SFT and loss masking, LoRA and QLoRA, PEFT comparison, evaluating fine-tunes; a map of preference tuning and RL | Intermediate |
+| 2 | [Preference Optimization](Notes/02-Preference-Optimization.mdx) | Bradley-Terry reward models, DPO derivation and β, IPO, KTO, SimPO, ORPO, offline vs online | Advanced |
+| 3 | [RL for LLMs](Notes/03-RL-for-LLMs.mdx) | PPO-RLHF, GRPO, RLVR, DAPO / Dr. GRPO / GSPO, reward sources and hacking, RL systems | Advanced |
+| 4 | [Reasoning Models & Test-Time Compute](Notes/04-Reasoning-Models-and-Test-Time-Compute.mdx) | R1-Zero and R1 recipes, distillation, self-consistency, best-of-N, budget forcing, effort dials, failure modes | Advanced |
+
+### Fine-Tuning in Practice
+
+| # | Note | Topic | Level |
+|---|------|-------|-------|
+| 5 | [HuggingFace Ecosystem](Notes/05-HuggingFace-Ecosystem.mdx) | `AutoModelForCausalLM`/`AutoTokenizer`, tokenization, chat templates, `datasets`, the Hub | Beginner |
+| 6 | [LoRA & QLoRA Hands-On](Notes/06-LoRA-and-QLoRA-Hands-On.mdx) | LoRA config (rank/alpha/dropout/target modules), QLoRA (NF4, double quant), merging vs serving adapters | Intermediate |
+| 7 | [Instruction Data & Training Runs](Notes/07-Instruction-Data-and-Training-Runs.mdx) | Formatting instruction data, prompt/completion masking, reading loss curves, a hand-written PEFT training loop | Intermediate |
+| 8 | [Benchmarking Base vs Tuned](Notes/08-Benchmarking-Base-vs-Tuned.mdx) | Held-out eval sets, quality delta, measured latency/tokens-per-sec, VRAM and cost-per-1k-requests | Advanced |
+
+### Code Labs
+
+- [QLoRA Fine-Tune](CodeLabs/01-QLoRA-Fine-Tune.mdx) - hands-on PEFT + QLoRA fine-tune with a base-vs-tuned benchmark, formatting and loss masking done by hand
+- [SFT, DPO & GRPO with TRL](CodeLabs/02-SFT-DPO-GRPO-with-TRL.mdx) - the three post-training stages with TRL, including verifiable math rewards
+
+## Recommended Learning Paths
+
+### Path A: Theory, Then a First Fine-Tune
+1. Notes 1-4 in order - the methods and why each stage exists
+2. [HuggingFace Ecosystem](Notes/05-HuggingFace-Ecosystem.mdx) and [LoRA & QLoRA Hands-On](Notes/06-LoRA-and-QLoRA-Hands-On.mdx) - the tools and what you are configuring
+3. [Instruction Data & Training Runs](Notes/07-Instruction-Data-and-Training-Runs.mdx) - format your data and run the training loop
+4. [QLoRA Fine-Tune Code Lab](CodeLabs/01-QLoRA-Fine-Tune.mdx), then [SFT, DPO & GRPO with TRL](CodeLabs/02-SFT-DPO-GRPO-with-TRL.mdx)
+5. [Benchmarking Base vs Tuned](Notes/08-Benchmarking-Base-vs-Tuned.mdx) - prove the fine-tune actually helped
+
+### Path B: Interview Preparation (Accelerated)
+1. [SFT & PEFT](Notes/01-Fine-Tuning-and-Alignment.mdx) and [Preference Optimization](Notes/02-Preference-Optimization.mdx) - the derivations interviewers ask for
+2. [LoRA & QLoRA Hands-On](Notes/06-LoRA-and-QLoRA-Hands-On.mdx) - config parameters and merge-vs-serve questions are very common
+3. [Benchmarking Base vs Tuned](Notes/08-Benchmarking-Base-vs-Tuned.mdx) - "how do you know it worked" is a favorite follow-up question
+4. [Q&A Review Bank](Notes/09-Interview-QA-Bank.mdx) - drill every question
+
+## Key Cross-References
+
+- VRAM estimation and precision formats → [Pretraining: GPU Memory & Hardware](../07-Pretraining/Notes/02-GPU-and-Hardware.mdx)
+- The raw-PyTorch training loop the hand-written PEFT loop extends → [PyTorch Fundamentals: Training Loop From Scratch](../06-PyTorch/Notes/03-Training-Loop-From-Scratch.mdx)
+- Measuring a fine-tune with a standard harness → [Eval Harness lab](../04-Evaluation/CodeLabs/01-Eval-Harness.mdx) - rerun it with your own fine-tune as the candidate
+- Agent RL, which reuses GRPO and verifiers → [Verifiers, Environments and Agent RL](../19-Agent-Engineering/Notes/07-Verifiers-Environments-and-Agent-RL.mdx)
+
+## Review
+
+- [Q&A Review Bank](Notes/09-Interview-QA-Bank.mdx) - interview-style questions across post-training and hands-on fine-tuning
+- [Module quiz](/quiz/post-training) - every *Check Yourself* question in this module
+- [Summary & Key Terms](APPENDIX.mdx) - a quick recap of this module and its essential vocabulary
+
+---
+
+## Next Topic
+
+Previous: [07 - Pretraining at Scale](../07-Pretraining/INDEX.mdx) · Next: [09 - Introduction to AI Agents](../09-Agent-Fundamentals/INDEX.mdx)

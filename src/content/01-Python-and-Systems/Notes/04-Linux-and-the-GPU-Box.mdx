@@ -1,0 +1,231 @@
+# Linux and the GPU Box
+
+Almost every GPU you will train or serve on runs Linux, and you will usually reach it over SSH. This note covers the working knowledge that makes a GPU machine productive and debuggable: connecting with SSH and keeping jobs alive, processes and signals, running a model server as a systemd service, reading `nvidia-smi`, the driver and CUDA version matrix, disks and caches, and the logs that explain crashes - including NVIDIA's Xid errors.
+
+```objectives
+time: 45 min
+outcomes:
+  - Connect to a remote GPU machine with SSH keys, a config file and port forwarding, and keep long jobs running with tmux
+  - Use signals correctly - SIGTERM for graceful shutdown and checkpointing, SIGKILL as a last resort - and handle preemption
+  - Run a model server as a systemd service with restarts and logs
+  - Read nvidia-smi, explain the difference between the driver's CUDA version and the toolkit's, and pick GPUs with CUDA_VISIBLE_DEVICES
+  - Diagnose common failures from disk usage, the kernel log, out-of-memory kills and Xid errors
+prerequisites:
+  - "A terminal and basic shell commands (cd, ls, cat, pipes)"
+```
+
+## Getting In and Staying In
+
+**SSH keys and a config file** save typing and mistakes:
+
+```bash
+ssh-keygen -t ed25519 -C "you@example.com"     # once; put the .pub key on the server
+```
+
+```
+# ~/.ssh/config
+Host gpu1
+    HostName 203.0.113.10
+    User ubuntu
+    IdentityFile ~/.ssh/id_ed25519
+    LocalForward 8000 localhost:8000     # vLLM API on your laptop at localhost:8000
+    LocalForward 6006 localhost:6006     # TensorBoard
+    ServerAliveInterval 60
+```
+
+Now `ssh gpu1` connects and forwards ports, so you can call a model server or open a dashboard on the remote machine as if it were local, without exposing it to the internet.
+
+**Keep jobs alive when you disconnect.** A process started in an SSH session dies when the session ends. Run long jobs inside **tmux**: `tmux new -s train` to start a session, `Ctrl-b d` to detach, `tmux attach -t train` to come back. For anything that must survive reboots, use a systemd service (below) or a scheduler, not a terminal.
+
+---
+
+## Processes and Signals
+
+| Command | Use |
+|---|---|
+| `htop`, `nvtop` | Live CPU, memory and GPU usage per process |
+| `ps aux \| grep python` | Find a process and its PID |
+| `ss -ltnp` | Which process listens on which port ("address already in use") |
+| `kill PID` | Send **SIGTERM** - ask the process to shut down cleanly |
+| `kill -9 PID` | Send **SIGKILL** - immediate, uncatchable; no cleanup |
+| `nohup cmd > log.txt 2>&1 &` | Run in the background, immune to hang-ups (tmux is usually nicer) |
+
+**Handle SIGTERM in training code.** Schedulers, Kubernetes and spot/preemptible instances send SIGTERM before killing a process (on AWS, a spot interruption comes with a two-minute warning). A training loop that catches it can save a checkpoint and exit cleanly instead of losing hours of work:
+
+```python
+import signal
+
+stop = False
+def on_sigterm(signum, frame):
+    global stop
+    stop = True                      # finish the current step, then checkpoint and exit
+signal.signal(signal.SIGTERM, on_sigterm)
+
+for step in range(start_step, total_steps):
+    train_step()
+    if stop or step % 1000 == 0:
+        save_checkpoint(step)
+    if stop:
+        break
+```
+
+---
+
+## Running a Model Server as a Service
+
+A **systemd** unit starts the server at boot, restarts it on failure and captures its logs:
+
+```ini
+# /etc/systemd/system/vllm.service
+[Unit]
+Description=vLLM OpenAI-compatible server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=llm
+Environment=HF_HOME=/mnt/nvme/hf-cache
+Environment=CUDA_VISIBLE_DEVICES=0,1
+ExecStart=/opt/vllm/.venv/bin/vllm serve Qwen/Qwen3-8B --port 8000 --tensor-parallel-size 2 --max-model-len 32768
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=60
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+sudo systemctl daemon-reload && sudo systemctl enable --now vllm
+systemctl status vllm
+journalctl -u vllm -f              # follow the logs
+```
+
+On a fleet, the same job is done by containers and Kubernetes ([Docker for GPU Inference](../../17-Production-Engineering/Notes/01-Docker-for-GPU-Inference.mdx), [LLM Serving on Kubernetes](../../17-Production-Engineering/Notes/03-LLM-Serving-on-Kubernetes.mdx)), but a single box with systemd is a common and perfectly good setup for a team server or a pilot.
+
+---
+
+## Reading nvidia-smi
+
+```bash
+nvidia-smi                                            # snapshot: driver, GPUs, memory, processes
+nvidia-smi --query-gpu=index,name,memory.used,memory.total,utilization.gpu,temperature.gpu,power.draw \
+           --format=csv -l 2                          # log key fields every 2 s
+nvidia-smi topo -m                                    # how GPUs connect: NVLink (NV#) vs PCIe paths
+```
+
+What to look for:
+
+- **Memory used but utilization near 0%** - a process is holding memory but idle (a crashed job's zombie, a notebook kernel). Find it in the process list and stop it.
+- **Utilization alone is a poor efficiency measure.** "100% utilization" means a kernel was running, not that the GPU was busy doing useful math; use throughput and MFU for that ([CUDA Concepts & GPU Profiling](../../07-Pretraining/Notes/08-CUDA-Concepts-and-GPU-Profiling.mdx)).
+- **Power well below the limit and high temperature** - thermal or power throttling; check cooling and `nvidia-smi -q -d PERFORMANCE` for throttle reasons.
+- **Topology** - tensor parallelism across GPUs without NVLink between them is much slower.
+
+**Choosing GPUs.** `CUDA_VISIBLE_DEVICES=2,3 python train.py` shows the process only GPUs 2 and 3, renumbered as 0 and 1 inside the process - the simplest way to share a multi-GPU box between jobs.
+
+---
+
+## Drivers and CUDA Versions
+
+Three different version numbers cause most "CUDA not available" confusion:
+
+| Component | Where it comes from | How to check |
+|---|---|---|
+| **NVIDIA driver** (kernel module + `libcuda`) | Installed on the host; containers use the host's | `nvidia-smi` (top line) |
+| **CUDA runtime/toolkit** your code uses | Bundled inside PyTorch, vLLM and other wheels, or a CUDA base image | `python -c "import torch; print(torch.version.cuda)"`, `nvcc --version` |
+| **"CUDA Version" in nvidia-smi** | The **highest** CUDA version this driver supports - not what is installed | `nvidia-smi` |
+
+The rule: **the driver must be new enough for the CUDA version your libraries were built with.** NVIDIA's minor-version compatibility lets a newer CUDA runtime within the same major release run on an older driver of that family - CUDA 12.x needs a driver of at least 525, CUDA 13.x at least 580 - with limits (code that JIT-compiles PTX, or uses newer driver features, needs a newer driver). When in doubt, upgrade the driver, which is backward compatible with older CUDA versions.
+
+Debug order for `torch.cuda.is_available() == False`: does `nvidia-smi` work (driver loaded, GPU visible to this container)? Is this a CPU-only wheel (`torch.version.cuda` is `None`)? Is the driver too old for the wheel's CUDA version?
+
+---
+
+## Disks, Memory and Logs
+
+- **Disk space:** `df -h` (free space per filesystem), `du -sh ~/.cache/huggingface/*` (what's using it). Model caches grow quietly; set `HF_HOME` to a large local NVMe disk, not a small root volume or a slow network mount - loading a 16 GB model from network storage can take minutes.
+- **Shared memory:** PyTorch `DataLoader` workers pass batches through `/dev/shm`; Docker's default 64 MB causes "bus error" crashes. Run containers with `--ipc=host` or a larger `--shm-size`.
+- **Host memory and the OOM killer:** when the machine (not the GPU) runs out of RAM, the kernel kills a process - often your training job - and logs it. Check `dmesg -T | grep -i "out of memory"` and `free -h`.
+- **The kernel log for GPU faults:** `dmesg -T | grep -i xid` shows NVIDIA **Xid** errors, numbered events reported by the driver:
+
+| Xid | NVIDIA's description | Usually means |
+|---|---|---|
+| 13 | Graphics Engine Exception | Often an application bug (bad memory access in a kernel) |
+| 31 | GPU memory page fault | Application illegal memory access, sometimes a driver issue |
+| 48 | Double Bit ECC Error | Uncorrectable memory error - the GPU needs attention |
+| 63 / 64 | GPU memory remapping event / failure | Memory row remapping; a failure means a reset or RMA is needed |
+| 74 | NVLINK Error | Interconnect problem - check links and topology |
+| 79 | GPU has fallen off the bus | Hardware, power or thermal problem; the GPU is unreachable until reset |
+| 94 / 95 | Contained / Uncontained memory error | 94: affected processes must restart; 95: the GPU must be reset |
+| 119 | GSP RPC Timeout | Driver / GPU System Processor problem; often needs a reset or driver update |
+
+Repeated hardware Xids on one GPU are a reason to drain it and open a ticket with your cloud or hardware vendor, not to keep retrying the job.
+
+---
+
+## Check Yourself
+
+```quiz
+- q: "nvidia-smi shows 'CUDA Version: 13.0'. What does that tell you?"
+  options:
+    - "CUDA toolkit 13.0 is installed"
+    - "PyTorch is using CUDA 13.0"
+    - "The installed driver supports CUDA versions up to 13.0"
+    - "The GPU's compute capability is 13.0"
+  answer: 3
+  explain: "nvidia-smi reports the highest CUDA version the driver supports. The runtime your code uses comes from its wheels or container; check torch.version.cuda."
+- q: "Your training job was killed by a spot-instance reclaim and lost six hours of progress. What change prevents that?"
+  options:
+    - "Run it with nohup"
+    - "Catch SIGTERM, save a checkpoint and exit; checkpoint periodically; resume from the latest checkpoint on restart"
+    - "Use kill -9 instead"
+    - "Increase the GPU memory"
+  answer: 2
+  explain: "Preemption sends SIGTERM shortly before termination. Handling it - plus regular checkpoints and automatic resume - turns a preemption into a short pause."
+- q: "PyTorch DataLoader workers crash with 'bus error' inside a Docker container. What is the likely fix?"
+  answer: "Give the container more shared memory: run it with --ipc=host or a larger --shm-size. Workers pass tensors through /dev/shm, and Docker's default is only 64 MB."
+- q: "How do you call a vLLM server running on port 8000 of a remote GPU machine from your laptop without opening the port to the internet?"
+  answer: "SSH local port forwarding: ssh -L 8000:localhost:8000 gpu1 (or LocalForward in ~/.ssh/config), then call http://localhost:8000 on the laptop. Traffic goes through the encrypted SSH connection."
+- q: "dmesg shows repeated 'Xid 79' for one GPU. What does it mean, and what do you do?"
+  answer: "Xid 79 means the GPU has fallen off the bus - usually a hardware, power or thermal problem. Drain the GPU or node, reset it if possible, and if it recurs report it to the cloud provider or vendor; it isn't an application bug to retry."
+```
+
+## Exercises
+
+```exercise
+- title: Share one 8-GPU machine
+  task: |
+    Three people share an 8-GPU server: a 4-GPU fine-tuning job, a 2-GPU vLLM server for the team, and two single-GPU experiments. Describe how you would run all of them so they don't interfere and survive disconnects.
+  solution: |
+    Check `nvidia-smi topo -m` and give the 4-GPU job and the 2-GPU server GPUs that are NVLink-connected among themselves. Run vLLM as a systemd service with `CUDA_VISIBLE_DEVICES=4,5` (restarts and logs handled). Run the fine-tune in tmux with `CUDA_VISIBLE_DEVICES=0,1,2,3`, catching SIGTERM and checkpointing. Run the two experiments in their own tmux sessions on GPUs 6 and 7. Put caches and datasets on the local NVMe disk with separate directories, watch `df -h`, and agree on the allocation in a shared note - or move to a scheduler (Slurm, Kubernetes) once more people need the box.
+- title: Debug "CUDA not available"
+  task: |
+    In a fresh container on a GPU server, `torch.cuda.is_available()` returns False. Write the checks in order, with the command for each.
+  solution: |
+    1. `nvidia-smi` inside the container: if it fails, the container has no GPU access - start it with `--gpus all` (or the Kubernetes device plugin) and check the NVIDIA Container Toolkit on the host.
+    2. `python -c "import torch; print(torch.__version__, torch.version.cuda)"`: `None` means a CPU-only wheel - reinstall from the CUDA wheel index.
+    3. Compare the wheel's CUDA version with the driver's maximum in `nvidia-smi`: if the driver is too old for that CUDA major version, upgrade the driver or install a wheel built for an older CUDA.
+    4. `CUDA_VISIBLE_DEVICES`: an empty or wrong value hides every GPU.
+    5. `dmesg -T | grep -i xid` on the host if the GPU itself is in a failed state.
+```
+
+## Study Notes
+
+**Must-know:**
+- SSH keys + ~/.ssh/config + LocalForward for remote servers and dashboards; tmux for long interactive jobs
+- SIGTERM = graceful (catch it, checkpoint, exit); SIGKILL = immediate; preemption and Kubernetes send SIGTERM first
+- systemd units for long-running servers: Restart=on-failure, environment, journalctl -u for logs
+- nvidia-smi: memory, utilization (a weak efficiency signal), power and throttling, `topo -m`; CUDA_VISIBLE_DEVICES selects and renumbers GPUs
+- nvidia-smi's CUDA Version = driver's maximum; the runtime comes from wheels or images; driver must be new enough (12.x ≥ 525, 13.x ≥ 580 with minor-version compatibility limits)
+- Model caches on local NVMe via HF_HOME; `--ipc=host` or `--shm-size` for DataLoader; OOM killer and Xid errors in `dmesg`; repeated hardware Xids (48, 79, 95) mean drain and report
+
+## References
+
+- NVIDIA, [nvidia-smi documentation](https://docs.nvidia.com/deploy/nvidia-smi/index.html) (2026)
+- NVIDIA, [CUDA Compatibility](https://docs.nvidia.com/deploy/cuda-compatibility/) and [Minor Version Compatibility](https://docs.nvidia.com/deploy/cuda-compatibility/minor-version-compatibility.html) (2026)
+- NVIDIA, [Xid Errors](https://docs.nvidia.com/deploy/xid-errors/) and [Xid catalog](https://docs.nvidia.com/deploy/xid-errors/analyzing-xid-catalog.html) (2026)
+- freedesktop.org, [systemd.service](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html) (2026)
+- MIT, [The Missing Semester of Your CS Education](https://missing.csail.mit.edu/) (2020-2026) - shell, SSH, tmux
+
+*Last reviewed: 2026-10*

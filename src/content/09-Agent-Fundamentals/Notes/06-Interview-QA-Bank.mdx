@@ -1,0 +1,116 @@
+# Introduction to AI Agents - Q&A Review Bank
+
+A consolidated review set for the module, grouped by chapter. Difficulty: `[Easy]` = recall, `[Medium]` = design decisions and trade-offs, `[Hard]` = system design, debugging and edge cases.
+
+```objectives
+time: 45 min
+outcomes:
+  - "Answer each question from memory before revealing the answer, across: What Agents Are; Anatomy; The Agent Loop; Practice and Evaluation"
+  - Explain the reasoning behind each answer - the mechanism or trade-off - not only the fact
+  - Identify the chapters you are weakest on and revisit them before the module quiz
+prerequisites:
+  - "The concept notes of this module"
+```
+
+---
+
+## What Agents Are
+
+**Q1: Define an agent and a workflow.** `[Easy]`
+Workflows orchestrate LLMs and tools through predefined code paths; agents are systems where the LLM dynamically directs its own process and tool use (Anthropic, 2024). Both are agentic systems; the difference is who controls the next step. See [What Are AI Agents](01-What-Are-AI-Agents.mdx).
+
+**Q2: Is a RAG chatbot an agent?** `[Easy]`
+Usually not. A fixed retrieve-then-generate pipeline is a workflow. It becomes agentic when the model decides whether, what and how many times to retrieve, or chooses among tools.
+
+**Q3: Name the five autonomy levels by user role.** `[Easy]`
+Operator, collaborator, consultant, approver, observer (Feng et al., 2025). Consequential agents usually launch at approver: the agent works independently and a person approves high-risk actions.
+
+**Q4: Why did agents become practical in 2025-26 when 2023's AutoGPT-style agents weren't?** `[Medium]`
+Models post-trained with RL on multi-step tool-using tasks; reasoning between tool calls; better tool-use APIs (strict schemas, parallel calls); and steady growth in the task length models can complete (METR's 50% time horizon doubling roughly every seven months). Reliability over repeated runs still lags single-run success.
+
+**Q5: A stakeholder asks for "an agent" to generate a weekly sales report. What do you recommend?** `[Medium]`
+A workflow: the steps are known (query, compute, chart, summarise). It is cheaper, faster and testable per step. Use a model call for the narrative summary; add an agentic step only for investigating anomalies, if that has value.
+
+**Q6: Give the decision test for workflow vs agent.** `[Medium]`
+Can one call do it? Can you write the steps in advance? Is the value worth the extra cost, latency and risk? Can you verify outcomes and bound the damage of mistakes? Agents fit unpredictable paths with verifiable outcomes and recoverable or gated actions.
+
+---
+
+## Anatomy
+
+**Q7: List the components of an agent.** `[Easy]`
+Model, instructions, tools, context and memory, orchestration (the loop), guardrails, and the environment it acts on. Everything but the model is the harness. See [Anatomy of an AI Agent](02-Anatomy-of-an-AI-Agent.mdx).
+
+**Q8: Why can the same model score very differently in two agents on the same benchmark?** `[Medium]`
+The harness - the tools, what they return, how errors are shown, how context is managed - determines what the model can do. SWE-agent showed that agent-computer interface design alone changes SWE-bench results substantially.
+
+**Q9: What makes agent self-correction work?** `[Medium]`
+External feedback: failing tests, validation errors, informative tool errors. Without new information, models rarely fix their own reasoning errors (Huang et al., 2024).
+
+**Q10: Where should a business rule such as a refund limit be enforced?** `[Medium]`
+In code (the tool or a guardrail), with the rule also stated in the instructions so the model plans around it. Prompt-only rules can be ignored or overridden by injected content.
+
+---
+
+## The Agent Loop
+
+**Q11: Write the agent loop in five lines of pseudocode.** `[Easy]`
+`loop: resp = model(history, tools); if no tool calls: return resp.text; append resp; for each call: append result(call.id, execute(call)); check bounds.` See [The Agent Loop](03-The-Agent-Loop.mdx).
+
+**Q12: What are the loop invariants?** `[Medium]`
+Every tool call answered exactly once by id; all results for a turn sent together (in Claude's API, one user message with tool_result blocks first); the assistant turn appended unmodified, including thinking blocks or reasoning items; earlier turns never edited; errors returned as results; truncated or refused turns never executed.
+
+**Q13: How should a loop handle each Claude stop reason?** `[Medium]`
+tool_use: execute and continue. end_turn: return. max_tokens: don't run partial tool calls; retry with more tokens. pause_turn: append the assistant turn unchanged and call again (a server-side tool loop paused). refusal: stop and surface it. model_context_window_exceeded: compact and retry.
+
+**Q14: In the OpenAI Responses API, what must go back to the model after a function call?** `[Medium]`
+A `function_call_output` item with the same `call_id`, plus the output items from the previous response, including reasoning items for reasoning models - or use `previous_response_id` so the server keeps them.
+
+**Q15: Why does agent cost grow roughly quadratically with steps?** `[Hard]`
+The whole history is re-sent on every call. If context grows by g tokens per step from a base b, total input over n calls is n·b + g·n(n−1)/2. Prompt caching makes the repeated prefix cheap; compaction and truncating tool outputs slow the growth.
+
+**Q16: What bounds does every agent loop need?** `[Easy]`
+Maximum model calls, tool calls, identical repeated calls, tokens or cost, and wall-clock time - each returning a structured partial result with a status rather than an exception.
+
+**Q17: When should tool calls run in parallel?** `[Medium]`
+When they are independent and read-only (or their side effects commute). Latency becomes the slowest call instead of the sum. Disable parallel calls (`parallel_tool_calls=false`, `disable_parallel_tool_use`) when order matters.
+
+**Q18: What is a "claimed action" failure and how do you catch it?** `[Hard]`
+The final reply says an action was done but no write tool was called. Catch it by grading on environment state, not text; in production, generate confirmations from tool results rather than free text.
+
+---
+
+## Practice and Evaluation
+
+**Q19: What properties make a good agent use case?** `[Easy]`
+Unpredictable path, verifiable outcome, recoverable or gated actions, and enough value per task. See [Agents in Practice](04-Agents-in-Practice.mdx).
+
+**Q20: What changes between a personal agent and an enterprise one?** `[Medium]`
+Measured reliability, delegated per-user authorisation and least privilege, injection-aware security, tracing and audit, cost governance, data governance, versioned change management with eval gates, and durable execution with escalation.
+
+**Q21: Name four human-in-the-loop patterns.** `[Easy]`
+Approve actions, approve the plan, review the output, escalate on uncertainty (plus sample-and-audit). All require the loop to pause and resume with persisted state.
+
+**Q22: Define pass@k and pass^k and compute both for 3 successes in 4 trials with k = 2.** `[Medium]`
+pass@k: at least one of k succeeds = 1 − C(n−c,k)/C(n,k) = 1 − C(1,2)/6 = 1. pass^k: all k succeed = C(c,k)/C(n,k) = 3/6 = 0.5. See [Agent Evaluation Basics](05-Agent-Evaluation-Basics.mdx).
+
+**Q23: Why grade agents on environment state?** `[Medium]`
+The reply isn't evidence of what happened. State checks catch claimed actions and side effects on the wrong records, and let should-refuse tasks be graded as "state unchanged".
+
+**Q24: What goes in a first agent test set?** `[Medium]`
+30-100 real tasks covering single actions, multi-step requests, read-only questions, should-refuse cases, bad input and ambiguity; expected end states; resettable environments; at least 3 trials per task; cost and latency recorded.
+
+**Q25: Your agent's LLM-judge score is 95% but state checks say 60%. Explain and fix.** `[Hard]`
+The judge reads text and rewards confident claims of actions never taken. Switch outcome grading to state, keep the judge only for response qualities, validate it against human labels, and fix the claimed-action failures (model capacity or effort, confirmation built from tool results).
+
+---
+
+## More Review Questions
+
+**Q26: What are the main failure modes of LLM agents?**
+(1) Tool call loops - agent keeps calling the same tool without progress. (2) Hallucinated tool arguments - LLM generates invalid parameters. (3) Context overflow - accumulated observations exceed the context window. (4) Overconfident stopping and claimed actions - the agent reports work as done without having done it (see Q18). (5) Cascading errors - early tool call failure derails the entire plan. Mitigation: max-step limits, result validation, structured error handling, human-in-the-loop checkpoints.
+
+**Q27: What is the difference between an agent and an agentic AI system?**
+An agent is a single LLM that can use tools in a loop. An agentic AI system is a broader architecture - potentially multiple agents, persistent memory, orchestration logic, human-in-the-loop mechanisms, evaluation layers, and reliability engineering. "Agentic" describes a class of systems that operate autonomously toward goals, make decisions over extended horizons, and coordinate resources. An agent is a component; an agentic system is an architecture.
+
+*Last reviewed: 2026-09*

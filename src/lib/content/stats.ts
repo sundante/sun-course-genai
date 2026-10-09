@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import type { NavItem, NavModule } from "@/types/content";
 import { getNavigationTree } from "./nav";
+import { conceptPages, leafPages } from "./navSections";
 
 // Counts derived from nav.yml + the content files, so the home page never hand-types
 // "180+ notes" style numbers that drift out of date.
@@ -18,15 +19,8 @@ export interface ModuleStats {
   questions: number;
 }
 
-function leaves(items: NavItem[]): NavItem[] {
-  return items.flatMap((item) => (item.children ? leaves(item.children) : [item]));
-}
-
 function group(items: NavItem[], title: string): NavItem[] {
-  return items.flatMap((item) => {
-    if (!item.children) return [];
-    return item.title === title ? leaves(item.children) : group(item.children, title);
-  });
+  return items.flatMap((item) => (item.children && item.title === title ? leafPages(item.children) : []));
 }
 
 function countQuestions(filePath: string | undefined): number {
@@ -37,10 +31,9 @@ function countQuestions(filePath: string | undefined): number {
 }
 
 export function getModuleStats(mod: NavModule): ModuleStats {
-  const concepts = group(mod.items, "Concepts");
-  const banks = concepts.filter((item) => item.title.includes("Q&A"));
+  const banks = group(mod.items, "Review").filter((item) => item.title.includes("Q&A"));
   return {
-    concepts: concepts.length - banks.length,
+    concepts: conceptPages(mod.items).length,
     labs: group(mod.items, "Code Labs").length,
     questions: banks.reduce((sum, bank) => sum + countQuestions(bank.filePath), 0),
   };
@@ -56,9 +49,9 @@ export interface CourseStats {
 }
 
 // Capstone projects and the review hub are not teaching modules
-const NON_TEACHING = new Set(["capstones", "knowledge-check"]);
+const NON_TEACHING = new Set(["capstones", "review"]);
 
-/** Course-wide totals, over teaching modules only (not the capstones or the Knowledge Check hub). */
+/** Course-wide totals, over teaching modules only (not the capstones or the Review & Readiness hub). */
 export function getCourseStats(): CourseStats {
   const { modules } = getNavigationTree();
   const teaching = modules.filter((mod) => !NON_TEACHING.has(mod.slug));
