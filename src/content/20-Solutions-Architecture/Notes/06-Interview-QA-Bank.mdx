@@ -1,0 +1,109 @@
+# Solutions Architecture - Q&A Review Bank
+
+> 16 Q&A pairs. Tags: `[Easy]` = conceptual recall, `[Medium]` = design decisions and trade-offs, `[Hard]` = quantitative reasoning or a full scenario.
+
+```objectives
+time: 30 min
+outcomes:
+  - "Answer each question from memory before revealing the answer, across: discovery; qualification and ROI; architecture docs and ADRs; communication; PoC to production"
+  - Explain the reasoning behind each answer - the mechanism or trade-off - not only the fact
+  - Identify the chapters you are weakest on and revisit them before the module quiz
+prerequisites:
+  - "The concept notes of this module"
+```
+
+---
+
+**Q1** `[Easy]` Why do most AI projects fail, according to RAND's 2024 study, and which of the causes does discovery address?
+
+> RAND's five root causes: misunderstanding or miscommunicating the problem, lacking the data, chasing technology instead of the user's problem, inadequate infrastructure, and problems too hard for current AI. Discovery directly addresses the first three - it pins down the problem and metric, checks data readiness, and anchors the work in the user's workflow.
+
+---
+
+**Q2** `[Easy]` What makes a discovery question reliable, and what's an example?
+
+> It asks about specific past events or concrete facts, not hypotheticals or opinions (the *Mom Test* principle). "Walk me through the last invoice you processed" is reliable; "Would you use an AI tool for invoices?" produces polite optimism.
+
+---
+
+**Q3** `[Medium]` What should a current-state workflow map contain, and why does it matter for AI projects?
+
+> Each step with who does it, volume, time per case, error rates, queues and hand-offs. It shows where time and delay actually are - often in queues or exceptions rather than the step that looks automatable - so the AI is aimed at the step that moves the outcome metric.
+
+---
+
+**Q4** `[Medium]` Write the template of a good success statement.
+
+> Reduce [metric] from [baseline] to [target] for [population] by [date], measured by [method], without [guardrail metric] getting worse than [limit]. The baseline is measured before the build, the same way the post-launch metric will be.
+
+---
+
+**Q5** `[Medium]` Give three signs that a use case should not be solved with an LLM.
+
+> Any three of: the pain is a process or policy problem (a queue, a missing owner); the task is tabular prediction with labelled history (classic ML fits better); the rules are known and stable (a rules engine is cheaper and auditable); errors are unacceptable and the output can't be verified before it matters.
+
+---
+
+**Q6** `[Hard]` What goes into a per-task cost model, and which term usually dominates in an "assist" use case?
+
+> Model cost (calls x tokens x prices), infrastructure share (fixed cost / tasks), human review time x loaded rate, and expected error cost (error rate x cost per error). In assist use cases, human review time usually dominates - model cost is often well under a cent per minute of human time saved - so draft quality matters more than token price.
+
+---
+
+**Q7** `[Medium]` What is the difference between a cash saving and a capacity saving, and why does it matter in an ROI case?
+
+> A cash saving changes spending - less overtime or contractor cost, avoided hires, captured discounts. A capacity saving frees time that may or may not be used. Finance reviewers discount capacity savings nobody plans to use, so the ROI case should say which applies and what the freed time will do.
+
+---
+
+**Q8** `[Medium]` When would you move from a managed platform to building on model APIs, and from there to fine-tuning or self-hosting?
+
+> Start with the most managed option that meets the constraints. Move to building on APIs when a measured limit appears - retrieval quality, integration needs, workflow specifics the platform can't handle. Move to fine-tuning or self-hosting on a measured cost problem at high volume, a latency requirement, a data-control requirement, or a narrow task where a small tuned model matches a large one - accepting the MLOps and on-call cost.
+
+---
+
+**Q9** `[Easy]` What are the four C4 levels, and which ones does an AI design doc usually need?
+
+> Context, Containers, Components and Code. Most design docs need context (the system, its users and external systems) and containers (the deployable parts and how they communicate); components only for the part under debate.
+
+---
+
+**Q10** `[Medium]` What does an ADR contain, and what do you do when the decision changes?
+
+> Title, status, context (constraints and evidence), decision, consequences (positive and negative), ideally with a trigger to revisit. When the decision changes, write a new ADR that supersedes the old one and mark the old one superseded - never rewrite an accepted ADR.
+
+---
+
+**Q11** `[Medium]` Name three non-functional requirements that are specific to AI systems, beyond latency and availability.
+
+> Any three of: quality thresholds on a named eval set; safety limits (ASR, over-refusal, disallowed categories); cost per task and spend ceilings; data residency, retention and training-use terms; auditability (prompt, model and index versions logged per request); model lifecycle (pinned versions, eval-gated upgrades, deprecation handling).
+
+---
+
+**Q12** `[Medium]` How would you present "91% accuracy, 95% CI 88-94%, n = 300" to an executive?
+
+> "About 9 in 10 drafts needed only small edits on 300 of our own tickets; the true rate is very likely between 88% and 94%." Then compare with the human baseline, show a couple of real failures and how they are caught, and say what hasn't been tested yet.
+
+---
+
+**Q13** `[Medium]` A security architect objects: "Our data will be used to train their model." How do you answer?
+
+> With evidence and design, not reassurance: the data-flow diagram, the provider's contractual terms on retention and training use, the processing region, access controls and the threat model - and offer the security team a review of them. If a requirement can't be met with a hosted provider, that is an input to the hosting ADR.
+
+---
+
+**Q14** `[Easy]` What are the four stages of staged autonomy, and must every use case reach the last one?
+
+> Shadow (AI runs, humans don't see it), assist (humans see and decide), automate with review (AI acts, humans review a sample or exceptions), automate (no review, low-risk segment only). No - for high-stakes or irreversible decisions, assist is often the right end state.
+
+---
+
+**Q15** `[Hard]` Design the measurement for a 10-week pilot of a drafting assistant in a 200-agent contact centre.
+
+> Randomize at the agent (or team) level into pilot and control groups, stratified by tenure and queue, to avoid before/after confounding from seasonality and case mix. Primary metric: handling time per ticket; quality guardrails: reopen rate, QA scores, complaints. Adoption: coverage of eligible tickets, acceptance rate, edit time, override reasons, repeat use by week (to see past the novelty effect). Agree go / iterate / stop thresholds with the sponsor before week 1.
+
+---
+
+**Q16** `[Hard]` A pilot "succeeded" but six months after launch nobody can say whether the system still delivers value. What was missing, and how do you fix it?
+
+> A handover with named owners and continued outcome tracking. Fix: assign a product owner for the business metric and roadmap, a technical owner for the system and on-call, and owners for the eval set, model lifecycle and budget; keep reporting the success metric against the baseline; add online evals and SLOs so decay is visible; refresh the eval set from incidents and feedback.

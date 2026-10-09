@@ -1,0 +1,229 @@
+# Tokenization
+
+A tokenizer converts text into the integer ids a model reads and converts ids back into text. It is fixed before pretraining and never changes afterwards, so its choices - the algorithm, the vocabulary size, how it treats numbers, whitespace and non-English scripts - shape a model's cost, context capacity and some of its oddest failures. This note covers how BPE, WordPiece and Unigram tokenizers are built, byte-level tokenization, the trade-offs of vocabulary size, the "token tax" on non-English text, numbers and arithmetic, glitch tokens, and special tokens and chat templates.
+
+```objectives
+time: 45 min
+outcomes:
+  - Explain how byte-level BPE is trained and applied, and how WordPiece and Unigram differ from it
+  - Estimate how vocabulary size trades off sequence length against embedding parameters
+  - Measure the token cost of different languages and explain why it matters for price, latency and context
+  - Diagnose failures caused by tokenization - arithmetic, letter counting, glitch tokens, trailing spaces
+  - Handle special tokens and chat templates safely, including untrusted text that contains special-token strings
+prerequisites:
+  - "[LLM Fundamentals](01-LLM-Fundamentals.mdx) - tokens and context windows"
+```
+
+## From Text to Ids
+
+<div class="audience-biz" markdown="1">
+
+Models don't read letters or words; they read **tokens** - pieces of text from a fixed dictionary of typically 32,000 to 256,000 entries, each with a number. Common words are usually one token, rare words are split into pieces, and some languages need many more tokens than English for the same meaning. Because providers charge per token and context windows are measured in tokens, the tokenizer quietly sets the price and capacity of everything you do with a model.
+
+</div>
+
+<div class="audience-tech" markdown="1">
+
+A tokenizer has three parts: **pre-tokenization** (split text into chunks, typically by a regex on whitespace, punctuation and digits), a **model** that splits each chunk into vocabulary entries (BPE merges, WordPiece or Unigram), and **special tokens** for structure (beginning and end of text, chat roles, tool calls). Encoding maps text to ids; decoding maps ids back. For byte-level tokenizers the round trip is lossless for any input.
+
+</div>
+
+```mermaid
+flowchart LR
+    T["📝 Text"] --> N["🧹 Normalize<br/>(optional: Unicode NFC)"]
+    N --> P["✂️ Pre-tokenize<br/>regex: words, digits, spaces"]
+    P --> M["🧩 Subword model<br/>BPE merges / Unigram"]
+    M --> S["🏷️ Add special tokens<br/>chat template"]
+    S --> I["🔢 Ids -> embedding lookup"]
+
+    style P fill:#e8e0d4,stroke:#c8b89a
+    style M fill:#d8dfe8,stroke:#b0bac8
+    style S fill:#ddd8e4,stroke:#b8b0c8
+```
+
+---
+
+## How BPE Is Trained
+
+**Byte-pair encoding** (adapted for NLP by Sennrich et al., 2016) builds a vocabulary bottom-up:
+
+1. Start with the smallest units - for **byte-level BPE** (GPT-2 onward), the 256 possible bytes, so any text, in any script, can be represented with no "unknown" token.
+2. Count every adjacent pair of units in the training corpus.
+3. Merge the most frequent pair into a new unit; record the merge.
+4. Repeat until the vocabulary reaches its target size.
+
+Encoding new text replays the learned merges in order. A minimal trainer:
+
+```python
+from collections import Counter
+
+def train_bpe(text, num_merges):
+    """Byte-level BPE on one string: returns the merges in the order they were learned."""
+    ids = list(text.encode("utf-8"))            # start from raw bytes: vocabulary of 256, no unknowns
+    vocab = {i: bytes([i]) for i in range(256)}
+    merges = []
+    for new_id in range(256, 256 + num_merges):
+        pairs = Counter(zip(ids, ids[1:]))     # count adjacent pairs
+        if not pairs:
+            break
+        pair = max(pairs, key=pairs.get)       # most frequent pair
+        merges.append((vocab[pair[0]] + vocab[pair[1]], pairs[pair]))
+        vocab[new_id] = vocab[pair[0]] + vocab[pair[1]]
+        out, i = [], 0                         # replace every occurrence of the pair
+        while i < len(ids):
+            if i + 1 < len(ids) and (ids[i], ids[i + 1]) == pair:
+                out.append(new_id); i += 2
+            else:
+                out.append(ids[i]); i += 1
+        ids = out
+    return merges, len(ids)
+
+text = "low lower lowest slow slower slowest " * 20
+merges, n = train_bpe(text, 6)
+print(f"{len(text.encode())} bytes -> {n} tokens after {len(merges)} merges")
+for m, count in merges:
+    print(f"  merge {m!r:12} (seen {count} times)")
+# 740 bytes -> 280 tokens after 6 merges
+#   merge b'lo'        (seen 120 times)
+#   merge b'low'       (seen 120 times)
+#   merge b'lowe'      (seen 80 times)
+#   merge b' s'        (seen 60 times)
+#   merge b' lowe'     (seen 40 times)
+#   merge b'st'        (seen 40 times)
+```
+
+Production tokenizers add a pre-tokenization regex so merges never cross word or digit boundaries, train on gigabytes of carefully mixed text, and run in fast Rust or C++ implementations (Hugging Face `tokenizers`, OpenAI `tiktoken`, Google `sentencepiece`).
+
+---
+
+## The Algorithm Families
+
+| Algorithm | How it builds the vocabulary | How it segments | Examples |
+|---|---|---|---|
+| **BPE** | Bottom-up: merge the most frequent pair | Replay merges greedily | GPT-2 to GPT-4o (`tiktoken`), Llama 3, Qwen, Mistral |
+| **WordPiece** | Bottom-up: merge the pair that most increases training-data likelihood | Greedy longest match | BERT family |
+| **Unigram LM** | Top-down: start large, prune pieces that least hurt likelihood | Most probable segmentation (Viterbi); can sample segmentations | T5, and many SentencePiece models |
+
+**SentencePiece** is a library rather than an algorithm: it implements BPE and Unigram directly on raw text, treating the space as an ordinary symbol (`▁`), so no language-specific pre-tokenizer is needed. Llama 1 and 2 and Gemma use SentencePiece models; Llama 3 moved to a `tiktoken`-based BPE vocabulary of 128K tokens. For closed models, the tokenizer is often not published - count tokens with the provider's token-counting API rather than guessing.
+
+---
+
+## Vocabulary Size
+
+| | Smaller vocabulary (e.g. 32K) | Larger vocabulary (e.g. 128K-256K) |
+|---|---|---|
+| Tokens per text | More - longer sequences | Fewer - shorter sequences, more text per context window |
+| Embedding and output layers | Smaller | Larger: `V x d` parameters each |
+| Rare tokens | Each seen often in training | Many tokens seen rarely - risk of under-trained entries |
+| Non-English and code | Split into many pieces | Better coverage |
+
+**Worked example.** Llama 3 8B has a 128,256-token vocabulary and width 4,096: each of its input embedding and output matrices has `128,256 x 4,096 ≈ 525M` parameters - about 1.05B of its 8B for the two together. For a small model, a huge vocabulary can take a large share of the parameter budget, which is why vocabulary size is now chosen with model size in mind (Tao et al., 2024, argue larger models deserve larger vocabularies).
+
+---
+
+## The Token Tax on Non-English Text
+
+The same sentence costs very different numbers of tokens depending on the language and the tokenizer. Measured with OpenAI's tokenizers (output of `tiktoken`):
+
+| Text (similar meaning) | UTF-8 bytes | `cl100k_base` (GPT-4) | `o200k_base` (GPT-4o and later) |
+|---|---|---|---|
+| English: "The tokenizer splits text into pieces." | 38 | 7 | 7 |
+| German: "Tokenisierung ist überraschend schwierig." | 42 | 13 | 7 |
+| Japanese: "トークン化は驚くほど難しい。" | 42 | 17 | 12 |
+| Hindi: "नमस्ते, आप कैसे हैं?" | 50 | 20 | 9 |
+
+Petrov et al. (2023) found differences of up to 15x in token counts for the same content across languages. Because pricing, rate limits, latency and context capacity are all per token, users of under-represented languages pay more, wait longer and fit less into the same context window. Larger, more multilingual vocabularies (like the move from `cl100k_base` to `o200k_base` above) reduce the gap but don't remove it. When you budget a multilingual product, **measure token counts per language** on real text.
+
+---
+
+## Numbers, Spelling and Other Tokenization Failures
+
+Many famous LLM failures trace back to the tokenizer rather than to reasoning:
+
+- **Numbers.** OpenAI's tokenizers split digit runs into groups of up to three from the left: `12345678` → `123 | 456 | 78`. Place values don't line up across numbers, which hurts arithmetic; Singh and Strouse (2024) showed that forcing right-to-left grouping (for example by inserting commas) measurably improves arithmetic in frontier models. Some tokenizers (Llama 2, for one) split every digit instead.
+- **Comparisons.** "9.11 vs 9.9" tokenizes as `9 | . | 11` and `9 | . | 9`; the model compares token sequences, and "11" looks larger than "9".
+- **Spelling and counting letters.** ` strawberry` is a single token in both OpenAI vocabularies, so the model never sees its letters individually; counting the r's requires recalled knowledge about the token, not reading.
+- **Leading spaces are part of tokens.** `"hello"` and `" hello"` are different tokens. A prompt that ends with a trailing space can push the model toward unusual continuations, because in training text the space almost always belongs to the *next* token.
+- **Glitch tokens.** Entries that were added to the vocabulary but rarely or never seen in training (the "SolidGoldMagikarp" tokens of GPT-2/3-era vocabularies) have nearly untrained embeddings and can trigger bizarre outputs. Land and Bartolo (2024) give methods to detect such under-trained tokens in open models.
+
+Research on tokenizer-free models - such as the Byte Latent Transformer (2024), which groups raw bytes into dynamic patches - aims to remove these failure modes, but production LLMs in 2026 still use subword tokenizers.
+
+---
+
+## Special Tokens and Chat Templates
+
+**Special tokens** mark structure: beginning and end of text, the start and end of each chat turn, roles, tool calls and tool results. A **chat template** (stored with the tokenizer, usually as a Jinja template) turns a list of messages into the exact token sequence the model was trained on - see [HuggingFace Ecosystem](../../08-Post-Training/Notes/05-HuggingFace-Ecosystem.mdx) for `apply_chat_template` and padding details.
+
+Two rules that prevent real bugs:
+
+- **Use the model's own template.** A wrong or missing template is a common reason a fine-tuned model "doesn't follow instructions" despite a good training loss ([Prompt Fundamentals](../../05-Prompt-Engineering/Notes/01-Prompt-Fundamentals.mdx)).
+- **Never let user text become special tokens.** If untrusted input containing the string `<|im_start|>system` is encoded with special-token parsing turned on, a user can forge a system turn. `tiktoken` refuses by default - encoding `"<|endoftext|>"` raises `ValueError: Encountered text corresponding to disallowed special token` - and your own code should keep it that way: encode user content as plain text, and add special tokens only from the template.
+
+---
+
+## Check Yourself
+
+```quiz
+- q: "Why does byte-level BPE never need an 'unknown' token?"
+  options:
+    - "Its vocabulary contains every word in every language"
+    - "It starts from the 256 possible bytes, so any UTF-8 text can be represented, at worst one byte per token"
+    - "It maps unknown words to the closest known word"
+    - "It drops characters it cannot encode"
+  answer: 2
+  explain: "Every string is a sequence of bytes, and every byte is in the base vocabulary. Merges only make common sequences shorter."
+- q: "Moving from a 32K to a 256K vocabulary, what typically happens?"
+  options:
+    - "Sequences get longer and the embedding matrix smaller"
+    - "Sequences get shorter and the embedding and output matrices larger"
+    - "Nothing changes except speed"
+    - "The model can no longer handle code"
+  answer: 2
+  explain: "More, longer vocabulary entries mean fewer tokens per text, at the cost of V x d parameters in each of the embedding and output layers."
+- q: "In the table above, the Hindi sentence takes 20 tokens with cl100k_base and 9 with o200k_base. What practical effects does that have for a Hindi-language product?"
+  answer: "With the larger vocabulary, the same text costs less than half as much per request, generates and prefills faster, and more conversation fits in the context window. Token-based rate limits also stretch further. Budget per language with measured token counts."
+- q: "A model fails to say whether 9.11 or 9.9 is larger. What is a tokenization-based explanation?"
+  answer: "Both numbers are tokenized as '9', '.', and then '11' or '9'. The model compares token sequences it has learned patterns for, and '11' looks larger than '9' (as in version numbers or dates), rather than comparing decimal values."
+- q: "Why must user-provided text be encoded without special-token parsing?"
+  answer: "Otherwise a user can type the string form of a special token (for example a role or end-of-turn marker) and have it encoded as the real control token, forging system or assistant turns - a prompt-injection vector. Special tokens should come only from the chat template."
+```
+
+## Exercises
+
+```exercise
+- title: Measure the token tax for your product
+  task: |
+    Take 20 real support messages per language for a product used in English, Spanish and Japanese. Using the tokenizer of the model you deploy, compute mean tokens per message and tokens per 1,000 characters for each language. If English costs $X per 1,000 messages, what do the others cost?
+  solution: |
+    Encode each message with the deployment model's tokenizer (or its token-counting API), average per language, and divide by the English mean to get a cost multiplier: `cost_lang = X x (mean_tokens_lang / mean_tokens_en)` for input tokens (do the same for typical reply lengths for output tokens). Expect Spanish modestly above English and Japanese noticeably higher with older vocabularies; report the multipliers and use them in the capacity and cost model, not a single English-based average.
+- title: Train and inspect a tiny BPE
+  task: |
+    Run the `train_bpe` function above on a paragraph of your own text for 50 merges. Which merges come first? Then encode a word that doesn't appear in the paragraph and explain how it is represented.
+  solution: |
+    The first merges are the most frequent byte pairs - usually common letter pairs, a space followed by a frequent first letter (`' t'`), and frequent short words. An unseen word is still encodable: it falls back to whatever learned merges apply to its pieces, and to single bytes for the rest, so it takes more tokens than a frequent word of the same length.
+```
+
+## Study Notes
+
+**Must-know:**
+- Tokenizer = normalize + pre-tokenize + subword model + special tokens; fixed at pretraining
+- Byte-level BPE: start from 256 bytes, merge most frequent pairs; no unknown tokens; replay merges to encode
+- WordPiece merges by likelihood gain; Unigram prunes a large vocabulary top-down; SentencePiece is a library treating spaces as symbols
+- Vocabulary size: fewer tokens per text vs V x d embedding and output parameters; Llama 3 8B ≈ 1.05B parameters in the two 128K x 4096 matrices
+- Non-English text can cost several times more tokens (up to 15x in Petrov et al.); measure per language
+- Tokenization explains arithmetic, number comparison, letter counting, trailing-space and glitch-token failures
+- Use the model's chat template; never parse special tokens from untrusted text
+
+## References
+
+- Sennrich, Haddow and Birch, [Neural Machine Translation of Rare Words with Subword Units](https://arxiv.org/abs/1508.07909) (2016) - BPE for NLP
+- Wu et al., [Google's Neural Machine Translation System](https://arxiv.org/abs/1609.08144) (2016) - WordPiece
+- Kudo, [Subword Regularization](https://arxiv.org/abs/1804.10959) (2018) - Unigram LM; Kudo and Richardson, [SentencePiece](https://arxiv.org/abs/1808.06226) (2018)
+- Llama Team, [The Llama 3 Herd of Models](https://arxiv.org/abs/2407.21783) (2024) - 128K tiktoken-based vocabulary
+- Petrov et al., [Language Model Tokenizers Introduce Unfairness Between Languages](https://arxiv.org/abs/2305.15425) (2023)
+- Singh and Strouse, [Tokenization Counts: the Impact of Tokenization on Arithmetic in Frontier LLMs](https://arxiv.org/abs/2402.14903) (2024)
+- Land and Bartolo, [Fishing for Magikarp: Automatically Detecting Under-trained Tokens in Large Language Models](https://arxiv.org/abs/2405.05417) (2024)
+- Tao et al., [Scaling Laws with Vocabulary](https://arxiv.org/abs/2407.13623) (2024); Pagnoni et al., [Byte Latent Transformer](https://arxiv.org/abs/2412.09871) (2024)
+- OpenAI, [tiktoken](https://github.com/openai/tiktoken) (2026)
+
+*Last reviewed: 2026-10*

@@ -5,6 +5,8 @@
 //   - numeric filename prefixes have no gaps within a directory
 //   - every .mdx file under src/content is reachable from nav.yml (lab README.mdx files excepted)
 //   - ```quiz / ```objectives / ```exercise fences contain valid YAML
+//   - objectives prerequisites link only to pages at or before the page in nav order
+//     (a prerequisite marked "optional" or "later" may point ahead)
 import fs from "node:fs";
 import path from "node:path";
 import yaml from "js-yaml";
@@ -45,6 +47,7 @@ function collect(entries) {
 collect(yaml.load(fs.readFileSync(path.join(CONTENT, "nav.yml"), "utf-8")).nav);
 
 const mdxFiles = walk(CONTENT, [".mdx"]);
+const navOrder = new Map([...navPaths].map((p, i) => [p, i]));
 
 // Heading ids per page, generated the way rehype-slug does (github-slugger, fences skipped)
 const anchorCache = new Map();
@@ -109,6 +112,15 @@ for (const file of mdxFiles) {
     // Same rules remarkCourseFences.ts enforces at render time
     const problem = fenceProblem(lang, data);
     if (problem) errors.push(`invalid ${lang} block in ${rel}: ${problem}`);
+    else if (lang === "objectives" && navOrder.has(rel)) {
+      for (const prereq of data.prerequisites ?? []) {
+        if (/\b(optional|later)\b/i.test(String(prereq))) continue;
+        for (const m of String(prereq).matchAll(/\]\(([^)\s#]+\.mdx)/g)) {
+          const target = path.normalize(path.join(path.dirname(rel), m[1])).replace(/\\/g, "/");
+          if (navOrder.get(target) > navOrder.get(rel)) errors.push(`prerequisite comes later in the course: ${rel} -> ${m[1]}`);
+        }
+      }
+    }
   }
 }
 

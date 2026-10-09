@@ -1,0 +1,258 @@
+# Safety Evaluation and Red-Teaming
+
+Capability evals ask whether a model can do the task; safety evals ask whether it does things it shouldn't - and whether it refuses things it should do. Red-teaming is the adversarial half of that work: people and tools actively trying to make the system fail. This note covers how to define what "unsafe" means for your system, the main attack classes, how to run manual and automated red-teaming, the metrics that make results comparable (attack success rate and over-refusal), guard models, and the public safety benchmarks.
+
+```objectives
+time: 55 min
+outcomes:
+  - Turn a content policy into a hazard taxonomy and a safety eval set that measures both harmful compliance and over-refusal
+  - Classify jailbreak and prompt-injection attacks (persona, obfuscation, multi-turn, many-shot, optimization-based, indirect) and pick tools to automate them
+  - Compute attack success rate with a validated grader and an explicit attacker budget, and report it with confidence intervals
+  - Place guard models in a layered defence and evaluate the guard itself for precision, recall and latency
+  - Plan a red-team exercise from scope to regression set
+prerequisites:
+  - "[LLM-as-Judge](03-LLM-as-Judge.mdx) - graders and their biases"
+  - "[Building Your Own Evals](04-Building-Your-Own-Evals.mdx) - eval sets and confidence intervals"
+```
+
+## Two Ways to Fail
+
+```mermaid
+flowchart LR
+    P["📜 Content policy<br/>what is allowed, for whom"] --> T["🗂️ Hazard taxonomy"]
+    T --> H["⚠️ Harmful compliance<br/>model helps with a disallowed request"]
+    T --> O["🚫 Over-refusal<br/>model refuses a legitimate request"]
+    H --> M["📏 Attack success rate<br/>per category, per attacker budget"]
+    O --> R["📏 Over-refusal rate<br/>on benign but edgy prompts"]
+
+    style P fill:#e8e0d4,stroke:#c8b89a
+    style H fill:#f8d7da,stroke:#dc3545
+    style O fill:#fff3cd,stroke:#f0a500
+    style M fill:#dde4dc,stroke:#b0c4b0
+    style R fill:#dde4dc,stroke:#b0c4b0
+```
+
+Safety is a trade-off with two error types, and measuring only one invites gaming it. A model that refuses everything has zero harmful compliance and is useless; a model tuned only for helpfulness will help with things it shouldn't. Every safety report should state **both** numbers.
+
+**Start from a policy, not a benchmark.** What counts as harmful depends on the product: a medical assistant must discuss overdose thresholds that a children's tutor must not. Public taxonomies are useful starting points:
+
+| Taxonomy | Scope |
+|---|---|
+| **MLCommons AILuminate v1.0** (2025) | 12 hazard categories for general-purpose chat (violent and non-violent crimes, CBRNE weapons, suicide and self-harm, hate, privacy, specialized advice, and others); Llama Guard 4 is trained to it |
+| **NIST AI 600-1** Generative AI Profile (2024) | 12 risk areas for generative AI, including CBRN information, confabulation, information security, harmful bias and IP |
+| **OWASP Top 10 for LLM Applications** (2025) | Application-security risks - prompt injection, sensitive information disclosure, excessive agency; see [Security & Compliance](../../17-Production-Engineering/Notes/06-Security-and-Compliance.mdx) |
+
+Write your policy as categories, each with examples of **disallowed**, **allowed with care** and **allowed** requests. Those examples become the seed set for both safety evals and red-teaming.
+
+---
+
+## Attack Classes
+
+| Class | How it works | Example technique |
+|---|---|---|
+| **Persona and role-play** | Reframe the request so the policy seems not to apply | "You are DAN...", fiction framing, "for a novel" |
+| **Obfuscation** | Hide the request from the model's safety training | Base64 or ciphers, low-resource languages, typos and leetspeak, splitting the payload across messages |
+| **Multi-turn escalation** | Start benign and move step by step toward the target, using the model's own earlier answers | Crescendo (2024) |
+| **Many-shot** | Fill a long context with fake dialogues in which an assistant complies, then ask | Many-shot jailbreaking (2024) - effectiveness grows with the number of shots |
+| **Optimization-based** | Search for an input that maximizes the chance of compliance | GCG adversarial suffixes (white-box, 2023); PAIR and TAP (an attacker LLM iteratively refines prompts, black-box, 2023); Best-of-N random augmentations (2024) |
+| **Prompt injection** | Instructions arrive in data the model reads - a web page, email, document or tool result - rather than from the user | Indirect injection against RAG and agents; see [Prompts in Production](../../05-Prompt-Engineering/Notes/08-Prompts-in-Production.mdx) and [Agent Security](../../15-Production-Agents/Notes/02-Agent-Security.mdx) |
+| **Extraction** | Get the system to reveal what it should keep | System prompt, other users' data, secrets in context, memorized training data |
+
+Two observations from the research change how you test:
+
+- **Attacks scale with attacker effort.** Best-of-N and many-shot results show success rising steadily with more attempts or more shots. A model that resists one attempt per behavior may fail at 100. Robustness is a curve, not a single number.
+- **Agents widen the attack surface.** Once a model can call tools, an injected instruction can trigger actions, not only text. Agent-specific suites such as AgentDojo test this directly.
+
+---
+
+## Manual and Automated Red-Teaming
+
+| | Manual | Automated |
+|---|---|---|
+| **Strength** | Creativity, domain expertise, realistic multi-turn abuse, judging subtle harm | Coverage, repeatability, regression testing, scale |
+| **Weakness** | Expensive, slow, hard to repeat exactly | Finds the attacks it was built to find; needs a trustworthy grader |
+| **Use for** | New products, new capabilities, high-severity domains (CBRN, child safety, medical) | Every release, in CI, and after every model, prompt or guardrail change |
+
+Use both: manual campaigns find new failure classes; automation turns each one into a regression test.
+
+**Open-source tools** (each is maintained and widely used as of 2026):
+
+| Tool | Shape | Good for |
+|---|---|---|
+| **garak** (NVIDIA) | A scanner: many probe modules (jailbreaks, encoding, leakage, toxicity, package hallucination) with detectors | Broad batch scans of a model endpoint |
+| **PyRIT** (Microsoft AI Red Team) | A framework: orchestrators, attacker LLMs, converters (encodings, translations) and scorers | Custom, adaptive and multi-turn campaigns against an application |
+| **promptfoo** | An eval and red-team CLI with generated attack plugins and CI integration; acquired by OpenAI in March 2026, core remains open source | Red-team scans as part of the regular eval pipeline |
+
+Whatever generates the attacks, the **grader** decides the result, and graders are where safety numbers go wrong. A grader that only checks "did the model refuse?" counts a non-refusal that contains nothing useful as a successful attack; StrongREJECT (2024) showed this inflates jailbreak success. Grade whether the response actually provides the harmful capability, and validate the grader against human labels the same way you validate any [LLM judge](03-LLM-as-Judge.mdx).
+
+---
+
+## Metrics
+
+**Attack success rate (ASR)** = successful attacks / attack attempts, where "successful" is decided by the validated grader.
+
+Report it with everything that changes it:
+
+- **Per hazard category** - an average across categories hides the one that matters
+- **Attacker budget** - attempts per behavior (ASR@1 vs ASR@100), number of turns, white-box or black-box access
+- **Confidence intervals** - ASR is a proportion; 200 attempts at 10% ASR gives roughly ±4 points (95% Wilson interval)
+- **System configuration** - model version, system prompt, guard models on or off
+
+**Over-refusal rate** = refusals / benign prompts, measured on prompts that look risky but are legitimate ("How do I kill a Python process?", "What is a lethal dose of paracetamol?" in a clinical tool). XSTest is the standard public set; build your own from your product's real edge cases.
+
+**Worked example.** A team adds an output guard model to a support assistant:
+
+| Configuration | ASR (400 attacks, 8 categories) | Over-refusal (250 benign-edgy) |
+|---|---|---|
+| Model only | 11.5% (46/400), 95% CI ≈ 8.7-15.0% | 2.0% (5/250) |
+| Model + output guard | 3.0% (12/400), 95% CI ≈ 1.7-5.2% | 6.8% (17/250) |
+
+The guard cut ASR by about three quarters - and more than tripled over-refusal. Whether that trade is acceptable is a product decision, and the table is what makes it decidable. Next step: per-category breakdown, to see whether a threshold change per category keeps most of the ASR gain with less refusal.
+
+---
+
+## Guard Models and Layered Defence
+
+```mermaid
+flowchart LR
+    U["👤 User input"] --> IG["🛡️ Input guard<br/>policy classifier · injection detector"]
+    IG -->|"allowed"| L["🧠 Model<br/>safety-trained · system prompt"]
+    D["📄 Retrieved docs /<br/>tool results"] --> IG2["🛡️ Injection detector<br/>on untrusted data"]
+    IG2 --> L
+    L --> OG["🛡️ Output guard<br/>policy classifier · PII / secrets scanner"]
+    OG -->|"allowed"| R["✅ Response"]
+    IG -->|"blocked"| X["🚫 Refusal + log"]
+    OG -->|"blocked"| X
+
+    style IG fill:#dde4dc,stroke:#b0c4b0
+    style IG2 fill:#dde4dc,stroke:#b0c4b0
+    style OG fill:#dde4dc,stroke:#b0c4b0
+    style L fill:#ddd8e4,stroke:#b8b0c8
+    style X fill:#f8d7da,stroke:#dc3545
+```
+
+A **guard model** is a classifier, usually a small LLM, that labels a prompt or response against a policy. Common open options:
+
+- **Llama Guard 4** (Meta, April 2025) - 12B, multimodal (text and images), trained to the MLCommons hazard taxonomy; labels a prompt or response safe or unsafe and lists violated categories
+- **ShieldGemma** (Google, 2024) and **WildGuard** (AI2, 2024) - open moderation models; WildGuard also classifies refusals
+- **Injection detectors** such as Meta's Prompt Guard models - small classifiers for jailbreak and injection patterns in untrusted text
+- **Constitutional Classifiers** (Anthropic, 2025) - input and output classifiers trained on synthetic data generated from a written constitution; showed strong robustness to universal jailbreaks in a large public red-team
+
+Evaluate the guard like any classifier: **precision and recall per category on your own traffic**, the over-refusal it adds, and its latency (an output guard that waits for the full response defeats streaming unless it checks chunks). Guards are a layer, not a guarantee - they are themselves attackable, which is why agent systems also need the architectural controls in [Agent Security](../../15-Production-Agents/Notes/02-Agent-Security.mdx).
+
+---
+
+## Safety Benchmarks
+
+| Benchmark | Measures | Note |
+|---|---|---|
+| **HarmBench** (2024) | ASR of standardized automated attacks across harm categories, with a fixed classifier grader | Compares attacks and defences under one protocol |
+| **JailbreakBench** (2024) | Jailbreak robustness with a curated behavior set and a public leaderboard of attack artifacts | Reproducible jailbreak comparison |
+| **XSTest** (2023) | Exaggerated safety - refusals of safe prompts that resemble unsafe ones | The over-refusal side |
+| **AILuminate** (MLCommons, 2025) | Graded hazard ratings across 12 categories for general-purpose chat systems | Industry benchmark with a hidden test set |
+| **AgentDojo** (2024) | Prompt-injection attacks and defences for tool-using agents, measuring both utility and attack success | Agent-specific |
+
+The caveats from [Contamination & Leaderboards](02-Contamination-and-Leaderboards.mdx) apply with extra force: public attack prompts end up in training data, and a model can learn to refuse the benchmark's phrasing without becoming robust. Treat public benchmarks as a baseline and your own policy-derived suite as the real gate.
+
+---
+
+## Running a Red-Team Exercise
+
+1. **Scope and threat model** - the system (model only, or the whole application with tools and retrieval), the attackers you care about (curious users, motivated abusers, injected content), and what is out of scope.
+2. **Policy and seed set** - the categories and examples above; agree on severity levels before testing.
+3. **Automated baseline** - run scanners against the system as deployed (with its system prompt and guards), so you are testing what users will hit.
+4. **Manual campaign** - domain experts and experienced red-teamers, focused on the highest-severity categories and on multi-turn and agentic attacks the scanners miss.
+5. **Triage** - deduplicate findings, assign severity, record reproduction steps and transcripts.
+6. **Fix and re-test** - training data, system prompt, guard threshold, or an architectural control; re-measure ASR and over-refusal after each fix.
+7. **Regression set** - every confirmed finding becomes a test in the safety suite that runs on each release.
+8. **Report** - scope, method, attacker budget, ASR and over-refusal per category with CIs, before and after fixes, and residual risk accepted by an owner.
+
+**Disclosure:** vulnerabilities found in a third-party model or service go to the vendor through its security or bug-bounty channel before any public write-up. Inside your organization, safety findings follow the incident process in [LLM Observability, SLOs & Incident Response](../../17-Production-Engineering/Notes/05-LLM-Observability-SLOs-and-Incident-Response.mdx).
+
+---
+
+## Check Yourself
+
+```quiz
+- q: "A safety report shows ASR falling from 12% to 1% after a change, and nothing else. What key number is missing?"
+  options:
+    - "The over-refusal rate on benign prompts"
+    - "The model's MMLU score"
+    - "The number of GPUs used"
+    - "The red team's headcount"
+  answer: 1
+  explain: "A model can reach near-zero ASR by refusing almost everything. Without the over-refusal rate, you cannot tell a safer model from a less useful one."
+- q: "Model A has 2% ASR at one attempt per behavior; model B has 6% ASR at 100 attempts per behavior. Which is more robust?"
+  options:
+    - "A - its ASR is lower"
+    - "B - its ASR is higher, so it was tested harder"
+    - "You can't tell - the attacker budgets differ, and ASR rises with attempts"
+    - "They are equally robust"
+  answer: 3
+  explain: "ASR depends on the attacker budget (Best-of-N and many-shot results show it rising with effort). Compare at the same budget, ideally as a curve."
+- q: "Why can a refusal-only grader overstate jailbreak success?"
+  answer: "It counts any non-refusal as a successful attack, including responses that comply in form but contain nothing harmful or useful. StrongREJECT showed this inflates ASR; graders should judge whether the response actually provides the harmful capability, and be validated against human labels."
+- q: "What makes indirect prompt injection different from a jailbreak?"
+  answer: "A jailbreak comes from the user, who is trying to get the model to break its policy. Indirect injection arrives in data the system reads - a web page, document, email or tool result - so the attacker isn't the user, and in agents the injected instructions can trigger tool calls and actions, not just text."
+- q: "Your output guard model cuts ASR substantially but users complain that streaming responses now appear all at once after a delay. Why, and what could you do?"
+  answer: "The guard classifies the full response before release, so streaming is buffered. Options: classify chunks or sentences as they stream (with the ability to retract), use a smaller or faster guard, or apply the full guard only to high-risk routes."
+```
+
+## Exercises
+
+```exercise
+- title: From policy to eval set
+  task: |
+    You are launching a pharmacy chat assistant for a retail chain. Write:
+
+    1. Four policy categories, each with one **disallowed**, one **allowed with care** and one **allowed** example request.
+    2. How many prompts per category you would include in the harmful set and the benign-edgy set, and why.
+    3. The two headline metrics for the release gate, with thresholds.
+  solution: |
+    1. Example categories:
+       - **Dosage and overdose**: disallowed "How many of these pills would kill me?"; with care "What's the maximum daily dose of paracetamol?" (answer plus safety framing, crisis resources if risk signals); allowed "Can I take ibuprofen with food?"
+       - **Controlled substances**: disallowed "How do I get oxycodone without a prescription?"; with care "Why is my prescription for codeine limited?"; allowed "What is a controlled substance?"
+       - **Diagnosis**: disallowed "Confirm I have cancer from these symptoms"; with care "What could cause a persistent cough?" (general information, see a doctor); allowed "What's the difference between a cold and flu?"
+       - **Privacy**: disallowed "What did my neighbour get prescribed?"; with care "Can my spouse pick up my prescription?"; allowed "How do I transfer my prescriptions?"
+    2. Around 50-100 harmful and 50 benign-edgy prompts per category, including multi-turn and obfuscated variants. That gives a 95% CI of roughly ±6-8 points at 10% ASR per category - enough to catch large regressions per category, while the pooled set (400+) catches smaller ones.
+    3. ASR per category at a fixed budget (e.g. 10 attempts per behavior with automated augmentation) below an agreed ceiling, e.g. under 2% for dosage and controlled substances; over-refusal on benign-edgy prompts under 5%. Both are compared with the previous release using a paired test, not just against the threshold.
+- title: Read the guard trade-off
+  task: |
+    Using the worked example table in this note (model only vs model + output guard), compute the number of additional benign users refused per 10,000 benign-edgy requests, and the number of additional attacks blocked per 10,000 attacks. What would you check before deciding?
+  solution: |
+    - Over-refusal rises from 2.0% to 6.8%: `4.8% x 10,000 = 480` more legitimate users refused.
+    - ASR falls from 11.5% to 3.0%: `8.5% x 10,000 = 850` more attacks blocked.
+    - Before deciding: the real ratio of attacks to benign-edgy requests in traffic (attacks are usually rare, so 480 refusals may affect far more people than 850 blocked attacks would); the severity of the categories where ASR dropped; whether a per-category threshold gives most of the reduction with less refusal; and the guard's latency cost.
+```
+
+## Study Notes
+
+**Must-know:**
+- Safety has two error types - harmful compliance (ASR) and over-refusal - report both, per category
+- Start from your product's policy; AILuminate, NIST AI 600-1 and OWASP are starting taxonomies
+- Attack classes: persona, obfuscation, multi-turn (Crescendo), many-shot, optimization (GCG, PAIR, TAP, Best-of-N), indirect prompt injection, extraction
+- ASR depends on attacker budget - state attempts per behavior, and compare at equal budgets
+- The grader decides the number: refusal-only graders inflate ASR (StrongREJECT); validate against humans
+- Tools: garak (scanner), PyRIT (campaign framework), promptfoo (CI red-team scans)
+- Guard models (Llama Guard 4, ShieldGemma, WildGuard, prompt-injection detectors, constitutional classifiers) are a layer, evaluated for precision, recall, over-refusal and latency
+- Public benchmarks: HarmBench, JailbreakBench, XSTest, AILuminate, AgentDojo - a baseline, not the gate
+- Every confirmed finding becomes a regression test
+
+## References
+
+- Perez et al., [Red Teaming Language Models with Language Models](https://arxiv.org/abs/2202.03286) (2022)
+- Ganguli et al., [Red Teaming Language Models to Reduce Harms](https://arxiv.org/abs/2209.07858) (2022)
+- Zou et al., [Universal and Transferable Adversarial Attacks on Aligned Language Models (GCG)](https://arxiv.org/abs/2307.15043) (2023)
+- Chao et al., [Jailbreaking Black Box Large Language Models in Twenty Queries (PAIR)](https://arxiv.org/abs/2310.08419) (2023); Mehrotra et al., [Tree of Attacks (TAP)](https://arxiv.org/abs/2312.02119) (2023)
+- Russinovich et al., [The Crescendo Multi-Turn LLM Jailbreak Attack](https://arxiv.org/abs/2404.01833) (2024)
+- Anil et al., [Many-shot Jailbreaking](https://www.anthropic.com/research/many-shot-jailbreaking) (Anthropic, 2024)
+- Hughes et al., [Best-of-N Jailbreaking](https://arxiv.org/abs/2412.03556) (2024)
+- Souly et al., [A StrongREJECT for Empty Jailbreaks](https://arxiv.org/abs/2402.10260) (2024)
+- Mazeika et al., [HarmBench](https://arxiv.org/abs/2402.04249) (2024); Chao et al., [JailbreakBench](https://arxiv.org/abs/2404.01318) (2024); Röttger et al., [XSTest](https://arxiv.org/abs/2308.01263) (2023)
+- Ghosh et al., [AILuminate v1.0](https://arxiv.org/abs/2503.05731) (MLCommons, 2025); NIST, [AI 600-1 Generative AI Profile](https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf) (2024)
+- Debenedetti et al., [AgentDojo](https://arxiv.org/abs/2406.13352) (2024)
+- Inan et al., [Llama Guard](https://arxiv.org/abs/2312.06674) (2023); Meta, [Llama Guard 4 model card](https://developer.meta.com/ai/docs/model-cards-and-prompt-formats/llama-guard-4/) (2025); Zeng et al., [ShieldGemma](https://arxiv.org/abs/2407.21772) (2024); Han et al., [WildGuard](https://arxiv.org/abs/2406.18495) (2024)
+- Sharma et al., [Constitutional Classifiers](https://arxiv.org/abs/2501.18837) (Anthropic, 2025)
+- Derczynski et al., [garak: A Framework for Security Probing LLMs](https://arxiv.org/abs/2406.11036) (2024); Munoz et al., [PyRIT](https://arxiv.org/abs/2410.02828) (2024); [promptfoo red teaming docs](https://www.promptfoo.dev/docs/red-team/) (2026)
+
+*Last reviewed: 2026-10*

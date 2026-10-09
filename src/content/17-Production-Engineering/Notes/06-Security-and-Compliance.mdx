@@ -1,0 +1,199 @@
+# Security and Compliance
+
+<div class="audience-biz" markdown="1">
+
+Deploying a GenAI system that touches sensitive data isn't just an engineering problem - it's an audit problem waiting to happen. Every credential, log line, and stored prompt is a potential exposure. The controls in this note are what a regulated review (HIPAA, SOC 2, an internal security team) actually checks for.
+
+</div>
+
+<div class="audience-tech" markdown="1">
+
+Security and compliance for AI systems layers standard application-security controls (IAM, secrets management, scanning) with AI-specific exposure points that don't exist in a normal CRUD app: prompts and completions routinely contain sensitive data and get logged, traced, and stored in eval datasets without anyone treating that pipeline as a compliance boundary.
+
+</div>
+
+```objectives
+time: 45 min
+outcomes:
+  - Scope IAM and secrets per component so a single compromise has a limited blast radius
+  - Design a redaction step that keeps PHI/PII out of traces and eval datasets
+  - Map a GenAI system's risks to the OWASP Top 10 for LLM Applications with a first-line control for each
+  - Secure the model supply chain with safetensors, pinning and signing, and place a system on the EU AI Act timeline
+prerequisites:
+  - "[Model Lifecycle & Rollout](04-Model-Lifecycle-and-Rollout.mdx)"
+```
+
+---
+
+## IAM and Least Privilege
+
+<div class="audience-biz" markdown="1">
+
+Every piece of the system - the model service, the data pipeline, the eval job - should only be able to touch exactly what it needs, nothing more. If a component is compromised, least privilege limits the blast radius.
+
+</div>
+
+<div class="audience-tech" markdown="1">
+
+Scope service accounts/IAM roles per component: the inference service needs read access to model weights, not write access to the training data bucket; the eval pipeline needs read access to the eval dataset, not access to production credentials. Avoid one shared "AI service account" with broad permissions - it turns any single compromised component into full-system access.
+
+</div>
+
+How to apply this on the cloud - workload identity instead of keys, model access scoped per model, private endpoints and data perimeters - is in [Cloud Networking & IAM for AI](07-Cloud-Networking-and-IAM-for-AI.mdx).
+
+---
+
+## Secrets Management
+
+<div class="audience-biz" markdown="1">
+
+API keys and credentials should never appear in a prompt, a log file, or a config file checked into source control. This sounds obvious, but it's one of the most common real-world leaks in GenAI systems specifically, because prompts and logs get captured so liberally for debugging and tracing.
+
+</div>
+
+<div class="audience-tech" markdown="1">
+
+Use a secrets manager (Vault, AWS Secrets Manager, GCP Secret Manager) injected as environment variables or mounted volumes at runtime - never baked into a container image or committed to a repo. Specific to LLM systems: never let a secret end up inside a prompt template (a tool-calling agent that's told an API key so it can "use" it is a leak waiting to be logged), and scrub logging/tracing middleware so it can't accidentally capture secrets that flow through request headers.
+
+</div>
+
+---
+
+## PHI/PII in Traces and Eval Datasets
+
+<div class="audience-biz" markdown="1">
+
+Tracing and evaluation tools are built to capture everything - every prompt, every response - because that's useful for debugging. In a healthcare or otherwise regulated context, that "everything" often includes protected health information or personal data, which turns your debugging tool into a compliance liability if it isn't handled deliberately.
+
+</div>
+
+<div class="audience-tech" markdown="1">
+
+Redact or tokenize PHI/PII before it reaches a tracing backend (Langfuse/LangSmith - see [Agent Observability](../../15-Production-Agents/Notes/06-Agent-Observability.mdx)) or an eval dataset. This is exactly the exposure surfaced in this course's own [Prior Authorization](../../15-Production-Agents/SystemDesigns/02-Prior-Authorization.mdx) and [Smart Diagnostic Assistant](../../15-Production-Agents/SystemDesigns/03-Smart-Diagnostic-Assistant-1.mdx) system designs - any component that logs model input/output by default needs an explicit redaction step in front of it before it touches PHI, not an assumption that "it's just for debugging so it's fine."
+
+</div>
+
+---
+
+## Pipeline Scanning and HIPAA Safeguards
+
+<div class="audience-biz" markdown="1">
+
+Two more checks round this out: automated scanning that catches known vulnerabilities before they ship, and - for healthcare specifically - naming the exact regulatory safeguards you've implemented, not just gesturing at "HIPAA compliance" in the abstract.
+
+</div>
+
+<div class="audience-tech" markdown="1">
+
+**Pipeline scanning:** SAST (static analysis on the codebase) and dependency scanning (known-CVE checks on third-party packages, including ML-specific ones like `transformers`/`torch`) run in CI, blocking merge on high-severity findings.
+
+**HIPAA technical safeguards, named precisely** (45 CFR §164.312):
+- **Access control** - unique user identification, automatic logoff, encryption/decryption of PHI at rest
+- **Audit controls** - hardware/software mechanisms that record and examine activity in systems containing PHI
+- **Integrity controls** - mechanisms to confirm PHI hasn't been improperly altered or destroyed
+- **Person or entity authentication** - verify that whoever requests PHI is who they claim to be (SSO + MFA, service identities for workloads)
+- **Transmission security** - encryption in transit (TLS) for PHI moving across a network
+
+Audit logging in particular needs to answer, for any PHI access: who accessed it, when, and why - sufficient to satisfy a regulator's after-the-fact review, not just an engineer's after-the-fact debugging session.
+
+</div>
+
+---
+
+## LLM-Specific Threats: OWASP Top 10 for LLM Applications (2025)
+
+Classic application security still applies, but LLM systems add their own failure modes. OWASP's 2025 list is the common vocabulary:
+
+| # | Risk | One-line example | First-line controls |
+|---|------|------------------|---------------------|
+| LLM01 | Prompt injection | A retrieved web page tells the model to email the user's data elsewhere | Treat all model inputs as untrusted; separate instructions from data; restrict what tools can do |
+| LLM02 | Sensitive information disclosure | The model repeats another customer's data from context or training | Minimize data in context; output filtering; tenant isolation |
+| LLM03 | Supply chain | A pickled checkpoint from a public hub runs code on load | safetensors only, pinned and signed artifacts (below) |
+| LLM04 | Data and model poisoning | Fine-tuning data seeded with a backdoor trigger | Data provenance, review, and evaluation on held-out sets |
+| LLM05 | Improper output handling | Model output inserted into SQL or HTML unescaped | Treat output like user input - validate, escape, parameterize |
+| LLM06 | Excessive agency | An agent with delete permissions acts on an injected instruction | Least-privilege tools, human approval for irreversible actions |
+| LLM07 | System prompt leakage | Secrets or internal rules placed in the system prompt are extracted | Never put secrets in prompts; enforce rules outside the model |
+| LLM08 | Vector and embedding weaknesses | RAG retrieves documents the user isn't allowed to see | Permission-aware retrieval (filter by ACL at query time) |
+| LLM09 | Misinformation | Confident but wrong answers in a medical or legal flow | Grounding, citations, calibrated refusal, human review |
+| LLM10 | Unbounded consumption | A user triggers huge contexts or loops that run up GPU cost | Rate limits, token and step budgets, quotas per tenant |
+
+Agent-specific security (prompt injection through tools, sandboxing, the "lethal trifecta") is covered in [Production Agents](../../15-Production-Agents/INDEX.mdx).
+
+---
+
+## Model Supply Chain
+
+- **No pickles from strangers.** PyTorch `.pt`/`.bin` checkpoints are pickles and can execute code on load. Prefer `safetensors`; if you must load a pickle, use `torch.load(..., weights_only=True)` (the default since PyTorch 2.6).
+- **Pin and verify.** Pin model repositories to a commit hash, mirror approved artifacts into your own registry, and record checksums.
+- **Sign artifacts.** The OpenSSF model-signing specification (built on Sigstore) lets you sign model files and verify them before deployment, like container image signing.
+- **Track provenance and licences.** Record where every base model, dataset and adapter came from and under which licence - several open-weight licences restrict usage or require attribution.
+
+---
+
+## Regulation: The EU AI Act Timeline
+
+The EU AI Act (Regulation (EU) 2024/1689) applies in stages. Dates as amended by the "Digital Omnibus on AI", which entered into force on 27 July 2026:
+
+| Date | What applies |
+|------|--------------|
+| 2 February 2025 | Prohibited practices; AI-literacy obligations |
+| 2 August 2025 | Obligations for general-purpose AI (GPAI) model providers; governance and penalties |
+| 2 August 2026 | Article 50 transparency duties - disclose AI interaction, label AI-generated or manipulated content |
+| 2 December 2027 | High-risk obligations for stand-alone Annex III systems (e.g. employment, credit, education uses) - deferred from August 2026 |
+| 2 August 2028 | High-risk obligations for AI embedded in products under Annex I sector law - deferred from August 2027 |
+
+**What engineers should take from it:** know whether your system could be high-risk under Annex III, keep documentation, logging, human-oversight and data-governance evidence from day one (it is far cheaper than retrofitting), and label AI-generated content where Article 50 requires it. Legal classification is a question for counsel - this table is orientation, not advice.
+
+---
+
+## Study Notes
+
+**Must-know for interviews:**
+- Least privilege means scoping IAM per component, not one shared broad-access service account
+- Secrets never belong in a prompt, log, or committed config - and prompt templates are an easy-to-miss leak vector
+- Tracing/eval tooling captures everything by default - PHI/PII redaction has to be an explicit step, not an afterthought
+- HIPAA's technical safeguards are five named things: access control, audit controls, integrity, person or entity authentication, transmission security - naming them precisely reads as far more credible than "we're HIPAA compliant"
+- SAST + dependency scanning belong in CI, blocking merge on high-severity findings
+
+## Check Yourself
+
+```quiz
+- q: "Why is loading a `.bin`/`.pt` checkpoint from an untrusted hub repository risky?"
+  options: ["The weights might be quantized", "Pickle files can execute arbitrary code when loaded", "They are slower to load than safetensors", "They lack a model card"]
+  answer: 2
+  explain: "Prefer safetensors; for pickles use `torch.load(..., weights_only=True)`, the default since PyTorch 2.6."
+- q: "A RAG assistant returns passages from HR documents the user is not permitted to read. Which OWASP LLM risk is this, and what is the first-line control?"
+  options: ["LLM01 prompt injection - input filtering", "LLM08 vector and embedding weaknesses - permission-aware retrieval (ACL filtering at query time)", "LLM10 unbounded consumption - rate limits", "LLM04 data poisoning - data provenance"]
+  answer: 2
+- q: "Why is a shared \"AI service account\" with broad permissions risky?"
+  answer: "It turns a compromise of any single component into full-system access, defeating the point of scoping permissions at all."
+- q: "Why do tracing tools pose a specific compliance risk for LLM systems that they don't for typical apps?"
+  answer: "They're designed to capture full request/response content by default for debugging, and in an LLM system that content routinely includes the sensitive data users typed into the prompt."
+- q: "What are HIPAA's five technical safeguards?"
+  answer: "Access control, audit controls, integrity, person or entity authentication, and transmission security (45 CFR §164.312)."
+- q: "What should trigger a CI pipeline to block a merge, from a security standpoint?"
+  answer: "A high-severity finding from SAST (code-level vulnerability) or dependency scanning (known-CVE in a third-party package)."
+```
+
+## Exercises
+
+```exercise
+- title: "Threat-model a clinical summarizer"
+  task: |
+    A service summarizes patient notes with a hosted LLM, logs traces to an observability tool and saves low-rated outputs into an eval dataset. List the five most important controls, each tied to a HIPAA safeguard or an OWASP LLM risk.
+  solution: |
+    1. **Redact PHI before traces and eval datasets** (or use a backend covered by a BAA with access controls) - HIPAA access control; OWASP LLM02.
+    2. **Per-component service identities** - summarizer reads notes, eval job reads only the redacted dataset - HIPAA access control and person or entity authentication.
+    3. **Audit log of every PHI access** (who, when, why) - HIPAA audit controls.
+    4. **TLS everywhere and a BAA with the model provider** - HIPAA transmission security.
+    5. **Treat note content as untrusted input and validate the output** - notes may contain injected text; summaries rendered in the EHR are escaped - OWASP LLM01 and LLM05.
+```
+
+## References
+
+- OWASP, [Top 10 for LLM Applications 2025](https://genai.owasp.org/llm-top-10/)
+- OpenSSF, [Model Signing](https://github.com/sigstore/model-transparency)
+- EU, [Regulation (EU) 2024/1689 (AI Act)](https://eur-lex.europa.eu/eli/reg/2024/1689/oj); Gibson Dunn, [EU AI Act Omnibus Agreement - Postponed High-Risk Deadlines](https://www.gibsondunn.com/eu-ai-act-omnibus-agreement-postponed-high-risk-deadlines-and-other-key-changes/) (2026)
+- US HHS, [HIPAA Security Rule, 45 CFR §164.312](https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C/part-164/subpart-C/section-164.312)
+
+*Last reviewed: 2026-09*

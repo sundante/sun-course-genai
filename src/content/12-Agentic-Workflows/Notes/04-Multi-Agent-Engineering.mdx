@@ -1,0 +1,174 @@
+# Multi-Agent Engineering
+
+Choosing a topology is the easy part. Making several agents work reliably together is an engineering problem of **context** (what each agent sees and returns), **state** (who owns what, and how it survives failures), **communication** (function returns, messages, shared state, events, A2A), **budgets**, and **observability and evaluation** across agents. This chapter covers each, with the practices that production systems converged on.
+
+```objectives
+time: 55 min
+outcomes:
+  - Design delegation messages, return formats and artifact stores that avoid the "game of telephone"
+  - Choose a communication mechanism and a state-ownership model for a multi-agent system
+  - Set effort budgets per agent and per level, and scale effort to query complexity
+  - Trace, evaluate and harden a multi-agent system, including resuming after failures and deploying changes to long-running agents
+prerequisites:
+  - "[Multi-Agent Architectures](03-Multi-Agent-Architectures.mdx)"
+  - "[Agent Memory](../../10-Agent-Building-Blocks/Notes/02-Agent-Memory.mdx) - task state and checkpoints"
+```
+
+## Context Across Agents
+
+Each agent sees only its own context. Everything that crosses an agent boundary is either **written down** or lost, so design the crossings deliberately:
+
+| Crossing | Design | Anti-pattern |
+|---|---|---|
+| **Delegation** (orchestrator → sub-agent) | Objective, why it matters, output format, tools and sources to use or avoid, boundaries, effort budget | "Look into X" |
+| **Return** (sub-agent → orchestrator) | Condensed findings in the requested format, with sources and confidence; large outputs written to an artifact store and returned **by reference** | Pasting 30K tokens of raw pages back |
+| **Handoff** (agent → agent, control transfers) | A structured summary: goal, verified facts with ids, actions taken, open questions | Forwarding the whole transcript - or nothing |
+| **Shared background** | A common task brief or ledger every agent reads | Each agent re-deriving the goal from fragments |
+
+Anthropic found that routing everything through the lead agent loses information at each hop; letting sub-agents write outputs to an **artifact store** (files, a database) and pass lightweight references both preserves detail and cuts tokens. Cognition's counterpoint applies to anything the agents must *decide together*: if two agents make choices that must be consistent (the style of two halves of an app), give them the full shared context or have one agent make both choices.
+
+```python
+# A delegation schema the orchestrator must fill - vague delegation becomes a validation error
+from pydantic import BaseModel, Field
+
+class Delegation(BaseModel):
+    objective: str = Field(description="What to find or do, specifically")
+    why: str = Field(description="How the result will be used")
+    output_format: str = Field(description="Exact structure of the return value")
+    sources: list[str] = Field(default_factory=list, description="Sources or tools to prefer")
+    out_of_scope: list[str] = Field(default_factory=list)
+    max_tool_calls: int = Field(default=15, le=40)
+```
+
+---
+
+## Communication Mechanisms
+
+| Mechanism | How | Use when | Watch for |
+|---|---|---|---|
+| **Function return** (sub-agent as tool) | The orchestrator calls a sub-agent and awaits its result | Most orchestrator-subagent systems | Orchestrator blocked while waiting |
+| **Structured messages** | Typed messages between agents (schemas, not prose) | Handoffs, pipelines of agents | Schema drift between agent versions |
+| **Shared state** | Agents read and write a common state object (graph state, blackboard) | Incremental assembly; frameworks like LangGraph | Conflicting writes - define owners and merge rules (reducers) |
+| **Events** (pub/sub, queues) | Agents publish results; others subscribe | Asynchronous, long-running, many agents | Ordering, idempotency, harder debugging |
+| **A2A** | Tasks over a standard protocol | Agents built, deployed or owned separately ([A2A](../../11-MCP-and-A2A/Notes/07-A2A-Protocol.mdx)) | Trust boundary: remote outputs are untrusted |
+
+**Synchronous vs asynchronous.** In most systems the orchestrator waits for all sub-agents of a round before continuing - simple, but the slowest sub-agent sets the pace and the orchestrator can't steer them mid-flight. Asynchronous designs (sub-agents report as they finish; the orchestrator can launch or cancel work) are faster but add coordination and state consistency problems. Start synchronous.
+
+---
+
+## State: Ownership, Ledgers and Recovery
+
+**Give every piece of state one owner.** The orchestrator owns the plan and the overall result; each sub-agent owns its own working context and its output artifact. Shared structures need explicit merge rules (append-only lists, last-writer-wins per key, or an owner per section).
+
+**Keep a task ledger.** Magentic-One's orchestrator maintains a *task ledger* (facts, guesses, plan) and a *progress ledger* (what's done, who's doing what, whether progress is being made), updated each round and used to detect stalls and re-plan. A ledger in structured state survives context compaction and gives humans a readable view of progress.
+
+**Checkpoint and resume.** Multi-agent runs are long and expensive; a crash at minute 25 must not restart from zero. Persist the ledger and completed sub-agent results after each step, make sub-agent work idempotent (keyed by a task id), and resume from the last checkpoint. Durable-execution engines provide this generically ([Production Agents](../../15-Production-Agents/INDEX.mdx)).
+
+**Deploy without breaking running agents.** Long-running agents may be mid-task when you ship a new prompt or tool. Anthropic uses *rainbow deployments* - running old and new versions side by side and shifting new traffic gradually - so in-flight runs finish on the version they started with.
+
+---
+
+## Budgets and Effort Scaling
+
+Multi-agent systems fail expensively: a confused orchestrator can spawn sub-agents that spawn more. Bound everything:
+
+| Budget | Example |
+|---|---|
+| Sub-agents per level and depth | ≤ 5 per round, depth ≤ 2 |
+| Tool calls per sub-agent | 15 (from the delegation) |
+| Rounds of orchestration | ≤ 4 |
+| Tokens and cost per query | From the p95 of your eval set, with an alert above it |
+| Wall-clock time | Per product requirement |
+
+And **scale effort to the question**. Anthropic's orchestrator guidance: simple fact-finding needs one agent with 3-10 tool calls; direct comparisons 2-4 sub-agents with 10-15 calls each; complex research more than 10 sub-agents with clearly divided responsibilities. Put these rules in the orchestrator's prompt - models otherwise over-invest in simple queries.
+
+---
+
+## Observability and Evaluation
+
+**Trace across agents.** Give every run a trace id and every agent a span (OpenTelemetry GenAI conventions work well): inputs, delegation, tool calls, outputs, tokens, errors. When the final answer is wrong you need to see which agent introduced the error and what it was told.
+
+**Evaluate the outcome first, then the parts.**
+
+| Level | What to check | How |
+|---|---|---|
+| End result | Correctness, completeness, citation accuracy, source quality | State checks where possible; an LLM judge with a rubric validated against human labels. Anthropic's rubric: factual accuracy, citation accuracy, completeness, source quality, tool efficiency |
+| Orchestration | Were delegations specific? Duplicate work? Right effort for the query? | Rubric on traces; count sub-agents and tool calls per query type |
+| Sub-agents | Did each return what was asked, in format? | Schema validation; spot-checks |
+| Cost and latency | Tokens and time per query vs single-agent baseline | Always report both next to quality |
+
+Start with a small set (~20 real queries) early - large effects show up quickly - and grow it as the system matures. Keep human review in the loop: people catch failure types automated judges miss, such as systematically preferring low-quality sources.
+
+## Resilience Checklist
+
+- Timeouts and retries per sub-agent; a failed sub-agent returns a structured failure, not silence
+- The orchestrator can proceed with partial results and says what's missing
+- Output validation before any sub-agent result is used
+- Loop and spawn limits; repeated-delegation detection
+- Least-privilege tools per agent; treat other agents' outputs as untrusted input (an injected instruction in one sub-agent's web page must not become an order to another)
+- Fallback: if the multi-agent path fails or exceeds budget, degrade to a single-agent answer
+
+---
+
+## Check Yourself
+
+```quiz
+- q: "What problem does an artifact store (sub-agents write outputs and return references) solve?"
+  options:
+    - "Information loss and token overhead from passing large outputs through the lead agent"
+    - "Authentication between agents"
+    - "Model selection"
+    - "Prompt injection"
+  answer: 1
+- q: "Why keep a structured task ledger in the orchestrator's state?"
+  options:
+    - "It survives compaction, lets the orchestrator detect stalls and re-plan, and gives humans a readable view"
+    - "It replaces tracing"
+    - "It reduces the number of sub-agents"
+    - "Frameworks require it"
+  answer: 1
+- q: "What is a rainbow deployment for long-running agents?"
+  options:
+    - "Running old and new versions side by side and shifting traffic gradually so in-flight runs finish on their original version"
+    - "Deploying each agent in a different colour-coded environment"
+    - "Randomly routing each step to a different model"
+    - "Canary-testing prompts on 1% of tokens"
+  answer: 1
+- q: "Your orchestrator spawns 12 sub-agents for 'What is the capital of Australia?'. What do you change?"
+  answer: "Add effort-scaling rules to the orchestrator prompt (simple fact-finding: one agent, 3-10 tool calls), enforce a spawn budget in code, and add an eval slice of simple queries that checks sub-agent counts."
+```
+
+## Exercises
+
+```exercise
+- title: Design the crossings
+  task: |
+    For a due-diligence system (orchestrator + financial, legal, market and technical sub-agents), write the delegation schema, the return schema, what goes into the artifact store, and the orchestrator's ledger fields.
+  solution: |
+    Delegation: objective, why, output_format, sources, out_of_scope, max_tool_calls, deadline. Return: {summary (≤300 words), key_findings [{claim, evidence_ref, confidence}], risks [{description, severity, evidence_ref}], open_questions, artifact_refs}. Artifact store: downloaded filings, extracted tables, full notes per sub-agent, keyed by run id and sub-agent. Ledger: facts established (with refs), hypotheses, plan with owner and status per item, budget spent, stall counter, next actions.
+- title: Trace a failure
+  task: |
+    A multi-agent report cites a revenue figure that is wrong. List, in order, what you would look at in the traces to find where the error entered, and one fix for each possible cause.
+  solution: |
+    (1) The final synthesis: was the figure copied correctly from a sub-agent return? Fix: citation checker comparing claims to returns. (2) The financial sub-agent's return: did it state the figure with a source? Fix: required evidence_ref per claim. (3) Its tool calls: did it read the right filing and period? Fix: delegation specifying fiscal period and primary sources. (4) The source itself: was the page wrong or injected? Fix: prefer primary sources; cross-check figures across two sources.
+```
+
+## Study Notes
+
+- Everything crossing an agent boundary must be written down: precise delegations, condensed returns, handoff summaries, shared briefs
+- Artifact stores + references avoid the telephone game and cut tokens; shared decisions need shared context
+- Mechanisms: function return, structured messages, shared state (owners, reducers), events, A2A across boundaries; start synchronous
+- One owner per piece of state; task and progress ledgers; checkpoint and resume; rainbow deployments
+- Budgets on spawn, depth, calls, rounds, tokens, time; scale effort to query complexity
+- Trace every agent under one trace id; evaluate end result, then orchestration and sub-agents, with cost and latency beside quality
+- Treat other agents' outputs as untrusted; degrade to a single agent on failure
+
+## References
+
+- Anthropic, [How we built our multi-agent research system](https://www.anthropic.com/engineering/multi-agent-research-system) (Jun 2025)
+- Walden Yan (Cognition), [Don't Build Multi-Agents](https://cognition.com/blog/dont-build-multi-agents) (Jun 2025)
+- Fourney et al., [Magentic-One: A Generalist Multi-Agent System for Solving Complex Tasks](https://arxiv.org/abs/2411.04468) (2024)
+- Cemri et al., [Why Do Multi-Agent LLM Systems Fail?](https://arxiv.org/abs/2503.13657) (2025)
+- [OpenTelemetry semantic conventions for generative AI](https://opentelemetry.io/docs/specs/semconv/gen-ai/)
+
+*Last reviewed: 2026-09*

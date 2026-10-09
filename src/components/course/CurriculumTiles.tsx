@@ -3,31 +3,19 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import type { NavItem, NavModule } from "@/types/content";
+import type { NavModule } from "@/types/content";
 
 import type { ModuleStats } from "@/lib/content/stats";
 import { MODULE_META, type ModuleMeta } from "@/lib/content/moduleMeta";
+import { conceptPages } from "@/lib/content/navSections";
 
 function countLabel(n: number, singular: string, plural = `${singular}s`): string {
   return `${n} ${n === 1 ? singular : plural}`;
 }
 
-/** Recursively find the "Concepts" group anywhere in a module's item tree
- *  (handles Prog Langs' one-extra-level-deep nesting) and return its leaves. */
-function findConcepts(items: NavItem[]): NavItem[] | null {
-  for (const item of items) {
-    if (item.title === "Concepts" && item.children) return item.children;
-    if (item.children) {
-      const found = findConcepts(item.children);
-      if (found) return found;
-    }
-  }
-  return null;
-}
-
 function DetailBody({ mod, meta, stats }: { mod: NavModule; meta: ModuleMeta; stats?: ModuleStats }) {
   const overviewHref = mod.items[0]?.href ?? `/learn/${mod.slug}/index`;
-  const concepts = findConcepts(mod.items) ?? [];
+  const concepts = conceptPages(mod.items);
 
   return (
     <div>

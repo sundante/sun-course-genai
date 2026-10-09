@@ -1,0 +1,42 @@
+# Summary & Key Terms - Post-Training & Fine-Tuning
+
+## What We Learned
+
+- SFT teaches desired responses; PEFT updates a small fraction of parameters.
+- Preference optimization learns from comparisons; online RL learns from sampled outcomes and rewards.
+- Reference-policy constraints limit drift but do not guarantee safety or correctness.
+- Reasoning models spend compute on intermediate work; more thinking is not always better.
+- Use matching model/tokenizer revisions and chat templates throughout the training pipeline.
+- Configure LoRA or QLoRA to fit memory limits; decide whether to merge or serve adapters separately.
+- Mask prompt and padding tokens where the objective requires it, and read loss curves for over- and underfitting.
+- Compare base and tuned models on quality, latency, memory and cost on held-out data before adopting the tune - and watch for forgetting and reward hacking.
+
+## Key Acronyms, Concepts & Jargon
+
+| Term | Short meaning |
+|---|---|
+| **SFT** | Supervised Fine-Tuning: training on examples of desired responses. |
+| **PEFT** | Parameter-Efficient Fine-Tuning: adapting a model with few trainable parameters. |
+| **LoRA / QLoRA** | Low-Rank Adaptation / Quantized LoRA: train low-rank updates / do so on a quantized base. |
+| **Rank / alpha** | Adapter update size / its scaling parameter. |
+| **NF4** | NormalFloat 4: a 4-bit format used to quantize base weights in QLoRA. |
+| **Adapter merge** | Combines learned adapter updates with base weights for deployment. |
+| **RL / RLHF** | Reinforcement Learning / RL from Human Feedback: learn from rewards / human-derived preferences. |
+| **Reward model** | Predicts preference or quality to supply a training signal. |
+| **DPO** | Direct Preference Optimization: learns from preferred/rejected pairs without an explicit RL rollout loop. |
+| **PPO** | Proximal Policy Optimization: constrains policy updates during reward optimization. |
+| **GRPO** | Group Relative Policy Optimization: uses group-relative rewards without a separate value critic. |
+| **RLVR** | Reinforcement Learning with Verifiable Rewards: trains against checkable outcomes. |
+| **KL penalty** | Discourages a policy from drifting away from a reference distribution. |
+| **CoT / test-time compute** | Chain of Thought / inference work spent reasoning, searching or checking. |
+| **Distillation** | Trains a smaller or cheaper model using a stronger model's outputs. |
+| **Reward hacking / forgetting** | Exploiting the reward without solving the task / losing earlier capabilities. |
+| **HF Hub** | Hugging Face Hub: versioned storage and sharing for models and datasets. |
+| **Transformers / datasets** | Libraries for model/tokenizer loading / dataset processing. |
+| **TRL** | Transformer Reinforcement Learning: Hugging Face's SFT, DPO and GRPO trainers. |
+| **Chat template** | Formats conversation roles and separators into the model's expected token sequence. |
+| **Loss masking** | Excludes selected tokens, such as prompts or padding, from the training objective. |
+| **Held-out set** | Data reserved for validation or testing rather than fitting the model. |
+| **Overfitting / quality delta** | Learning training-specific patterns / measured change from the baseline. |
+
+[Back to module overview](INDEX.mdx)

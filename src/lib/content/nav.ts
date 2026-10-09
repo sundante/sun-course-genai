@@ -8,34 +8,35 @@ const CONTENT_DIR = path.join(process.cwd(), "src/content");
 type NavYaml = { nav: NavEntry[] };
 type NavEntry = string | Record<string, string | NavEntry[]>;
 
-// Module title (as written in nav.yml) → URL slug. Slugs are kept stable across
-// restructures so existing /learn/<slug>/... URLs keep working where possible.
+// Module title (as written in nav.yml) → URL slug. Changing a slug changes every URL in the
+// module: add old -> new paths to legacy-redirects.json when you do.
 const MODULE_SLUG_MAP: Record<string, string> = {
-  "LLM Foundations": "llm-models",
-  "Prog Langs": "prog-langs",
+  "Python & Systems": "python-and-systems",
   "Math for ML": "math-for-ml",
-  "Pretraining at Scale": "pretraining",
-  "Post-Training & Reasoning": "post-training",
-  "Fine-Tuning Lab": "fine-tuning-lab",
+  "Foundation Models": "foundation-models",
   "Evaluation & Benchmarks": "evaluation",
-  "Inference & Serving": "serving-and-inference",
-  "Production Engineering": "production-engineering",
-  "Cloud Platforms": "platform-breadth",
   "Prompt & Context Engineering": "prompt-engineering",
-  "RAG": "rag",
-  "Agent Foundations": "agents",
-  "MCP & A2A": "mcp",
-  "Agent Patterns & Multi-Agent": "agentic-ai",
+  "PyTorch Fundamentals": "pytorch",
+  "Pretraining at Scale": "pretraining",
+  "Post-Training & Fine-Tuning": "post-training",
+  "Introduction to AI Agents": "agent-fundamentals",
+  "Agent Building Blocks": "agent-building-blocks",
+  "Agent Protocols: MCP & A2A": "mcp-and-a2a",
+  "Agentic Workflows & Multi-Agent Systems": "agentic-workflows",
+  "RAG Systems": "rag",
   "Agent Frameworks": "agent-frameworks",
   "Production Agents": "production-agents",
+  "Inference & Serving": "inference-and-serving",
+  "Production Engineering": "production-engineering",
+  "Cloud AI Platforms": "cloud-platforms",
   "Agent Engineering": "agent-engineering",
-  "Solutions Architecture & Communication": "solutions-architecture",
+  "Solutions Architecture": "solutions-architecture",
   "Capstones": "capstones",
-  "Knowledge Check": "knowledge-check",
+  "Review & Readiness": "review",
 };
 
 /** A module's root content dir is the top-level folder shared by all of its pages
- *  (e.g. "02-Prog-Langs"), or "" when its pages live in different top-level folders. */
+ *  (e.g. "07-RAG"), or "" when its pages live in different top-level folders. */
 function moduleRootDir(filePaths: string[]): string {
   const roots = new Set(filePaths.map((p) => (p.includes("/") ? p.split("/")[0] : "")));
   return roots.size === 1 ? [...roots][0] : "";
