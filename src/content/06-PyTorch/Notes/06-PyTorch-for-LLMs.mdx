@@ -43,8 +43,6 @@ flowchart LR
 
 ## Fused Attention: SDPA and FlexAttention
 
-### Concept
-
 A naive attention implementation materializes the full `T × T` score matrix in GPU memory, then reads it back for softmax and again for the value product. `torch.nn.functional.scaled_dot_product_attention` (SDPA) dispatches to fused kernels - FlashAttention, memory-efficient attention, or cuDNN - that compute attention in tiles and never store the full matrix.
 
 ```python
@@ -74,8 +72,6 @@ y = flex(q, k, v, block_mask=block_mask)
 ---
 
 ## torch.compile
-
-### Concept
 
 `torch.compile(model)` traces the model's Python into a graph and generates fused kernels (via TorchInductor/Triton on GPUs). For transformer training it typically removes a large share of the small elementwise kernels around the matmuls - normalization, activation, residual adds - and speeds up training noticeably; the gain depends on the model and GPU, so measure it.
 

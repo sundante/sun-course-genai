@@ -75,8 +75,6 @@ With standard parametrization, the best learning rate and initialization scale s
 
 ## Optimizers Beyond AdamW
 
-### Concept
-
 **AdamW** is still the default: per-parameter adaptive step sizes from first and second moment estimates, with decoupled weight decay. Its cost is two FP32 state tensors per parameter - 8 of the ~16 bytes/parameter of mixed-precision training memory.
 
 **Muon** (Jordan et al., 2024) treats each 2D weight matrix as a matrix rather than a bag of numbers. It takes the momentum-averaged gradient and **orthogonalizes** it (approximately, with a few Newton-Schulz iterations), so the update pushes equally in all directions of the matrix instead of being dominated by a few large singular directions. Embeddings, the output head and 1D parameters (norm gains) still use AdamW.

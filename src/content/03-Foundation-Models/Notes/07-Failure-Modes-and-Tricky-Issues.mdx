@@ -14,8 +14,6 @@ prerequisites:
 
 ## Catastrophic Forgetting
 
-### Concept
-
 Catastrophic forgetting occurs when fine-tuning on a new task causes the model to lose its previously learned capabilities. This is a fundamental challenge in neural networks that arises from the way gradient descent updates all weights simultaneously.
 
 **Mechanism:**
@@ -93,8 +91,6 @@ Simple but requires access to the original training data - often not available f
 
 ## Lost in the Middle
 
-### Concept
-
 Liu et al. (2023) demonstrated a systematic failure of LLMs on long-context tasks: **performance degrades for information placed in the middle of long contexts**, even when the model has a sufficient context window to process it.
 
 **The effect:**
@@ -131,8 +127,6 @@ The model shows primacy bias (start) and recency bias (end) - both ends of the c
 
 ## Hallucination
 
-### Concept
-
 Hallucination occurs when an LLM generates factually incorrect, fabricated, or unsupported content with apparent confidence. It is a fundamental property of probabilistic text generation.
 
 **Hallucination taxonomy:**
@@ -165,8 +159,6 @@ Hallucination occurs when an LLM generates factually incorrect, fabricated, or u
 
 ## Sycophancy
 
-### Concept
-
 Sycophancy is the tendency of RLHF-trained models to **agree with the user regardless of the factual correctness** of the user's statement.
 
 **Example:**
@@ -198,8 +190,6 @@ Correct model: "The Earth is approximately 4.5 billion years old based on radiom
 
 ## Context Window Saturation
 
-### Concept
-
 As a prompt approaches the model's context window limit, performance degrades - even if the total token count technically fits.
 
 **What causes degradation near the limit:**
@@ -219,8 +209,6 @@ As a prompt approaches the model's context window limit, performance degrades - 
 ---
 
 ## Repetition and Degeneration
-
-### Concept
 
 Greedy decoding (temperature=0) has a well-known failure mode: **degeneration loops**, where the model repeatedly produces the same sequence of tokens.
 
@@ -242,8 +230,6 @@ Greedy decoding (temperature=0) has a well-known failure mode: **degeneration lo
 ---
 
 ## Token Boundary Artifacts
-
-### Concept
 
 The way text tokenizes creates systematic model failures that are easy to overlook.
 
@@ -269,8 +255,6 @@ The way text tokenizes creates systematic model failures that are easy to overlo
 ---
 
 ## Position Bias in Few-Shot Learning
-
-### Concept
 
 When providing few-shot examples, models exhibit bias toward the **label distribution at the end of the example list** and toward **majority labels** in the example set.
 

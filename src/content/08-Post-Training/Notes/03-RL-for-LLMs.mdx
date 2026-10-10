@@ -36,8 +36,6 @@ Language generation as RL: the **state** is the prompt plus tokens so far, an **
 
 ## PPO-based RLHF
 
-### Concept
-
 The InstructGPT-style pipeline keeps **four models** in play:
 
 | Model | Role | Trained? |
@@ -59,8 +57,6 @@ PPO works but is heavy: two extra trainable-size models in memory, and the value
 ---
 
 ## GRPO: Drop the Critic
-
-### Concept
 
 **Group Relative Policy Optimization** (DeepSeekMath, 2024) replaces the learned value model with a statistical baseline. For each prompt, sample a **group** of G responses, score them, and use each one's standing within its group as the advantage:
 

@@ -15,8 +15,6 @@ prerequisites:
 
 ## Scaled Dot-Product Attention
 
-### Concept
-
 Attention is the core operation that allows each token to "look at" every other token and decide what information to incorporate. The mechanism is elegant: **the more similar a query is to a key, the more the corresponding value contributes to the output**.
 
 **Formal definition:**
@@ -68,8 +66,6 @@ Softmax is `exp(x_i) / Σ exp(x_j)`. With large magnitude differences, one term 
 
 ## Multi-Head Attention
 
-### Concept
-
 A single attention computation attends to the sequence with one "perspective." Multi-head attention runs **h parallel attention operations** with different learned projections, then concatenates the results.
 
 **Why multiple heads?**
@@ -109,8 +105,6 @@ Splitting the raw embedding would restrict each head to d_model/h of the input f
 
 ## Self-Attention vs Cross-Attention
 
-### Concept
-
 **Self-attention:** Q, K, and V all come from the **same** input sequence. Used in both encoder and decoder (for attending within a sequence).
 
 ```
@@ -134,8 +128,6 @@ Cross-attention is absent in decoder-only models (LLaMA, GPT) - they have no sep
 
 ## Causal (Autoregressive) Masking
 
-### Concept
-
 Decoder-only models generate tokens left-to-right. During training, the model sees the full sequence but must not be allowed to "cheat" by attending to future tokens when predicting position i.
 
 **The causal mask:** A lower-triangular boolean matrix applied to attention scores before softmax:
@@ -156,8 +148,6 @@ Masked positions get score = -inf → softmax produces probability ≈ 0 for tho
 ---
 
 ## Attention Complexity: The Quadratic Bottleneck
-
-### Concept
 
 Standard self-attention is O(n²) in both memory and compute for sequence length n:
 - The attention score matrix is [n × n] - n² entries
@@ -181,8 +171,6 @@ This is why long-context models need specialized attention implementations.
 ## Efficient Attention Variants
 
 ### Flash Attention
-
-### Concept
 
 Flash Attention (Dao et al., 2022) achieves the *same mathematical result* as standard attention but avoids materializing the full n×n attention matrix in GPU HBM (High Bandwidth Memory). Instead, it tiles the computation to fit in fast on-chip SRAM.
 
@@ -211,8 +199,6 @@ Flash:    Tile(Q,K,V) → compute entire attention within SRAM → write only ou
 ---
 
 ### Multi-Query Attention (MQA) and Grouped-Query Attention (GQA)
-
-### Concept
 
 Both are modifications of multi-head attention that **share key and value projections across heads**, reducing KV cache memory (critical for inference - see [KV Cache](../../16-Inference-and-Serving/Notes/01-KV-Cache-and-Inference-Optimization.mdx)).
 
@@ -251,8 +237,6 @@ MQA:  [Q1 Q2 Q3 Q4  K  V ]                           (1 KV pair)
 ---
 
 ### Sliding Window Attention (Mistral)
-
-### Concept
 
 Instead of attending to all past tokens, each token attends only to the W nearest tokens (window size W). Long-range information propagates through multiple layers.
 
