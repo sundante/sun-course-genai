@@ -145,6 +145,12 @@ Models trained with softmax attention dump a large share of attention onto the f
 
 Very large runs suffer loss spikes when attention logits grow without bound. **QK-norm** normalizes queries and keys (RMSNorm) before the dot product; OLMo 2, Gemma 3 and Qwen3 use it (Qwen3 dropped the QKV bias in its favour). Gemma 2 instead soft-caps logits, and PaLM-style **z-loss** penalizes large softmax normalizers. These are covered with other stability techniques in [Pretraining at Scale](../../07-Pretraining/INDEX.mdx).
 
+### Attention Residuals (AttnRes)
+
+Every block above ends with a residual add: `h = h + layer(norm(h))`. That sum gives every earlier layer a fixed weight of 1, so with pre-norm the hidden state grows with depth and each new layer's contribution gets diluted. **Attention Residuals** (Kimi Team, 2026) replace the fixed sum with softmax attention *over depth*: each layer forms its input as a learned, input-dependent weighted mix of earlier layers' outputs, the same way ordinary attention mixes earlier tokens.
+
+Attending over every previous layer costs memory and pipeline communication, so the practical variant, **Block AttnRes**, groups layers into blocks and attends over one summary per block. Moonshot reported more uniform output magnitudes and gradients across depth and better downstream scores when pretraining a 48B-total / 3B-active Kimi Linear model on 1.4T tokens. It is new, so treat it as a promising direction rather than a settled default.
+
 ---
 
 ## Beyond Pure Attention: State-Space and Linear-Attention Hybrids
@@ -256,6 +262,7 @@ There are two ways to make an LLM see (and hear):
 - Auxiliary-loss-free balancing adjusts per-expert routing biases instead of adding a loss term
 - Local-global interleaving bounds KV cache while keeping long-range information flow; attention sinks must stay in a streaming cache
 - QK-norm, logit soft-capping and z-loss exist to stop attention logits from blowing up in large runs
+- Attention Residuals (AttnRes) replace the fixed residual sum with learned attention over earlier layers' outputs; Block AttnRes attends over block summaries to keep it cheap
 - SSM / linear-attention hybrids trade some exact-recall ability for linear-time long context; a few attention layers restore it
 - Early-fusion multimodal models train on interleaved tokens from the start; late fusion bolts an encoder on with an adapter
 
@@ -272,6 +279,7 @@ There are two ways to make an LLM see (and hear):
 - OpenAI, [gpt-oss-120b & gpt-oss-20b Model Card](https://arxiv.org/abs/2508.10925) (2025)
 - Gemma Team, [Gemma 3 Technical Report](https://arxiv.org/abs/2503.19786) (2025)
 - Xiao et al., [Efficient Streaming Language Models with Attention Sinks](https://arxiv.org/abs/2309.17453) (2023)
+- Kimi Team, [Attention Residuals](https://arxiv.org/abs/2603.15031) (2026)
 - Gu & Dao, [Mamba](https://arxiv.org/abs/2312.00752) (2023); Dao & Gu, [Mamba-2](https://arxiv.org/abs/2405.21060) (2024)
 - Lieber et al., [Jamba](https://arxiv.org/abs/2403.19887) (2024); MiniMax, [MiniMax-01](https://arxiv.org/abs/2501.08313) (2025); NVIDIA, [Nemotron-H](https://arxiv.org/abs/2504.03624) (2025)
 - Chameleon Team, [Chameleon: Mixed-Modal Early-Fusion Foundation Models](https://arxiv.org/abs/2405.09818) (2024); Liu et al., [Visual Instruction Tuning (LLaVA)](https://arxiv.org/abs/2304.08485) (2023)

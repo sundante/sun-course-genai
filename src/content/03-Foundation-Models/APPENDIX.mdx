@@ -18,8 +18,14 @@
 | **Temperature / top-p** | Controls sampling sharpness / limits sampling to a probability mass. |
 | **Q/K/V** | Query, Key, Value: attention matches queries to keys and combines values. |
 | **RoPE** | Rotary Position Embeddings: rotations that encode token position in attention. |
+| **ALiBi** | Attention with Linear Biases: a distance penalty added to attention scores instead of position embeddings. |
+| **LN / Pre-LN** | Layer Normalization / normalizing before each sublayer (modern) rather than after the residual add (original Post-LN). |
 | **RMSNorm / FFN** | Root Mean Square Normalization / Feed-Forward Network: normalize activations / transform each token. |
+| **SwiGLU** | Swish-Gated Linear Unit: the gated FFN activation used by most modern LLMs. |
+| **QK-norm** | Normalizes queries and keys before the dot product to keep attention logits bounded in large runs. |
+| **AttnRes** | Attention Residuals: replace the fixed residual sum with learned attention over earlier layers' outputs. |
 | **MHA / MQA / GQA** | Multi-Head / Multi-Query / Grouped-Query Attention: independent / shared / grouped K/V heads. |
+| **SWA** | Sliding Window Attention: each token attends only to the nearest W tokens. |
 | **FlashAttention** | Exact attention computed with less intermediate memory and data movement. |
 | **MoE** | Mixture of Experts: routes tokens to a subset of expert networks. |
 | **MLA / SSM** | Multi-head Latent Attention / State-Space Model: compressed attention state / recurrent sequence state. |

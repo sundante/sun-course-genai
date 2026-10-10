@@ -6,11 +6,13 @@
 //   - every .mdx file under src/content is reachable from nav.yml (lab README.mdx files excepted)
 //   - ```quiz / ```objectives / ```exercise fences contain valid YAML
 //   - objectives prerequisites link only to pages at or before the page in nav order
+//   - the generated A-Z glossary (22-Review/02-Glossary.mdx) matches the module Summary & Key Terms tables
 //     (a prerequisite marked "optional" or "later" may point ahead)
 import fs from "node:fs";
 import path from "node:path";
 import yaml from "js-yaml";
 import GithubSlugger from "github-slugger";
+import { glossaryIsStale } from "./build-glossary.mjs";
 
 const ROOT = process.cwd();
 const CONTENT = path.join(ROOT, "src/content");
@@ -194,6 +196,9 @@ function checkNumbering(dir) {
   for (const e of entries) if (e.isDirectory()) checkNumbering(path.join(dir, e.name));
 }
 checkNumbering(CONTENT);
+
+// Generated glossary must be rebuilt after any Summary & Key Terms change
+if (glossaryIsStale()) errors.push("glossary is stale: run `npm run build:glossary`");
 
 for (const w of warnings) console.warn(`warn  ${w}`);
 for (const e of errors) console.error(`error ${e}`);
