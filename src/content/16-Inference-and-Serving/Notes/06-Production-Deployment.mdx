@@ -27,8 +27,6 @@ This note is the production view - latency budgets, caching, context-window work
 
 ## Latency Budget
 
-### Concept
-
 Understanding where latency comes from lets you optimize the right bottleneck.
 
 **Latency components:**
@@ -64,8 +62,6 @@ Tokens-per-second (TPS)    = 1 / per-token-decode-time
 
 ## Caching Hierarchy
 
-### Concept
-
 Multiple layers of caching are possible in LLM serving, each with different trade-offs.
 
 **Level 1 - KV Cache (per-request, in-GPU):**
@@ -93,8 +89,6 @@ Multiple layers of caching are possible in LLM serving, each with different trad
 ---
 
 ## Token Window Workarounds
-
-### Concept
 
 When documents or conversations exceed the context window, several strategies exist beyond simply refusing to process them.
 
@@ -168,8 +162,6 @@ LongLoRA:
 
 ## Latency Optimization Tricks
 
-### Concept
-
 A comprehensive list of techniques to reduce perceived and actual latency:
 
 **1. Quantization (up to ~2-3× decode throughput)**
@@ -223,8 +215,6 @@ Details and methods: [Quantized Inference](03-Quantized-Inference.mdx).
 
 ## Cost Optimization
 
-### Concept
-
 At scale, LLM inference cost is significant. Key levers:
 
 **1. Prompt caching ROI:**
@@ -257,8 +247,6 @@ With 90% cache hit rate:
 ---
 
 ## Monitoring and Observability
-
-### Concept
 
 Key metrics to track in production LLM serving:
 

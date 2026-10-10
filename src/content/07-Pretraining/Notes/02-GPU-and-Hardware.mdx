@@ -16,8 +16,6 @@ prerequisites:
 
 ## VRAM Estimation
 
-### Concept
-
 Before deploying or training any LLM, you must know whether it fits in your GPU(s). VRAM estimation is a fundamental interview skill.
 
 **Model weights memory:**
@@ -98,8 +96,6 @@ When model state doesn't fit on one GPU, it is split across GPUs. The parallelis
 
 ### ZeRO - Zero Redundancy Optimizer
 
-### Concept
-
 ZeRO (Rajbhandari et al., 2019) eliminates redundant copies of optimizer states, gradients, and parameters across GPUs in data-parallel training. Three stages:
 
 ```
@@ -134,8 +130,6 @@ Stage 3 - Parameter Partitioning:
 
 ## Flash Attention as Hardware Optimization
 
-### Concept
-
 Flash Attention is primarily a hardware (GPU memory hierarchy) optimization - see [Attention Mechanisms](../../03-Foundation-Models/Notes/04-Attention-Mechanisms.mdx) for the algorithm. Here is the hardware context:
 
 **GPU memory hierarchy:**
@@ -154,8 +148,6 @@ Standard attention writes the n×n attention matrix to HBM (slow), reads it back
 ---
 
 ## PCIe vs NVLink
-
-### Concept
 
 GPU-to-GPU communication speed determines how well parallelism strategies scale.
 

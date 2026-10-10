@@ -12,8 +12,6 @@ prerequisites:
 
 ## What Is the KV Cache
 
-### Concept
-
 During autoregressive generation, the model generates one token at a time. At each step, it must compute the attention output for the current token, which requires the Key and Value matrices for **all preceding tokens**.
 
 Without caching, this would be catastrophically expensive:
@@ -48,8 +46,6 @@ Prefill processes all input tokens in parallel - the GPU is compute-bound (utili
 ---
 
 ## KV Cache Memory Math
-
-### Concept
 
 KV cache memory is a critical capacity constraint in production. Every generated sequence consumes cache memory proportional to its length.
 
@@ -93,8 +89,6 @@ for ctx in [2048, 8192, 32768, 131072]:
 ---
 
 ## MHA vs MQA vs GQA
-
-### Concept
 
 These three variants trade KV cache size for generation quality.
 
@@ -149,8 +143,6 @@ MQA (G=1):  32 × 32768 × 2 × 1  × 128 × 2 bytes = 0.5 GB
 
 ## Paged Attention (vLLM)
 
-### Concept
-
 Production LLM serving has a fundamental memory fragmentation problem. Traditional KV cache allocation reserves contiguous memory blocks per sequence at the maximum context length - this wastes memory because:
 1. Most sequences are much shorter than the maximum context
 2. Memory is reserved upfront but used gradually as tokens are generated
@@ -177,8 +169,6 @@ When a sequence finishes, its blocks are freed and immediately reusable
 ---
 
 ## Prefix Caching
-
-### Concept
 
 Many production workloads have repeated prompt prefixes:
 - Chatbot: same system prompt for every conversation
@@ -208,8 +198,6 @@ Paged Attention's block-based addressing makes prefix caching efficient - blocks
 ---
 
 ## Speculative Decoding
-
-### Concept
 
 Speculative decoding uses a small "draft" model to propose K tokens at once, then verifies them with the large "target" model in a single forward pass. This converts the sequential bottleneck of K decode steps into one batch verification step.
 
@@ -257,8 +245,6 @@ sequenceDiagram
 
 ## Continuous Batching
 
-### Concept
-
 **Static batching** (naive approach): wait until a fixed batch of N requests is assembled, run one forward pass for all N, return all results. Problem: different sequences finish at different times - some GPUs sit idle waiting for the longest sequence in the batch to finish.
 
 ```mermaid
@@ -292,8 +278,6 @@ sequenceDiagram
 
 ## Decode Latency vs Throughput Trade-off
 
-### Concept
-
 **Batch size and latency vs throughput:**
 - Small batch (1 request): lowest latency (TTFT + decode), GPU underutilized, low throughput
 - Large batch (many requests): GPU fully utilized, high throughput, but each individual request waits longer (queuing + longer decode steps)
@@ -312,8 +296,6 @@ sequenceDiagram
 ---
 
 ## Comprehensive Speed-Up Techniques Reference
-
-### Concept
 
 A consolidated reference of all major LLM inference and training speed-up techniques. Many are covered in depth elsewhere - this table gives you the full landscape for interviews.
 

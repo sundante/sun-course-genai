@@ -57,8 +57,6 @@ flowchart TD
 
 ## Multi-Head Latent Attention (MLA)
 
-### Concept
-
 GQA shrinks the KV cache by letting several query heads share one key/value head. **MLA** (introduced in DeepSeek-V2, 2024) takes a different route: instead of caching per-head keys and values, it caches one small **latent vector** per token and reconstructs keys and values from it with up-projection matrices.
 
 ```
@@ -96,8 +94,6 @@ flowchart LR
 ---
 
 ## Mixture of Experts, 2025 Edition
-
-### Concept
 
 The Mixtral-style MoE (2023) replaced each FFN with 8 experts and routed each token to 2. Current MoE models push further in four ways:
 
@@ -153,8 +149,6 @@ Very large runs suffer loss spikes when attention logits grow without bound. **Q
 
 ## Beyond Pure Attention: State-Space and Linear-Attention Hybrids
 
-### Concept
-
 A **state-space model (SSM)** layer such as Mamba processes the sequence with a fixed-size recurrent state instead of attending over all previous tokens: compute is linear in sequence length and there is no growing KV cache. **Linear attention** variants (Lightning Attention, Gated DeltaNet) get similar properties from a kernelized attention formulation.
 
 Pure SSMs lag attention on tasks that require exact recall of earlier tokens (copying, retrieval from context). The production answer has been **hybrids**: mostly linear-time layers, with a few full-attention layers to handle precise recall.
@@ -193,8 +187,6 @@ flowchart LR
 ---
 
 ## Native Multimodality
-
-### Concept
 
 There are two ways to make an LLM see (and hear):
 

@@ -35,8 +35,6 @@ Throughput alone is misleading: a system can maximize tokens/s by batching aggre
 
 ## Prefill vs Decode: Chunking and Disaggregation
 
-### Concept
-
 Prefill (process the whole prompt at once) is **compute-bound**; decode (one token per sequence per step) is **memory-bound**. Running both on the same GPU causes interference: a long prefill stalls every in-flight decode, spiking ITL.
 
 Two fixes:

@@ -16,8 +16,6 @@ prerequisites:
 
 ## Transformer Architecture Overview
 
-### Concept
-
 The transformer architecture, introduced in "Attention Is All You Need" (Vaswani et al., 2017), replaced recurrent networks (LSTMs, GRUs) as the dominant architecture for sequence modeling. Its key insight: replace sequential recurrence with **parallel attention** - compute relationships between all positions simultaneously.
 
 **Why transformers displaced RNNs:**
@@ -54,8 +52,6 @@ flowchart TD
 ---
 
 ## Input Embedding and Positional Encoding
-
-### Concept
 
 **Token Embedding:** Maps each token ID to a learnable dense vector of size `d_model` (512–8192 depending on model). This is a lookup table - a matrix of shape `[vocab_size, d_model]` - learned during training.
 
@@ -119,8 +115,6 @@ Where `m` is a per-head slope and `|i-j|` is the distance between positions.
 
 ## Layer Normalization and Residual Connections
 
-### Concept
-
 Two techniques that make deep transformers trainable: residual connections and layer normalization.
 
 **Residual connections (He et al., 2016):**
@@ -158,8 +152,6 @@ It is cheaper than LayerNorm and trains just as well, which is why nearly every 
 
 ## Feed-Forward Network (FFN)
 
-### Concept
-
 Each transformer block has an FFN that applies the same two-layer MLP to each token **independently** (no cross-token interaction - that's attention's job):
 
 **Original FFN (ReLU):**
@@ -185,8 +177,6 @@ SwiGLU uses **three** weight matrices (W1, W2, W3) but the intermediate dimensio
 ---
 
 ## Key Architectural Hyperparameters
-
-### Concept
 
 Understanding model shape hyperparameters is essential for VRAM estimation (see [GPU and Hardware](../../07-Pretraining/Notes/02-GPU-and-Hardware.mdx)) and for interpreting model cards.
 

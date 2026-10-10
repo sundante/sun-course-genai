@@ -17,8 +17,6 @@ prerequisites:
 
 ## Fine-Tuning Taxonomy
 
-### Concept
-
 Fine-tuning adapts a pretrained base model for specific tasks or behaviors. The spectrum ranges from minimal (few-shot prompting) to maximal (full parameter updates).
 
 ```mermaid
@@ -47,8 +45,6 @@ flowchart LR
 ---
 
 ## Supervised Fine-Tuning (SFT)
-
-### Concept
 
 SFT trains the model on labeled (input, output) pairs using the standard CLM loss. The model learns to produce the desired output format and style.
 
@@ -99,8 +95,6 @@ Llama 3's post-training, for example, combined SFT, rejection sampling and DPO; 
 
 ## Parameter-Efficient Fine-Tuning (PEFT)
 
-### Concept
-
 Full fine-tuning updates all model parameters. For a 7B model, that's 7 billion gradients, a full copy of optimizer states, etc. PEFT methods update a tiny fraction of parameters.
 
 **Why not full fine-tuning?**
@@ -112,8 +106,6 @@ Full fine-tuning updates all model parameters. For a 7B model, that's 7 billion 
 ---
 
 ## LoRA - Low-Rank Adaptation
-
-### Concept
 
 LoRA (Hu et al., 2021) is the dominant PEFT method. The key insight: the change in weights during fine-tuning has low intrinsic rank - it can be approximated by two small matrices.
 
@@ -152,8 +144,6 @@ output = x·W_0 + (α/r) × x·(B·A)
 ---
 
 ## QLoRA - Quantized LoRA
-
-### Concept
 
 QLoRA (Dettmers et al., 2023) enables fine-tuning very large models on consumer hardware by:
 1. **Quantizing the base model to NF4** (4-bit NormalFloat) - reduces base model memory by 4×
@@ -238,8 +228,6 @@ training_args = TrainingArguments(
 ---
 
 ## Multi-Head Fine-Tuning
-
-### Concept
 
 Multi-head fine-tuning uses a **shared encoder backbone** with **multiple task-specific output heads**. This allows a single model to perform several tasks with minimal parameter overhead.
 
@@ -348,8 +336,6 @@ optimizer = torch.optim.AdamW([
 ---
 
 ## Fine-Tuning Evaluation
-
-### Concept
 
 After fine-tuning, you need to verify that quality improved on the target task without degrading general capability. Evaluation spans multiple dimensions.
 
