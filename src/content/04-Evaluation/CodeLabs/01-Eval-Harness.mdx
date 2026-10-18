@@ -13,7 +13,7 @@ outcomes:
   - Explain why the same model can score differently under different harness settings
 prerequisites:
   - "[Building Your Own Evals](../Notes/04-Building-Your-Own-Evals.mdx) - confidence intervals and paired comparisons"
-  - "Two models to compare - any base checkpoint and a tuned variant from the Hugging Face Hub (e.g. `Qwen/Qwen3-0.6B-Base` vs `Qwen/Qwen3-0.6B`); later in the course, rerun it with your own fine-tune from the [SFT, DPO & GRPO lab](../../08-Post-Training/CodeLabs/02-SFT-DPO-GRPO-with-TRL.mdx)"
+  - "Two models to compare - any base checkpoint and a tuned variant from the Hugging Face Hub (e.g. `Qwen/Qwen3-0.6B-Base` vs `Qwen/Qwen3-0.6B`); later in the course, rerun it with your own fine-tune from the [SFT, DPO & GRPO lab](../../09-Post-Training/CodeLabs/02-SFT-DPO-GRPO-with-TRL.mdx)"
 ```
 
 ---
@@ -55,7 +55,7 @@ lm-eval run --model hf --model_args pretrained=Qwen/Qwen3-0.6B,dtype=bfloat16 \
 
 # 2. Base vs candidate with paired statistics
 python compare.py --base Qwen/Qwen3-0.6B \
-    --candidate ../../../08-Post-Training/CodeLabs/02-SFT-DPO-GRPO-with-TRL/runs/grpo/merged \
+    --candidate ../../../09-Post-Training/CodeLabs/02-SFT-DPO-GRPO-with-TRL/runs/grpo/merged \
     --tasks gsm8k,arc_easy --limit 200 --chat-template
 
 # CPU smoke test with tiny random models

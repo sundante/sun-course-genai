@@ -109,7 +109,7 @@ Remote root should look like:
 - MDX pipeline (`src/app/(course)/learn/[module]/[slug]/page.tsx`): `next-mdx-remote/rsc`'s `MDXRemote` with `remark-gfm`, `remarkRewriteMdLinks`, `rehype-raw`, `rehype-slug`, `rehype-autolink-headings` (wrap), `rehype-highlight`; `parseFrontmatter: false`, format `"md"`
 - Slug-collision prevention - subdirectory paths included in generated slugs
 - **Automatic WIP detection** - `isStubFile()` in `src/lib/content/nav.ts` flags any content file with fewer than 8 non-heading/non-empty body lines as `wip: true`; this is computed from content length, not a manual flag per file
-- **Generated A-Z glossary** - `scripts/build-glossary.mjs` (`npm run build:glossary`) collects every `| **Term** | meaning |` row from the 22 module `APPENDIX.mdx` (Summary & Key Terms) pages, de-duplicates them, and rewrites the region between the `glossary:start` / `glossary:end` HTML comments in `22-Review/02-Glossary.mdx`. `check:content` fails if that region is stale, so after editing any Key Terms table run `npm run build:glossary`
+- **Generated A-Z glossary** - `scripts/build-glossary.mjs` (`npm run build:glossary`) collects every `| **Term** | meaning |` row from the 22 module `APPENDIX.mdx` (Summary & Key Terms) pages, de-duplicates them, and rewrites the region between the `glossary:start` / `glossary:end` HTML comments in `23-Review/02-Glossary.mdx`. `check:content` fails if that region is stale, so after editing any Key Terms table run `npm run build:glossary`
 
 ### Pages
 - Homepage - hero, module grid, stats strip, learning paths, footer
@@ -133,7 +133,7 @@ Remote root should look like:
 - `MdxComponents` - custom component overrides for MDX rendering
 - `src/components/ui/` - shadcn/ui primitives: button, sheet, card, badge, progress, separator
 
-### Course Content - 228 `.mdx` files across 20 teaching modules in 7 tracks (+ Capstones and Review & Readiness)
+### Course Content - 232 `.mdx` files across 21 teaching modules in 7 tracks (+ Capstones and Review & Readiness)
 
 Restructured 2026-10-09 (see Changelog). The flow: conceptual & mathematical foundations -> large language models (understand, measure, prompt, then build them) -> fundamentals of AI agents -> building products with LLMs & agents -> production & operations -> industry standards & frontier -> capstones & review. Order, numbering and tracks come from `src/content/nav.yml`. Every module has the same nav shape: Overview, concept group(s), Code Labs, Case Studies, Review (Q&A bank + Summary & Key Terms). Module order follows the declared `objectives` prerequisites, enforced by `npm run check:content`.
 
@@ -146,21 +146,22 @@ Restructured 2026-10-09 (see Changelog). The flow: conceptual & mathematical fou
 | 05 | Large Language Models | Prompt & Context Engineering (`prompt-engineering`) | `05-Prompt-Engineering/` | 9 notes in 2 groups + Q&A bank (56) + 1 lab |
 | 06 | Large Language Models | PyTorch Fundamentals (`pytorch`) | `06-PyTorch/` | 6 notes + Q&A bank + 2 labs (Raw PyTorch Classifier, GPT From Scratch) |
 | 07 | Large Language Models | Pretraining at Scale (`pretraining`) | `07-Pretraining/` | 8 notes in 2 groups + Q&A bank (35) + Profile and Fuse lab |
-| 08 | Large Language Models | Post-Training & Fine-Tuning (`post-training`) | `08-Post-Training/` | 8 notes in 2 groups (Methods; Fine-Tuning in Practice) + Q&A bank (48) + QLoRA and SFT/DPO/GRPO labs |
-| 09 | Fundamentals of AI Agents | Introduction to AI Agents (`agent-fundamentals`) | `09-Agent-Fundamentals/` | 5 notes (what agents are, anatomy, the loop, agents in practice, evaluation basics) + Q&A bank (27) + Agent Loop from Scratch lab |
-| 10 | Fundamentals of AI Agents | Agent Building Blocks (`agent-building-blocks`) | `10-Agent-Building-Blocks/` | 3 notes (tool use & function calling, memory, planning & reasoning) + Q&A bank (21) |
-| 11 | Fundamentals of AI Agents | Agent Protocols: MCP & A2A (`mcp-and-a2a`) | `11-MCP-and-A2A/` | 7 notes + Q&A bank (41) + MCP Server & Agent lab |
-| 12 | Fundamentals of AI Agents | Agentic Workflows & Multi-Agent Systems (`agentic-workflows`) | `12-Agentic-Workflows/` | 4 notes in 2 groups (Agentic Workflows; Multi-Agent Systems) + Q&A bank (40) + Patterns Under Measurement lab |
-| 13 | Building with LLMs & Agents | RAG Systems (`rag`) | `13-RAG/` | 13 notes in 3 groups + Q&A bank (64) + 1 lab + 2 case studies |
-| 14 | Building with LLMs & Agents | Agent Frameworks (`agent-frameworks`) | `14-Agent-Frameworks/` | 8 notes (choosing + 7 frameworks) + Q&A bank (31) + One Agent, Many Frameworks lab |
-| 15 | Building with LLMs & Agents | Production Agents (`production-agents`) | `15-Production-Agents/` | 6 notes + Q&A bank (32) + 4 case studies |
-| 16 | Production & Operations | Inference & Serving (`inference-and-serving`) | `16-Inference-and-Serving/` | 7 notes + Q&A bank + FastAPI/vLLM lab |
-| 17 | Production & Operations | Production Engineering (`production-engineering`) | `17-Production-Engineering/` | 8 notes in 3 groups + Q&A bank (33) + Helm lab + Terraform lab |
-| 18 | Industry Standards & Frontier | Cloud AI Platforms (`cloud-platforms`) | `18-Cloud-Platforms/` | 5 notes + Q&A bank |
-| 19 | Industry Standards & Frontier | Agent Engineering (`agent-engineering`) | `19-Agent-Engineering/` | 8 notes in 2 groups (Harness & Runtime; Frontier Agents) + Q&A bank (30) + Minimal Coding Harness lab |
-| 20 | Industry Standards & Frontier | Solutions Architecture (`solutions-architecture`) | `20-Solutions-Architecture/` | 5 notes + Q&A bank (16) + 1 case study |
-| 21 | Capstones & Review | Capstones (`capstones`) | `21-Capstones/` | 3 projects with deliverables and rubrics |
-| 22 | Capstones & Review | Review & Readiness (`review`) | `22-Review/` | Hub linking every module's Q&A bank and `/quiz/<module>` page + Readiness Self-Assessment (linked from the home page hero) + Glossary of Terms & Concepts (35 core LLM terms in 6 groups with links to where each is taught, then a generated A-Z of all ~300 module key terms) |
+| 08 | Large Language Models | Training LLMs from Scratch (`llm-from-scratch`) | `08-LLM-From-Scratch/` | 1 note in Model Builds (GPT From Scratch: Step by Step) + Summary & Key Terms; runnable companion is the PyTorch GPT From Scratch lab; Q&A bank and further model builds planned |
+| 09 | Large Language Models | Post-Training & Fine-Tuning (`post-training`) | `09-Post-Training/` | 8 notes in 2 groups (Methods; Fine-Tuning in Practice) + Q&A bank (48) + QLoRA and SFT/DPO/GRPO labs |
+| 10 | Fundamentals of AI Agents | Introduction to AI Agents (`agent-fundamentals`) | `10-Agent-Fundamentals/` | 5 notes (what agents are, anatomy, the loop, agents in practice, evaluation basics) + Q&A bank (27) + Agent Loop from Scratch lab |
+| 11 | Fundamentals of AI Agents | Agent Building Blocks (`agent-building-blocks`) | `11-Agent-Building-Blocks/` | 3 notes (tool use & function calling, memory, planning & reasoning) + Q&A bank (21) |
+| 12 | Fundamentals of AI Agents | Agent Protocols: MCP & A2A (`mcp-and-a2a`) | `12-MCP-and-A2A/` | 7 notes + Q&A bank (41) + MCP Server & Agent lab |
+| 13 | Fundamentals of AI Agents | Agentic Workflows & Multi-Agent Systems (`agentic-workflows`) | `13-Agentic-Workflows/` | 4 notes in 2 groups (Agentic Workflows; Multi-Agent Systems) + Q&A bank (40) + Patterns Under Measurement lab |
+| 14 | Building with LLMs & Agents | RAG Systems (`rag`) | `14-RAG/` | 13 notes in 3 groups + Q&A bank (64) + 1 lab + 2 case studies |
+| 15 | Building with LLMs & Agents | Agent Frameworks (`agent-frameworks`) | `15-Agent-Frameworks/` | 8 notes (choosing + 7 frameworks) + Q&A bank (31) + One Agent, Many Frameworks lab |
+| 16 | Building with LLMs & Agents | Production Agents (`production-agents`) | `16-Production-Agents/` | 6 notes + Q&A bank (32) + 4 case studies |
+| 17 | Production & Operations | Inference & Serving (`inference-and-serving`) | `17-Inference-and-Serving/` | 7 notes + Q&A bank + FastAPI/vLLM lab |
+| 18 | Production & Operations | Production Engineering (`production-engineering`) | `18-Production-Engineering/` | 8 notes in 3 groups + Q&A bank (33) + Helm lab + Terraform lab |
+| 19 | Industry Standards & Frontier | Cloud AI Platforms (`cloud-platforms`) | `19-Cloud-Platforms/` | 5 notes + Q&A bank |
+| 20 | Industry Standards & Frontier | Agent Engineering (`agent-engineering`) | `20-Agent-Engineering/` | 8 notes in 2 groups (Harness & Runtime; Frontier Agents) + Q&A bank (30) + Minimal Coding Harness lab |
+| 21 | Industry Standards & Frontier | Solutions Architecture (`solutions-architecture`) | `21-Solutions-Architecture/` | 5 notes + Q&A bank (16) + 1 case study |
+| 22 | Capstones & Review | Capstones (`capstones`) | `22-Capstones/` | 3 projects with deliverables and rubrics |
+| 23 | Capstones & Review | Review & Readiness (`review`) | `23-Review/` | Hub linking every module's Q&A bank and `/quiz/<module>` page + Readiness Self-Assessment (linked from the home page hero) + Glossary of Terms & Concepts (35 core LLM terms in 6 groups with links to where each is taught, then a generated A-Z of all ~300 module key terms) |
 
 **Most recently active area:** course restructure (2026-10-09) - LLM-first flow in 7 tracks, agent fundamentals split into four modules, consistent module shape, slug cleanup; see Changelog. Before that, readiness gaps (2026-10-02/03) - the course was extended to cover the 14-domain GenAI-engineer self-assessment: new modules Math for ML (03) and Solutions Architecture & Communication (19, new Field Engineering track), a Python & Systems section in Prog Langs, 9 new concept notes across existing modules, 4 new labs, a Readiness Self-Assessment page, and capstone requirements for architecture docs and business outcomes. Its checklist was deleted when complete; the outcome is in the Changelog.
 
@@ -276,19 +277,19 @@ src/
       remarkRewriteMdLinks.ts         build-time cross-link rewriting
   types/
     content.ts                        NavItem, NavModule, NavigationTree, PageRef, PageContent, TocItem, QuizCard
-  content/                            228 .mdx source files: 20 teaching modules in 7 tracks + Capstones + Review & Readiness
+  content/                            232 .mdx source files: 21 teaching modules in 7 tracks + Capstones + Review & Readiness
     nav.yml                           single source of truth for order, tracks and titles
     01-Python-and-Systems/  02-Math-for-ML/
-    03-Foundation-Models/  04-Evaluation/  05-Prompt-Engineering/  06-PyTorch/  07-Pretraining/  08-Post-Training/
-    09-Agent-Fundamentals/  10-Agent-Building-Blocks/  11-MCP-and-A2A/  12-Agentic-Workflows/
-    13-RAG/  14-Agent-Frameworks/  15-Production-Agents/
-    16-Inference-and-Serving/  17-Production-Engineering/
-    18-Cloud-Platforms/  19-Agent-Engineering/  20-Solutions-Architecture/
-    21-Capstones/  22-Review/
+    03-Foundation-Models/  04-Evaluation/  05-Prompt-Engineering/  06-PyTorch/  07-Pretraining/  08-LLM-From-Scratch/  09-Post-Training/
+    10-Agent-Fundamentals/  11-Agent-Building-Blocks/  12-MCP-and-A2A/  13-Agentic-Workflows/
+    14-RAG/  15-Agent-Frameworks/  16-Production-Agents/
+    17-Inference-and-Serving/  18-Production-Engineering/
+    19-Cloud-Platforms/  20-Agent-Engineering/  21-Solutions-Architecture/
+    22-Capstones/  23-Review/
 
 scripts/
   check-content.mjs                   `npm run check:content` - broken links, em dashes, numbering gaps, nav coverage, fence YAML, prerequisites pointing ahead, stale glossary
-  build-glossary.mjs                  `npm run build:glossary` - regenerates the A-Z section of 22-Review/02-Glossary.mdx from module Key Terms tables
+  build-glossary.mjs                  `npm run build:glossary` - regenerates the A-Z section of 23-Review/02-Glossary.mdx from module Key Terms tables
 
 vibes/                                project tracking & active plans
   status.md                          this file - the sole live source of truth
@@ -358,3 +359,4 @@ vibes/                                project tracking & active plans
 - **2026-10-09** - **Course restructure: LLM-first flow in 7 tracks and a consistent module shape** (no dedicated checklist; two plans approved in session - an application-first arc, then revised at the user's request to the final flow below). Tracks: Conceptual & Mathematical Foundations (Python & Systems, Math for ML) -> Large Language Models (Foundation Models - renamed from LLM Foundations, the "foundation model" every later module builds on - then Evaluation, Prompt & Context Engineering, PyTorch, Pretraining, Post-Training & Fine-Tuning) -> Fundamentals of AI Agents (Introduction to AI Agents, new Agent Building Blocks module, Agent Protocols: MCP & A2A, Agentic Workflows & Multi-Agent Systems) -> Building with LLMs & Agents (RAG Systems, Agent Frameworks, Production Agents) -> Production & Operations (new: Inference & Serving, Production Engineering) -> Industry Standards & Frontier (Cloud AI Platforms, Agent Engineering, Solutions Architecture) -> Capstones & Review. Structural changes: Prog Langs flattened into Python & Systems and PyTorch Fundamentals; Fine-Tuning Lab merged into Post-Training & Fine-Tuning (overview, appendix and Q&A banks merged - 48 questions); Agent Foundations split into Introduction to AI Agents (5 notes + lab) and Agent Building Blocks (tool use, memory, planning; new overview and summary; Q&A bank split 27/21); Agent Patterns renamed Agentic Workflows & Multi-Agent Systems; Knowledge Check renamed Review & Readiness. Legacy slugs cleaned (`llm-models`, `prog-langs`, `fine-tuning-lab`, `serving-and-inference`, `platform-breadth`, `agents`, `mcp`, `agentic-ai`, `knowledge-check`). Every module now has the same nav shape - Overview, concept group(s), Code Labs, Case Studies (label for SystemDesigns/), Review (Q&A bank + "Summary & Key Terms", renamed from "Appendix") - with named concept groups in large modules. Note orders follow declared prerequisites (Production Engineering: lifecycle -> security -> networking -> IaC; Agent Engineering: verifiers before spec-driven; Pretraining kept). Forward prerequisites the new flow creates are marked "Optional, later in the course"; a new `check:content` rule rejects unmarked ones. Code: `MODULE_SLUG_MAP`, `moduleMeta.ts` (re-keyed; new "The Workbench" and "The Parts"), `courseMap.ts`/`stats.ts` review slug, new `navSections.ts` so stats and home tiles count named concept groups, `LegacyRedirect.tsx` also forwards `/quiz/`, home page learning paths and a readiness self-assessment link, `CourseMap.tsx` ribbon width estimate fixed for long track names. Content: relative links rewritten by resolve-and-relativize over three scripted passes, code-block paths updated, INDEX headings / prev-next footers / Review hub table regenerated from nav.yml, prose references to old module names and numbers replaced with names. Redirects: 273 entries (108 page URLs + 9 quiz URLs changed vs the deployed site; older chains collapsed). Verified: `check:content` 0 errors, `tsc` and lint clean, `npm run build` (225 lesson pages, 23 quiz pages), every redirect target exists, all 410 old URLs reachable, all 245 internal hrefs resolve, headless-Chrome screenshots of the sidebar and `/map`.
 - **2026-10-10** - Removed all 82 generic `### Concept` sub-headings from 20 concept notes (Foundation Models, PyTorch, Pretraining, Post-Training, Inference & Serving) so the right-hand "On this page" TOC lists only real topic names. No links pointed at the `#concept-N` anchors. `### Code` labels (18) kept. `check:content` 228 files 0/0.
 - **2026-10-10** - **Core LLM vocabulary + course-wide Glossary** (no dedicated checklist). Covered the 35 terms from a lecture slide (attention techniques, architecture optimizations, model tuning, RL, benchmarks, metrics): new Attention Residuals (AttnRes) subsection in 03/06 Modern Architectures; an explanation of Elo vs Bradley-Terry plus a new quiz question in 04/02 Contamination & Leaderboards; SWA spelled out in 03/04; the LaaJ alias in 04/03. Added the missing terms to the Key Terms tables of modules 03, 04, 08 and 16. New page `22-Review/02-Glossary.mdx` (in nav after Readiness Self-Assessment, linked from the Review index) with a mindmap, six curated term tables and a generated A-Z of 297 terms; added the new `scripts/build-glossary.mjs` and a stale-glossary check in `check:content`. Verified: `check:content` reports 0 errors; `npm run build` succeeds; the comment markers don't appear in the HTML or the search index. The mindmap was not checked visually in a browser.
+- **2026-10-18** - Added a new module **08 Training LLMs from Scratch** (`llm-from-scratch`, Large Language Models track, after Pretraining at Scale) to hold one end-to-end build per model version. First page: `Notes/01-GPT-From-Scratch-Step-by-Step.mdx` - plan (C ≈ 6ND) -> clean/dedup -> tokenize -> train/val split (after tokenization, before chunking; contiguous vs document-level) -> (x, y) blocks -> batches -> GPT decoder in PyTorch -> sanity checks -> AdamW + cosine -> training loop -> eval -> checkpoint -> sampling, with 4 Mermaid diagrams, quiz, exercises and references; plus module `INDEX.mdx` and `APPENDIX.mdx`. Renumbered module folders 08-22 -> 09-23 (URLs unchanged: slugs come from module slug + path inside the folder, so no legacy redirects needed), updated cross-links, `NN - Title` references, Review hub table, CLAUDE.md and scripts paths; added `MODULE_SLUG_MAP` and `MODULE_META` entries; rebuilt glossary (306 terms). `check:content` 232 files 0/0, `npm run build` passes, all 4 new diagrams parse.

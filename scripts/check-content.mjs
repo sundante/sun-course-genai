@@ -6,7 +6,7 @@
 //   - every .mdx file under src/content is reachable from nav.yml (lab README.mdx files excepted)
 //   - ```quiz / ```objectives / ```exercise fences contain valid YAML
 //   - objectives prerequisites link only to pages at or before the page in nav order
-//   - the generated A-Z glossary (22-Review/02-Glossary.mdx) matches the module Summary & Key Terms tables
+//   - the generated A-Z glossary (23-Review/02-Glossary.mdx) matches the module Summary & Key Terms tables
 //     (a prerequisite marked "optional" or "later" may point ahead)
 import fs from "node:fs";
 import path from "node:path";

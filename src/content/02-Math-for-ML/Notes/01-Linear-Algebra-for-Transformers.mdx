@@ -31,7 +31,7 @@ A vector `x ∈ ℝ^d` is a point or direction in d-dimensional space. Token emb
 Where this shows up:
 
 - **Attention scores** are dot products between a query and every key ([Attention Mechanisms](../../03-Foundation-Models/Notes/04-Attention-Mechanisms.mdx)).
-- **Retrieval** ranks documents by cosine similarity (or dot product) between embeddings ([Embeddings & Vector Search](../../13-RAG/Notes/02-Embeddings-and-Vector-Search.mdx)). If embeddings are normalized to length 1, dot product and cosine similarity are the same, and many vector databases rely on that.
+- **Retrieval** ranks documents by cosine similarity (or dot product) between embeddings ([Embeddings & Vector Search](../../14-RAG/Notes/02-Embeddings-and-Vector-Search.mdx)). If embeddings are normalized to length 1, dot product and cosine similarity are the same, and many vector databases rely on that.
 - **The output layer** computes a dot product between the final hidden state and every token's output embedding; the largest dot products become the most likely next tokens.
 
 ---
@@ -102,7 +102,7 @@ This is the whole idea of **LoRA**: freeze the pretrained `W` and learn a low-ra
 - Full matrix: `4096² = 16,777,216` parameters
 - LoRA: `16 x (4096 + 4096) = 131,072` parameters - **0.78%** of the matrix
 
-That ratio, applied across every adapted matrix, is why a LoRA fine-tune fits on one GPU ([LoRA & QLoRA Hands-On](../../08-Post-Training/Notes/06-LoRA-and-QLoRA-Hands-On.mdx)).
+That ratio, applied across every adapted matrix, is why a LoRA fine-tune fits on one GPU ([LoRA & QLoRA Hands-On](../../09-Post-Training/Notes/06-LoRA-and-QLoRA-Hands-On.mdx)).
 
 ---
 
@@ -173,7 +173,7 @@ Three facts you will use:
   hints:
     - "Forward ≈ 2N FLOPs per token."
   solution: |
-    `2 x 7 x 10⁹ x 2,000 = 2.8 x 10¹³` FLOPs. At `4 x 10¹⁴` FLOP/s: `0.07 s`. This ignores attention's T² term (small at 2K tokens for a 7B model) and assumes the GPU stays busy - true for prefill, which is compute-bound, but not for token-by-token decode, which is memory-bandwidth-bound ([KV Cache](../../16-Inference-and-Serving/Notes/01-KV-Cache-and-Inference-Optimization.mdx)).
+    `2 x 7 x 10⁹ x 2,000 = 2.8 x 10¹³` FLOPs. At `4 x 10¹⁴` FLOP/s: `0.07 s`. This ignores attention's T² term (small at 2K tokens for a 7B model) and assumes the GPU stays busy - true for prefill, which is compute-bound, but not for token-by-token decode, which is memory-bandwidth-bound ([KV Cache](../../17-Inference-and-Serving/Notes/01-KV-Cache-and-Inference-Optimization.mdx)).
 - title: Shapes with grouped-query attention
   task: |
     A model has d = 4096, 32 query heads and 8 KV heads (grouped-query attention), head dimension 128. Give the shapes of Wq, Wk and Wv, and the parameter saving in K and V compared with full multi-head attention.

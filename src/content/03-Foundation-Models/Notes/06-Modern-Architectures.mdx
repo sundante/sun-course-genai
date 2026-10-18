@@ -113,7 +113,7 @@ The Mixtral-style MoE (2023) replaced each FFN with 8 experts and routed each to
 **What this means in practice:**
 
 - **Compute scales with active parameters** - a 671B MoE costs roughly what a 37B dense model costs per token in FLOPs.
-- **Memory scales with total parameters** - all 671B must be resident somewhere, which is why MoE serving relies on multi-GPU expert parallelism (see [Inference & Serving](../../16-Inference-and-Serving/INDEX.mdx)) and aggressive weight quantization (gpt-oss ships its MoE weights in 4-bit MXFP4 so the 120B model fits on one 80 GB GPU).
+- **Memory scales with total parameters** - all 671B must be resident somewhere, which is why MoE serving relies on multi-GPU expert parallelism (see [Inference & Serving](../../17-Inference-and-Serving/INDEX.mdx)) and aggressive weight quantization (gpt-oss ships its MoE weights in 4-bit MXFP4 so the 120B model fits on one 80 GB GPU).
 - **Quality tracks something between the two.** Rules of thumb that place an MoE "somewhere near the geometric mean of total and active" dense-equivalent are folklore, not a law - compare on benchmarks for your task.
 
 ### Multi-token prediction (MTP)

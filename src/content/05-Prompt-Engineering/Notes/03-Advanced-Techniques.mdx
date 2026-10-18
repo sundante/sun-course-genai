@@ -13,7 +13,7 @@ prerequisites:
   - "[Core Techniques](02-Core-Techniques.mdx) - chain-of-thought"
 ```
 
-All of the techniques below were designed for models that do not reason on their own. Reasoning models now perform much of this search internally (see [Reasoning Models & Test-Time Compute](../../08-Post-Training/Notes/04-Reasoning-Models-and-Test-Time-Compute.mdx)). The patterns still matter: they remain the building blocks of agent workflows, they are how you add *external* checks (tests, verifiers, tools) that a model cannot provide for itself, and they are common interview material.
+All of the techniques below were designed for models that do not reason on their own. Reasoning models now perform much of this search internally (see [Reasoning Models & Test-Time Compute](../../09-Post-Training/Notes/04-Reasoning-Models-and-Test-Time-Compute.mdx)). The patterns still matter: they remain the building blocks of agent workflows, they are how you add *external* checks (tests, verifiers, tools) that a model cannot provide for itself, and they are common interview material.
 
 | Technique | Problem it addresses | Extra cost | Needs |
 |---|---|---|---|
@@ -120,7 +120,7 @@ flowchart LR
     style CK2 fill:#d8dfe8,stroke:#b0bac8
 ```
 
-Benefits: each step can be tested and improved on its own, independent steps can run in parallel, and small focused prompts are followed more reliably than one prompt with ten jobs. The main risk is **error propagation** - a mistake in step 1 flows downstream - so validate intermediate outputs (schemas, counts, cross-references back to the source). Chaining is the simplest form of the "workflow" patterns in [Agentic Workflows](../../12-Agentic-Workflows/INDEX.mdx).
+Benefits: each step can be tested and improved on its own, independent steps can run in parallel, and small focused prompts are followed more reliably than one prompt with ten jobs. The main risk is **error propagation** - a mistake in step 1 flows downstream - so validate intermediate outputs (schemas, counts, cross-references back to the source). Chaining is the simplest form of the "workflow" patterns in [Agentic Workflows](../../13-Agentic-Workflows/INDEX.mdx).
 
 ---
 
@@ -137,7 +137,7 @@ Its limit is well documented: Huang et al. (2024) showed that when models are as
 | Explicit criteria | A rubric or checklist the draft is scored against |
 | A different, stronger model or a human | Reviewer comments |
 
-This is why coding agents run the tests rather than re-reading their own code - see [Agentic Workflows](../../12-Agentic-Workflows/Notes/02-Single-Agent-Patterns.mdx).
+This is why coding agents run the tests rather than re-reading their own code - see [Agentic Workflows](../../13-Agentic-Workflows/Notes/02-Single-Agent-Patterns.mdx).
 
 ---
 

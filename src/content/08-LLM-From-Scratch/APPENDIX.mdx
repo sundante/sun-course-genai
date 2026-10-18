@@ -1,0 +1,27 @@
+# Summary & Key Terms - Training LLMs from Scratch
+
+## What We Learned
+
+- A from-scratch run follows a fixed order: clean, dedup, tokenize, split, chunk, batch, train, evaluate, checkpoint, generate.
+- Split train and validation before chunking (contiguous for one text, by document for a corpus), or validation loss measures memorization.
+- Each window of T tokens gives T next-token predictions, because the targets are the inputs shifted one token left.
+- Predict parameters (≈ 12·L·d² + V·d) and compute (≈ 6ND) before running, and check that the initial loss is ≈ ln(V).
+- Train with AdamW, warmup + cosine decay, gradient accumulation, clipping and bf16, and keep the best-validation checkpoint with optimizer state.
+
+## Key Acronyms, Concepts & Jargon
+
+| Term | Short meaning |
+|---|---|
+| **Train/validation split** | Held-out data for measuring generalization; done before chunking so no window crosses the boundary. |
+| **Document-level split** | Assigns whole documents to train or validation so pieces of one document cannot leak across. |
+| **block_size (context length)** | The fixed number of tokens in each training window the model sees. |
+| **Context block (x, y)** | A window of tokens and its targets, the same window shifted one token left. |
+| **End-of-text token** | Special token inserted between documents to mark boundaries in the token stream. |
+| **Tokens per step** | Batch × block_size × gradient-accumulation steps × GPUs; the effective batch size for the optimizer. |
+| **Gradient accumulation** | Summing gradients over several micro-batches before one optimizer step, to reach a large batch. |
+| **Weight tying** | Sharing one matrix between the token embedding and the output (LM) head. |
+| **Overfit-one-batch check** | Training on a single batch until loss is near zero, to prove the model and loop can learn. |
+| **Perplexity** | exp(average cross-entropy loss); comparable only between models with the same tokenizer. |
+| **Temperature / top-k sampling** | Scaling logits to sharpen or flatten them / sampling only among the k most likely tokens. |
+
+[Back to module overview](INDEX.mdx)

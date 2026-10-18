@@ -63,7 +63,7 @@ Activations come on top and scale with batch × sequence length × layers; activ
 | FP32 master weights + Adam m, v | 12 bytes × params | Training only |
 | Gradients | 2 bytes × params (BF16) | Training only |
 | Activations | Scales with batch × seq_len × d_model × n_layers | Reduced by activation (gradient) checkpointing |
-| KV cache | 2 × n_layers × n_kv_heads × d_head × bytes × tokens | Inference; see [KV Cache](../../16-Inference-and-Serving/Notes/01-KV-Cache-and-Inference-Optimization.mdx) |
+| KV cache | 2 × n_layers × n_kv_heads × d_head × bytes × tokens | Inference; see [KV Cache](../../17-Inference-and-Serving/Notes/01-KV-Cache-and-Inference-Optimization.mdx) |
 
 **Worked example - 70B inference on A100-80GB:**
 ```
@@ -81,10 +81,10 @@ Memory scales with bytes per parameter, so lower precision is the first lever fo
 |---|---|---|---|
 | FP32 | 4 | Optimizer master weights and states | This chapter |
 | BF16 / FP16 | 2 | Training compute and standard inference | This chapter |
-| FP8 (E4M3/E5M2) | 1 | Training on Hopper/Blackwell; the first serving choice on those GPUs | [Accelerators & Interconnects](07-Accelerators-and-Interconnects.mdx), [Quantized Inference](../../16-Inference-and-Serving/Notes/03-Quantized-Inference.mdx) |
-| INT8 | 1 | Weight(-and-activation) quantized serving | [Quantized Inference](../../16-Inference-and-Serving/Notes/03-Quantized-Inference.mdx) |
-| INT4 (GPTQ, AWQ) / FP4 (MXFP4, NVFP4) | ~0.5 | Weight-only 4-bit serving; FP4 native on Blackwell | [Quantized Inference](../../16-Inference-and-Serving/Notes/03-Quantized-Inference.mdx) |
-| NF4 | ~0.5 | Frozen base weights in QLoRA fine-tuning | [LoRA & QLoRA Hands-On](../../08-Post-Training/Notes/06-LoRA-and-QLoRA-Hands-On.mdx) |
+| FP8 (E4M3/E5M2) | 1 | Training on Hopper/Blackwell; the first serving choice on those GPUs | [Accelerators & Interconnects](07-Accelerators-and-Interconnects.mdx), [Quantized Inference](../../17-Inference-and-Serving/Notes/03-Quantized-Inference.mdx) |
+| INT8 | 1 | Weight(-and-activation) quantized serving | [Quantized Inference](../../17-Inference-and-Serving/Notes/03-Quantized-Inference.mdx) |
+| INT4 (GPTQ, AWQ) / FP4 (MXFP4, NVFP4) | ~0.5 | Weight-only 4-bit serving; FP4 native on Blackwell | [Quantized Inference](../../17-Inference-and-Serving/Notes/03-Quantized-Inference.mdx) |
+| NF4 | ~0.5 | Frozen base weights in QLoRA fine-tuning | [LoRA & QLoRA Hands-On](../../09-Post-Training/Notes/06-LoRA-and-QLoRA-Hands-On.mdx) |
 
 4-bit formats store a scale per group of weights, so real sizes are a little above 0.5 bytes per parameter; quality loss depends on the method and the task, so always re-evaluate a quantized model on your own evaluation set.
 
@@ -237,7 +237,7 @@ if torch.cuda.is_available():
 
 ## Hands-On Lab
 
-Want to apply this VRAM/quantization math to an actual training run? See the fine-tuning half of [Post-Training & Fine-Tuning](../../08-Post-Training/INDEX.mdx) - configuring `BitsAndBytesConfig` for real 4-bit QLoRA loading, and a benchmark script that reads *measured* peak VRAM (`torch.cuda.max_memory_allocated()`) rather than estimating it.
+Want to apply this VRAM/quantization math to an actual training run? See the fine-tuning half of [Post-Training & Fine-Tuning](../../09-Post-Training/INDEX.mdx) - configuring `BitsAndBytesConfig` for real 4-bit QLoRA loading, and a benchmark script that reads *measured* peak VRAM (`torch.cuda.max_memory_allocated()`) rather than estimating it.
 
 ---
 

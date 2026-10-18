@@ -2,7 +2,7 @@
 then compare them properly: per-task scores with 95% CIs, and a *paired* bootstrap on the
 per-item differences.
 
-    python compare.py --base Qwen/Qwen3-0.6B --candidate ../../../08-Post-Training/CodeLabs/02-SFT-DPO-GRPO-with-TRL/runs/grpo/merged
+    python compare.py --base Qwen/Qwen3-0.6B --candidate ../../../09-Post-Training/CodeLabs/02-SFT-DPO-GRPO-with-TRL/runs/grpo/merged
     python compare.py --tasks gsm8k,arc_easy --limit 200
     python compare.py --base trl-internal-testing/tiny-Qwen3ForCausalLM \
                       --candidate trl-internal-testing/tiny-Qwen2ForCausalLM-2.5 --limit 8   # CPU smoke test
