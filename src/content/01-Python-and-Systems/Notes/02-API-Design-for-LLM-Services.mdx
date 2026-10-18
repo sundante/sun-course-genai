@@ -12,7 +12,7 @@ outcomes:
   - Design rate limits, timeouts and versioning for a multi-tenant model API
 prerequisites:
   - "[Python for AI Engineering](01-Python-for-AI-Engineering.mdx) - asyncio and Pydantic"
-  - "Optional, later in the course: [Streaming & TTFT](../../16-Inference-and-Serving/Notes/05-Streaming-and-TTFT.mdx)"
+  - "Optional, later in the course: [Streaming & TTFT](../../17-Inference-and-Serving/Notes/05-Streaming-and-TTFT.mdx)"
 ```
 
 ## Choosing the Interaction Style
@@ -199,7 +199,7 @@ Reject a reused key with a **different** request body - it signals a client bug.
 - **Limit on what costs money.** Model providers limit requests per minute **and** tokens per minute; do the same per tenant, counting input plus requested `max_tokens` up front and correcting with actual usage afterwards.
 - **Token bucket** (as above) allows short bursts while enforcing an average rate. Enforce it at the gateway or in a shared store, not per replica.
 - **Tell clients where they stand.** Return `Retry-After` on 429 and 503; the IETF RateLimit header fields draft defines headers for remaining quota.
-- **Backpressure, not collapse.** When the model backend is saturated, queue up to a bounded depth, then shed load with 503 + `Retry-After` rather than accepting work that will time out anyway. Queue depth is also the right autoscaling signal ([LLM Serving on Kubernetes](../../17-Production-Engineering/Notes/03-LLM-Serving-on-Kubernetes.mdx)).
+- **Backpressure, not collapse.** When the model backend is saturated, queue up to a bounded depth, then shed load with 503 + `Retry-After` rather than accepting work that will time out anyway. Queue depth is also the right autoscaling signal ([LLM Serving on Kubernetes](../../18-Production-Engineering/Notes/03-LLM-Serving-on-Kubernetes.mdx)).
 - **Priority classes.** Interactive traffic ahead of batch; give batch its own quota or a separate endpoint.
 
 ---

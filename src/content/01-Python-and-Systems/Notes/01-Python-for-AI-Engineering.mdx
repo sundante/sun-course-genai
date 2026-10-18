@@ -160,7 +160,7 @@ Before optimizing, measure where the time goes:
 
 - **`cProfile`** (standard library) - deterministic function-level profile: `python -m cProfile -s cumulative app.py`.
 - **`py-spy`** - a sampling profiler that attaches to a **running** process with negligible overhead (`py-spy top --pid 1234`, `py-spy record -o profile.svg --pid 1234`). Ideal for "the server is slow right now".
-- **`time.perf_counter()`** around suspect sections for quick checks, and tracing spans in production ([Agent Observability](../../15-Production-Agents/Notes/06-Agent-Observability.mdx)).
+- **`time.perf_counter()`** around suspect sections for quick checks, and tracing spans in production ([Agent Observability](../../16-Production-Agents/Notes/06-Agent-Observability.mdx)).
 
 In LLM applications the profile usually shows time waiting on the model, retrieval or the network, not Python itself. The fixes are then concurrency, caching and fewer or smaller model calls - not rewriting Python in another language. For GPU code, use the GPU profilers instead ([CUDA Concepts & GPU Profiling](../../07-Pretraining/Notes/08-CUDA-Concepts-and-GPU-Profiling.mdx)).
 
@@ -214,7 +214,7 @@ In LLM applications the profile usually shows time waiting on the model, retriev
     4. Write results incrementally (append to a file or database keyed by ticket id) so a crash resumes instead of restarting, and skip already-done ids.
     5. Log progress and failures.
 
-    Runtime: `20,000 x 1.5 s / 20 ≈ 1,500 s ≈ 25 minutes`, plus retry overhead - versus 30 hours sequentially. Also check whether the provider's batch API (often cheaper, with a longer turnaround) fits the job ([Cost and Latency](../../15-Production-Agents/Notes/04-Cost-and-Latency.mdx)).
+    Runtime: `20,000 x 1.5 s / 20 ≈ 1,500 s ≈ 25 minutes`, plus retry overhead - versus 30 hours sequentially. Also check whether the provider's batch API (often cheaper, with a longer turnaround) fits the job ([Cost and Latency](../../16-Production-Agents/Notes/04-Cost-and-Latency.mdx)).
 - title: Validate model output at the boundary
   task: |
     Write a Pydantic model for an extraction that returns an invoice number (pattern `INV-` followed by 6 digits), a total (positive, at most 1,000,000), a currency (one of EUR, USD, GBP) and an optional due date. What happens when the model returns a total of -5?

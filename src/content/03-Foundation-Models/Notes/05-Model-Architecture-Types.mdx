@@ -335,18 +335,18 @@ Beyond the three architecture shapes, people describe models by what they are tr
 
 | Category | What it is | Examples | Typical use |
 |---|---|---|---|
-| **Reasoning model** | A decoder-only LLM post-trained, largely with RL on verifiable tasks, to produce a long chain of thought before answering (see [Post-Training & Fine-Tuning](../../08-Post-Training/INDEX.mdx)) | DeepSeek-R1, OpenAI o-series, Qwen3 in thinking mode | Maths, code, multi-step planning |
+| **Reasoning model** | A decoder-only LLM post-trained, largely with RL on verifiable tasks, to produce a long chain of thought before answering (see [Post-Training & Fine-Tuning](../../09-Post-Training/INDEX.mdx)) | DeepSeek-R1, OpenAI o-series, Qwen3 in thinking mode | Maths, code, multi-step planning |
 | **Mixture of experts** | Sparse FFN layers: a router sends each token to a few experts | Mixtral, DeepSeek-V3, Qwen3-235B-A22B, gpt-oss | Large capacity at lower compute per token |
 | **Vision-language model** | A vision encoder (often a ViT) whose features are mapped into the LM's embedding space by a projector, trained on image-text data, or a natively multimodal model | LLaVA, Qwen-VL, Gemma 3, GPT-4o | Documents, screenshots, image Q&A, agent perception |
 | **Small language model** | Models of roughly 1-8B parameters, trained (often with distillation from a larger model) to run on a single GPU or device | Phi, Gemma, Qwen and Llama small sizes | On-device use, latency-critical sub-tasks, fine-tuning |
-| **Computer-use / action model** | An LLM trained or tuned to output actions - tool calls, clicks, keystrokes - from screenshots or UI trees | OpenAI's Computer-Using Agent, Anthropic's computer-use capability, Gemini computer-use models | Browser and desktop agents (see [Computer-Use and Browser Agents](../../19-Agent-Engineering/Notes/06-Computer-Use-and-Browser-Agents.mdx)) |
+| **Computer-use / action model** | An LLM trained or tuned to output actions - tool calls, clicks, keystrokes - from screenshots or UI trees | OpenAI's Computer-Using Agent, Anthropic's computer-use capability, Gemini computer-use models | Browser and desktop agents (see [Computer-Use and Browser Agents](../../20-Agent-Engineering/Notes/06-Computer-Use-and-Browser-Agents.mdx)) |
 | **Embedding model** | Usually an encoder (or a decoder adapted) trained with contrastive objectives to output a fixed vector | BGE, E5, Gemini and OpenAI embedding models | Search, RAG, clustering |
 | **Large concept model** (research) | Models that predict the next sentence-level embedding ("concept") instead of the next token | Meta's LCM (2024) | Research into language-agnostic reasoning |
 
 **Distinctions worth knowing:**
 - **Reasoning model vs chat model:** same architecture; the difference is post-training that rewards correct final answers and lets the model spend tokens thinking first.
 - **Vision-language training** typically goes: pretrained vision encoder and LM → train the projector on image-caption pairs → instruction-tune on visual tasks (LLaVA's recipe); newer models are trained multimodally from the start.
-- **Small model vs quantized large model:** a small model has fewer parameters; quantization keeps the parameter count and lowers the precision. They trade off differently (see [Quantized Inference](../../16-Inference-and-Serving/Notes/03-Quantized-Inference.mdx)).
+- **Small model vs quantized large model:** a small model has fewer parameters; quantization keeps the parameter count and lowers the precision. They trade off differently (see [Quantized Inference](../../17-Inference-and-Serving/Notes/03-Quantized-Inference.mdx)).
 - **Action models vs tool use:** any tool-calling LLM can act through tools; computer-use models are additionally trained on screen-and-action data so they can operate interfaces that have no API.
 
 ---

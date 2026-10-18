@@ -1,0 +1,39 @@
+# 08 - Training LLMs from Scratch
+
+This module puts the earlier concepts into practice by building and training language models end to end. Each chapter is a complete build of one model version, taking it from raw text to a trained model that generates text. It starts with a GPT-style decoder, and later chapters add newer architectures and larger training recipes on top of the same pipeline.
+
+```objectives
+scope: module
+time: 2-3 hours (growing as builds are added)
+outcomes:
+  - Run every step of a from-scratch pretraining pipeline in the right order, from data cleaning to sampling
+  - Split train and validation data without leakage, and build (x, y) context blocks and batches from a token stream
+  - Implement and size a GPT-style decoder, predicting its parameter count and training compute before running it
+  - Train it with a correct loop (AdamW, LR schedule, gradient accumulation, clipping, bf16) and diagnose it from the loss curves
+prerequisites:
+  - "[Foundation Models](../03-Foundation-Models/INDEX.mdx) - tokenization, the transformer and attention"
+  - "[PyTorch Fundamentals](../06-PyTorch/INDEX.mdx) - the training loop and the GPT From Scratch lab"
+  - "[Pretraining at Scale](../07-Pretraining/INDEX.mdx) - objectives, data curation and scaling laws"
+```
+
+## Chapter Map
+
+| # | Note | Topic | Level |
+|---|------|-------|-------|
+| 1 | [GPT From Scratch: Step by Step](Notes/01-GPT-From-Scratch-Step-by-Step.mdx) | The full pipeline: plan the run (C ≈ 6ND), clean and dedup, tokenize, split train/val before chunking, build (x, y) blocks and batches, a GPT decoder in PyTorch, sanity checks, AdamW + cosine, the training loop, evaluation, checkpointing and sampling | Intermediate |
+
+**Planned builds:** later chapters will follow the same step-by-step format for other model versions, such as a full GPT-2 (124M) reproduction on FineWeb-Edu, a modern Llama-style decoder, a mixture-of-experts model and training a tokenizer from scratch.
+
+## Code Lab
+
+The runnable companion for this module is the [GPT From Scratch lab](../06-PyTorch/CodeLabs/02-GPT-From-Scratch.mdx) in PyTorch Fundamentals. It is a modernized version of the model built in chapter 1, with RMSNorm, RoPE, grouped-query attention and SwiGLU, trained on Tiny Shakespeare, and a smoke test that runs on a laptop CPU.
+
+## Summary & Key Terms
+
+[Summary & Key Terms](APPENDIX.mdx) - a quick recap of this module and its essential vocabulary.
+
+---
+
+## Next Topic
+
+Previous: [07 - Pretraining at Scale](../07-Pretraining/INDEX.mdx) · Next: [09 - Post-Training & Fine-Tuning](../09-Post-Training/INDEX.mdx)

@@ -18,6 +18,7 @@ const MODULE_SLUG_MAP: Record<string, string> = {
   "Prompt & Context Engineering": "prompt-engineering",
   "PyTorch Fundamentals": "pytorch",
   "Pretraining at Scale": "pretraining",
+  "Training LLMs from Scratch": "llm-from-scratch",
   "Post-Training & Fine-Tuning": "post-training",
   "Introduction to AI Agents": "agent-fundamentals",
   "Agent Building Blocks": "agent-building-blocks",

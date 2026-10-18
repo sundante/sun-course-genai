@@ -77,7 +77,7 @@ They are tied together by **H(p, q) = H(p) + KL(p ‖ q)**. Since the entropy of
 - **Forward KL(p ‖ q)** - penalizes q for putting low probability where p has mass, so q spreads out to *cover* every mode of p. Maximum-likelihood training and standard distillation from a teacher's soft probabilities behave this way.
 - **Reverse KL(q ‖ p)** - penalizes q for putting mass where p has little, so q *concentrates* on a mode it can match well.
 
-**Where KL appears in post-training:** RLHF adds a penalty `β · KL(π ‖ π_ref)` that keeps the policy close to the SFT reference model, so it can't drift into reward-hacking text; DPO derives its loss from the same KL-constrained objective ([Preference Optimization](../../08-Post-Training/Notes/02-Preference-Optimization.mdx)). A higher β keeps the model closer to the reference.
+**Where KL appears in post-training:** RLHF adds a penalty `β · KL(π ‖ π_ref)` that keeps the policy close to the SFT reference model, so it can't drift into reward-hacking text; DPO derives its loss from the same KL-constrained objective ([Preference Optimization](../../09-Post-Training/Notes/02-Preference-Optimization.mdx)). A higher β keeps the model closer to the reference.
 
 ---
 

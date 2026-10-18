@@ -40,7 +40,7 @@ Safety is a trade-off with two error types, and measuring only one invites gamin
 |---|---|
 | **MLCommons AILuminate v1.0** (2025) | 12 hazard categories for general-purpose chat (violent and non-violent crimes, CBRNE weapons, suicide and self-harm, hate, privacy, specialized advice, and others); Llama Guard 4 is trained to it |
 | **NIST AI 600-1** Generative AI Profile (2024) | 12 risk areas for generative AI, including CBRN information, confabulation, information security, harmful bias and IP |
-| **OWASP Top 10 for LLM Applications** (2025) | Application-security risks - prompt injection, sensitive information disclosure, excessive agency; see [Security & Compliance](../../17-Production-Engineering/Notes/06-Security-and-Compliance.mdx) |
+| **OWASP Top 10 for LLM Applications** (2025) | Application-security risks - prompt injection, sensitive information disclosure, excessive agency; see [Security & Compliance](../../18-Production-Engineering/Notes/06-Security-and-Compliance.mdx) |
 
 Write your policy as categories, each with examples of **disallowed**, **allowed with care** and **allowed** requests. Those examples become the seed set for both safety evals and red-teaming.
 
@@ -55,7 +55,7 @@ Write your policy as categories, each with examples of **disallowed**, **allowed
 | **Multi-turn escalation** | Start benign and move step by step toward the target, using the model's own earlier answers | Crescendo (2024) |
 | **Many-shot** | Fill a long context with fake dialogues in which an assistant complies, then ask | Many-shot jailbreaking (2024) - effectiveness grows with the number of shots |
 | **Optimization-based** | Search for an input that maximizes the chance of compliance | GCG adversarial suffixes (white-box, 2023); PAIR and TAP (an attacker LLM iteratively refines prompts, black-box, 2023); Best-of-N random augmentations (2024) |
-| **Prompt injection** | Instructions arrive in data the model reads - a web page, email, document or tool result - rather than from the user | Indirect injection against RAG and agents; see [Prompts in Production](../../05-Prompt-Engineering/Notes/08-Prompts-in-Production.mdx) and [Agent Security](../../15-Production-Agents/Notes/02-Agent-Security.mdx) |
+| **Prompt injection** | Instructions arrive in data the model reads - a web page, email, document or tool result - rather than from the user | Indirect injection against RAG and agents; see [Prompts in Production](../../05-Prompt-Engineering/Notes/08-Prompts-in-Production.mdx) and [Agent Security](../../16-Production-Agents/Notes/02-Agent-Security.mdx) |
 | **Extraction** | Get the system to reveal what it should keep | System prompt, other users' data, secrets in context, memorized training data |
 
 Two observations from the research change how you test:
@@ -138,7 +138,7 @@ A **guard model** is a classifier, usually a small LLM, that labels a prompt or 
 - **Injection detectors** such as Meta's Prompt Guard models - small classifiers for jailbreak and injection patterns in untrusted text
 - **Constitutional Classifiers** (Anthropic, 2025) - input and output classifiers trained on synthetic data generated from a written constitution; showed strong robustness to universal jailbreaks in a large public red-team
 
-Evaluate the guard like any classifier: **precision and recall per category on your own traffic**, the over-refusal it adds, and its latency (an output guard that waits for the full response defeats streaming unless it checks chunks). Guards are a layer, not a guarantee - they are themselves attackable, which is why agent systems also need the architectural controls in [Agent Security](../../15-Production-Agents/Notes/02-Agent-Security.mdx).
+Evaluate the guard like any classifier: **precision and recall per category on your own traffic**, the over-refusal it adds, and its latency (an output guard that waits for the full response defeats streaming unless it checks chunks). Guards are a layer, not a guarantee - they are themselves attackable, which is why agent systems also need the architectural controls in [Agent Security](../../16-Production-Agents/Notes/02-Agent-Security.mdx).
 
 ---
 
@@ -167,7 +167,7 @@ The caveats from [Contamination & Leaderboards](02-Contamination-and-Leaderboard
 7. **Regression set** - every confirmed finding becomes a test in the safety suite that runs on each release.
 8. **Report** - scope, method, attacker budget, ASR and over-refusal per category with CIs, before and after fixes, and residual risk accepted by an owner.
 
-**Disclosure:** vulnerabilities found in a third-party model or service go to the vendor through its security or bug-bounty channel before any public write-up. Inside your organization, safety findings follow the incident process in [LLM Observability, SLOs & Incident Response](../../17-Production-Engineering/Notes/05-LLM-Observability-SLOs-and-Incident-Response.mdx).
+**Disclosure:** vulnerabilities found in a third-party model or service go to the vendor through its security or bug-bounty channel before any public write-up. Inside your organization, safety findings follow the incident process in [LLM Observability, SLOs & Incident Response](../../18-Production-Engineering/Notes/05-LLM-Observability-SLOs-and-Incident-Response.mdx).
 
 ---
 

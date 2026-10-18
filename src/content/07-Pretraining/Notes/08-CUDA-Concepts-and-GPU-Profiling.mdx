@@ -184,7 +184,7 @@ flowchart TD
 | Matmuls slow for their size | Odd shapes not multiples of 8 or 64, FP32 instead of BF16 | Pad dimensions; use BF16 or FP8 tensor cores |
 | Attention dominates and memory explodes at long context | Unfused attention materializing `T x T` | FlashAttention / SDPA backends |
 | Long NCCL kernels, compute waiting | Communication not overlapped | Overlap gradient all-reduce with backward; tune bucket sizes; check interconnect topology ([Distributed Training at Scale](05-Distributed-Training-at-Scale.mdx)) |
-| Decode tokens/s low at batch 1 | Memory-bandwidth bound by design | Batch more requests; quantize weights and KV cache ([Inference & Serving](../../16-Inference-and-Serving/INDEX.mdx)) |
+| Decode tokens/s low at batch 1 | Memory-bandwidth bound by design | Batch more requests; quantize weights and KV cache ([Inference & Serving](../../17-Inference-and-Serving/INDEX.mdx)) |
 
 ---
 

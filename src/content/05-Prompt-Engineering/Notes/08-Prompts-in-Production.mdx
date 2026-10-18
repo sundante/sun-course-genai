@@ -122,7 +122,7 @@ flowchart TD
 1. **Mark untrusted content.** Wrap it in tags and instruct the model to treat it as data. *Spotlighting* (Hines et al., 2024) strengthens this by transforming the untrusted text - interleaving a marker character between words ("datamarking") or base64-encoding it - which cut attack success rates from over 50% to under 2% in their experiments on some models, though not to zero.
 2. **Detect.** Run a trained injection classifier on user input *and* on retrieved or tool content. Regex blocklists of phrases like "ignore previous instructions" catch only the laziest attacks and produce false positives - use them for logging, not as a defence.
 3. **Limit privilege.** Give the model only the tools and data the task needs; keep secrets and credentials out of the context entirely; require human confirmation for irreversible or external actions (payments, emails, deletions).
-4. **Architect around it.** Patterns such as keeping a "privileged" planner that never sees untrusted text, and a "quarantined" model that processes it without tool access, bound what an injection can reach. These are covered with agent security in [Production Agents](../../15-Production-Agents/INDEX.mdx).
+4. **Architect around it.** Patterns such as keeping a "privileged" planner that never sees untrusted text, and a "quarantined" model that processes it without tool access, bound what an injection can reach. These are covered with agent security in [Production Agents](../../16-Production-Agents/INDEX.mdx).
 5. **Monitor outputs.** Flag responses that reproduce system-prompt text, contain unexpected URLs, or trigger unusual tool calls.
 
 Assume the system prompt will leak eventually: never put secrets, keys or anything sensitive in it.

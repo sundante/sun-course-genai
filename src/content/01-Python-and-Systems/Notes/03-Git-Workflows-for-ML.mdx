@@ -22,7 +22,7 @@ prerequisites:
 | Notebooks | **Git, outputs stripped** | Outputs bloat diffs and can leak data |
 | Medium binary files (images, small models) in a code repo | **Git LFS** | Keeps pointers in Git, contents in LFS storage |
 | Datasets and pipeline outputs | **DVC** (or a data lake with versioned snapshots) | Versions large data in object storage, tied to Git commits |
-| Model weights and checkpoints | **Model registry** or the Hugging Face Hub | Large, with lifecycle stages and access control ([Model Lifecycle & Rollout](../../17-Production-Engineering/Notes/04-Model-Lifecycle-and-Rollout.mdx)) |
+| Model weights and checkpoints | **Model registry** or the Hugging Face Hub | Large, with lifecycle stages and access control ([Model Lifecycle & Rollout](../../18-Production-Engineering/Notes/04-Model-Lifecycle-and-Rollout.mdx)) |
 | Secrets (API keys, tokens) | **Secret manager** - never Git | Git history is permanent and copied to every clone |
 
 A starting `.gitignore` for an LLM project excludes `.venv/`, `__pycache__/`, `.env`, `data/` (tracked by DVC instead), `checkpoints/`, `wandb/` and `mlruns/`, and large model files such as `*.safetensors` and `*.gguf`.
@@ -56,7 +56,7 @@ gitGraph
 
 - Lint, format, type check and unit tests on every PR ([Python for AI Engineering](01-Python-for-AI-Engineering.mdx))
 - A **fast eval subset** whenever prompts, model versions, retrieval settings or tool definitions change - prompts are code, and a prompt edit needs the same review and gate as a code edit ([Prompts in Production](../../05-Prompt-Engineering/Notes/08-Prompts-in-Production.mdx))
-- Infrastructure plans posted to the PR for IaC changes ([Infrastructure as Code](../../17-Production-Engineering/Notes/08-Infrastructure-as-Code.mdx))
+- Infrastructure plans posted to the PR for IaC changes ([Infrastructure as Code](../../18-Production-Engineering/Notes/08-Infrastructure-as-Code.mdx))
 
 **Commits:** small, one logical change each, with messages that say why. Squash-merging PRs keeps `main`'s history readable, and tags mark releases.
 

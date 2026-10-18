@@ -68,7 +68,7 @@ flowchart LR
     style AI fill:#e8e2d9,stroke:#ccc4b8
 ```
 
-**Why decode is memory-bound:** generating one token at batch size 1 multiplies each weight once (2 FLOPs per parameter) but must read every weight (2 bytes in BF16) - an intensity of about 1 FLOP/byte, nearly 300× below H100's ridge. Throughput comes from batching many sequences so each weight read is reused, which is exactly what [continuous batching](../../16-Inference-and-Serving/INDEX.mdx) does.
+**Why decode is memory-bound:** generating one token at batch size 1 multiplies each weight once (2 FLOPs per parameter) but must read every weight (2 bytes in BF16) - an intensity of about 1 FLOP/byte, nearly 300× below H100's ridge. Throughput comes from batching many sequences so each weight read is reused, which is exactly what [continuous batching](../../17-Inference-and-Serving/INDEX.mdx) does.
 
 **Back-of-envelope decode ceiling:** at batch size 1, tokens/second ≤ memory bandwidth ÷ bytes of weights. A 70B BF16 model (140 GB) split across two H100s reads at up to ~6.7 TB/s → at most ~48 tokens/s per sequence, before any overhead.
 
@@ -84,7 +84,7 @@ flowchart LR
 | MXFP4 | 4 | E8M0 scale per block of 32 values (OCP Microscaling spec) | Weights for serving; gpt-oss ships its MoE weights in MXFP4 |
 | NVFP4 | 4 | FP8 (E4M3) scale per block of 16 values, plus a per-tensor FP32 scale | NVIDIA's 4-bit format for Blackwell inference (and increasingly training) |
 
-Smaller blocks and finer scales track outliers better, which is why NVFP4's 16-value blocks with FP8 scales typically lose less accuracy than MXFP4's 32-value blocks with power-of-two scales. Quantization for serving is covered in [Inference & Serving](../../16-Inference-and-Serving/INDEX.mdx).
+Smaller blocks and finer scales track outliers better, which is why NVFP4's 16-value blocks with FP8 scales typically lose less accuracy than MXFP4's 32-value blocks with power-of-two scales. Quantization for serving is covered in [Inference & Serving](../../17-Inference-and-Serving/INDEX.mdx).
 
 ---
 
