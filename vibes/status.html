@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Learn GenAI — Project Status</title>
+<title>Learn GenAI - Project Status</title>
 <style>
   :root {
     --bg: #f7f7f5;
@@ -205,19 +205,29 @@
     td::before { content: attr(data-label); display: block; font-size: .72rem; color: var(--text-dim); font-weight: 600; }
   }
 </style>
+<style>
+  .section-body h3 { font-size: .95rem; margin: 1.1rem 0 .5rem; }
+  .section-body h3:first-child { margin-top: 0; }
+  .section-body li { margin: .3rem 0; }
+  .section-body input[type=checkbox] { margin-right: .4rem; }
+  .section-body blockquote { border-left: 3px solid var(--accent); background: var(--accent-bg); margin: .8rem 0; padding: .5rem 1rem; border-radius: 0 8px 8px 0; }
+  .table-scroll { overflow-x: auto; }
+  .changelog li { font-size: .88rem; }
+  .changelog li strong:first-child { color: var(--accent); }
+</style>
 </head>
 <body>
 <div class="wrap">
 
   <header class="page-head">
-    <h1>Learn GenAI — Project Status</h1>
+    <h1>Learn GenAI - Project Status</h1>
     <div class="meta">
       <span>🔗 <code>learngenai.sunmintz.com</code></span>
-      <span>🧱 Next.js 16.2.9 · TypeScript · Tailwind 4 · MDX · shadcn/ui</span>
-      <span>📅 Last updated <code>2026-08-10</code></span>
-      <span>📌 Last commit <code>69f4c46</code> (2026-08-10) — local <code>dev</code> only, not pushed/merged</span>
+      <span>🧱 Next.js 16.2.9 (App Router, static export) - TypeScript (strict) - Tailwind CSS 4 - MDX (<code>next-mdx-remote/rsc</code>) - shadcn/ui - Mermaid</span>
+      <span>📅 Last updated <code>2026-10-19</code></span>
     </div>
-    <div class="callout" style="margin-top:.9rem"><strong>Uncommitted work exists:</strong> the full glass UI redesign (19 files) landed after commit <code>69f4c46</code> and is not yet committed. See Handover Notes.</div>
+    <div class="callout" style="margin-top:.9rem"><strong>Last commit:</strong> <code>d1ede03</code> (2026-10-18 - &quot;Updated the repo with Building GPT from scratch&quot;) - <code>dev</code> branch; the 2026-10-19 bigram primer work is on top of it and <strong>not yet committed</strong> (see Changelog)</div>
+    <div class="callout"><strong>Content:</strong> <code>find src/content -name &#39;*.mdx&#39; | wc -l</code> -&gt; <strong>233 files</strong> (+1 bigram primer on 2026-10-19; 232 after the 2026-10-18 LLM-from-Scratch module; after the 2026-10-09 restructure: Fine-Tuning Lab&#39;s INDEX, Q&amp;A bank and appendix merged into Post-Training (-3), new Agent Building Blocks INDEX, appendix and bank (+3); 228 before it too - the 206 figures below were already stale - after readiness-gaps Phases 4-5: +3 lab pages; 203 after Phase 3; 194 after Phase 2; 185 after Phase 1; 174 after Phase 5&#39;s Q&amp;A dedupe and capstones; 183 after Phase 4, down from 201 after the Phase 4 agents-track merges: framework stub pages, old labs and duplicate agent-engineering notes removed, all with legacy redirects)</div>
   </header>
 
   <div class="toolbar">
@@ -226,28 +236,29 @@
     <button id="themeToggle">🌙 Dark mode</button>
   </div>
 
-  <details class="section" open>
-    <summary><span class="chev">▶</span> 1 · Deployment <span class="count">Hostinger · manual FTP</span></summary>
+  <details class="section">
+    <summary><span class="chev">▶</span> 1 · Deployment <span class="count">static export · Hostinger FTP</span></summary>
     <div class="section-body">
-      <p>Static export (<code>output: "export"</code>) built via <code>next build</code>, uploaded to Hostinger by a manually-triggered GitHub Actions workflow. No Node server at runtime; served at <code>sunmintz.com/learngenai/</code>.</p>
-
-      <h3 class="sub">Why static export works</h3>
-      <ul class="plain">
-        <li><code>output: "export"</code> → pure static HTML/CSS/JS</li>
-        <li><code>trailingSlash: true</code> → every route emits <code>route/index.html</code></li>
-        <li><code>images: { unoptimized: true }</code> → no image-optimization server needed</li>
-      </ul>
-
-      <h3 class="sub">Current workflow — <code>.github/workflows/deploy.yml</code></h3>
-      <pre><code>name: Deploy to Hostinger
+<p><strong>Target:</strong> <code>sunmintz.com/learngenai/</code> (static export, no Node server at runtime)
+<strong>Method:</strong> <code>next build</code> (static export) -&gt; FTP upload of <code>out/</code> via GitHub Actions -&gt; Hostinger shared hosting</p>
+<h3>Why static export works</h3>
+<ul>
+<li><code>next.config.ts</code>: <code>output: &quot;export&quot;</code> -&gt; pure static HTML/CSS/JS, no server needed</li>
+<li><code>trailingSlash: true</code> -&gt; every route emits as <code>route/index.html</code> (Apache-friendly)</li>
+<li><code>images: { unoptimized: true }</code> -&gt; no Node image-optimization server required</li>
+</ul>
+<h3>Current workflow (<code>.github/workflows/deploy.yml</code>)</h3>
+<pre><code class="language-yaml">name: Deploy to Hostinger
 on:
-  workflow_dispatch:        # manual trigger only
+  push:
+    branches: [main]       # auto-deploy on every push to main
+  workflow_dispatch:        # + manual trigger for on-demand redeploys
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - actions/checkout@v4
-      - actions/setup-node@v4 (node 20, npm cache)
+      - actions/setup-node@v4 (node-version: 20, cache: npm)
       - run: npm ci
       - run: npm run build
       - uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -257,217 +268,507 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           port: 21
           local-dir: ./out/
-          server-dir: /domains/sunmintz.com/public_html/learngenai/</code></pre>
+          server-dir: /domains/sunmintz.com/public_html/learngenai/
+          exclude: [**/.DS_Store, **/*.txt]
+          dangerous-clean-slate: true
+</code></pre>
+<p><strong>Required GitHub repo secrets (Settings -&gt; Secrets -&gt; Actions):</strong></p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Secret</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>FTP_SERVER</code></td>
+<td>FTP hostname from Hostinger hPanel</td>
+</tr>
+<tr>
+<td><code>FTP_USERNAME</code></td>
+<td>FTP account username</td>
+</tr>
+<tr>
+<td><code>FTP_PASSWORD</code></td>
+<td>FTP account password</td>
+</tr>
+</tbody></table></div>
+<p>Note: <code>server-dir</code> is hardcoded directly in the YAML (<code>/domains/sunmintz.com/public_html/learngenai/</code>), it is <strong>not</strong> read from a secret. (The previous tracker doc claimed a <code>FTP_HOST</code> secret and a <code>FTP_SERVER_DIR</code> secret - both wrong; see <strong>Known Issues</strong> below, now corrected in this doc.)</p>
+<h3>Local/manual deploy fallback</h3>
+<pre><code class="language-bash">npm run build
+# FTP the CONTENTS of ./out/ (not the folder itself) to /domains/sunmintz.com/public_html/learngenai/
+</code></pre>
+<p>Remote root should look like:</p>
+<pre><code class="language-text">/domains/sunmintz.com/public_html/learngenai/
+  index.html
+  _next/
+  404.html
+  learn/
+  quiz/
+  favicon.ico
+</code></pre>
+<h3>Deploy history notes</h3>
+<ul>
+<li>Workflow was iterated on heavily in June: briefly deleted and recreated, switched from an auto-trigger to manual-only (<code>workflow_dispatch</code>), had CI-breaking issues fixed (untracked <code>package-lock.json</code>/<code>tsconfig.json</code> blocking npm cache and path-alias resolution).</li>
+<li>2026-06-29 (commit <code>e5f3191</code>) removed an <code>environment</code> choice dropdown from the manual trigger, simplifying it back to a bare <code>workflow_dispatch</code> with no inputs.</li>
+<li><strong>2026-09-18</strong>: re-added an auto-deploy trigger (<code>push: branches: [main]</code>, alongside the existing <code>workflow_dispatch</code>) and switched <code>dangerous-clean-slate</code> to <code>true</code>, after comparing this repo&#39;s deployment against a reference &quot;Static SPA + PHP API on shared hosting&quot; pattern - see Changelog.</li>
+<li><strong>No CI runs on push/PR</strong> - lint, typecheck, and build are not verified automatically before merge. Every push to <code>main</code> now deploys straight to production (<code>sunmintz.com/learngenai/</code>).</li>
+</ul>
 
-      <h3 class="sub">Required secrets</h3>
-      <table>
-        <thead><tr><th>Secret</th><th>Purpose</th></tr></thead>
-        <tbody>
-          <tr><td data-label="Secret"><code>FTP_SERVER</code></td><td data-label="Purpose">FTP hostname from Hostinger hPanel</td></tr>
-          <tr><td data-label="Secret"><code>FTP_USERNAME</code></td><td data-label="Purpose">FTP account username</td></tr>
-          <tr><td data-label="Secret"><code>FTP_PASSWORD</code></td><td data-label="Purpose">FTP account password</td></tr>
-        </tbody>
-      </table>
-      <div class="callout"><strong>Note:</strong> <code>server-dir</code> is hardcoded in the YAML, not read from a secret — a previous tracker doc claimed <code>FTP_HOST</code> / <code>FTP_SERVER_DIR</code> secrets existed. That was wrong; corrected here.</div>
-
-      <h3 class="sub">Deploy history</h3>
-      <ul class="plain">
-        <li>Workflow was deleted/recreated and switched from auto-trigger to manual-only during June CI fixes (untracked <code>package-lock.json</code>/<code>tsconfig.json</code> had been blocking npm cache and path-alias resolution)</li>
-        <li>Latest change (2026-06-29, <code>e5f3191</code>) removed an unused <code>environment</code> choice input, back to a bare <code>workflow_dispatch</code></li>
-        <li><strong>No CI runs on push/PR</strong> — lint/typecheck/build are not verified automatically before merge</li>
-      </ul>
     </div>
   </details>
 
   <details class="section">
-    <summary><span class="chev">▶</span> 2 · What's Built <span class="count">154 .mdx files · 12 modules</span></summary>
+    <summary><span class="chev">▶</span> 2 · What's Built <span class="count">233 .mdx files · 23 modules · 7 tracks</span></summary>
     <div class="section-body">
+<h3>Core App</h3>
+<ul>
+<li>Next.js App Router scaffolded with TypeScript (strict mode) + Tailwind CSS 4</li>
+<li>Static export configured (<code>output: &quot;export&quot;</code>)</li>
+<li>Inter + JetBrains Mono via <code>next/font/google</code></li>
+<li>Design system: sun-yellow color tokens, glassmorphism token system (<code>--glass-panel/nav/card/modal-bg/border</code>, <code>--glass-shadow-sm/md/lg</code>, <code>--glass-glow-yellow</code>, <code>--blur-glass-sm/md/lg</code>), full light/dark token pairs for every <code>--sun-*</code>/<code>--glass-*</code>/<code>--shadcn-*</code> custom property, prose overrides (now theme-reactive via <code>var()</code> references instead of static hex), audience-toggle CSS (see <code>src/app/globals.css</code>). The <code>blur-glass-*</code> scale is currently <code>0px</code>, so &quot;glass&quot; surfaces render flat. Design rules (token architecture, where glass applies, MDX surface, audience split) live in <code>CLAUDE.md</code> &gt; &quot;Site UI Conventions&quot;</li>
+<li>Dark mode: user-facing toggle (<code>ThemeToggle.tsx</code>), hand-rolled <code>.dark</code> class + <code>localStorage</code>, no-flash-of-wrong-theme inline script in <code>layout.tsx</code>, defaults to light. Glass treatment is live across chrome (<code>Header</code>/<code>Sidebar</code>/<code>MobileNav</code>/<code>PageNav</code>/<code>TableOfContents</code>), modals/overlays (<code>AudienceOnboardingModal</code>/<code>DisclaimerModal</code>/<code>sheet.tsx</code>), shadcn primitives (<code>card</code>/<code>button</code>/<code>badge</code>/<code>progress</code>/<code>separator</code> - additive <code>glass</code> variant on button/badge, restyled-by-default on the other three since they had zero live consumers), the MDX prose layer (tables/code blocks/inline code/blockquotes), and all page-level layouts (landing, lesson, quiz, not-found). <code>AgentUseCaseMindmap.tsx</code>&#39;s structural chrome is glass-token-based; its 15 data-driven category accent colors (agent types/domains/complexity tiers) remain light-mode-only hex by design scope, not oversight - see <code>vibes/GLASS-UI-REDESIGN.md</code> Section 9. <strong>All 11 sections of the redesign are complete and browser-verified</strong> (real Playwright + Chromium walkthrough, light/dark x desktop/mobile, 2026-08-10) - see <code>vibes/GLASS-UI-REDESIGN.md</code> for the final status; the execution checklist has been deleted per its own retirement rule now that nothing remains pending. Not yet pushed/committed to <code>main</code> at time of writing.</li>
+</ul>
+<h3>Navigation &amp; Content Pipeline</h3>
+<ul>
+<li><code>src/content/nav.yml</code> - single source of truth for nav, MkDocs-style tree</li>
+<li><code>src/lib/content/nav.ts</code> - parses <code>nav.yml</code>, builds <code>NavModule[]</code> + flat <code>PageRef[]</code>, computes prev/next, module-level cache</li>
+<li><code>src/lib/content/loader.ts</code> - reads raw <code>.mdx</code> per page, extracts TOC via heading regex (<code>extractToc</code>), exposes <code>getPage</code> / <code>getAllPages</code> / <code>getPageWithNavigation</code></li>
+<li><code>src/lib/content/remarkRewriteMdLinks.ts</code> - build-time remark plugin rewriting cross-content links</li>
+<li>MDX pipeline (<code>src/app/(course)/learn/[module]/[slug]/page.tsx</code>): <code>next-mdx-remote/rsc</code>&#39;s <code>MDXRemote</code> with <code>remark-gfm</code>, <code>remarkRewriteMdLinks</code>, <code>rehype-raw</code>, <code>rehype-slug</code>, <code>rehype-autolink-headings</code> (wrap), <code>rehype-highlight</code>; <code>parseFrontmatter: false</code>, format <code>&quot;md&quot;</code></li>
+<li>Slug-collision prevention - subdirectory paths included in generated slugs</li>
+<li><strong>Automatic WIP detection</strong> - <code>isStubFile()</code> in <code>src/lib/content/nav.ts</code> flags any content file with fewer than 8 non-heading/non-empty body lines as <code>wip: true</code>; this is computed from content length, not a manual flag per file</li>
+<li><strong>Course fences</strong> - <code>remarkCourseFences.ts</code> turns <code>```objectives</code>, <code>```quiz</code>, <code>```exercise</code> and <code>```interactive</code> YAML fences into <code>cf-*</code> divs rendered by <code>CourseFences.tsx</code> / <code>Quiz.tsx</code> / <code>InteractiveEmbed.tsx</code>; <code>check:content</code> validates the same schemas (and, for <code>interactive</code>, that <code>src</code> exists under <code>public/</code>)</li>
+<li><strong>Interactive labs</strong> - self-contained HTML pages in <code>public/labs/&lt;name&gt;/</code> (copied to <code>out/labs/</code> on build), embedded with the <code>interactive</code> fence. Rules: light default + on-page dark toggle that follows the site&#39;s <code>localStorage.theme</code>; reference the file by full name (<code>/labs/bigram/index.html</code>) because <code>next dev</code> does not serve folder index files. First lab: <code>public/labs/bigram/</code> (Bigram, Visualized - synced YouTube player, 22 steps, 3-D canvas stage, paraphrased transcript, line-by-line <code>bigram.py</code>, Credits dialog with the MIT notice)</li>
+<li><strong>Generated A-Z glossary</strong> - <code>scripts/build-glossary.mjs</code> (<code>npm run build:glossary</code>) collects every <code>| **Term** | meaning |</code> row from the 22 module <code>APPENDIX.mdx</code> (Summary &amp; Key Terms) pages, de-duplicates them, and rewrites the region between the <code>glossary:start</code> / <code>glossary:end</code> HTML comments in <code>23-Review/02-Glossary.mdx</code>. <code>check:content</code> fails if that region is stale, so after editing any Key Terms table run <code>npm run build:glossary</code></li>
+</ul>
+<h3>Pages</h3>
+<ul>
+<li>Homepage - hero, module grid, stats strip, learning paths, footer</li>
+<li>Course content pages - <code>/learn/[module]/[slug]</code></li>
+<li>404 page</li>
+<li>Quiz pages - <code>/quiz/all</code>, <code>/quiz/[module]</code> - <strong>stubs only</strong>, render <code>&lt;UnderDevelopment&gt;</code> placeholder; <code>quiz/[module]</code> params now come from the nav tree (was a hardcoded 7-slug list). In-page quizzes exist via the <code>quiz</code> fence (see CLAUDE.md). Previously: hardcoded <code>generateStaticParams</code> for 7 module slugs but no actual quiz data/logic</li>
+</ul>
+<h3>UI Components (<code>src/components/course/</code>)</h3>
+<ul>
+<li><code>Header</code> - sticky, social links, GitHub star button</li>
+<li><code>Sidebar</code> - track labels from nav.yml; collapsible icon-rail mode (<code>CollapsedRail</code>, module numbers - letter abbreviations collided once there were two &quot;Agent F...&quot; modules), expandable modules, active-link tracking via <code>usePathname</code>; <code>ModuleSection</code> renders numbered top-level modules (<code>01. LLM Models</code> ... <code>07. Knowledge Check</code>); <code>NavLeaf</code> renders numbered leaf items and an italic &quot;WIP&quot; badge for stub pages</li>
+<li><code>MobileNav</code> - sheet drawer for mobile</li>
+<li><code>AudienceToggle</code> - All / Technical / Non-Technical modes, persists to <code>localStorage</code></li>
+<li><code>AudienceOnboardingModal</code>, <code>DisclaimerModal</code>, <code>DisclaimerNote</code></li>
+<li><code>TableOfContents</code> - sticky, IntersectionObserver-based active heading tracking, independently scrollable</li>
+<li><code>PageNav</code> - prev/next footer</li>
+<li><code>CourseMap</code> (<code>/map</code>, &quot;The Course Atlas&quot;) - an illustrated, map-style sitemap: day parchment / night map via the <code>--map-*</code> tokens, title cartouche, tracks as double-ruled regions, the 20 numbered modules (plus the Knowledge Check hall) as landmarks named by their <code>moduleMeta.ts</code> subtitles, a dotted learning route that snakes through them in order (kept clear of labels), compass rose and legend. Data and layout come from <code>src/lib/content/courseMap.ts</code> (derived from <code>nav.yml</code>; <code>layoutWide()</code> for desktop, <code>layoutTall()</code> for a vertical strip map below <code>md</code>). Selecting a landmark (a <code>#slug</code> link, so <code>/map#rag</code> deep-links and back/forward work) opens a note card beside it on desktop or a bottom <code>Sheet</code> on mobile with the description, counts and every page. &quot;You are here&quot;: <code>VisitTracker</code> on lesson pages stores the last page opened (<code>localStorage</code> <code>genai_last_visit</code>) and the map pins footprints on that module plus a &quot;Continue&quot; link. Below the map, a &quot;Map index&quot; lists every page as plain links (accessible, no-JS, crawlable). Linked from the course header (&quot;Map&quot;), the mobile nav bar, the sidebar footer and the home page header. EB Garamond is loaded for map labels on this page only</li>
+<li><code>src/app/sitemap.ts</code> / <code>robots.ts</code> - <code>out/sitemap.xml</code> (home, map, quiz index, each module quiz with questions, every lesson page; trailing-slash URLs on <code>SITE_URL</code> from <code>src/lib/site.ts</code>) and <code>out/robots.txt</code> pointing to it</li>
+<li><code>Search</code> - header button (course <code>Header</code> and the home page&#39;s own header) opening a Radix dialog; ⌘K / Ctrl K toggles, <code>/</code> opens. On first open it fetches <code>/search-index.json</code> (<del>1.8 MB, ~570 KB gzipped) and builds a MiniSearch index in the browser (</del>140 ms): prefix match on the word being typed, typo tolerance on words over 4 letters, heading/title boosts, AND across terms. Results show module › page, the section heading (<code>###</code> sections prefixed with their <code>##</code> parent) and a highlighted snippet; arrow keys + Enter jump straight to the section anchor. The index comes from <code>src/lib/content/searchIndex.ts</code> via the static route <code>src/app/search-index.json/route.ts</code>: one entry per page intro and per <code>##</code>/<code>###</code> section, fence prose (objectives, quiz questions, exercise tasks - not answers or solutions), and code blocks reduced to distinct identifiers in a hidden field so <code>LoraConfig</code> still finds the lab. Mermaid is skipped. New content is indexed automatically on build</li>
+<li><code>UnderDevelopment</code> - animated placeholder for WIP/stub pages</li>
+<li><code>MermaidDiagram</code>, <code>AgentUseCaseMindmap</code></li>
+<li><code>CourseFences</code> (<code>CourseDiv</code>) + <code>Quiz</code> - render the <code>cf-*</code> fence divs (objectives, quiz, exercise, interactive)</li>
+<li><code>InteractiveEmbed</code> (client) - the <code>interactive</code> fence: iframe card with <strong>Theatre view</strong> (pins the same iframe over the viewport so a lab&#39;s two-pane layout fits; no reload, Esc exits, body scroll locked) and a New tab link</li>
+<li><code>MdxComponents</code> - custom component overrides for MDX rendering</li>
+<li><code>src/components/ui/</code> - shadcn/ui primitives: button, sheet, card, badge, progress, separator</li>
+</ul>
+<h3>Course Content - 233 <code>.mdx</code> files across 21 teaching modules in 7 tracks (+ Capstones and Review &amp; Readiness)</h3>
+<p>Restructured 2026-10-09 (see Changelog). The flow: conceptual &amp; mathematical foundations -&gt; large language models (understand, measure, prompt, then build them) -&gt; fundamentals of AI agents -&gt; building products with LLMs &amp; agents -&gt; production &amp; operations -&gt; industry standards &amp; frontier -&gt; capstones &amp; review. Order, numbering and tracks come from <code>src/content/nav.yml</code>. Every module has the same nav shape: Overview, concept group(s), Code Labs, Case Studies, Review (Q&amp;A bank + Summary &amp; Key Terms). Module order follows the declared <code>objectives</code> prerequisites, enforced by <code>npm run check:content</code>.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Track</th>
+<th>Module (slug)</th>
+<th>Dir</th>
+<th>Contents today</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>01</td>
+<td>Conceptual &amp; Mathematical Foundations</td>
+<td>Python &amp; Systems (<code>python-and-systems</code>)</td>
+<td><code>01-Python-and-Systems/</code></td>
+<td>4 notes + Q&amp;A bank (16)</td>
+</tr>
+<tr>
+<td>02</td>
+<td>Conceptual &amp; Mathematical Foundations</td>
+<td>Math for ML (<code>math-for-ml</code>)</td>
+<td><code>02-Math-for-ML/</code></td>
+<td>4 notes + Q&amp;A bank (16) + Attention &amp; Backprop by Hand lab</td>
+</tr>
+<tr>
+<td>03</td>
+<td>Large Language Models</td>
+<td>Foundation Models (<code>foundation-models</code>)</td>
+<td><code>03-Foundation-Models/</code></td>
+<td>8 notes (fundamentals, tokenization, architecture, attention, model types, modern architectures, failure modes, model landscape) + Q&amp;A bank (47)</td>
+</tr>
+<tr>
+<td>04</td>
+<td>Large Language Models</td>
+<td>Evaluation &amp; Benchmarks (<code>evaluation</code>)</td>
+<td><code>04-Evaluation/</code></td>
+<td>5 notes + Q&amp;A bank (21) + Eval Harness lab + Red-Team Harness lab</td>
+</tr>
+<tr>
+<td>05</td>
+<td>Large Language Models</td>
+<td>Prompt &amp; Context Engineering (<code>prompt-engineering</code>)</td>
+<td><code>05-Prompt-Engineering/</code></td>
+<td>9 notes in 2 groups + Q&amp;A bank (56) + 1 lab</td>
+</tr>
+<tr>
+<td>06</td>
+<td>Large Language Models</td>
+<td>PyTorch Fundamentals (<code>pytorch</code>)</td>
+<td><code>06-PyTorch/</code></td>
+<td>6 notes + Q&amp;A bank + 2 labs (Raw PyTorch Classifier, GPT From Scratch)</td>
+</tr>
+<tr>
+<td>07</td>
+<td>Large Language Models</td>
+<td>Pretraining at Scale (<code>pretraining</code>)</td>
+<td><code>07-Pretraining/</code></td>
+<td>8 notes in 2 groups + Q&amp;A bank (35) + Profile and Fuse lab</td>
+</tr>
+<tr>
+<td>08</td>
+<td>Large Language Models</td>
+<td>Training LLMs from Scratch (<code>llm-from-scratch</code>)</td>
+<td><code>08-LLM-From-Scratch/</code></td>
+<td>Primer (Bigram Model, Visualized, with the embedded <code>/labs/bigram/</code> lab) + 1 note in Model Builds (GPT From Scratch: Step by Step) + Summary &amp; Key Terms; runnable companion is the PyTorch GPT From Scratch lab; Q&amp;A bank and further model builds planned</td>
+</tr>
+<tr>
+<td>09</td>
+<td>Large Language Models</td>
+<td>Post-Training &amp; Fine-Tuning (<code>post-training</code>)</td>
+<td><code>09-Post-Training/</code></td>
+<td>8 notes in 2 groups (Methods; Fine-Tuning in Practice) + Q&amp;A bank (48) + QLoRA and SFT/DPO/GRPO labs</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Fundamentals of AI Agents</td>
+<td>Introduction to AI Agents (<code>agent-fundamentals</code>)</td>
+<td><code>10-Agent-Fundamentals/</code></td>
+<td>5 notes (what agents are, anatomy, the loop, agents in practice, evaluation basics) + Q&amp;A bank (27) + Agent Loop from Scratch lab</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Fundamentals of AI Agents</td>
+<td>Agent Building Blocks (<code>agent-building-blocks</code>)</td>
+<td><code>11-Agent-Building-Blocks/</code></td>
+<td>3 notes (tool use &amp; function calling, memory, planning &amp; reasoning) + Q&amp;A bank (21)</td>
+</tr>
+<tr>
+<td>12</td>
+<td>Fundamentals of AI Agents</td>
+<td>Agent Protocols: MCP &amp; A2A (<code>mcp-and-a2a</code>)</td>
+<td><code>12-MCP-and-A2A/</code></td>
+<td>7 notes + Q&amp;A bank (41) + MCP Server &amp; Agent lab</td>
+</tr>
+<tr>
+<td>13</td>
+<td>Fundamentals of AI Agents</td>
+<td>Agentic Workflows &amp; Multi-Agent Systems (<code>agentic-workflows</code>)</td>
+<td><code>13-Agentic-Workflows/</code></td>
+<td>4 notes in 2 groups (Agentic Workflows; Multi-Agent Systems) + Q&amp;A bank (40) + Patterns Under Measurement lab</td>
+</tr>
+<tr>
+<td>14</td>
+<td>Building with LLMs &amp; Agents</td>
+<td>RAG Systems (<code>rag</code>)</td>
+<td><code>14-RAG/</code></td>
+<td>13 notes in 3 groups + Q&amp;A bank (64) + 1 lab + 2 case studies</td>
+</tr>
+<tr>
+<td>15</td>
+<td>Building with LLMs &amp; Agents</td>
+<td>Agent Frameworks (<code>agent-frameworks</code>)</td>
+<td><code>15-Agent-Frameworks/</code></td>
+<td>8 notes (choosing + 7 frameworks) + Q&amp;A bank (31) + One Agent, Many Frameworks lab</td>
+</tr>
+<tr>
+<td>16</td>
+<td>Building with LLMs &amp; Agents</td>
+<td>Production Agents (<code>production-agents</code>)</td>
+<td><code>16-Production-Agents/</code></td>
+<td>6 notes + Q&amp;A bank (32) + 4 case studies</td>
+</tr>
+<tr>
+<td>17</td>
+<td>Production &amp; Operations</td>
+<td>Inference &amp; Serving (<code>inference-and-serving</code>)</td>
+<td><code>17-Inference-and-Serving/</code></td>
+<td>7 notes + Q&amp;A bank + FastAPI/vLLM lab</td>
+</tr>
+<tr>
+<td>18</td>
+<td>Production &amp; Operations</td>
+<td>Production Engineering (<code>production-engineering</code>)</td>
+<td><code>18-Production-Engineering/</code></td>
+<td>8 notes in 3 groups + Q&amp;A bank (33) + Helm lab + Terraform lab</td>
+</tr>
+<tr>
+<td>19</td>
+<td>Industry Standards &amp; Frontier</td>
+<td>Cloud AI Platforms (<code>cloud-platforms</code>)</td>
+<td><code>19-Cloud-Platforms/</code></td>
+<td>5 notes + Q&amp;A bank</td>
+</tr>
+<tr>
+<td>20</td>
+<td>Industry Standards &amp; Frontier</td>
+<td>Agent Engineering (<code>agent-engineering</code>)</td>
+<td><code>20-Agent-Engineering/</code></td>
+<td>8 notes in 2 groups (Harness &amp; Runtime; Frontier Agents) + Q&amp;A bank (30) + Minimal Coding Harness lab</td>
+</tr>
+<tr>
+<td>21</td>
+<td>Industry Standards &amp; Frontier</td>
+<td>Solutions Architecture (<code>solutions-architecture</code>)</td>
+<td><code>21-Solutions-Architecture/</code></td>
+<td>5 notes + Q&amp;A bank (16) + 1 case study</td>
+</tr>
+<tr>
+<td>22</td>
+<td>Capstones &amp; Review</td>
+<td>Capstones (<code>capstones</code>)</td>
+<td><code>22-Capstones/</code></td>
+<td>3 projects with deliverables and rubrics</td>
+</tr>
+<tr>
+<td>23</td>
+<td>Capstones &amp; Review</td>
+<td>Review &amp; Readiness (<code>review</code>)</td>
+<td><code>23-Review/</code></td>
+<td>Hub linking every module&#39;s Q&amp;A bank and <code>/quiz/&lt;module&gt;</code> page + Readiness Self-Assessment (linked from the home page hero) + Glossary of Terms &amp; Concepts (35 core LLM terms in 6 groups with links to where each is taught, then a generated A-Z of all ~300 module key terms)</td>
+</tr>
+</tbody></table></div>
+<p><strong>Most recently active area:</strong> 08 Training LLMs from Scratch (2026-10-18/19) - the module itself, then a Primer section with the bigram visualizer lab and full attribution to Andrej Karpathy; see Changelog. Before that, the course restructure (2026-10-09) - LLM-first flow in 7 tracks, agent fundamentals split into four modules, consistent module shape, slug cleanup; see Changelog. Before that, readiness gaps (2026-10-02/03) - the course was extended to cover the 14-domain GenAI-engineer self-assessment: new modules Math for ML (03) and Solutions Architecture &amp; Communication (19, new Field Engineering track), a Python &amp; Systems section in Prog Langs, 9 new concept notes across existing modules, 4 new labs, a Readiness Self-Assessment page, and capstone requirements for architecture docs and business outcomes. Its checklist was deleted when complete; the outcome is in the Changelog.</p>
+<p><strong>Naming convention:</strong> zero-padded numeric prefixes (<code>01-</code>, <code>02-</code>, ...) at module and file level; <code>INDEX.mdx</code> per module overview; <code>Notes/</code>, <code>SystemDesigns/</code>, <code>CodeLabs/</code>, <code>Resources/</code>, <code>Implementation/</code> as topic subfolders. See root <code>CLAUDE.md</code> for the renumbering rule when files are deleted.</p>
 
-      <h3 class="sub">Core App</h3>
-      <ul class="plain">
-        <li>Next.js App Router + TypeScript (strict) + Tailwind CSS 4</li>
-        <li>Static export configured (<code>output: "export"</code>)</li>
-        <li>Inter + JetBrains Mono via <code>next/font/google</code></li>
-        <li>Design system — full glassmorphism token system (<code>--glass-panel/nav/card/modal-bg/border</code>, shadows, blur radii), light+dark pairs for every <code>--sun-*</code>/<code>--glass-*</code>/<code>--shadcn-*</code> token, theme-reactive <code>.prose</code> overrides</li>
-      </ul>
-
-      <h3 class="sub">Dark Mode & Glass UI Redesign <span class="pill done">complete, browser-verified</span></h3>
-      <ul class="plain">
-        <li>User-facing toggle (<code>ThemeToggle.tsx</code>), hand-rolled <code>.dark</code> class + <code>localStorage</code>, no-flash-of-wrong-theme inline script, defaults to light</li>
-        <li>Glass treatment live across all chrome, both modals/overlays, all 5 shadcn primitives, the MDX prose layer (tables/code/inline code/blockquotes), and every page-level layout</li>
-        <li><code>AgentUseCaseMindmap.tsx</code> structural chrome glass-treated; its 15 data-driven category accent colors are a documented, deliberate scope exclusion</li>
-        <li>Verified with a real Playwright + Chromium browser pass (24+ screenshots, light/dark × desktop/mobile) — caught and fixed 3 real bugs a build-only pass had missed (a CSS-comment parse break, missing Typography dark-mode variables, and several fixed-yellow-bg/reactive-text contrast bugs)</li>
-        <li>Full detail: <code>vibes/GLASS-UI-REDESIGN.md</code> (status: COMPLETE)</li>
-      </ul>
-
-      <h3 class="sub">Navigation & Content Pipeline</h3>
-      <ul class="plain">
-        <li><code>src/content/nav.yml</code> — single source of truth for navigation (MkDocs-style)</li>
-        <li><code>src/lib/content/nav.ts</code> — parses nav.yml, builds flat page list, computes prev/next; <code>MODULE_SLUG_MAP</code>/<code>MODULE_DIR_MAP</code> must be updated for any new top-level module or its pages silently fail to render</li>
-        <li><code>src/lib/content/loader.ts</code> — reads .mdx, extracts TOC via heading regex</li>
-        <li><code>src/lib/content/remarkRewriteMdLinks.ts</code> — build-time cross-link rewriting</li>
-        <li>MDX pipeline: <code>next-mdx-remote/rsc</code> + remark-gfm, rehype-raw/slug/autolink-headings/highlight</li>
-        <li><strong>Automatic WIP detection</strong> — <code>isStubFile()</code> flags pages with &lt; 8 substantive lines as <code>wip: true</code>, not a manual flag</li>
-      </ul>
-
-      <h3 class="sub">Pages</h3>
-      <ul class="plain">
-        <li>Homepage — hero, module grid, stats strip, learning paths, footer <span class="pill done">done</span></li>
-        <li>Course content pages — <code>/learn/[module]/[slug]</code> <span class="pill done">done</span></li>
-        <li>404 page <span class="pill done">done</span></li>
-        <li>Quiz pages — <code>/quiz/all</code>, <code>/quiz/[module]</code> <span class="pill progress">stub only</span></li>
-      </ul>
-
-      <h3 class="sub">UI Components</h3>
-      <ul class="plain">
-        <li>Header, Sidebar (icon-rail collapse, numbered modules/leaves), MobileNav, ThemeToggle</li>
-        <li>AudienceToggle (All / Technical / Non-Technical, localStorage-persisted)</li>
-        <li>AudienceOnboardingModal, DisclaimerModal, DisclaimerNote</li>
-        <li>TableOfContents (IntersectionObserver active-heading tracking)</li>
-        <li>PageNav (prev/next), UnderDevelopment (WIP placeholder)</li>
-        <li>MermaidDiagram, AgentUseCaseMindmap, MdxComponents</li>
-        <li>shadcn/ui primitives — button (+ <code>glass</code> variant), badge (+ <code>glass</code> variant), card, progress, separator, sheet — all glass-treated</li>
-      </ul>
-
-      <h3 class="sub">Course Content by Module</h3>
-      <table>
-        <thead><tr><th>Module</th><th>Dir</th><th>Contents</th></tr></thead>
-        <tbody>
-          <tr><td data-label="Module">01 · LLM Models</td><td data-label="Dir"><code>01-LLM-Models/</code></td><td data-label="Contents">Overview + 12 notes (Fundamentals → Architecture → Attention → Model Types → KV Cache/Inference → Training → Fine-Tuning → GPU/Hardware → Failure Modes → Production → Prompting Strategies → Q&amp;A Bank)</td></tr>
-          <tr><td data-label="Module">02 · Prompt Engineering</td><td data-label="Dir"><code>02-Prompts/</code></td><td data-label="Contents">Overview + 6 notes (Basics, Core Techniques, Advanced Techniques, Production, Optimization/Automation, Q&amp;A Bank) + Resources</td></tr>
-          <tr><td data-label="Module">03 · RAG</td><td data-label="Dir"><code>03-RAGs/</code></td><td data-label="Contents">Overview + 12 notes + 2 System Designs (Simple RAG Pipeline, Agentic RAG Hybrid) + Resources</td></tr>
-          <tr><td data-label="Module">04 · MCP</td><td data-label="Dir"><code>04-MCP/</code></td><td data-label="Contents">Overview + 9 notes (Problem → Definition → Solution → Components → Capabilities → Why It Matters → Architecture → Getting Started → Q&amp;A Bank) + Implementation</td></tr>
-          <tr><td data-label="Module">05 · AI Agents</td><td data-label="Dir"><code>05-Agents/</code></td><td data-label="Contents">Overview + 6 concept notes + Code Labs (Agent Types + GCP ADK / LangChain / LangGraph / CrewAI, each Fundamentals + Simple + Complex Agent)</td></tr>
-          <tr><td data-label="Module">06 · Agentic AI</td><td data-label="Dir"><code>06-Agentic-AI/</code></td><td data-label="Contents">Overview + 12 notes + 4 System Designs + Code Labs matrix (7 architecture patterns × 4 frameworks; 4 agentic systems × 4 frameworks)</td></tr>
-          <tr><td data-label="Module">07 · Fine-Tuning Lab</td><td data-label="Dir"><code>07-Fine-Tuning-Lab/</code></td><td data-label="Contents">Overview + 4 notes (HuggingFace Ecosystem, LoRA/QLoRA Hands-On, Instruction Data & Training Runs, Benchmarking Base vs Tuned) + Q&amp;A Bank + Code Lab (runnable QLoRA fine-tune + benchmark script)</td></tr>
-          <tr><td data-label="Module">08 · Serving & Inference</td><td data-label="Dir"><code>08-Serving-and-Inference/</code></td><td data-label="Contents">Overview + 4 notes (vLLM & Paged Attention, Quantized Inference, Batching/Concurrency/Latency, Streaming & TTFT) + Q&amp;A Bank + Code Lab (FastAPI + vLLM endpoint + load-test client)</td></tr>
-          <tr><td data-label="Module">09 · Production Engineering</td><td data-label="Dir"><code>09-Production-Engineering/</code></td><td data-label="Contents">Overview + 4 notes (Docker for GPU Inference, Kubernetes & Helm, Model Lifecycle & Rollout, Security & Compliance) + Q&amp;A Bank + Code Lab (Helm chart + release-readiness checklist)</td></tr>
-          <tr><td data-label="Module">10 · Platform Breadth</td><td data-label="Dir"><code>10-Platform-Breadth/</code></td><td data-label="Contents">Overview + 4 notes (AWS Bedrock, Databricks & Spark, Azure AI Foundry, Platform Comparison Table) + Q&amp;A Bank (no Code Lab — table-only content)</td></tr>
-          <tr><td data-label="Module">Prog Langs · PyTorch Fundamentals</td><td data-label="Dir"><code>11-Prog-Langs/PyTorch/</code></td><td data-label="Contents">Overview + 5 notes (Tensors & Autograd, Dataset & DataLoader, Training Loop From Scratch, Checkpointing & Mixed Precision, Debugging & GPU Memory) + Q&amp;A Bank + Code Lab (raw-PyTorch MNIST CNN). Standalone top-level nav grouping, nested one level deeper so future language modules can sit alongside it.</td></tr>
-          <tr><td data-label="Module">Knowledge Check</td><td data-label="Dir"><code>Interview-Questions/</code></td><td data-label="Contents">Per-module question banks (01–11) + aggregate "All Questions" (not yet updated for 07-11)</td></tr>
-        </tbody>
-      </table>
-      <p style="font-size:.85rem;color:var(--text-dim)">Modules 07-11 shipped 2026-08-09/10 as a single content tranche, then the sidebar was reordered into a more logical learning sequence with PyTorch moved into a new "Prog Langs" grouping.</p>
     </div>
   </details>
 
   <details class="section">
     <summary><span class="chev">▶</span> 3 · Backlog <span class="count">near-term · content · future</span></summary>
     <div class="section-body">
+<h3>Near-term</h3>
+<ul>
+<li><input checked="" disabled="" type="checkbox"> <del><strong>Glassmorphism / &quot;Liquid Glass&quot; UI redesign</strong> - whole-site restyle + new dark mode (toggle, defaults to light)</del> - <strong>DONE 2026-08-10</strong>, all 11 sections complete and browser-verified (see <code>vibes/GLASS-UI-REDESIGN.md</code> for the plan/final status; the execution checklist has since been deleted per its own retirement rule - see Changelog). Not yet pushed/committed to <code>main</code> at time of writing.</li>
+<li><input checked="" disabled="" type="checkbox"> <del><strong>Quiz feature</strong></del> - <strong>DONE 2026-09-27</strong>: <code>/quiz/[module]</code> and <code>/quiz/all</code> render each module&#39;s page quiz fences (<code>src/lib/content/quizzes.ts</code>); the unused <code>QuizCard</code> type in <code>src/types/content.ts</code> remains unused</li>
+<li><input checked="" disabled="" type="checkbox"> <del><strong>Search</strong></del> - <strong>DONE 2026-09-29</strong>: header search dialog (<code>Search.tsx</code>, ⌘K / Ctrl K / <code>/</code>) over a build-time section index (<code>/search-index.json</code>); see What&#39;s Built</li>
+<li><input disabled="" type="checkbox"> <strong>Progress tracking</strong> - no &quot;mark lesson complete&quot; mechanism (localStorage-first was the original intent)</li>
+<li><input disabled="" type="checkbox"> <strong>Wire lint/build into CI</strong> - currently only a manual deploy workflow exists; nothing runs <code>npm run lint</code> or <code>next build</code> automatically on push/PR, so regressions can reach <code>main</code> unchecked</li>
+</ul>
+<h3>Content</h3>
+<ul>
+<li><input checked="" disabled="" type="checkbox"> <del><strong>Readiness-rubric gaps</strong></del> - <strong>DONE 2026-10-03</strong>: all 14 domains of the self-assessment covered (5 phases; checklist deleted - see Changelog)</li>
+<li><input disabled="" type="checkbox"> 08 Training LLMs from Scratch: Q&amp;A Review Bank, plus the planned builds (GPT-2 124M on FineWeb-Edu, Llama-style decoder, MoE, tokenizer from scratch)</li>
+<li><input disabled="" type="checkbox"> More system-design case studies (only RAG and Agentic AI modules have them so far)</li>
+<li><input disabled="" type="checkbox"> Runnable code labs - embed via CodeSandbox / StackBlitz instead of static code blocks</li>
+<li><input disabled="" type="checkbox"> Video embeds for visual/architecture concepts - <strong>started 2026-10-19</strong>: the <code>interactive</code> fence + <code>public/labs/</code> pattern (first: the bigram lab, synced to Karpathy&#39;s lecture). Candidates next: a self-attention lab for the rest of the same lecture (42:13 onward)</li>
+<li><input checked="" disabled="" type="checkbox"> <del>Convert ASCII-art diagrams / un-diagrammed architecture-flow prose to Mermaid across content</del> - <strong>DONE 2026-07-22</strong>, all 9 phases complete (tracking checklist has since been deleted - see Changelog); house rule remains at root <code>CLAUDE.md</code> &gt; &quot;Diagrams &amp; Visual Explanations&quot;</li>
+</ul>
+<h3>Future (post-maturity)</h3>
+<ul>
+<li><input disabled="" type="checkbox"> User auth + accounts (Clerk or Auth.js)</li>
+<li><input disabled="" type="checkbox"> Bookmarks - save and resume lessons</li>
+<li><input disabled="" type="checkbox"> Persistent progress sync across devices</li>
+<li><input disabled="" type="checkbox"> Interactive MDX components - <code>&lt;QuizWidget /&gt;</code>, <code>&lt;CodePlayground /&gt;</code></li>
+<li><input disabled="" type="checkbox"> Comment/discussion threads per lesson</li>
+</ul>
+<h3>Test coverage (not previously tracked)</h3>
+<ul>
+<li><input disabled="" type="checkbox"> <strong>No automated tests exist anywhere in the repo</strong> - no Jest/Vitest/Playwright config, no test dependencies in <code>package.json</code>. <code>test-results/.last-run.json</code> is a stray leftover artifact from an ad-hoc external tool run, not a real suite (see Known Issues).</li>
+</ul>
 
-      <h3 class="sub">Near-term</h3>
-      <ul class="tasklist" style="list-style:none;padding-left:0">
-        <li style="padding-left:1.6rem;position:relative"><span style="position:absolute;left:0;color:var(--done)">☑</span> <strong>Glassmorphism / "Liquid Glass" UI redesign</strong> — <span class="pill done">DONE 2026-08-10</span> all 11 sections complete and browser-verified. See <code>vibes/GLASS-UI-REDESIGN.md</code>. Not yet pushed/committed to <code>main</code>.</li>
-        <li><strong>Quiz feature</strong> — both routes fully stubbed; <code>QuizCard</code> type already scaffolded in <code>src/types/content.ts</code> with no consumer yet</li>
-        <li><strong>Search</strong> — no full-text search across content</li>
-        <li><strong>Progress tracking</strong> — no "mark complete" mechanism (localStorage-first was the plan)</li>
-        <li><strong>CI lint/build gate</strong> — nothing runs <code>npm run lint</code> / <code>next build</code> automatically on push/PR</li>
-      </ul>
-
-      <h3 class="sub">Content</h3>
-      <ul class="tasklist">
-        <li>More system-design case studies (only RAG + Agentic AI have them today)</li>
-        <li>Runnable code labs via CodeSandbox / StackBlitz instead of static blocks</li>
-        <li>Video embeds for architecture/visual concepts</li>
-      </ul>
-
-      <h3 class="sub">Future (post-maturity)</h3>
-      <ul class="tasklist">
-        <li>User auth + accounts (Clerk or Auth.js)</li>
-        <li>Bookmarks — save and resume lessons</li>
-        <li>Persistent progress sync across devices</li>
-        <li>Interactive MDX components — <code>&lt;QuizWidget /&gt;</code>, <code>&lt;CodePlayground /&gt;</code></li>
-        <li>Comment/discussion threads per lesson</li>
-      </ul>
-
-      <h3 class="sub">Test coverage</h3>
-      <div class="callout"><strong>No automated tests exist anywhere</strong> in the repo — no Jest/Vitest/Playwright config or dependencies. <code>test-results/.last-run.json</code> is a stray leftover artifact, not a real suite.</div>
     </div>
   </details>
 
   <details class="section">
-    <summary><span class="chev">▶</span> 4 · Known Issues / Discrepancies <span class="count">5 items</span></summary>
+    <summary><span class="chev">▶</span> 4 · Known Issues / Discrepancies <span class="count">14 items (6 fixed)</span></summary>
     <div class="section-body">
-      <div class="issue-item"><span class="num">1</span><strong>Deploy secrets doc drift</strong> (corrected in this doc) — old tracker said <code>FTP_HOST</code>/<code>FTP_SERVER_DIR</code>; actual workflow uses <code>FTP_SERVER</code> with a hardcoded server-dir.</div>
-      <div class="issue-item"><span class="num">2</span><strong>Stale predecessor tracker</strong> — old root <code>STATUS.md</code> undercounted content (107 vs. actual 109 files) and called deployment "to-do" though it already existed. Deleted; replaced by this file + <code>vibes/status.md</code>.</div>
-      <div class="issue-item"><span class="num">3</span><strong><code>test-results/.last-run.json</code></strong> at repo root is a leftover artifact from an ad-hoc run, not a checked-in suite. Safe to delete.</div>
-      <div class="issue-item"><span class="num">4</span><strong><code>README.md</code></strong> is still unedited <code>create-next-app</code> boilerplate — real docs live in <code>CLAUDE.md</code>, <code>AGENTS.md</code>, and <code>vibes/</code>.</div>
-      <div class="issue-item"><span class="num">5</span><strong>No staging environment</strong> — deploys go straight to production via manual trigger; no rollback beyond re-running an older commit's workflow.</div>
+<ol>
+<li><strong>Deploy secrets doc drift (now fixed in this doc)</strong> - the previous tracker documented <code>FTP_HOST</code> and <code>FTP_SERVER_DIR</code> as required secrets; the actual workflow uses <code>FTP_SERVER</code> and hardcodes the server directory in the YAML. Anyone rotating credentials should check the live workflow file, not assume old docs are correct.</li>
+<li><strong>Stale predecessor tracker</strong> - the old root <code>STATUS.md</code> undercounted content (107 vs. actual 109 <code>.mdx</code> files) and listed &quot;deploy to learngenai.sunmintz.com (set up CI/CD)&quot; as still to-do even though the deploy workflow already existed and had been edited as recently as the last commit. It has been deleted and replaced by this file + <code>vibes/status.html</code>, both now living in <code>vibes/</code> per project convention.</li>
+<li><del><strong><code>test-results/.last-run.json</code></strong> at repo root is a leftover artifact (<code>{&quot;status&quot;: &quot;failed&quot;, &quot;failedTests&quot;: []}</code>), likely from an ad-hoc Playwright MCP run rather than a checked-in suite.</del> <strong>Fixed 2026-09-18</strong> - untracked from git and <code>/test-results</code> added to <code>.gitignore</code>; the file stays on disk locally (harmless) but no longer gets committed.</li>
+<li><strong><code>README.md</code></strong> is still the unedited default <code>create-next-app</code> boilerplate - no project-specific setup instructions live there. All real project docs currently live in <code>CLAUDE.md</code>, <code>AGENTS.md</code>, and <code>vibes/</code>.</li>
+<li><strong>No staging environment</strong> - deploys go straight to production via manual trigger; no rollback mechanism beyond re-running an older commit&#39;s workflow.</li>
+<li><del><strong><code>extractToc()</code> TOC-generation bug (fixed 2026-07-22)</strong></del> - <code>src/lib/content/loader.ts</code>&#39;s <code>extractToc()</code> was a naive line regex with two bugs: (a) it wasn&#39;t fenced-code-block-aware, so Python/YAML comment lines like <code># Define a tool</code> inside <code>```</code> blocks were misparsed as real headings (334 false positives found across content); (b) it didn&#39;t dedupe repeated heading text the way the actual renderer&#39;s <code>rehype-slug</code> does, so pages with repeated headings (e.g. <code>### Concept</code> used as a template heading many times per file) produced duplicate <code>id</code>s in the TOC, causing a React &quot;two children with the same key&quot; crash in <code>TableOfContents.tsx</code> and silently broken TOC links/scroll-spy for every occurrence past the first. Fixed by making <code>extractToc()</code> skip <code>```</code> fenced regions and generate ids via <code>github-slugger</code> (added as a direct dependency - it&#39;s what <code>rehype-slug</code> uses under the hood), so TOC ids now match the rendered DOM&#39;s anchor ids exactly, including the <code>-1</code>, <code>-2</code> dedup suffixes.</li>
+<li><del><strong>Pre-existing lint errors (8)</strong></del> <strong>Fixed 2026-09-28</strong> - <code>npm run lint</code> is clean: client-only state (theme, audience mode, disclaimer, first-visit hint) is read with <code>useSyncExternalStore</code>, the sidebar re-syncs its open state during render instead of in an effect, and 3 unescaped quotes in <code>AgentUseCaseMindmap.tsx</code> are escaped.</li>
+<li><del><strong>~173 broken internal links</strong></del> <strong>Fixed 2026-09-26</strong> - content linked to <code>.md</code> targets and <code>.mdx#anchor</code> targets that <code>remarkRewriteMdLinks.ts</code> never matched; the rewriter now resolves <code>.md</code> -&gt; <code>.mdx</code> and preserves anchors. Verified: all 291 distinct <code>/learn/...</code> hrefs in the built <code>out/</code> resolve to real pages. <code>npm run check:content</code> now guards this.</li>
+<li><del><strong>Home-page tiles are hand-maintained</strong></del> <strong>Fixed 2026-09-26</strong> - module numbers, tracks and note/lab/Q&amp;A counts on the home page now come from <code>nav.yml</code> + <code>src/lib/content/stats.ts</code>; only subtitles and descriptions in <code>CurriculumTiles.tsx</code> are hand-written. The old copy claimed &quot;180+ notes / 370+ Q&amp;A&quot;; the real counts are 81 concept notes and 447 bank questions.</li>
+<li><strong>Old URLs of moved pages</strong> - 62 page URLs changed in the 2026-09-26 restructure and 108 page URLs + 9 quiz URLs in the 2026-10-09 one. <code>src/lib/content/legacy-redirects.json</code> (273 entries, chains collapsed so every target is a live page) + <code>LegacyRedirect.tsx</code> forward <code>/learn/</code> and <code>/quiz/</code> paths from the 404 page, which relies on the host serving <code>404.html</code> for unknown paths (<code>public/.htaccess</code> sets <code>ErrorDocument 404 /404.html</code> for Apache/LiteSpeed). Verified locally with an Apache-like static server, not yet on Hostinger.</li>
+<li><strong>Lab verification limits (from the redesign)</strong> - GPU paths were not run: the MNIST lab&#39;s CUDA AMP path, the GPT-from-scratch default preset, the QLoRA/TRL labs (smoke-tested on CPU only), the vLLM endpoint lab and the Helm lab (no cluster or <code>helm</code> available; chart not linted). The Claude Agent SDK lab script is import-verified only. Agent labs were run against a local Qwen3-8B (<code>mlx_lm.server</code>).</li>
+<li><del><strong>Dark mode left the site chrome white</strong></del> <strong>Fixed 2026-09-28</strong> - header, sidebar, mobile nav, TOC, breadcrumb and prev/next bars hard-coded <code>bg-white</code>, so dark mode showed light surfaces with light text; they now use the <code>bg-sun-bg</code> theme token. Found in the browser pass (headless Chrome screenshots, light/dark x desktop/mobile).</li>
+<li><strong>Bigram lab external dependencies</strong> - the lab loads the YouTube IFrame API and Google Fonts at runtime, so it needs a network connection; if YouTube cannot embed it falls back to transcript mode. The lab uses a two-pane layout only at &gt;= 960px, so inline in the article column it stacks - Theatre view is the intended way to watch. Verified in headless Chrome (light, dark, embedded, theatre); not yet checked on Hostinger or on a real phone.</li>
+<li><strong><code>ng-video-lecture</code> has no LICENSE file</strong> - its README states MIT, so the notice we reproduce reads &quot;Copyright (c) Andrej Karpathy&quot; with no year. If the repo ever adds a LICENSE file, copy its exact copyright line into <code>public/labs/bigram/bigram_annotated.py</code> and the lab&#39;s Credits dialog.</li>
+</ol>
+
+    </div>
+  </details>
+
+  <details class="section" open>
+    <summary><span class="chev">▶</span> 5 · Handover Notes (read this first if picking up a new session) <span class="count">read first</span></summary>
+    <div class="section-body">
+<p><strong>Bigram primer (2026-10-19): complete, uncommitted.</strong> New <code>08-LLM-From-Scratch/Notes/01-Bigram-Model-Primer.mdx</code> (nav group &quot;Primer&quot;) embeds <code>public/labs/bigram/index.html</code> via the new <code>interactive</code> fence; the GPT note moved to <code>02-</code> (legacy redirect added). The lab was restyled from its source in <code>../sun-learn-visually/bigram-andrej/</code> (that copy is the unstyled original - edit the one in <code>public/labs/bigram/</code>). Attribution to Andrej Karpathy is on the note (Credits &amp; Attribution section), the module INDEX, the lab (Credits dialog) and the script (full MIT notice). <code>check:content</code> 233 files 0/0, <code>tsc</code> clean, <code>npm run build</code> passes. To deploy: build and upload <code>out/</code> as usual - <code>out/labs/</code> must go with it; no server-side process is needed.</p>
+<p><strong>Course restructure (2026-10-09): complete.</strong> 22 modules in 7 tracks: Conceptual &amp; Mathematical Foundations -&gt; Large Language Models -&gt; Fundamentals of AI Agents -&gt; Building with LLMs &amp; Agents -&gt; Production &amp; Operations -&gt; Industry Standards &amp; Frontier -&gt; Capstones &amp; Review. All 410 pre-restructure URLs (old nav pages, quiz pages, existing redirect keys) verified to reach a live page in <code>out/</code>, and all 245 internal hrefs in the build resolve. The 404-page redirects are still not verified on Hostinger itself.</p>
+<p><strong>Readiness gaps (2026-10-03): complete.</strong> 19 teaching modules in 6 tracks plus Capstones and the Knowledge Check hub (with the Readiness Self-Assessment); every self-assessment domain is covered in full. Not yet verified: a GPU run of the Triton path in the Profile and Fuse lab, and a real (non-mocked) <code>tofu plan</code> of the Terraform lab. The work is staged but uncommitted.</p>
+<p><strong>Redesign status (2026-09-28): complete.</strong> All six phases (0-5) of the full-course redesign are done - 17 teaching modules in 5 tracks plus Capstones and the Knowledge Check hub, every page on the note template. The tracking checklist has been deleted; see the Changelog. Original context: A three-angle audit (LLM training/serving, agentic AI, pedagogy) found factual errors, 2024-era content, heavy duplication and no pedagogy scaffolding. The approved plan restructures the course into 17 modules in 5 tracks and is tracked phase by phase in <code>vibes/course-redesign-checklist.md</code> - read that first. Phases 0 (correctness &amp; hygiene), 1 (fence components, nav-derived home page, 17-module restructure), 2 (LLM-track content, modules 01-09) 3 (Prompt &amp; Context Engineering, RAG) and 4 (agents track, modules 12-17) are done; Phase 5 (pedagogy layer: template everywhere, capstones, Q&amp;A dedupe, quiz pages) is next. Research tip: verify library APIs by installing them in a scratch venv and inspecting signatures - several documented-looking imports (LangChain v0 retrievers, <code>vertexai.generative_models</code>, vLLM <code>guided_*</code>) no longer exist.</p>
+<p><strong>Earlier state (2026-08-10):</strong> As of 2026-08-10, two large bodies of work landed in the same extended session and are <strong>committed to <code>dev</code> locally but not yet pushed to <code>origin</code> or merged to <code>main</code></strong> (commit <code>69f4c46</code>, &quot;New course tranche + sidebar reorg&quot;) - plus a second, larger batch of changes on top of that (the full glass UI redesign, Sections 5-11) that is <strong>still uncommitted</strong> as of this writing. Check <code>git status</code>/<code>git log</code> before assuming what&#39;s actually on disk vs. committed:</p>
+<ol>
+<li>The 07-11 content tranche (5 new modules: PyTorch Fundamentals, Fine-Tuning Lab, Serving &amp; Inference, Production Engineering, Platform Breadth) plus a sidebar reorg that moved PyTorch into a new &quot;Prog Langs&quot; grouping and renumbered 07-10 - this part is committed (<code>69f4c46</code>).</li>
+<li>The full 11-section Glassmorphism/dark-mode UI redesign (<code>vibes/GLASS-UI-REDESIGN.md</code>, now marked COMPLETE) - <strong>not yet committed</strong>. 19 files changed: every chrome component, both modals, all 5 shadcn primitives, the MDX prose layer, all page-level layouts, and <code>AgentUseCaseMindmap.tsx</code>. Real-browser-verified via a temporary Playwright + Chromium install (not a project dependency - see Known Issues if you need to re-verify visually).</li>
+</ol>
+<p><strong>Suggested next steps, in priority order:</strong></p>
+<ol>
+<li><strong>Push and deploy decision</strong> - everything is committed on <code>dev</code> (ahead of <code>origin/dev</code> and <code>origin/main</code>); push <code>dev</code>, then PR <code>dev</code> -&gt; <code>main</code> (merging triggers the FTP deploy). Nothing has been pushed or deployed yet.</li>
+<li>Decide whether to wire <code>npm run lint</code> (and ideally <code>next build</code>) into a CI check on PRs/push - currently nothing automated guards <code>main</code> before a manual deploy.</li>
+<li><del>Quiz feature</del> - done in redesign Phase 5: <code>/quiz/&lt;module&gt;</code> and <code>/quiz/all</code> are built from the pages&#39; quiz fences (<code>src/lib/content/quizzes.ts</code>).</li>
+<li>If rotating or auditing deploy credentials, use the secret names in this file (<code>FTP_SERVER</code>/<code>FTP_USERNAME</code>/<code>FTP_PASSWORD</code>), not any older doc.</li>
+<li>Sanity-check <code>nav.yml</code> against <code>src/content/</code> before adding new content - it&#39;s the single source of truth for navigation, and (as of the 07-11 tranche) <code>src/lib/content/nav.ts</code>&#39;s <code>MODULE_SLUG_MAP</code>/<code>MODULE_DIR_MAP</code> must also be updated for any new top-level module or its pages silently fail to render - see Changelog for the bug this caused on Module 07.</li>
+<li>Re-verify content counts (<code>find src/content -name &#39;*.mdx&#39; | wc -l</code>) whenever content is added/removed, and update this file&#39;s header count.</li>
+</ol>
+<p><strong>Process going forward:</strong></p>
+<ul>
+<li><code>vibes/status.md</code> (this file): update after every successful build/coding session - refresh affected sections + append a one-line Changelog entry below.</li>
+<li><code>vibes/status.html</code>: regenerate on demand only (not tied to every session) - reflects whatever this file says at generation time.</li>
+</ul>
+
     </div>
   </details>
 
   <details class="section">
-    <summary><span class="chev">▶</span> 5 · Handover Notes <span class="count">read first</span></summary>
+    <summary><span class="chev">▶</span> 6 · Project Structure <span class="count">src · public · scripts · vibes</span></summary>
     <div class="section-body">
-      <p><strong>Where things left off:</strong> as of 2026-08-10, two large bodies of work landed in the same extended session. (1) The 07-11 content tranche (5 new modules) + a sidebar reorg (PyTorch moved into a new "Prog Langs" grouping) — <strong>committed</strong> to <code>dev</code> locally as <code>69f4c46</code>, not yet pushed to <code>origin</code> or merged to <code>main</code>. (2) The full 11-section glass UI redesign — <strong>not yet committed</strong> (19 files changed), real-browser-verified via a temporary Playwright + Chromium install (not a project dependency).</p>
-
-      <h3 class="sub">Suggested next steps, in priority order</h3>
-      <ol style="padding-left:1.3rem; font-size:.92rem;">
-        <li><strong>Commit the uncommitted glass-redesign work</strong>, then decide whether to push <code>dev</code> and/or merge to <code>main</code> for production deploy — nothing has been pushed or deployed yet.</li>
-        <li>Wire <code>npm run lint</code> (and ideally <code>next build</code>) into a CI check on PRs/push — nothing automated guards <code>main</code> today.</li>
-        <li>Pick a near-term backlog item — Quiz feature is the most visible gap; <code>QuizCard</code> is already scaffolded in <code>src/types/content.ts</code>.</li>
-        <li>If rotating deploy credentials, use <code>FTP_SERVER</code>/<code>FTP_USERNAME</code>/<code>FTP_PASSWORD</code> — not any older doc's names.</li>
-        <li>Keep <code>nav.yml</code> in sync with <code>src/content/</code> before adding content — and remember <code>src/lib/content/nav.ts</code>'s <code>MODULE_SLUG_MAP</code>/<code>MODULE_DIR_MAP</code> must also be updated for any new top-level module, or its pages silently fail to render.</li>
-        <li>Re-verify content counts whenever files change; update this doc's header count.</li>
-      </ol>
-
-      <h3 class="sub">Process going forward</h3>
-      <ul class="plain">
-        <li><code>vibes/status.md</code> — update after every successful build/coding session (refresh sections + append Changelog entry)</li>
-        <li><code>vibes/status.html</code> — regenerate on demand only, reflects <code>status.md</code> at generation time</li>
-      </ul>
-    </div>
-  </details>
-
-  <details class="section">
-    <summary><span class="chev">▶</span> 6 · Project Structure</summary>
-    <div class="section-body">
-      <pre><code>src/
+<pre><code>src/
   app/
-    layout.tsx                        root layout (fonts, no-flash theme script, modals)
+    layout.tsx                        root layout (fonts, no-flash theme script, DisclaimerModal, AudienceOnboardingModal)
     page.tsx                          homepage (own inline header, incl. ThemeToggle)
     not-found.tsx                     404 (renders UnderDevelopment)
-    globals.css                       design tokens (sun-*/glass-*/shadcn-*, light+dark), .prose overrides
+    globals.css                       design tokens (sun-*/glass-*/shadcn-* incl. light+dark pairs), .prose overrides
     (course)/
       layout.tsx                      header + sidebar shell
-      learn/[module]/[slug]/page.tsx  course content pages
-      quiz/all/page.tsx               quiz stub
-      quiz/[module]/page.tsx          quiz stub
+      learn/[module]/[slug]/page.tsx  course content pages (dark title banner, sticky glass footer nav)
+      quiz/all/page.tsx               every module&#39;s quiz with question counts
+      quiz/[module]/page.tsx          a module&#39;s Check Yourself questions, from the pages&#39; quiz fences
+    map/page.tsx                      the Course Atlas (/map)
+    search-index.json/route.ts        build-time search index (static)
+    sitemap.ts, robots.ts             derived from nav.yml and SITE_URL
   components/
-    ui/                               shadcn primitives - button/badge (+glass variant), card,
-                                      progress, separator (glass-by-default), sheet (mobile drawer)
-    course/                           Header, Sidebar, MobileNav, ThemeToggle, AudienceToggle,
-                                      TableOfContents, PageNav, UnderDevelopment, ...
+    ui/                               shadcn primitives - button, badge (additive `glass` variant), card, progress,
+                                      separator (restyled glass-by-default, zero live consumers), sheet (mobile drawer)
+    course/                           Header, Sidebar, MobileNav, ThemeToggle, AudienceToggle, AudienceOnboardingModal,
+                                      DisclaimerModal, DisclaimerNote, TableOfContents, PageNav,
+                                      UnderDevelopment, MermaidDiagram, AgentUseCaseMindmap, MdxComponents,
+                                      CourseFences, Quiz, InteractiveEmbed
   lib/
     utils.ts                          cn() helper
     content/
-      nav.ts                          navigation tree, MODULE_SLUG_MAP/MODULE_DIR_MAP, WIP detection
-      loader.ts                       reads .mdx, extracts TOC
+      nav.ts                          navigation tree from nav.yml (tracks, module numbers), MODULE_SLUG_MAP, isStubFile() WIP detection
+      stats.ts                        note/lab/Q&amp;A counts for the home page
+      remarkCourseFences.ts           ```objectives / ```quiz / ```exercise / ```interactive fences -&gt; CourseFences.tsx / Quiz.tsx / InteractiveEmbed.tsx
+      legacy-redirects.json           old -&gt; new /learn/ and /quiz/ URLs for every moved or renumbered page (273 entries)
+      navSections.ts                  which nav sections count as concepts (shared by stats.ts and the home tiles)
+      moduleMeta.ts                   per-module subtitle + description (home tiles, map landmarks)
+      courseMap.ts                    /map data + layout; quizzes.ts quiz collection; searchIndex.ts search index
+      loader.ts                       reads .mdx files, extracts TOC
       remarkRewriteMdLinks.ts         build-time cross-link rewriting
   types/
-    content.ts                        NavItem, NavModule, PageRef, PageContent, TocItem, QuizCard
-  content/                            154 .mdx source files across 12 modules
-    nav.yml
-    01-LLM-Models/  02-Prompts/  03-RAGs/  04-MCP/
-    05-Agents/      06-Agentic-AI/  07-Fine-Tuning-Lab/
-    08-Serving-and-Inference/  09-Production-Engineering/
-    10-Platform-Breadth/  11-Prog-Langs/PyTorch/
-    Interview-Questions/  All_Questions.mdx
+    content.ts                        NavItem, NavModule, NavigationTree, PageRef, PageContent, TocItem, QuizCard
+  content/                            233 .mdx source files: 21 teaching modules in 7 tracks + Capstones + Review &amp; Readiness
+    nav.yml                           single source of truth for order, tracks and titles
+    01-Python-and-Systems/  02-Math-for-ML/
+    03-Foundation-Models/  04-Evaluation/  05-Prompt-Engineering/  06-PyTorch/  07-Pretraining/  08-LLM-From-Scratch/  09-Post-Training/
+    10-Agent-Fundamentals/  11-Agent-Building-Blocks/  12-MCP-and-A2A/  13-Agentic-Workflows/
+    14-RAG/  15-Agent-Frameworks/  16-Production-Agents/
+    17-Inference-and-Serving/  18-Production-Engineering/
+    19-Cloud-Platforms/  20-Agent-Engineering/  21-Solutions-Architecture/
+    22-Capstones/  23-Review/
 
-vibes/                                project tracking & active plans
-  status.md          ← raw tracker (source of truth)
-  status.html         ← this file
-  GLASS-UI-REDESIGN.md  glass/dark-mode redesign plan — COMPLETE
-  design-system-playbook.md  portable layout/UX spec (not a task tracker)
+scripts/
+  check-content.mjs                   `npm run check:content` - broken links, em dashes, numbering gaps, nav coverage, fence YAML, prerequisites pointing ahead, stale glossary
+  build-glossary.mjs                  `npm run build:glossary` - regenerates the A-Z section of 23-Review/02-Glossary.mdx from module Key Terms tables
 
-.github/workflows/deploy.yml          manual FTP deploy to Hostinger</code></pre>
+public/
+  .htaccess                           ErrorDocument 404 -&gt; /404.html (legacy-URL redirects)
+  labs/bigram/                        index.html (Bigram, Visualized lab) + bigram_annotated.py (MIT notice)
+
+vibes/                                project tracking &amp; active plans
+  status.md                          this file - the sole live source of truth
+  status.html                        polished collapsible status view (regenerated on demand, not auto-synced)
+
+.github/workflows/deploy.yml          auto (push to main) + manual FTP deploy to Hostinger
+</code></pre>
+<p><strong><code>public/</code></strong> holds only <code>.htaccess</code> and the interactive labs under <code>public/labs/</code>; the favicon lives at <code>src/app/favicon.ico</code> (App Router convention).</p>
+<p><strong>Structure audit (2026-09-18):</strong> full repo reviewed against standard Next.js/React App Router conventions at user request - <code>src/app</code>, <code>src/components/{course,ui}</code>, <code>src/lib/content</code>, <code>src/types</code> all match convention, no legacy <code>pages/</code> dir, no duplicate root <code>content/</code>, no stray Python/shell/PHP files outside their intentional home in <code>src/content/</code>&#39;s CodeLabs (pedagogical assets, not misplaced app code). No reorganization was needed - see Changelog.</p>
+
     </div>
   </details>
 
-  <footer class="page-foot">
-    Generated on demand from <code>vibes/status.md</code>. Not auto-synced — re-run generation after status.md changes to keep this current.
-  </footer>
+  <details class="section" open>
+    <summary><span class="chev">▶</span> 7 · Changelog <span class="count">55 entries · newest first</span></summary>
+    <div class="section-body">
+      <ul class="changelog">
+        <li><strong>2026-10-19</strong> - <strong>Bigram primer + interactive labs</strong> (no dedicated checklist). Added a <strong>Primer</strong> nav group to 08 Training LLMs from Scratch: new <code>Notes/01-Bigram-Model-Primer.mdx</code> (Karpathy&#39;s bigram section, 7:52-42:13, as reading notes with 2 Mermaid diagrams, quiz, exercises, references, and a Credits &amp; Attribution section); the GPT note renumbered <code>01-</code> -&gt; <code>02-</code> with a legacy redirect; INDEX, APPENDIX (3 new terms; glossary rebuilt to 309) and nav updated. The visualizer lab lives at <code>public/labs/bigram/index.html</code> (+ <code>bigram_annotated.py</code>), restyled to the site design system (Inter/JetBrains Mono, sun-yellow/amber/coral tokens, light default + dark toggle that follows <code>localStorage.theme</code>, American spelling, no en/em dashes) with a Credits dialog carrying the MIT notice. New <code>```interactive</code> fence (<code>src</code>, <code>title</code>, <code>height</code>, <code>caption</code>) -&gt; <code>InteractiveEmbed.tsx</code> with Theatre view (fixes video and visuals stacking in the narrow article column) and a New tab link; <code>check:content</code> checks <code>src</code> exists. Two fixes found along the way: <code>next dev</code> 404s on folder URLs under <code>public/</code>, so fences use <code>/labs/bigram/index.html</code>; <code>ng-video-lecture</code> has no LICENSE file (README says MIT), so the notice has no year. CLAUDE.md documents the fence. <code>check:content</code> 233 files 0/0, <code>tsc</code> clean, <code>npm run build</code> passes; light, dark, embedded and theatre views checked in headless Chrome.</li>
+        <li><strong>2026-10-18</strong> - Added a new module <strong>08 Training LLMs from Scratch</strong> (<code>llm-from-scratch</code>, Large Language Models track, after Pretraining at Scale) to hold one end-to-end build per model version. First page: <code>Notes/01-GPT-From-Scratch-Step-by-Step.mdx</code> - plan (C ≈ 6ND) -&gt; clean/dedup -&gt; tokenize -&gt; train/val split (after tokenization, before chunking; contiguous vs document-level) -&gt; (x, y) blocks -&gt; batches -&gt; GPT decoder in PyTorch -&gt; sanity checks -&gt; AdamW + cosine -&gt; training loop -&gt; eval -&gt; checkpoint -&gt; sampling, with 4 Mermaid diagrams, quiz, exercises and references; plus module <code>INDEX.mdx</code> and <code>APPENDIX.mdx</code>. Renumbered module folders 08-22 -&gt; 09-23 (URLs unchanged: slugs come from module slug + path inside the folder, so no legacy redirects needed), updated cross-links, <code>NN - Title</code> references, Review hub table, CLAUDE.md and scripts paths; added <code>MODULE_SLUG_MAP</code> and <code>MODULE_META</code> entries; rebuilt glossary (306 terms). <code>check:content</code> 232 files 0/0, <code>npm run build</code> passes, all 4 new diagrams parse.</li>
+        <li><strong>2026-10-10</strong> - <strong>Core LLM vocabulary + course-wide Glossary</strong> (no dedicated checklist). Covered the 35 terms from a lecture slide (attention techniques, architecture optimizations, model tuning, RL, benchmarks, metrics): new Attention Residuals (AttnRes) subsection in 03/06 Modern Architectures; an explanation of Elo vs Bradley-Terry plus a new quiz question in 04/02 Contamination &amp; Leaderboards; SWA spelled out in 03/04; the LaaJ alias in 04/03. Added the missing terms to the Key Terms tables of modules 03, 04, 08 and 16. New page <code>22-Review/02-Glossary.mdx</code> (in nav after Readiness Self-Assessment, linked from the Review index) with a mindmap, six curated term tables and a generated A-Z of 297 terms; added the new <code>scripts/build-glossary.mjs</code> and a stale-glossary check in <code>check:content</code>. Verified: <code>check:content</code> reports 0 errors; <code>npm run build</code> succeeds; the comment markers don&#39;t appear in the HTML or the search index. The mindmap was not checked visually in a browser.</li>
+        <li><strong>2026-10-10</strong> - Removed all 82 generic <code>### Concept</code> sub-headings from 20 concept notes (Foundation Models, PyTorch, Pretraining, Post-Training, Inference &amp; Serving) so the right-hand &quot;On this page&quot; TOC lists only real topic names. No links pointed at the <code>#concept-N</code> anchors. <code>### Code</code> labels (18) kept. <code>check:content</code> 228 files 0/0.</li>
+        <li><strong>2026-10-09</strong> - <strong>Course restructure: LLM-first flow in 7 tracks and a consistent module shape</strong> (no dedicated checklist; two plans approved in session - an application-first arc, then revised at the user&#39;s request to the final flow below). Tracks: Conceptual &amp; Mathematical Foundations (Python &amp; Systems, Math for ML) -&gt; Large Language Models (Foundation Models - renamed from LLM Foundations, the &quot;foundation model&quot; every later module builds on - then Evaluation, Prompt &amp; Context Engineering, PyTorch, Pretraining, Post-Training &amp; Fine-Tuning) -&gt; Fundamentals of AI Agents (Introduction to AI Agents, new Agent Building Blocks module, Agent Protocols: MCP &amp; A2A, Agentic Workflows &amp; Multi-Agent Systems) -&gt; Building with LLMs &amp; Agents (RAG Systems, Agent Frameworks, Production Agents) -&gt; Production &amp; Operations (new: Inference &amp; Serving, Production Engineering) -&gt; Industry Standards &amp; Frontier (Cloud AI Platforms, Agent Engineering, Solutions Architecture) -&gt; Capstones &amp; Review. Structural changes: Prog Langs flattened into Python &amp; Systems and PyTorch Fundamentals; Fine-Tuning Lab merged into Post-Training &amp; Fine-Tuning (overview, appendix and Q&amp;A banks merged - 48 questions); Agent Foundations split into Introduction to AI Agents (5 notes + lab) and Agent Building Blocks (tool use, memory, planning; new overview and summary; Q&amp;A bank split 27/21); Agent Patterns renamed Agentic Workflows &amp; Multi-Agent Systems; Knowledge Check renamed Review &amp; Readiness. Legacy slugs cleaned (<code>llm-models</code>, <code>prog-langs</code>, <code>fine-tuning-lab</code>, <code>serving-and-inference</code>, <code>platform-breadth</code>, <code>agents</code>, <code>mcp</code>, <code>agentic-ai</code>, <code>knowledge-check</code>). Every module now has the same nav shape - Overview, concept group(s), Code Labs, Case Studies (label for SystemDesigns/), Review (Q&amp;A bank + &quot;Summary &amp; Key Terms&quot;, renamed from &quot;Appendix&quot;) - with named concept groups in large modules. Note orders follow declared prerequisites (Production Engineering: lifecycle -&gt; security -&gt; networking -&gt; IaC; Agent Engineering: verifiers before spec-driven; Pretraining kept). Forward prerequisites the new flow creates are marked &quot;Optional, later in the course&quot;; a new <code>check:content</code> rule rejects unmarked ones. Code: <code>MODULE_SLUG_MAP</code>, <code>moduleMeta.ts</code> (re-keyed; new &quot;The Workbench&quot; and &quot;The Parts&quot;), <code>courseMap.ts</code>/<code>stats.ts</code> review slug, new <code>navSections.ts</code> so stats and home tiles count named concept groups, <code>LegacyRedirect.tsx</code> also forwards <code>/quiz/</code>, home page learning paths and a readiness self-assessment link, <code>CourseMap.tsx</code> ribbon width estimate fixed for long track names. Content: relative links rewritten by resolve-and-relativize over three scripted passes, code-block paths updated, INDEX headings / prev-next footers / Review hub table regenerated from nav.yml, prose references to old module names and numbers replaced with names. Redirects: 273 entries (108 page URLs + 9 quiz URLs changed vs the deployed site; older chains collapsed). Verified: <code>check:content</code> 0 errors, <code>tsc</code> and lint clean, <code>npm run build</code> (225 lesson pages, 23 quiz pages), every redirect target exists, all 410 old URLs reachable, all 245 internal hrefs resolve, headless-Chrome screenshots of the sidebar and <code>/map</code>.</li>
+        <li><strong>2026-10-03</strong> - <strong>Readiness gaps Phases 4 and 5 complete - the readiness-gaps effort is finished; <code>vibes/readiness-gaps-checklist.md</code> deleted per its own rule.</strong> Phase 4 labs: 04/CodeLabs/01 Profile and Fuse (torch.profiler on a small GPT step; SwiGLU+RMSNorm tail eager vs torch.compile vs Triton; CPU path run on Apple M4 / torch 2.14.1: compile 2.14x, 95% CI 2.11-2.16; Triton/CUDA path not GPU-run); 07/CodeLabs/02 Red-Team Harness (Qwen3-0.6B support bot with a canary secret, 42 attacks in 7 classes x 3 samples, 30 benign, configs baseline / hardened prompt / + Qwen3Guard-Gen-0.6B / + literal output filter; full run 157 s on MPS, reproduced exactly: ASR 68.3% -&gt; 29.4% -&gt; 19.8% -&gt; 0%, paired-bootstrap CIs all excluding 0, over-refusal 10% -&gt; 80% for the hardened prompt; graders unit-tested); 09/CodeLabs/02 Terraform Private Endpoint &amp; SLO Alerts (Bedrock interface endpoint + scoped policies + Pod Identity role; <code>tofu test</code> 4/4 with mocked AWS provider on OpenTofu 1.13.1 / AWS provider 6.67; burn-rate rules <code>promtool check/test rules</code> SUCCESS on promtool 3.15.0, plus a mutation check that fails as expected). Phase 5: self-assessment links every new lab; lab questions added to banks 04 (35), 07 (21), 09 (33); all 20 banks&#39; stated counts audited against actual counts (all match); home lab blurb updated; status.md project structure, table and handover refreshed. Final verification: <code>check:content</code> 206 files 0/0, lint, build (232 pages), 165 redirects resolve, Mermaid parser passes every diagram; headless-Chrome pass over 22 new or changed pages shows every diagram rendered with no raw-text fallback (two first-load misses were cold-cache timing and rendered on reload), and screenshots of the home page, course map, a note and a lab look correct (home: 19 modules in 6 tracks, 131 notes, 657 review questions, 18 labs). Not verified: Triton on a GPU, a real <code>tofu plan</code></li>
+        <li><strong>2026-10-03</strong> - <strong>Readiness gaps Phase 3 complete</strong> (checklist: <code>vibes/readiness-gaps-checklist.md</code>). New Python &amp; Systems sub-area in Prog Langs (<code>02-Prog-Langs/Python-and-Systems/</code>, listed before PyTorch: INDEX, Python for AI Engineering, API Design for LLM Services, Git Workflows for ML, Linux &amp; the GPU Box, Q&amp;A bank); new 09/07 Cloud Networking &amp; IAM for AI and 09/08 Infrastructure as Code (ProdEng Q&amp;A bank 07 -&gt; 09, +5 questions); new 12/10 Enterprise Data Integration (RAG notes 10-13 -&gt; 11-14, +4 bank questions); 5 redirects (165 total, plus re-pointed older targets). Self-assessment: all 14 domains now Full. Verified: asyncio fan-out, FastAPI service (idempotency, 422, SSE, 429 + Retry-After problem+json), Pydantic/pytest snippets and the permission-aware retrieval sketch all run on Python 3.12; pre-commit config passes <code>pre-commit validate-config</code>; AWS (PrivateLink endpoint, IAM, Pod Identity) and GCP (L4 node pool) HCL pass <code>tofu validate</code>/<code>fmt</code> with OpenTofu 1.13.1 (AWS provider 6.67, Google 8.5); Rego policy passes <code>opa check</code> and returns the expected denials with OPA 1.21. <code>check:content</code> 203 files 0/0, lint, build (229 pages), 165 redirects resolve, 214/214 Mermaid diagrams parse. Browser pass still not done (extension disconnected)</li>
+        <li><strong>2026-10-02</strong> - <strong>Readiness gaps Phase 2 complete</strong> (checklist: <code>vibes/readiness-gaps-checklist.md</code>). New module 03 Math for ML (<code>math-for-ml</code>, Foundations track: INDEX, 4 notes, Q&amp;A bank, Attention &amp; Backprop by Hand lab - NumPy forward/backward verified against finite differences, worst rel. error 1.3e-7, and torch 2.14 autograd to 1e-16). Every later module folder renumbered (<code>03-Pretraining</code> ... <code>19-Capstones</code> -&gt; <code>04-</code> ... <code>20-</code>) with a scripted sweep of folder paths, footer link texts, H1s and prose refs (<code>Lab 12</code> -&gt; <code>Lab 13</code>, <code>Module 14</code> -&gt; <code>Module 15</code>, <code>modules 01-06</code> -&gt; <code>01-07</code>); module URLs unchanged. New notes 01/02 Tokenization (LLM Foundations 02-08 renumbered to 03-09, 7 redirects) and 04/08 CUDA Concepts &amp; GPU Profiling (Pretraining Q&amp;A bank 08 -&gt; 09, redirect); 04/01&#39;s 76-line tokenizer table trimmed to a summary + link; Q&amp;A banks 01 (43 -&gt; 47) and 04 (30 -&gt; 34). Self-assessment domains 3, 5 and 8 flipped to Full. Fixed a pre-existing broken Mermaid diagram in 13/02 (a <code>;</code> inside a sequence message). Verified: <code>check:content</code> 194 files 0/0, lint, build (220 pages), all 160 redirect targets exist, Mermaid parser (jsdom) passes all 208 diagrams in the course; <code>/quiz/math-for-ml</code> = 24 questions. Browser pass not done this session (extension disconnected)</li>
+        <li><strong>2026-10-02</strong> - <strong>Readiness gaps Phase 1 complete</strong> (checklist: <code>vibes/readiness-gaps-checklist.md</code>). New Readiness Self-Assessment page (Knowledge Check); new module 18 Solutions Architecture &amp; Communication (<code>solutions-architecture</code>, new <code>Field Engineering</code> track: INDEX, 5 notes, Q&amp;A bank, AP-invoice system design), Capstones moved <code>18-Capstones</code> -&gt; <code>19-Capstones</code> (URLs unchanged, slugs come from titles); new notes 06/05 Safety Evaluation &amp; Red-Teaming and 08/06 LLM Observability, SLOs &amp; Incident Response (Q&amp;A banks renumbered to 06/07 with redirects, +4 questions each); capstone rubrics gain an architecture/ADR + business-outcome criterion (weights rebalanced to 100). Also fixed a stale redirect target (<code>/learn/knowledge-check/all-questions</code> pointed at a non-existent <code>interview-questions-index</code>). Sources checked: OTel GenAI metric names, SRE Workbook burn rates, all arXiv IDs, Llama Guard 4, Promptfoo acquisition, RAND/Gartner/MIT NANDA. <code>check:content</code> 185 files 0/0, <code>build</code> and <code>lint</code> green; dev-server pass: every Mermaid diagram on the 12 new/changed pages renders (no raw fallbacks), <code>/quiz/solutions-architecture</code> shows 20 questions from 5 pages, audience toggle works, all 152 redirect targets exist in <code>out/</code></li>
+        <li><strong>2026-10-02</strong> - Gap analysis of the course against the 14-domain readiness rubric (6 domains partial, 3 missing, capstones lack a business-outcome requirement); created <code>vibes/readiness-gaps-checklist.md</code> (5 phases, 0 done). Decisions: Math for ML goes after Prog Langs; the rubric becomes a static self-assessment page. No content changes yet</li>
+        <li><strong>2026-09-29</strong> - <strong>Course map + sitemap.xml shipped</strong> (plan: <code>~/.claude/plans/can-we-plan-to-streamed-duckling.md</code>). New <code>/map</code> page (&quot;The Course Atlas&quot;, <code>CourseMap.tsx</code> + <code>courseMap.ts</code>), <code>VisitTracker</code> for the &quot;You are here&quot; pin, <code>sitemap.ts</code> / <code>robots.ts</code>, <code>--map-*</code> tokens, <code>SITE_URL</code> constant; <code>MODULE_META</code> moved from <code>CurriculumTiles.tsx</code> to <code>src/lib/content/moduleMeta.ts</code> (shared with the map; Knowledge Check&#39;s landmark copy lives in <code>courseMap.ts</code> so it gets no home tile). One change from the plan: module details open as a note card beside the landmark instead of a side panel, which would have shrunk the map and its labels. Verified: typecheck, lint, build, <code>check:content</code>; <code>sitemap.xml</code> valid, all 190 URLs and all 173 map-page links resolve to built pages. Headless Chrome walkthrough on the built site (light/dark x desktop/mobile): landmark click, <code>#slug</code> deep link, Escape closes, Tab + Enter, card stays inside the map, mobile bottom sheet, pin appears after visiting a lesson and disappears when storage is cleared, no horizontal scroll at 390px, no page errors.</li>
+        <li><strong>2026-09-29</strong> - <strong>Full-text search shipped</strong> (Backlog: Search). Header search dialog (<code>Search.tsx</code>, MiniSearch, new dependency <code>minisearch</code>) over a build-time per-section index at <code>/search-index.json</code> (<code>searchIndex.ts</code> + a <code>force-static</code> route handler, so the static export writes it to <code>out/</code>). Fixed two bugs found along the way: (1) <code>extractToc()</code> stripped every <code>_</code> from heading text, so headings with <code>requires_grad</code>/<code>state_dict</code>/<code>create_agent</code> in code spans got TOC links that didn&#39;t match the rendered ids (4 broken links). <code>extractToc()</code> and the search index now share <code>headingText()</code> in <code>loader.ts</code>. (2) Anchor jumps landed under the sticky audience bar; prose headings now have <code>scroll-margin-top</code>. Verified: typecheck, lint, build, <code>check:content</code>; all 1,677 search anchors and all 3,696 in-page links in <code>out/</code> resolve to real ids. Headless Chrome walkthrough on the built site (⌘K and <code>/</code> open, typing, typo query, arrow keys, Enter navigates to the section with the heading visible, Escape, no-results state; light/dark x desktop/mobile), no page errors.</li>
+        <li><strong>2026-09-28</strong> - Retired <code>vibes/design-system-playbook.md</code>. Its still-accurate rules moved to <code>CLAUDE.md</code>: a new &quot;Site UI Conventions&quot; section (tokens via <code>@theme inline</code>, palette, glass tiers, hand-rolled dark mode, layout breakpoints, prose, MDX surface, audience split, nav/WIP/TOC behavior, no speculative features) plus Mermaid node conventions and fallback rendering under &quot;Diagrams&quot;. Its numbering, <code>nav.yml</code>, punctuation and tracking rules were already in CLAUDE.md. Stale claims were dropped rather than copied: glass blur (now <code>0px</code>), letter abbreviations in the collapsed rail (now module numbers), and <code>AudienceOnboardingModal</code> (removed). What&#39;s Built and Project Structure updated to match.</li>
+        <li><strong>2026-09-28</strong> - Redesign wrap-up (plan file, &#39;Pending - wrap-up&#39;): last 8 inline Interview Q blocks moved into page quizzes; lint fixed (Known Issue 7); browser pass with headless Chrome (home, a note, module quiz, <code>/quiz/all</code>, a system design, Capstones, a legacy redirect via <code>404.html</code>; light/dark, desktop/mobile) found and fixed 15 objectives outcomes parsed as YAML maps (rendered <code>[object Object]</code>) and white site chrome in dark mode; <code>check:content</code> now fails on non-string fence text fields. Lint, check:content and build pass.</li>
+        <li><strong>2026-09-28</strong> - <strong>Redesign Phase 5 complete (pedagogy layer)</strong> - objectives on all 16 Q&amp;A banks (and question counts in bank intros and INDEX pages corrected after the dedupe merges: 01 43, 03 30, 04 21, 10 56, 12 48, 13 41, 14 40, 16 32) and objectives + references on the 6 system designs (Prior Authorization gains the CMS-0057-F payer deadlines, checked on cms.gov). <code>npm run check:content</code> and <code>npm run build</code> pass. With every item done, <code>vibes/course-redesign-checklist.md</code> has been deleted; remaining lab-verification limits are recorded as Known Issue 11.</li>
+        <li><strong>2026-09-27</strong> - Phase 5: module 09 Cloud Platforms on the note template (notes 01-05, INDEX); every module INDEX now has objectives. Checklist updated.</li>
+        <li><strong>2026-09-27</strong> - Phase 5: module 08 Production Engineering on the note template (notes 01-04, Helm lab, INDEX); GPU-container CUDA misconception corrected; lab autoscaling switched to queue depth. Checklist updated.</li>
+        <li><strong>2026-09-27</strong> - Phase 5: added <code>18-Capstones</code> (3 projects with deliverables and rubrics, own track, not counted as a teaching module); refreshed stale home-page module descriptions (MCP &amp; A2A, patterns, frameworks, production agents, agent engineering); 174 <code>.mdx</code> files.</li>
+        <li><strong>2026-09-27</strong> - Redesign Phase 5 started (<code>vibes/course-redesign-checklist.md</code>): module quizzes live at <code>/quiz/[module]</code> and <code>/quiz/all</code>, built from the pages&#39; quiz fences; Q&amp;A deduplicated to one bank per module (All_Questions and 12 Concept Review pages merged and removed with redirects, module-01 bank split to its owning modules); Knowledge Check is a hub; content now 170 <code>.mdx</code> files.</li>
+        <li><strong>2026-09-27</strong> - <strong>Redesign Phase 4 complete (Agents track, modules 12-17)</strong> - detail in <code>vibes/course-redesign-checklist.md</code>. Every module rewritten to the note template with cited sources and one lab that runs against a local model (<code>mlx_lm.server</code>, Qwen3-8B 4-bit) with measured results on the page. 12: 11 notes merged into 8, one memory taxonomy, Agent Loop from Scratch lab (pass^k; prompt-only rule broken in every variant, guard fixes it). 13: MCP 2026-07-28 + SDK v2, Authorization, Security, A2A v1.0; lab measured tool poisoning (description 0/30, tool-result injection 7/30, guard 0/30). 14: Workflow Patterns note; Patterns Under Measurement lab (HumanEval hidden tests, paired CIs, ceiling effect). 15: 8 notes (choosing + 7 frameworks, snippets run against installed packages; ADK 2 graph Workflows), One Agent, Many Frameworks lab - frameworks split 3/3 vs 0/3 on the prompt-only rule, traced by request replay to generated tool-schema metadata (<code>title</code> + <code>additionalProperties:false</code>). 16: 6 notes (architecture, security/OWASP Agentic Top 10/CaMeL, durable execution, cost, evals/benchmarks, OTel observability); system designs updated (Agent Runtime naming, no model names, Production Controls). 17: 8 notes restructured and cited (harness, loops/graphs, context, coding agents, computer use, SKILL.md skills, verifiers/RL, spec-driven), Minimal Coding Harness lab (bare 0.62 / stop hook 0.67 / + repeated-call detection 0.79: the model looped instead of finishing, so the hook only mattered once repeats were blocked). 28 pages removed with redirects (137 total); <code>check-content</code> now validates links inside course fences; 183 <code>.mdx</code> files. Infra note: <code>mlx_lm.server</code> froze for 900 s at a time with an unbounded prompt cache - restart with <code>--prompt-cache-size 4 --prompt-cache-bytes 2000000000</code>.</li>
+        <li><strong>2026-09-26</strong> - <strong>Redesign Phase 3 complete (Building Apps track, modules 10-11).</strong> Module 10: Prompting Mechanics folded into Prompt Fundamentals; 4 new notes (Structured Outputs, Prompting Reasoning Models, Context Engineering, Prompt Caching &amp; Cost); Core/Advanced/Production/Optimization notes rewritten and corrected (flipped-label ICL, many-shot, persona evidence, self-correction limits, spotlighting, DSPy 3.4 MIPROv2/GEPA); new Prompt Evals &amp; Structured Outputs lab. Module 11 restructured to 13 notes: 3 new (Grounded Generation &amp; Citations, Agentic &amp; Deep-Research RAG, Long Context vs RAG vs CAG), Scaling &amp; LLM Issues split into Grounded Generation / System Design / Production, Vertex AI RAG rewritten as cross-cloud Managed RAG; factual fixes (Vector Search uses ScaNN, PQ compression math, Self-RAG tokens, Speculative RAG, lost-in-the-middle numbers, fabricated biomedical facts in SD-2); all code on current APIs (LangChain v1 packages, RAGAS 0.4, <code>agentplatform</code>/<code>google-genai</code>, Bedrock <code>retrieve_and_generate</code>); new Retrieval Evaluation lab on BEIR SciFact. Both labs run end to end on a laptop and their reference numbers are real runs; exercise answers were corrected where runs contradicted them (nested-schema validity, hybrid vs strong dense). Q&amp;A banks deduped (57 -&gt; 48, 80 -&gt; 60); 15 moved or folded URLs redirected (85 total). Verified: 0 content errors, build OK (206 pages), all 183 lesson pages render in Chromium, 85 redirects resolve (chains checked in-browser), all 97 cited arXiv IDs match their titles, lint unchanged (8 pre-existing). Home page: 104 notes / 495 questions / 12 labs. Checklist: <code>vibes/course-redesign-checklist.md</code> Phase 3 checked off.</li>
+        <li><strong>2026-09-26</strong> - <strong>Redesign Phase 2 complete (LLM track, modules 01-09).</strong> 18 new notes, 4 new labs, 3 new Q&amp;A banks: Modern Architectures + Model Landscape (01); PyTorch for LLMs + GPT From Scratch lab (02); Data Curation, Scaling Laws, Distributed Training, Stability &amp; Optimizers, Accelerators + bank (03); Preference Optimization, RL for LLMs, Reasoning Models + bank (04); SFT/DPO/GRPO TRL lab + Qwen3 QLoRA lab (05); four Evaluation notes + eval-harness lab + bank (06); Modern Serving Stack, FP8/FP4 quantization rewrite, dedup, vLLM V1 lab (07); LLM Serving on Kubernetes, OWASP/supply chain/EU AI Act (08); Microsoft Foundry + Google Cloud Agent Platform + fixed comparisons (09). Time-sensitive facts checked against vendor/primary pages on 2026-09-26 (model lineups, NVIDIA/Google hardware specs, vLLM V0 removal, AutoAWQ archival, DRA GA, EU AI Act Digital Omnibus dates, Bedrock model access, Foundry and Vertex AI renames). Code labs smoke-tested on CPU where possible (GPT lab, QLoRA lab, SFT/DPO/GRPO lab, lm-eval compare); GPU-only paths (vLLM server, full-size fine-tunes) API-checked but not GPU-run. <code>check:content</code> now validates #anchors. Verified: 0 content errors, build OK (199 pages), all 176 lesson pages render diagrams/fences in Chromium, 351 internal hrefs and 70 legacy redirects resolve. Home page now reports 99 notes / 524 questions / 10 labs. Checklist: <code>vibes/course-redesign-checklist.md</code> Phase 2 checked off.</li>
+        <li><strong>2026-09-26</strong> - <strong>Redesign Phase 1 complete (platform &amp; restructure).</strong> Content restructured into 17 modules / 5 tracks with <code>git mv</code> (254 files moved, 376 relative links + GitHub URLs rewritten by a migration script; old <code>01-LLM-Models</code> split across LLM Foundations / Pretraining / Post-Training / Inference &amp; Serving / Prompt Engineering; old <code>10-Agents</code> + <code>11-Agentic-AI</code> split into Agent Foundations / Agent Patterns / Agent Frameworks / Production Agents). New overview pages for 5 new modules and rewritten overviews for 01, 12, 14; chapter maps, H1 numbers and Next Topic footers regenerated for every module. <code>nav.yml</code> gains <code>- track:</code> labels; <code>nav.ts</code> derives each module&#39;s folder (MODULE_DIR_MAP removed) and exposes <code>number</code>/<code>track</code>. Added <code>objectives / </code>quiz / ```exercise fences (remark plugin + components; interactive scored quiz, collapsible hints/solutions) with a worked example in the KV-cache note; <code>check:content</code> validates their schema. Home page stats/tiles/path steps, quiz route params and the lesson header label are now nav-derived. 62 moved URLs forward via a 404-page redirect map. Fixed site-wide literal backticks around inline code. CLAUDE.md gains the note template + fence docs; its punctuation rule (mangled by the Phase 0 em-dash sweep) is repaired. Verified: <code>check:content</code> 0 errors, <code>next build</code> OK (175 pages), all 303 internal hrefs resolve, lint unchanged at the 8 pre-existing errors, Playwright pass over quiz/exercise/objectives (light, dark, mobile), sidebar tracks, home page and the legacy redirect. Checklist: <code>vibes/course-redesign-checklist.md</code> Phase 1 checked off.</li>
+        <li><strong>2026-09-26</strong> - Full-course redesign kicked off: three-angle audit (LLM training/serving, agentic AI, pedagogy) -&gt; approved plan to restructure into 17 modules / 5 tracks, tracked in new <code>vibes/course-redesign-checklist.md</code>. <strong>Phase 0 (correctness &amp; hygiene) complete:</strong> fixed factual errors across 01-LLM-Models (16 B/param Adam memory, pretraining cost off by <del>1000x, LoRA &quot;cannot forget&quot;, KV-cache math, Post-LN formula, YaRN/Llama 3.1 RoPE, tokenizer claims, ChatML, GRPO/rejection sampling, Mixtral MoE, NVLink generations, TP diagram, unsourced proprietary-internals claims) plus their Q&amp;A-bank copies; HIPAA five safeguards (05); fabricated MCP spec version <code>2026-01-01</code> (09); AutoGen <code>HumanProxyAgent</code> / CrewAI tool import / LangGraph <code>SqliteSaver</code> (11/04, 11/09). Fixed broken ADK code in 20 lab files (<code>InMemoryRunner(session_service=)</code> -&gt; <code>Runner(app_name=...)</code>; <code>InProcessRunner</code>/<code>google.adk.types</code> -&gt; async <code>Runner.run_async</code> + <code>google.genai.types</code>) - all 14 ADK <code>.py</code> labs import and wire a Runner on google-adk 2.10.0 (not run against a live model). Migrated PyTorch AMP to <code>torch.amp</code> (MNIST lab run end-to-end on CPU; CUDA path unverified). Repaired 2 corrupt <code>.ipynb</code> files. Link rewriter fix (</del>173 links), new <code>npm run check:content</code>, corrected Q&amp;A counts in 7 INDEX pages, em dashes removed from <code>.tsx</code>/<code>CLAUDE.md</code>/<code>AGENTS.md</code>, CLAUDE.md house-style path updated. Checklist: <code>vibes/course-redesign-checklist.md</code> Phase 0 checked off (numbering gaps deferred to Phase 1 restructure).</li>
+        <li><strong>2026-09-18</strong> - Full project-folder structure audit at user request (&quot;reorganise into correct folder structure as per industry standard... move anything non react into react and html&quot;). Reviewed the entire repo root, <code>src/</code> tree, <code>public/</code>, <code>vibes/</code>, and git tracking state - found the structure already matches standard Next.js/React App Router convention (see Section 6), so <strong>no folder reorganization was performed</strong>. Two candidate moves were explicitly evaluated and declined with the user: (1) moving <code>vibes/status.html</code> (an internal project-status dashboard with backlog/known-issues/handover notes) into <code>public/</code> - declined, since Next.js static export would then publish it live at <code>sunmintz.com/learngenai/status.html</code> on the next deploy, exposing internal project status on the production site; it stays in <code>vibes/</code>. (2) Moving <code>src/content/</code>&#39;s embedded CodeLab assets (Python/Jupyter/Dockerfile/Helm files) out of <code>src/</code> - declined, since they&#39;re intentional pedagogical content co-located with their MDX lessons and read by <code>src/lib/content/loader.ts</code>, not misplaced app code. What did ship: git-hygiene cleanup - added <code>/test-results</code> to <code>.gitignore</code> and ran <code>git rm --cached test-results/.last-run.json</code> (was tracked despite being a Playwright test-runner artifact, per Known Issue #3, now resolved), and deleted 3 stray untracked <code>.DS_Store</code> files under <code>src/content/</code> (they were already correctly gitignored, just local clutter). Section 4 (Known Issues) and Section 6 (Project Structure) updated to match.</li>
+        <li><strong>2026-09-18</strong> - Compared this repo&#39;s deployment against a user-supplied reference pattern (&quot;Static SPA + PHP API on shared hosting via GitHub Actions&quot;, modeled on the sunmintz marketing repo). Found this repo already implements nearly all of it (static <code>next export</code>, no API routes, FTP-to-Hostinger via GitHub Actions) - the PHP+MySQL backend portion of the reference doesn&#39;t apply here since the site has no forms/API needs. The one real gap was automation: <code>.github/workflows/deploy.yml</code> only ran on manual <code>workflow_dispatch</code> (a deliberate choice from the June iteration noted above). Per user request, added <code>push: branches: [main]</code> alongside the existing <code>workflow_dispatch</code>, and switched <code>dangerous-clean-slate</code> from <code>false</code> to <code>true</code> (safe here - no hand-placed backend config exists on the host to lose - and prevents stale pages lingering after content renumbering). Section 1 above updated to match. <strong>Every future push to <code>main</code> now deploys straight to production automatically</strong> - be aware of this before merging <code>dev</code> -&gt; <code>main</code>.</li>
+        <li><strong>2026-09-18</strong> - Completed Module 12 (Agent Engineering) at the user&#39;s request, who originally asked for a standalone &quot;Engineering in LLMs&quot; chapter without knowing Module 12 already existed (this session&#39;s local branch had been forked before Module 12 landed on 2026-08-10, so the first attempt built a duplicate <code>07-Engineering-Layers</code> chapter covering Harness/Loop/Graph Engineering a second time - caught during a pre-push <code>git fetch</code> that revealed 6 diverged remote commits, discarded before anything was pushed, and preserved on a local-only <code>backup-engineering-layers-wip</code> branch for reference). Rebuilt the net-new material as 5 additional notes in the existing <code>12-Agent-Engineering/Notes/</code> (04-Context-Engineering, 05-Evaluation-and-Verifier-Engineering, 06-Environment-Engineering, 07-Memory-and-Skill-Engineering, 08-Spec-and-Vibe-Engineering) plus <code>09-Interview-QA-Bank.mdx</code> (30+ questions across all 8 topics, matching the <code>07-Fine-Tuning-Lab</code> Q&amp;A-bank pattern) and <code>Interview-Questions/12-Agent-Engineering.mdx</code> (concept-review companion, matching the Knowledge Check pattern), filling the &quot;no Q&amp;A bank yet&quot; gap flagged in the module&#39;s original changelog entry. Each new note follows the chapter&#39;s existing <code>audience-biz</code>/<code>audience-tech</code> + Mermaid style and cross-links back into Harness/Loop/Graph Engineering rather than re-deriving them. Updated <code>12-Agent-Engineering/INDEX.mdx</code> (chapter map + recommended path), <code>nav.yml</code> (5 notes + QA bank under Agent Engineering&#39;s Concepts, plus the new Knowledge Check entry), <code>CurriculumTiles.tsx</code> (<code>agent-engineering</code> tile: &quot;3 notes/No Q&amp;A bank yet&quot; -&gt; &quot;8 notes/30+ Q&amp;A&quot;), and <code>Interview-Questions/INDEX.mdx</code> (added the Module 12 row). <code>nav.ts</code> needed no changes - its <code>agent-engineering</code> mapping was already correct from the original Module 12 commit. Verified via <code>npm run build</code> (159 static pages, 0 errors, up from 152) and confirmed all 10 new <code>/learn/agent-engineering/*</code> and <code>/learn/knowledge-check/*</code> routes exported correctly under <code>out/</code>. Zero em-dashes across all new content.</li>
+        <li><strong>2026-08-10</strong> - Shipped Module 12 (Agent Engineering) after the user asked whether &quot;Agent Harness Engineering,&quot; &quot;Thinking in Loops,&quot; and a loop-vs-graph topic were worth adding, and shared 10 source articles (OpenAI/LangChain/Anthropic on harnesses; Addy Osmani/Towards Data Science/rico.codes on loop engineering; Medium/aibuilderclub/LinkedIn/Prefect on loop-vs-graph). Fetched and read 9 of the 10 (OpenAI&#39;s harness-engineering page 403&#39;d; the other two on that topic covered the same ground) and checked for overlap against existing content before building - confirmed all three were genuine gaps, distinct from <code>06-Agentic-AI/Notes/02-The-Agent-Loop.mdx</code> (loop <em>mechanics</em>, not design philosophy) and <code>11-Evaluation-and-Observability.mdx</code> (a differently-scoped &quot;evaluation harness,&quot; not execution scaffolding). Built new <code>12-Agent-Engineering/</code> following the plain <code>02-Prompts</code> template (Overview + Concepts, no Code Labs): <code>INDEX.mdx</code> + 3 Notes (Harness Engineering - Agent=Model+Harness, storage/execution/context-management/long-horizon-support; Loop Engineering - design-loops-not-prompts, verification surface, the six-component practice, loop economics formula; Graph Engineering - &quot;a loop is a graph with one node and a self-edge,&quot; five signals justifying a graph, the &quot;what happens if this dies halfway&quot; decision framework, hybrid architectures), each following the <code>audience-biz</code>/<code>audience-tech</code> split and Mermaid house style from <code>05-Agents/Notes/02-Anatomy-of-an-AI-Agent.mdx</code>, with explicit cross-links back into <code>06-Agentic-AI</code> rather than re-deriving its content. Placed as a new top-level <code>12-</code> module after Prog Langs per explicit user choice (no renumbering of 01-11). Wired into <code>nav.yml</code> <strong>and</strong> <code>src/lib/content/nav.ts</code>&#39;s <code>MODULE_SLUG_MAP</code>/<code>MODULE_DIR_MAP</code> from the start (the step Module 07 originally missed, per Known Issue/Handover note #5/#6) - verified with a full <code>next build</code>: all 4 new pages render with zero errors, 152 total pages generated (up from 148). Also added a <code>MODULE_META</code> entry in <code>src/components/course/CurriculumTiles.tsx</code> so the module shows up on the landing-page tiles (this map is a third place, beyond <code>nav.yml</code> and <code>nav.ts</code>, that silently excludes any module missing from it - worth remembering for the next new module). Verified in a real browser via curl against the dev server: correct sidebar ordering (Prog Langs -&gt; Agent Engineering -&gt; Knowledge Check) and mermaid diagrams rendering. Zero em-dashes across all new content. Deliberately did not build a Q&amp;A/Interview-Questions file or Code Lab for this module (flagged as out-of-scope in the plan, not an oversight) - can be added on request.</li>
+        <li><strong>2026-08-10</strong> - Landing page + onboarding UX pass at user request: removed the blocking <code>AudienceOnboardingModal.tsx</code> (&quot;second flash screen&quot; asking Business/Technical/Everything before the site was usable) - deleted the file, replaced its global localStorage-&gt;<code>body[data-audience]</code> sync duty (which ran on every page regardless of modal state) with a new no-UI <code>AudienceSync.tsx</code> mounted in <code>layout.tsx</code>, and removed the now-dead <code>DISCLAIMER_DISMISSED_EVENT</code> export/dispatch from <code>DisclaimerModal.tsx</code> that only the deleted modal had listened for. In its place, <code>AudienceToggle.tsx</code> (the persistent &quot;View as:&quot; pill already on every lesson page) now gets a one-time first-visit highlight - a pulsing yellow ring + a bouncing &quot;👆 Personalize this page&quot; tooltip, gated by a new <code>genai_toggle_highlight_v1</code> localStorage flag, auto-fading after 7s or on first interaction - so personalization is discoverable without a blocking modal. Also added a &quot;credibility strip&quot; section to <code>src/app/page.tsx</code> (between hero and feature grid) to make the landing page feel more &quot;startupy&quot;/informative - then, per immediate user follow-up, <strong>reverted it</strong>: deleted the section and its <code>CREDIBILITY</code> const entirely, and instead added a plain author-name link (<code>https://suryaprakash.sunmintz.com/</code>, desktop-only) into the header&#39;s top-right corner next to the existing <code>sunmintz.com</code> link. Not yet verified in a browser or via <code>next build</code> (no Node runtime available in this session&#39;s shell) - reviewed by hand instead; next session should run a real build/dev-server check before this ships. The user pushed back on marking Section 10 done via static analysis alone, so this session installed a working browser: <code>npx playwright install chromium --with-deps</code> (network access confirmed available, install succeeded), started the dev server, and ran a real Playwright script capturing screenshots across light/dark x desktop (1440x900)/mobile (390x844) for the landing page, a lesson page, a fine-tuning-lab index, a code-lab page with tables, the new Prog Langs nested module, quiz-all, the disclaimer modal, the mobile nav drawer, and all 4 tabs of <code>AgentUseCaseMindmap.tsx</code> - 24+ screenshots total, manually reviewed. <strong>This caught 3 real bugs the build-only/static-grep verification had missed:</strong> (1) a malformed CSS comment in Section 7&#39;s <code>.prose</code> block (<code>sun-*/glass-*</code> contains a literal <code>*/</code>, closing the CSS comment early) broke dev-mode CSS parsing entirely and 500&#39;d every page - <code>next build</code> had silently tolerated it, so &quot;the build passes&quot; was not sufficient proof the CSS was valid; fixed by respacing the comment. (2) Section 7 only overrode 10 of Tailwind Typography&#39;s ~19 CSS custom properties - missing <code>--tw-prose-bold</code> (among others: <code>lead</code>/<code>counters</code>/<code>bullets</code>/<code>quotes</code>/<code>quote-borders</code>/<code>captions</code>/<code>kbd</code>/<code>kbd-shadows</code>) left bold table-header text nearly invisible against dark glass table backgrounds in dark mode; also found <code>--tw-prose-blockquote-border</code> (used in the original Section 7 pass) isn&#39;t a real Typography variable - the correct name is <code>--tw-prose-quote-borders</code> - fixed by adding the complete, correctly-named variable set. (3) three more instances of the recurring fixed-yellow-bg-plus-reactive-text bug beyond what Section 8 had already fixed: <code>AudienceToggle.tsx</code>&#39;s active pill, <code>Sidebar.tsx</code>&#39;s collapsed-rail active module badge, and <code>DisclaimerModal.tsx</code>&#39;s primary CTA button - all fixed, then a final <code>grep -rn &quot;bg-sun-yellow.*text-sun-dark&quot;</code> across all of <code>src/</code> confirmed zero remaining instances. Rebuilt and re-ran the full screenshot pass a second time to confirm every fix - all pages clean, zero console errors beyond the expected/documented hydration-mismatch noise from the no-flash-of-wrong-theme script. <strong><code>vibes/glass-ui-redesign-checklist.md</code> is now deleted</strong> - all 11 sections genuinely complete and verified, per its own retirement instruction; <code>vibes/GLASS-UI-REDESIGN.md</code>&#39;s status line updated to COMPLETE. The Playwright browser binary and the throwaway verification script/screenshots live in <code>/tmp</code>, not committed to the repo.</li>
+        <li><strong>2026-08-10</strong> - Implemented Sections 5-9 of the glass UI redesign (<code>vibes/glass-ui-redesign-checklist.md</code>) at user request, continuing from Sections 1-4 (done 2026-07-22). <strong>Section 5 (Modals &amp; Overlays):</strong> <code>AudienceOnboardingModal.tsx</code>/<code>DisclaimerModal.tsx</code> scrim+panel and shadcn <code>sheet.tsx</code> (mobile drawer overlay + all 4 side variants) converted to glass tokens. <strong>Section 6 (shadcn Primitives):</strong> audited <code>variant=</code> usage first - found zero live consumers of <code>&lt;Card&gt;</code>/<code>&lt;Button&gt;</code>/<code>&lt;Badge&gt;</code>/<code>&lt;Progress&gt;</code>/<code>&lt;Separator&gt;</code> as JSX (only <code>buttonVariants({variant:&quot;ghost&quot;})</code> used once in <code>Header.tsx</code>), so <code>button.tsx</code>/<code>badge.tsx</code> got an additive <code>glass</code> variant (non-breaking) while <code>card.tsx</code>/<code>progress.tsx</code>/<code>separator.tsx</code> (no prior variant system, zero consumers) were restyled directly rather than given an unused variant enum. <strong>Section 7 (MDX/Prose Layer):</strong> converted every <code>.prose</code> CSS custom property in <code>globals.css</code> from static hex to the <code>sun-*</code>/<code>glass-*</code> token references (so prose text is now theme-reactive), added glass border/shadow chrome to code blocks (kept background solid/theme-matched, not translucent, to protect code legibility per the plan&#39;s own risk callout), added new glass-treated <code>.prose table</code>/<code>.prose thead</code> rules. <strong>Section 8 (Page-Level Layouts):</strong> landing page, lesson page, and the shared <code>UnderDevelopment</code> component (covers both quiz routes + <code>not-found.tsx</code>) converted to glass tokens. <strong>Found and fixed a real, previously-undiagnosed dark-mode contrast bug in the process</strong>: many elements paired a theme-invariant fixed background (<code>bg-sun-yellow</code>, or an intentionally-fixed dark banner) with the <em>reactive</em> <code>text-sun-dark</code>/<code>text-white</code> tokens, which invert per-theme - so a yellow button&#39;s text would go near-white-on-yellow in dark mode, and the lesson-page title banner (flagged but not fixed back in Section 4) had literally illegible white-on-near-white text. Fixed every instance found (lesson-page banner, landing-page header/hero/footer/buttons/stats, <code>UnderDevelopment</code>&#39;s &quot;Go Home&quot; button) by pairing fixed backgrounds with fixed <code>text-zinc-900</code>/<code>text-white</code> instead of reactive tokens. <strong>Section 9 (AgentUseCaseMindmap.tsx):</strong> converted all structural chrome (panel/tab-bar/card/table backgrounds, borders, primary text across all 4 sub-components) to glass tokens; deliberately left the 15 data-driven category accent colors (4 agent types, 8 domains, 3 complexity tiers) as light-mode hex by documented scope decision (a proper dark-mode palette for 15 distinct semantic hues is separate, larger work), matching the plan&#39;s own flag of this component as highest-uncertainty. <strong>Section 10 (QA):</strong> could only be done as static analysis - grepped the full component tree for every remaining <code>bg-white</code>/<code>bg-black</code>/<code>text-white</code> and manually confirmed each is an intentional fixed-color pairing, not a reactive-token bug (this is exactly the technique that caught the contrast bug above) - but an actual browser walkthrough (light/dark), mobile performance check, and cross-browser check were <strong>not done</strong>, since no browser/screenshot tool was available in this session; left honestly unchecked in the checklist rather than claimed. Verified all of the above via <code>npm run build</code> (148 pages, 0 errors, unchanged from before this session) after every section. <strong>Section 11 (Status Doc Sync)</strong> done in this same entry - <code>vibes/status.md</code>&#39;s &quot;What&#39;s Built&quot; and <code>vibes/GLASS-UI-REDESIGN.md</code>&#39;s status header both updated to reflect Sections 1-9 complete, Section 10 partial. The checklist is intentionally not deleted yet - Section 10&#39;s browser-based items remain genuinely open for the next session with real browser access.</li>
+        <li><strong>2026-08-10</strong> - Updated this file&#39;s stale header (<code>Last commit at time of writing</code> still pointed at <code>e5f3191</code> from 2026-06-29; corrected to <code>69f4c46</code>, noted it&#39;s local-only on <code>dev</code> at time of writing, not yet pushed/merged to <code>main</code>). Audited all files in <code>vibes/</code> for done-vs-pending status at user request and deleted <code>vibes/genai-course-gap-analysis.md</code> - all 5 of its shortlist items (PyTorch Fundamentals, Fine-Tuning Lab, Serving &amp; Inference, Production Engineering, Platform Breadth) are now shipped, so it had become a fully-actioned checklist rather than a live reference, matching the precedent already set for <code>modules-07-11-checklist.md</code>. Kept <code>vibes/GLASS-UI-REDESIGN.md</code> and <code>vibes/glass-ui-redesign-checklist.md</code> - only Sections 1-4 of 11 are done, still an active tracker. Kept <code>vibes/design-system-playbook.md</code> - it&#39;s a portable reference spec meant to persist across projects, not a task checklist, so it has no &quot;done&quot; state to retire.</li>
+        <li><strong>2026-08-10</strong> - Reordered the sidebar into a more logical learning/upskilling sequence and moved PyTorch Fundamentals into a new &quot;Prog Langs&quot; grouping, per user request. Renumbered module directories: <code>08-Fine-Tuning-Lab</code> -&gt; <code>07-Fine-Tuning-Lab</code>, <code>09-Serving-and-Inference</code> -&gt; <code>08-Serving-and-Inference</code>, <code>10-Production-Engineering</code> -&gt; <code>09-Production-Engineering</code>, <code>11-Platform-Breadth</code> -&gt; <code>10-Platform-Breadth</code>, and <code>07-PyTorch-Fundamentals</code> -&gt; <code>11-Prog-Langs/PyTorch/</code> (nested one level deeper, same pattern as <code>05-Agents/GCP-ADK</code> etc., so future language-specific modules can sit alongside it as siblings under <code>Prog Langs</code>). Matching renames applied to <code>Interview-Questions/*.mdx</code> (07-11 renumbered accordingly, PyTorch&#39;s file became <code>11-PyTorch-Fundamentals.mdx</code>). Used a staging-directory technique (<code>mv X _tmp</code>, shift the rest down, <code>mv _tmp</code> into final spot) to avoid collisions during the renumbering. Bulk-updated every cross-reference across all touched content files (<code>.mdx</code>, <code>.py</code>, <code>Dockerfile</code>) via <code>sed</code> on the unique old directory names (safe because each was a distinct full string, not just a numeric prefix, so no double-transformation risk regardless of order) - fixed a handful of resulting ugly anchor-text artifacts by hand (e.g. <code>[11-Prog-Langs/PyTorch: ...]</code> -&gt; <code>[PyTorch Fundamentals: ...]</code>) and manually corrected the 4 relative links inside PyTorch&#39;s own <code>INDEX.mdx</code> that needed an extra <code>../</code> for its new nesting depth. Rebuilt <code>nav.yml</code> with the new order (01-06 unchanged, then Fine-Tuning Lab -&gt; Serving &amp; Inference -&gt; Production Engineering -&gt; Platform Breadth, then a new top-level <code>Prog Langs</code> section containing nested <code>PyTorch Fundamentals</code>, then Knowledge Check last as always) and reordered/renumbered the Knowledge Check interview-question links to match, with PyTorch&#39;s link now last before the section ends. Updated <code>src/lib/content/nav.ts</code>&#39;s <code>MODULE_SLUG_MAP</code>/<code>MODULE_DIR_MAP</code>: removed the old <code>pytorch-fundamentals</code> entry, added <code>&quot;Prog Langs&quot;: &quot;prog-langs&quot;</code> / <code>&quot;prog-langs&quot;: &quot;11-Prog-Langs&quot;</code>, and shifted the other four modules&#39; directory mappings down by one. Verified via a full <code>next build</code>: still 148 total pages (zero lost or duplicated), confirmed all 8 PyTorch pages now serve at <code>/learn/prog-langs/pytorch-*</code> and the old <code>/learn/pytorch-fundamentals/*</code> route no longer exists, confirmed <code>fine-tuning-lab</code> correctly occupies the old module-08 slot. Grepped the full content tree for any remaining old-numbered path references and em-dashes - both clean. Checked <code>Sidebar.tsx</code>, the homepage, and the quiz stub page for hardcoded module slugs/counts that might need updating - none found, sidebar numbering and abbreviations are computed dynamically from <code>nav.yml</code> order/titles so no further changes were needed there.</li>
+        <li><strong>2026-08-10</strong> - Shipped Module 11 (Platform Breadth), the fifth and final module of the <code>vibes/genai-course-gap-analysis.md</code> 07-11 content tranche: new <code>11-Platform-Breadth/</code> with <code>INDEX.mdx</code> + 4 Notes files (AWS Bedrock, Databricks &amp; Spark, Azure AI Foundry, Platform Comparison Table) + a 15-Q&amp;A review bank, following the <code>audience-biz</code>/<code>audience-tech</code> split and Mermaid house style. This module has no Code Lab by design (per CLAUDE.md&#39;s &quot;table, not diagram, for tabular attribute comparisons&quot; guidance and the gap-analysis doc&#39;s own scoping) - the artifact is the Vertex AI ↔ Bedrock ↔ Azure AI Foundry comparison table itself, covering model access/RAG/guardrails, data platform, and MLOps equivalents across all three clouds, plus a note on how to use it credibly in an interview (name the capability, then the products, then one real architectural difference - not just recite a vocabulary mapping). Added a complementary cross-topic <code>Interview-Questions/11-Platform-Breadth.mdx</code>. Wired the module into <code>nav.yml</code> and <code>src/lib/content/nav.ts</code>&#39;s <code>MODULE_SLUG_MAP</code>/<code>MODULE_DIR_MAP</code> - verified with a full <code>next build</code>: all 6 new module pages render with zero errors, 148 total pages generated. Verified nav.yml is valid YAML and zero em-dashes across all new content. <strong>This module (and the rest of the tranche after Module 10&#39;s interruption) was built directly in the main session rather than via a background agent</strong>, since an account-level session limit had interrupted the prior background-agent attempt at Module 10. <code>All_Questions.mdx</code> left untouched, same as Modules 07-10. <strong>The full 07-11 tranche from <code>vibes/genai-course-gap-analysis.md</code> is now complete</strong> - 5 new modules, 45 new content files, 154 total <code>.mdx</code> files across 12 modules. <code>vibes/modules-07-11-checklist.md</code> deleted per CLAUDE.md&#39;s rule to remove a finished checklist once it&#39;s no longer a live tracker - this changelog entry is now the record of what shipped.</li>
+        <li><strong>2026-08-10</strong> - Shipped Module 10 (Production Engineering), the fourth of the <code>vibes/genai-course-gap-analysis.md</code> 07-11 content tranche: new <code>10-Production-Engineering/</code> with <code>INDEX.mdx</code> + 4 Notes files (Docker for GPU Inference, Kubernetes &amp; Helm, Model Lifecycle &amp; Rollout, Security &amp; Compliance) + an 18-Q&amp;A review bank, following the <code>audience-biz</code>/<code>audience-tech</code> split and Mermaid house style. Added one hands-on Code Lab (<code>CodeLabs/01-Helm-Chart-and-Release-Checklist</code>) - a multi-stage GPU-inference <code>Dockerfile</code> (CUDA <code>-devel</code> build stage, <code>-runtime</code> final stage) packaging the Module 09 FastAPI+vLLM <code>serve.py</code>, a real Helm chart (<code>Chart.yaml</code>, <code>values.yaml</code>, templated <code>deployment.yaml</code>/<code>service.yaml</code>/<code>hpa.yaml</code> with GPU requests=limits and a GPU-utilization-based HPA), and a standalone <code>release-readiness-checklist.md</code> - the &quot;first 90 days&quot; artifact named in the gap-analysis doc. Added a complementary cross-topic <code>Interview-Questions/10-Production-Engineering.mdx</code>. Wired the module into <code>nav.yml</code> and <code>src/lib/content/nav.ts</code>&#39;s <code>MODULE_SLUG_MAP</code>/<code>MODULE_DIR_MAP</code> - verified with a full <code>next build</code>: all 7 new module pages render with zero errors, 141 total pages generated. Verified nav.yml and both Helm <code>Chart.yaml</code>/<code>values.yaml</code> parse as valid YAML, every referenced file path exists on disk, and zero em-dashes across all new content. <strong>Note:</strong> this module&#39;s build was originally delegated to a background agent, which was interrupted mid-session by an account-level session limit after completing only <code>Notes/01-Docker-for-GPU-Inference.mdx</code> (verified complete and kept as-is); the remaining files (Notes 02-05, INDEX, CodeLabs, nav wiring) were written directly in the main session following the same conventions and verified identically. <code>All_Questions.mdx</code> left untouched, same as Modules 07-09. Module 11 (Platform Breadth) is next and is the last module in this tranche.</li>
+        <li><strong>2026-08-10</strong> - Shipped Module 09 (Serving &amp; Inference), the third of the <code>vibes/genai-course-gap-analysis.md</code> 07-11 content tranche: new <code>09-Serving-and-Inference/</code> with <code>INDEX.mdx</code> + 4 Notes files (vLLM &amp; Paged Attention, Quantized Inference, Batching/Concurrency/Latency, Streaming &amp; TTFT) + a 15-Q&amp;A review bank, following the <code>audience-biz</code>/<code>audience-tech</code> split and Mermaid house style, deliberately linking back to (not re-deriving) the KV-cache/Paged-Attention theory in <code>01-LLM-Models/Notes/05-KV-Cache-and-Inference-Optimization.mdx</code> and the NF4/<code>bitsandbytes</code> training-time quantization covered in <code>08-Fine-Tuning-Lab/Notes/02-LoRA-and-QLoRA-Hands-On.mdx</code>, contrasting it against GPTQ/AWQ serving-time quantization instead. Added one hands-on Code Lab (<code>CodeLabs/01-FastAPI-vLLM-Endpoint</code>) - a real FastAPI server (<code>serve.py</code>) backed by a vLLM <code>AsyncLLMEngine</code>, exposing a <code>/generate</code> endpoint with both SSE streaming (per-chunk TTFT reporting) and non-streaming responses, plus a <code>load_test.py</code> client that fires bounded-concurrency async requests and reports aggregate tokens/sec, p50/p95 per-request latency, and p50/p95 TTFT with warm-up requests excluded - the &quot;record tokens/sec under load&quot; artifact called out in the gap analysis. Added a complementary cross-topic <code>Interview-Questions/09-Serving-and-Inference.mdx</code>, and a short cross-reference note in <code>01-LLM-Models/Notes/10-Production-Deployment.mdx</code> pointing into the new module. Wired the new module into <code>nav.yml</code> (top-level block after Fine-Tuning Lab, plus a Knowledge Check line) and into <code>src/lib/content/nav.ts</code>&#39;s <code>MODULE_SLUG_MAP</code>/<code>MODULE_DIR_MAP</code> from the start - verified with a full <code>next build</code>: all 7 new module pages (index, 4 notes, Q&amp;A bank, codelab landing) plus the new Knowledge Check page render with zero errors, 133 total pages generated. Verified nav.yml is valid YAML, every referenced file path exists on disk, both Python scripts pass <code>py_compile</code>, and zero em-dashes across all new content. <code>All_Questions.mdx</code> was intentionally left untouched, same as Modules 07-08 (out of scope, not enumerated in the task instructions) and left unchecked in <code>vibes/modules-07-11-checklist.md</code>; all other Module 09 items checked off. Module 10 (Production Engineering) is next.</li>
+        <li><strong>2026-08-10</strong> - Shipped Module 08 (Fine-Tuning &amp; PEFT Lab), the second of the <code>vibes/genai-course-gap-analysis.md</code> 07-11 content tranche: new <code>08-Fine-Tuning-Lab/</code> with <code>INDEX.mdx</code> + 4 Notes files (HuggingFace Ecosystem, LoRA &amp; QLoRA Hands-On, Instruction Data &amp; Training Runs, Benchmarking Base vs Tuned) + a 15-Q&amp;A review bank, following the <code>audience-biz</code>/<code>audience-tech</code> split and Mermaid house style, deliberately linking back to (not re-deriving) the LoRA math and VRAM/quantization formulas already covered in <code>01-LLM-Models/Notes/07-Fine-Tuning.mdx</code> and <code>08-GPU-and-Hardware.mdx</code> - added short &quot;Hands-On Lab&quot; cross-reference sections to both of those files pointing into the new module. Added one hands-on Code Lab (<code>CodeLabs/01-QLoRA-Fine-Tune</code>) - a real, runnable QLoRA fine-tune (<code>train_qlora.py</code>: 4-bit NF4 loading via <code>bitsandbytes</code>, a <code>peft</code> <code>LoraConfig</code>, masked instruction-tuning loss, <code>Trainer</code>-based training with a built-in demo dataset fallback) plus a <code>benchmark.py</code> that loads base vs adapter-merged model and prints a measured (not estimated) base-vs-tuned comparison table - ROUGE-L quality proxy, tokens/sec with warm-up excluded, peak VRAM via <code>torch.cuda.max_memory_allocated()</code>, and an illustrative cost-per-1k-requests figure. Added a complementary cross-topic <code>Interview-Questions/08-Fine-Tuning-Lab.mdx</code>. Wired the new module into <code>nav.yml</code> (top-level block after PyTorch Fundamentals, plus a Knowledge Check line) and into <code>src/lib/content/nav.ts</code>&#39;s <code>MODULE_SLUG_MAP</code>/<code>MODULE_DIR_MAP</code> from the start this time (the step Module 07 initially missed) - verified with a full <code>next build</code>: all 7 new module pages (index, 4 notes, Q&amp;A bank, codelab landing) plus the new Knowledge Check page render with zero errors, 125 total pages generated. Verified nav.yml is valid YAML, every referenced file path exists on disk, both Python scripts pass <code>py_compile</code>, and zero em-dashes across all new content. <code>All_Questions.mdx</code> was intentionally left untouched, same as Module 07 (out of scope, not enumerated in the task instructions) and left unchecked in <code>vibes/modules-07-11-checklist.md</code>; all other Module 08 items checked off. Module 09 (Serving &amp; Inference) is next.</li>
+        <li><strong>2026-08-09</strong> - Verified Module 07 with an actual <code>next build</code>: the module&#39;s 8 new pages were silently missing from both <code>.next/server/app/learn/</code> and the static <code>out/</code> export, because <code>nav.yml</code> alone does not register a new module - <code>src/lib/content/nav.ts</code> hardcodes a separate <code>MODULE_SLUG_MAP</code>/<code>MODULE_DIR_MAP</code> (title -&gt; URL slug -&gt; content directory) that every module must also be added to. Added the <code>&quot;PyTorch Fundamentals&quot;: &quot;pytorch-fundamentals&quot;</code> / <code>&quot;pytorch-fundamentals&quot;: &quot;07-PyTorch-Fundamentals&quot;</code> entries; rebuilt and confirmed all 8 pages now generate (117 total pages, up from 109) in both the server build and the static export used for deployment. Updated <code>vibes/modules-07-11-checklist.md</code> with this as a new required step for every remaining module (08-11) and checked off Module 07&#39;s &quot;dev server renders, no MDX errors&quot; item accordingly.</li>
+        <li><strong>2026-08-09</strong> - Shipped Module 07 (PyTorch Fundamentals), the first of the <code>vibes/genai-course-gap-analysis.md</code> 07-11 content tranche: new <code>07-PyTorch-Fundamentals/</code> with <code>INDEX.mdx</code> + 5 Notes files (Tensors &amp; Autograd, Dataset &amp; DataLoader, Training Loop From Scratch, Checkpointing &amp; Mixed Precision, Debugging &amp; GPU Memory) + a 15-Q&amp;A review bank, all following the <code>audience-biz</code>/<code>audience-tech</code> split and Mermaid house style from <code>05-Agents</code>. Added one hands-on Code Lab (<code>CodeLabs/01-Raw-PyTorch-Classifier</code>) - a real, runnable raw-PyTorch CNN (<code>model.py</code>/<code>train.py</code>/<code>requirements.txt</code>) that trains an MNIST classifier end-to-end with a custom Dataset/DataLoader pipeline, a hand-written training loop, resumable checkpointing, and <code>autocast</code>/<code>GradScaler</code> mixed precision (auto-disabled on CPU). Added a complementary cross-topic <code>Interview-Questions/07-PyTorch-Fundamentals.mdx</code>. Wired the new module into <code>nav.yml</code> (top-level block after Agentic AI, plus a Knowledge Check line) and verified it parses as valid YAML with <code>python3 -c &quot;import yaml; yaml.safe_load(...)&quot;</code>; confirmed every new file referenced in the nav block exists on disk. <code>All_Questions.mdx</code> was intentionally left untouched (out of scope per the task instructions - it&#39;s a freeform aggregate file, not enumerated as a required edit) and the dev-server-render check was not run this session (no dev server started); both left unchecked in <code>vibes/modules-07-11-checklist.md</code>, all other Module 07 items checked off. Module 08 (Fine-Tuning &amp; PEFT Lab) is next.</li>
+        <li><strong>2026-07-22</strong> - Implemented Sections 2-3 (Dark Mode Infrastructure, Theme Toggle Component) of the glass UI redesign. Hand-rolled dark mode instead of adding <code>next-themes</code> (a single boolean toggle didn&#39;t justify a new dependency): a no-flash-of-wrong-theme inline <code>&lt;script&gt;</code> in <code>src/app/layout.tsx</code>&#39;s <code>&lt;head&gt;</code> reads <code>localStorage[&quot;theme&quot;]</code> and adds <code>.dark</code> to <code>&lt;html&gt;</code> before hydration, defaulting to light with no <code>prefers-color-scheme</code> check (per the locked-in requirement). New <code>src/components/course/ThemeToggle.tsx</code> is the toggle - keyboard-operable, <code>aria-pressed</code>, hydration-safe (renders a neutral disabled placeholder until mount to avoid a hydration-mismatch warning, since static-export HTML has no access to the visitor&#39;s stored preference at build time). Wired into both <code>Header.tsx</code> (course/lesson/quiz pages) as an always-visible icon button and into <code>src/app/page.tsx</code>&#39;s own separate header markup (the landing page doesn&#39;t reuse <code>Header.tsx</code>, so it needed its own copy or the toggle would be invisible on <code>/</code>). Verified via <code>npm run build</code> (108 pages) and inspecting the built HTML for the pre-hydration script and placeholder button; <strong>not yet verified in an actual browser</strong> (no browser tool available this session) - only curl/build-output checked. Known limitation, expected at this stage: most chrome components (<code>Header</code>, <code>Sidebar</code>, <code>MobileNav</code>, both modals, <code>AgentUseCaseMindmap</code>, the landing page body) still hardcode <code>bg-white</code>, so toggling dark mode right now only visibly changes page background/text, not chrome - that&#39;s Sections 4/5/8/9. <code>vibes/glass-ui-redesign-checklist.md</code> Sections 2-3 checked off.</li>
+        <li><strong>2026-07-22</strong> - Implemented Section 1 (Design Token System) of the glass UI redesign in <code>src/app/globals.css</code>: added light/dark pairs for every <code>--color-sun-*</code> token via a <code>:root</code>/<code>.dark</code> runtime-variable indirection (mirrors the existing <code>--font-sans</code> pattern so utilities stay reactive to theme changes instead of baking in a static value); added glass surface tokens per elevation (panel/nav/card/modal + scrim) and shadow/glow/blur tokens, all with dark pairs. Also fixed a pre-existing bug found along the way: the shadcn <code>:root</code> HSL block (<code>--background</code>, <code>--border</code>, <code>--ring</code>, etc.) had no <code>@theme</code> mapping, so Tailwind v4 was silently dropping every <code>bg-background</code>/<code>border-input</code>/<code>ring-ring</code> utility already used in <code>src/components/ui/*.tsx</code> (button, sheet, badge) - these are real currently-used classes, so the fix was in-scope token-system work. <code>body</code> background/color now reads from the new tokens. Verified via <code>npm run build</code> (108 pages, 0 errors) and dev-server 200s; new glass-specific utilities (<code>shadow-glass-*</code>, <code>backdrop-blur-glass-*</code>, <code>bg-glass-*</code>) are defined but won&#39;t appear in shipped CSS until a component references them (Tailwind v4 JIT tree-shaking - expected, not a bug). No dark-mode toggle exists yet (Section 2/3 next) - light mode is unchanged visually. <code>vibes/glass-ui-redesign-checklist.md</code> Section 1 checked off.</li>
+        <li><strong>2026-07-22</strong> - Cleaned out <code>vibes/</code> per user request: deleted <code>BUILD-PROMPT.md</code> (severely stale - referenced a nonexistent top-level <code>content/</code>/<code>project-docs/</code> layout, <code>.md</code> content files instead of the actual <code>.mdx</code>, a <code>basePath</code> no longer in <code>next.config.ts</code>, and only 7 of the current 13 components), plus <code>DESIGN-SYSTEM.md</code>, <code>UI-COMPONENTS.md</code>, and <code>PAGE-LAYOUTS.md</code> (accurate for what they covered but stale - missing newer color tokens, both modals, and 6 of 13 components; user chose to delete rather than refresh, <code>status.md</code> + source files are now the sole reference). Also removed the stray <code>.DS_Store</code>. Updated dangling references in this file&#39;s Project Structure section and in <code>vibes/GLASS-UI-REDESIGN.md</code>/<code>glass-ui-redesign-checklist.md</code> (Section 11 rescoped from &quot;Design Doc Sync&quot; to &quot;Status Doc Sync&quot; since there are no more separate spec docs to keep in lockstep; total estimate revised to ~16.5 days).</li>
+        <li><strong>2026-07-22</strong> - Scoped a whole-site Glassmorphism/&quot;Liquid Glass&quot; UI redesign (with new dark mode + toggle, defaulting to light) at the user&#39;s request. Produced an effort estimate (~17 eng-days) via codebase recon (styling architecture, component/page inventory, existing design docs), then persisted it as <code>vibes/GLASS-UI-REDESIGN.md</code> (11 section-level plans: design tokens, dark-mode infra, theme toggle, core chrome, modals, shadcn primitives, MDX rendering layer, page layouts, the AgentUseCaseMindmap component, cross-cutting QA, design-doc sync) with a companion <code>vibes/glass-ui-redesign-checklist.md</code> for execution tracking. No implementation started yet - Backlog/Near-term updated with a pointer.</li>
+        <li><strong>2026-07-22</strong> - Deleted <code>vibes/diagram-conversion-checklist.md</code> now that all 9 phases are complete and it&#39;s no longer a live tracker (per user request). Added a <code>CLAUDE.md</code> &gt; &quot;Project Tracking&quot; note: once a dedicated checklist is fully complete, delete it rather than letting it linger - the outcome lives in this Changelog instead. The house rule itself (<code>CLAUDE.md</code> &gt; &quot;Diagrams &amp; Visual Explanations&quot; - prefer Mermaid going forward) remains in place permanently; only the now-finished tracking checklist was removed.</li>
+        <li><strong>2026-07-22</strong> - <strong>Phase 9 complete - the entire <code>vibes/diagram-conversion-checklist.md</code> (all 9 phases) is now done.</strong> Converted diagrams across all 16 remaining files: <code>06-Agentic-AI/Notes</code> (07-Design-Patterns, 05-Planning-and-Reasoning, 03-Tool-Use-and-Function-Calling, 01-Agentic-Concepts - 7 diagrams total), <code>01-LLM-Models/Notes</code> (02-Architecture, 04-Model-Architecture-Types, 05-KV-Cache-and-Inference-Optimization, 06-Training-and-Pretraining, 09-Failure-Modes-and-Tricky-Issues, 10-Production-Deployment - 15 diagrams total, including several <code>sequenceDiagram</code>s for speculative/continuous-batching timelines and <code>xychart-beta</code> bars for accuracy-by-position and static-batch-slot charts), <code>04-MCP/Notes</code> (01-The-Problem, 02-Definition, 03-The-Solution, 05-Capabilities, 06-Why-MCP-Matters - 11 diagrams total, including a full six-primitives <code>mindmap</code> and a circular network-effect flywheel), and <code>05-Agents/Notes/06-Enterprise-vs-Personal-Agents.mdx</code> (the last ASCII holdout in that module). Verified all 16 pages render 200 with matching diagram counts via the dev server. <strong>Every ASCII diagram identified in the original full-repo audit has now been converted to Mermaid</strong>, closing out the entire diagram-conversion initiative started earlier in this session.</li>
+        <li><strong>2026-07-22</strong> - Phase 8 of <code>vibes/diagram-conversion-checklist.md</code> complete: converted all 11 CodeLabs README diagrams to <code>flowchart TD</code>/<code>LR</code>, matching the master pattern diagrams from Phase 1 - 7 under <code>06-Agentic-AI/CodeLabs/02-Architectures/{01-Sequential...07-Reflexion}/README.mdx</code> and 4 under <code>03-Agentic-Systems/{Research-Assistant, Document-Processor, Autonomous-Task-Planner, Code-Review-System}/README.mdx</code>. Discovered these 11 files aren&#39;t registered in <code>nav.yml</code> and therefore aren&#39;t routed/renderable through the dev server - verified instead by confirming zero remaining ASCII box-drawing characters and syntax parity with dozens of already-confirmed diagrams from earlier phases. Phase 9 (16 individually low-priority files with mixed ASCII/mermaid across Agentic AI, LLM Models, and MCP) is the last remaining phase.</li>
+        <li><strong>2026-07-22</strong> - Phase 7 of <code>vibes/diagram-conversion-checklist.md</code> complete: converted 8 diagrams across <code>02-Prompts/Notes/03-Advanced-Techniques.mdx</code> (Standard CoT vs. Tree of Thought branching/backtrack, Self-Consistency majority vote, Prompt Chaining pipeline, Least-to-Most decomposition) and <code>04-Prompt-Engineering-for-Production.mdx</code> (the prompt lifecycle, a newly authored Defense Layers diagram for a section that previously had no diagram, and an <code>xychart-beta</code> bar chart replacing the ASCII attention-distribution illustration). Left the historical-arc year list and the <code>prompts/</code> directory-tree listing as text/ASCII per the CLAUDE.md exceptions. Verified both pages render 200 with matching diagram counts via the dev server. Phase 8 (low-priority CodeLabs README bulk pass) is next; Phase 9 (mixed ASCII/mermaid, 16 individually-low-priority files) still remains after that.</li>
+        <li><strong>2026-07-22</strong> - Phase 6 of <code>vibes/diagram-conversion-checklist.md</code> complete: converted 6 ASCII diagrams in <code>01-LLM-Models/Notes/08-GPU-and-Hardware.mdx</code> (Data Parallelism, Tensor Parallelism, Pipeline Parallelism - the latter as a <code>sequenceDiagram</code> using a <code>par</code> block to show micro-batch overlap across GPUs) and <code>07-Fine-Tuning.mdx</code> (the prompting→full-fine-tune parameter-modification spectrum, the RLHF 3-stage pipeline, and the Multi-Head Fine-Tuning shared-encoder architecture). Left worked-example ASCII (loss-masking illustration, VRAM arithmetic, GPU memory hierarchy listing) as text since it&#39;s not diagram-shaped content. Verified both pages render 200 with matching diagram counts via the dev server. Phase 7 (Prompts module: Tree of Thought/Self-Consistency, Defense Layers) is next.</li>
+        <li><strong>2026-07-22</strong> - Phase 5 of <code>vibes/diagram-conversion-checklist.md</code> complete, finishing all diagram conversion work in the 06-Agentic-AI module: <code>insurance-claims-processor.mdx</code> and <code>prior-authorization.mdx</code> had their System Architecture Overview and state-machine ASCII replaced with cross-references to equivalent mermaid diagrams already in the same file (avoiding duplication) and their Data Flow ASCII converted to new <code>flowchart TD</code> diagrams; <code>smart-diagnostic-assistant-interview-answer-1.mdx</code> and <code>-2.mdx</code> (previously zero mermaid) were fully converted, including one large 5-subgraph architecture diagram and a 5-stage orchestrator-subagent flow with parallel fan-out. Verified all 4 pages render 200 with matching diagram counts via the dev server. <strong>All of 06-Agentic-AI (Notes + SystemDesigns) is now fully on Mermaid.</strong> Phase 6 (LLM Models module) is next.</li>
+        <li><strong>2026-07-22</strong> - Phase 4 of <code>vibes/diagram-conversion-checklist.md</code> complete: converted all 21 ASCII diagrams across the 5 Agentic AI core notes - <code>02-The-Agent-Loop.mdx</code> (4, including an <code>xychart-beta</code> bar chart replacing a hand-drawn ASCII token-growth plot - the first non-flowchart chart type used in the conversion effort), <code>10-Agentic-System-Design.mdx</code> (4, including the 6-layer production architecture), <code>08-Multi-Agent-Systems.mdx</code> (6, including a <code>sequenceDiagram</code> for the event-driven state pattern), <code>04-Memory-and-State.mdx</code> (2), and <code>11-Evaluation-and-Observability.mdx</code> (5 - these had been authored as ASCII earlier in this same session before the house rule existed, now brought into line). Verified all 5 pages render 200 with matching diagram counts via the dev server. Checklist updated to mark Phase 4 done; Phase 5 (Agentic AI SystemDesigns - finishing 2 partially-converted files, fully converting 2 zero-mermaid ones) is next.</li>
+        <li><strong>2026-07-22</strong> - Phase 3 of <code>vibes/diagram-conversion-checklist.md</code> complete: converted all 21 ASCII diagrams across the 9-file RAG module (<code>Notes/01,02,04,05,06,08,09</code> + both <code>SystemDesigns/*.mdx</code>) to Mermaid - the canonical RAG pipeline, HyDE/multi-query/step-back retrieval flows, the Naive→Advanced→Modular→Agentic→GraphRAG→Multimodal evolution ladder, the Modular RAG router, GraphRAG&#39;s entity-extraction pipeline, a RAG failure-taxonomy <code>mindmap</code>, the full production architecture (ingest/query/feedback), the 100M-doc-scale architecture, a failure-cascade fallback diagram, the 3-way GCP stack comparison (Vertex AI Search vs RAG Engine vs Custom RAG), and both SystemDesigns&#39; end-to-end ingestion+query architectures. Left one JSON-schema-shaped field listing as ASCII per the CLAUDE.md table/schema exception. Verified all 9 pages render 200 with matching diagram counts via the dev server. Checklist updated to mark Phase 3 done; Phase 4 (Agentic AI core notes: Agent Loop, System Design, Multi-Agent Systems, Memory &amp; State, Evaluation) is next.</li>
+        <li><strong>2026-07-22</strong> - Phase 2 of <code>vibes/diagram-conversion-checklist.md</code> complete: converted all 5 ASCII diagrams in <code>04-MCP/Notes/04-Components.mdx</code> and <code>07-Architecture-Deep-Dive.mdx</code> to Mermaid - 2 nested Host/Client/Server <code>flowchart TD</code> box diagrams, 1 <code>stateDiagram-v2</code> session lifecycle (CONNECTING → INITIALIZING → ACTIVE → TERMINATED), 1 <code>sequenceDiagram</code> for the stdio startup handshake, and 1 <code>flowchart TD</code> for the full 5-stage session lifecycle (found while converting, one more than the checklist&#39;s original estimate). Verified both pages render 200 with the expected diagram counts via the dev server. Checklist updated to mark Phase 2 done; Phase 3 (RAG module) is next.</li>
+        <li><strong>2026-07-22</strong> - Fixed a pre-existing, unrelated bug surfaced while testing: <code>extractToc()</code> in <code>src/lib/content/loader.ts</code> generated duplicate/incorrect TOC ids (React key-collision crash + broken TOC links on any page with repeated headings, e.g. <code>### Concept</code>) and picked up 334 false-positive &quot;headings&quot; from inside fenced code blocks (Python/YAML comments) across the content tree. Fixed by making <code>extractToc()</code> fence-aware and switching it to <code>github-slugger</code> (added as a direct dependency) so generated ids match <code>rehype-slug</code>&#39;s actual DOM ids exactly, including dedup suffixes (<code>concept</code>, <code>concept-1</code>, <code>concept-2</code>, ...). Verified against <code>01-LLM-Models/Notes/01-LLM-Fundamentals.mdx</code> (5x <code>### Concept</code>) and <code>06-Agentic-AI/Notes/02-The-Agent-Loop.mdx</code> (code-fence comments) - no duplicate ids, no bogus headings, and the dev-server-rendered DOM ids match exactly. See Known Issues #6.</li>
+        <li><strong>2026-07-22</strong> - Added <code>CLAUDE.md</code> &gt; &quot;Project Tracking&quot; instruction to always update the relevant tracker doc (not just <code>status.md</code>) after every completed build. Started executing <code>vibes/diagram-conversion-checklist.md</code>: Phase 1 complete - converted all 12 ASCII diagrams in <code>06-Agentic-AI/Notes/06-Architectural-Patterns.mdx</code> to Mermaid (flowchart/sequenceDiagram), verified rendering via the dev server. Checklist and its own Changelog updated to reflect Phase 1 done; Phase 2 (MCP architecture + lifecycle) is next.</li>
+        <li><strong>2026-07-22</strong> - Added <code>CLAUDE.md</code> &gt; &quot;Diagrams &amp; Visual Explanations&quot; house rule (prefer Mermaid over ASCII-art/prose for architecture/pipeline/flow/state-machine/comparison content); audited all 110 <code>.mdx</code> content files and created <code>vibes/diagram-conversion-checklist.md</code> (9-phase priority checklist) to track the conversion; no diagrams converted yet, this session was prep only.</li>
+        <li><strong>2026-07-21</strong> - Full repo audit performed; replaced stale root <code>STATUS.md</code> with this file, moved into <code>vibes/</code>; corrected deploy-secret documentation drift; added Backlog/Known Issues/Handover structure; created <code>vibes/status.html</code> companion view.</li>
+      </ul>
+    </div>
+  </details>
 
+  <footer class="page-foot">Generated from <code>vibes/status.md</code> on 2026-10-18. That file is the source of truth; this view is regenerated on request and is not auto-synced.</footer>
 </div>
 
 <script>
@@ -477,21 +778,16 @@ vibes/                                project tracking & active plans
   document.getElementById('collapseAll').addEventListener('click', function () {
     document.querySelectorAll('details.section').forEach(function (d) { d.open = false; });
   });
-
   var themeBtn = document.getElementById('themeToggle');
   function applyTheme(theme) {
-    if (theme === 'dark') {
-      document.documentElement.setAttribute('data-theme', 'dark');
-      themeBtn.textContent = '☀️ Light mode';
-    } else {
-      document.documentElement.removeAttribute('data-theme');
-      themeBtn.textContent = '🌙 Dark mode';
-    }
+    if (theme === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); themeBtn.textContent = '☀️ Light mode'; }
+    else { document.documentElement.removeAttribute('data-theme'); themeBtn.textContent = '🌙 Dark mode'; }
   }
-  applyTheme(localStorage.getItem('statusTheme') || 'light');
+  var saved = 'light'; try { saved = localStorage.getItem('statusTheme') || 'light'; } catch (e) {}
+  applyTheme(saved);
   themeBtn.addEventListener('click', function () {
     var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    localStorage.setItem('statusTheme', next);
+    try { localStorage.setItem('statusTheme', next); } catch (e) {}
     applyTheme(next);
   });
 </script>

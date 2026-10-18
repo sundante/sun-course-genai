@@ -3,9 +3,9 @@
 **URL:** https://learngenai.sunmintz.com
 **Stack:** Next.js 16.2.9 (App Router, static export) - TypeScript (strict) - Tailwind CSS 4 - MDX (`next-mdx-remote/rsc`) - shadcn/ui - Mermaid
 **Deploy:** Static export (`out/`) -> manual GitHub Actions FTP push -> Hostinger, served at `sunmintz.com/learngenai/`
-**Last updated:** 2026-10-09
-**Last commit at time of writing:** `ed5b565` (2026-09-29 - "Added search and Webmap") - `dev` branch; the readiness-gaps work (2026-10-02/03, phases 1-5) is staged on top of it but **not yet committed** (see Changelog)
-**Content inventory verified (2026-10-09):** `find src/content -name '*.mdx' | wc -l` -> **228 files** (after the 2026-10-09 restructure: Fine-Tuning Lab's INDEX, Q&A bank and appendix merged into Post-Training (-3), new Agent Building Blocks INDEX, appendix and bank (+3); 228 before it too - the 206 figures below were already stale - after readiness-gaps Phases 4-5: +3 lab pages; 203 after Phase 3; 194 after Phase 2; 185 after Phase 1; 174 after Phase 5's Q&A dedupe and capstones; 183 after Phase 4, down from 201 after the Phase 4 agents-track merges: framework stub pages, old labs and duplicate agent-engineering notes removed, all with legacy redirects)
+**Last updated:** 2026-10-19
+**Last commit at time of writing:** `d1ede03` (2026-10-18 - "Updated the repo with Building GPT from scratch") - `dev` branch; the 2026-10-19 bigram primer work is on top of it and **not yet committed** (see Changelog)
+**Content inventory verified (2026-10-19):** `find src/content -name '*.mdx' | wc -l` -> **233 files** (+1 bigram primer on 2026-10-19; 232 after the 2026-10-18 LLM-from-Scratch module; after the 2026-10-09 restructure: Fine-Tuning Lab's INDEX, Q&A bank and appendix merged into Post-Training (-3), new Agent Building Blocks INDEX, appendix and bank (+3); 228 before it too - the 206 figures below were already stale - after readiness-gaps Phases 4-5: +3 lab pages; 203 after Phase 3; 194 after Phase 2; 185 after Phase 1; 174 after Phase 5's Q&A dedupe and capstones; 183 after Phase 4, down from 201 after the Phase 4 agents-track merges: framework stub pages, old labs and duplicate agent-engineering notes removed, all with legacy redirects)
 
 > This file is the raw source of truth for project status. It is updated as part of
 > every successful build/coding session (see **Changelog** at the bottom). The
@@ -109,6 +109,8 @@ Remote root should look like:
 - MDX pipeline (`src/app/(course)/learn/[module]/[slug]/page.tsx`): `next-mdx-remote/rsc`'s `MDXRemote` with `remark-gfm`, `remarkRewriteMdLinks`, `rehype-raw`, `rehype-slug`, `rehype-autolink-headings` (wrap), `rehype-highlight`; `parseFrontmatter: false`, format `"md"`
 - Slug-collision prevention - subdirectory paths included in generated slugs
 - **Automatic WIP detection** - `isStubFile()` in `src/lib/content/nav.ts` flags any content file with fewer than 8 non-heading/non-empty body lines as `wip: true`; this is computed from content length, not a manual flag per file
+- **Course fences** - `remarkCourseFences.ts` turns ```` ```objectives ````, ```` ```quiz ````, ```` ```exercise ```` and ```` ```interactive ```` YAML fences into `cf-*` divs rendered by `CourseFences.tsx` / `Quiz.tsx` / `InteractiveEmbed.tsx`; `check:content` validates the same schemas (and, for `interactive`, that `src` exists under `public/`)
+- **Interactive labs** - self-contained HTML pages in `public/labs/<name>/` (copied to `out/labs/` on build), embedded with the `interactive` fence. Rules: light default + on-page dark toggle that follows the site's `localStorage.theme`; reference the file by full name (`/labs/bigram/index.html`) because `next dev` does not serve folder index files. First lab: `public/labs/bigram/` (Bigram, Visualized - synced YouTube player, 22 steps, 3-D canvas stage, paraphrased transcript, line-by-line `bigram.py`, Credits dialog with the MIT notice)
 - **Generated A-Z glossary** - `scripts/build-glossary.mjs` (`npm run build:glossary`) collects every `| **Term** | meaning |` row from the 22 module `APPENDIX.mdx` (Summary & Key Terms) pages, de-duplicates them, and rewrites the region between the `glossary:start` / `glossary:end` HTML comments in `23-Review/02-Glossary.mdx`. `check:content` fails if that region is stale, so after editing any Key Terms table run `npm run build:glossary`
 
 ### Pages
@@ -130,10 +132,12 @@ Remote root should look like:
 - `Search` - header button (course `Header` and the home page's own header) opening a Radix dialog; ⌘K / Ctrl K toggles, `/` opens. On first open it fetches `/search-index.json` (~1.8 MB, ~570 KB gzipped) and builds a MiniSearch index in the browser (~140 ms): prefix match on the word being typed, typo tolerance on words over 4 letters, heading/title boosts, AND across terms. Results show module › page, the section heading (`###` sections prefixed with their `##` parent) and a highlighted snippet; arrow keys + Enter jump straight to the section anchor. The index comes from `src/lib/content/searchIndex.ts` via the static route `src/app/search-index.json/route.ts`: one entry per page intro and per `##`/`###` section, fence prose (objectives, quiz questions, exercise tasks - not answers or solutions), and code blocks reduced to distinct identifiers in a hidden field so `LoraConfig` still finds the lab. Mermaid is skipped. New content is indexed automatically on build
 - `UnderDevelopment` - animated placeholder for WIP/stub pages
 - `MermaidDiagram`, `AgentUseCaseMindmap`
+- `CourseFences` (`CourseDiv`) + `Quiz` - render the `cf-*` fence divs (objectives, quiz, exercise, interactive)
+- `InteractiveEmbed` (client) - the `interactive` fence: iframe card with **Theatre view** (pins the same iframe over the viewport so a lab's two-pane layout fits; no reload, Esc exits, body scroll locked) and a New tab link
 - `MdxComponents` - custom component overrides for MDX rendering
 - `src/components/ui/` - shadcn/ui primitives: button, sheet, card, badge, progress, separator
 
-### Course Content - 232 `.mdx` files across 21 teaching modules in 7 tracks (+ Capstones and Review & Readiness)
+### Course Content - 233 `.mdx` files across 21 teaching modules in 7 tracks (+ Capstones and Review & Readiness)
 
 Restructured 2026-10-09 (see Changelog). The flow: conceptual & mathematical foundations -> large language models (understand, measure, prompt, then build them) -> fundamentals of AI agents -> building products with LLMs & agents -> production & operations -> industry standards & frontier -> capstones & review. Order, numbering and tracks come from `src/content/nav.yml`. Every module has the same nav shape: Overview, concept group(s), Code Labs, Case Studies, Review (Q&A bank + Summary & Key Terms). Module order follows the declared `objectives` prerequisites, enforced by `npm run check:content`.
 
@@ -163,7 +167,7 @@ Restructured 2026-10-09 (see Changelog). The flow: conceptual & mathematical fou
 | 22 | Capstones & Review | Capstones (`capstones`) | `22-Capstones/` | 3 projects with deliverables and rubrics |
 | 23 | Capstones & Review | Review & Readiness (`review`) | `23-Review/` | Hub linking every module's Q&A bank and `/quiz/<module>` page + Readiness Self-Assessment (linked from the home page hero) + Glossary of Terms & Concepts (35 core LLM terms in 6 groups with links to where each is taught, then a generated A-Z of all ~300 module key terms) |
 
-**Most recently active area:** course restructure (2026-10-09) - LLM-first flow in 7 tracks, agent fundamentals split into four modules, consistent module shape, slug cleanup; see Changelog. Before that, readiness gaps (2026-10-02/03) - the course was extended to cover the 14-domain GenAI-engineer self-assessment: new modules Math for ML (03) and Solutions Architecture & Communication (19, new Field Engineering track), a Python & Systems section in Prog Langs, 9 new concept notes across existing modules, 4 new labs, a Readiness Self-Assessment page, and capstone requirements for architecture docs and business outcomes. Its checklist was deleted when complete; the outcome is in the Changelog.
+**Most recently active area:** 08 Training LLMs from Scratch (2026-10-18/19) - the module itself, then a Primer section with the bigram visualizer lab and full attribution to Andrej Karpathy; see Changelog. Before that, the course restructure (2026-10-09) - LLM-first flow in 7 tracks, agent fundamentals split into four modules, consistent module shape, slug cleanup; see Changelog. Before that, readiness gaps (2026-10-02/03) - the course was extended to cover the 14-domain GenAI-engineer self-assessment: new modules Math for ML (03) and Solutions Architecture & Communication (19, new Field Engineering track), a Python & Systems section in Prog Langs, 9 new concept notes across existing modules, 4 new labs, a Readiness Self-Assessment page, and capstone requirements for architecture docs and business outcomes. Its checklist was deleted when complete; the outcome is in the Changelog.
 
 **Naming convention:** zero-padded numeric prefixes (`01-`, `02-`, ...) at module and file level; `INDEX.mdx` per module overview; `Notes/`, `SystemDesigns/`, `CodeLabs/`, `Resources/`, `Implementation/` as topic subfolders. See root `CLAUDE.md` for the renumbering rule when files are deleted.
 
@@ -180,9 +184,10 @@ Restructured 2026-10-09 (see Changelog). The flow: conceptual & mathematical fou
 
 ### Content
 - [x] ~~**Readiness-rubric gaps**~~ - **DONE 2026-10-03**: all 14 domains of the self-assessment covered (5 phases; checklist deleted - see Changelog)
+- [ ] 08 Training LLMs from Scratch: Q&A Review Bank, plus the planned builds (GPT-2 124M on FineWeb-Edu, Llama-style decoder, MoE, tokenizer from scratch)
 - [ ] More system-design case studies (only RAG and Agentic AI modules have them so far)
 - [ ] Runnable code labs - embed via CodeSandbox / StackBlitz instead of static code blocks
-- [ ] Video embeds for visual/architecture concepts
+- [ ] Video embeds for visual/architecture concepts - **started 2026-10-19**: the `interactive` fence + `public/labs/` pattern (first: the bigram lab, synced to Karpathy's lecture). Candidates next: a self-attention lab for the rest of the same lecture (42:13 onward)
 - [x] ~~Convert ASCII-art diagrams / un-diagrammed architecture-flow prose to Mermaid across content~~ - **DONE 2026-07-22**, all 9 phases complete (tracking checklist has since been deleted - see Changelog); house rule remains at root `CLAUDE.md` > "Diagrams & Visual Explanations"
 
 ### Future (post-maturity)
@@ -211,12 +216,16 @@ Restructured 2026-10-09 (see Changelog). The flow: conceptual & mathematical fou
 10. **Old URLs of moved pages** - 62 page URLs changed in the 2026-09-26 restructure and 108 page URLs + 9 quiz URLs in the 2026-10-09 one. `src/lib/content/legacy-redirects.json` (273 entries, chains collapsed so every target is a live page) + `LegacyRedirect.tsx` forward `/learn/` and `/quiz/` paths from the 404 page, which relies on the host serving `404.html` for unknown paths (`public/.htaccess` sets `ErrorDocument 404 /404.html` for Apache/LiteSpeed). Verified locally with an Apache-like static server, not yet on Hostinger.
 11. **Lab verification limits (from the redesign)** - GPU paths were not run: the MNIST lab's CUDA AMP path, the GPT-from-scratch default preset, the QLoRA/TRL labs (smoke-tested on CPU only), the vLLM endpoint lab and the Helm lab (no cluster or `helm` available; chart not linted). The Claude Agent SDK lab script is import-verified only. Agent labs were run against a local Qwen3-8B (`mlx_lm.server`).
 12. ~~**Dark mode left the site chrome white**~~ **Fixed 2026-09-28** - header, sidebar, mobile nav, TOC, breadcrumb and prev/next bars hard-coded `bg-white`, so dark mode showed light surfaces with light text; they now use the `bg-sun-bg` theme token. Found in the browser pass (headless Chrome screenshots, light/dark x desktop/mobile).
+13. **Bigram lab external dependencies** - the lab loads the YouTube IFrame API and Google Fonts at runtime, so it needs a network connection; if YouTube cannot embed it falls back to transcript mode. The lab uses a two-pane layout only at >= 960px, so inline in the article column it stacks - Theatre view is the intended way to watch. Verified in headless Chrome (light, dark, embedded, theatre); not yet checked on Hostinger or on a real phone.
+14. **`ng-video-lecture` has no LICENSE file** - its README states MIT, so the notice we reproduce reads "Copyright (c) Andrej Karpathy" with no year. If the repo ever adds a LICENSE file, copy its exact copyright line into `public/labs/bigram/bigram_annotated.py` and the lab's Credits dialog.
 
 ---
 
 ## 5. Handover Notes (read this first if picking up a new session)
 
-**Course restructure (2026-10-09): complete, uncommitted.** 22 modules in 7 tracks: Conceptual & Mathematical Foundations -> Large Language Models -> Fundamentals of AI Agents -> Building with LLMs & Agents -> Production & Operations -> Industry Standards & Frontier -> Capstones & Review. All 410 pre-restructure URLs (old nav pages, quiz pages, existing redirect keys) verified to reach a live page in `out/`, and all 245 internal hrefs in the build resolve. The 404-page redirects are still not verified on Hostinger itself.
+**Bigram primer (2026-10-19): complete, uncommitted.** New `08-LLM-From-Scratch/Notes/01-Bigram-Model-Primer.mdx` (nav group "Primer") embeds `public/labs/bigram/index.html` via the new `interactive` fence; the GPT note moved to `02-` (legacy redirect added). The lab was restyled from its source in `../sun-learn-visually/bigram-andrej/` (that copy is the unstyled original - edit the one in `public/labs/bigram/`). Attribution to Andrej Karpathy is on the note (Credits & Attribution section), the module INDEX, the lab (Credits dialog) and the script (full MIT notice). `check:content` 233 files 0/0, `tsc` clean, `npm run build` passes. To deploy: build and upload `out/` as usual - `out/labs/` must go with it; no server-side process is needed.
+
+**Course restructure (2026-10-09): complete.** 22 modules in 7 tracks: Conceptual & Mathematical Foundations -> Large Language Models -> Fundamentals of AI Agents -> Building with LLMs & Agents -> Production & Operations -> Industry Standards & Frontier -> Capstones & Review. All 410 pre-restructure URLs (old nav pages, quiz pages, existing redirect keys) verified to reach a live page in `out/`, and all 245 internal hrefs in the build resolve. The 404-page redirects are still not verified on Hostinger itself.
 
 **Readiness gaps (2026-10-03): complete.** 19 teaching modules in 6 tracks plus Capstones and the Knowledge Check hub (with the Readiness Self-Assessment); every self-assessment domain is covered in full. Not yet verified: a GPU run of the Triton path in the Profile and Fuse lab, and a real (non-mocked) `tofu plan` of the Terraform lab. The work is staged but uncommitted.
 
@@ -262,13 +271,14 @@ src/
                                       separator (restyled glass-by-default, zero live consumers), sheet (mobile drawer)
     course/                           Header, Sidebar, MobileNav, ThemeToggle, AudienceToggle, AudienceOnboardingModal,
                                       DisclaimerModal, DisclaimerNote, TableOfContents, PageNav,
-                                      UnderDevelopment, MermaidDiagram, AgentUseCaseMindmap, MdxComponents
+                                      UnderDevelopment, MermaidDiagram, AgentUseCaseMindmap, MdxComponents,
+                                      CourseFences, Quiz, InteractiveEmbed
   lib/
     utils.ts                          cn() helper
     content/
       nav.ts                          navigation tree from nav.yml (tracks, module numbers), MODULE_SLUG_MAP, isStubFile() WIP detection
       stats.ts                        note/lab/Q&A counts for the home page
-      remarkCourseFences.ts           ```objectives / ```quiz / ```exercise fences -> CourseFences.tsx / Quiz.tsx
+      remarkCourseFences.ts           ```objectives / ```quiz / ```exercise / ```interactive fences -> CourseFences.tsx / Quiz.tsx / InteractiveEmbed.tsx
       legacy-redirects.json           old -> new /learn/ and /quiz/ URLs for every moved or renumbered page (273 entries)
       navSections.ts                  which nav sections count as concepts (shared by stats.ts and the home tiles)
       moduleMeta.ts                   per-module subtitle + description (home tiles, map landmarks)
@@ -277,7 +287,7 @@ src/
       remarkRewriteMdLinks.ts         build-time cross-link rewriting
   types/
     content.ts                        NavItem, NavModule, NavigationTree, PageRef, PageContent, TocItem, QuizCard
-  content/                            232 .mdx source files: 21 teaching modules in 7 tracks + Capstones + Review & Readiness
+  content/                            233 .mdx source files: 21 teaching modules in 7 tracks + Capstones + Review & Readiness
     nav.yml                           single source of truth for order, tracks and titles
     01-Python-and-Systems/  02-Math-for-ML/
     03-Foundation-Models/  04-Evaluation/  05-Prompt-Engineering/  06-PyTorch/  07-Pretraining/  08-LLM-From-Scratch/  09-Post-Training/
@@ -291,6 +301,10 @@ scripts/
   check-content.mjs                   `npm run check:content` - broken links, em dashes, numbering gaps, nav coverage, fence YAML, prerequisites pointing ahead, stale glossary
   build-glossary.mjs                  `npm run build:glossary` - regenerates the A-Z section of 23-Review/02-Glossary.mdx from module Key Terms tables
 
+public/
+  .htaccess                           ErrorDocument 404 -> /404.html (legacy-URL redirects)
+  labs/bigram/                        index.html (Bigram, Visualized lab) + bigram_annotated.py (MIT notice)
+
 vibes/                                project tracking & active plans
   status.md                          this file - the sole live source of truth
   status.html                        polished collapsible status view (regenerated on demand, not auto-synced)
@@ -298,7 +312,7 @@ vibes/                                project tracking & active plans
 .github/workflows/deploy.yml          auto (push to main) + manual FTP deploy to Hostinger
 ```
 
-**`public/` is intentionally empty** - the favicon lives at `src/app/favicon.ico` (App Router convention) and there are no other static assets to serve yet; not a gap.
+**`public/`** holds only `.htaccess` and the interactive labs under `public/labs/`; the favicon lives at `src/app/favicon.ico` (App Router convention).
 
 **Structure audit (2026-09-18):** full repo reviewed against standard Next.js/React App Router conventions at user request - `src/app`, `src/components/{course,ui}`, `src/lib/content`, `src/types` all match convention, no legacy `pages/` dir, no duplicate root `content/`, no stray Python/shell/PHP files outside their intentional home in `src/content/`'s CodeLabs (pedagogical assets, not misplaced app code). No reorganization was needed - see Changelog.
 
@@ -360,7 +374,4 @@ vibes/                                project tracking & active plans
 - **2026-10-10** - Removed all 82 generic `### Concept` sub-headings from 20 concept notes (Foundation Models, PyTorch, Pretraining, Post-Training, Inference & Serving) so the right-hand "On this page" TOC lists only real topic names. No links pointed at the `#concept-N` anchors. `### Code` labels (18) kept. `check:content` 228 files 0/0.
 - **2026-10-10** - **Core LLM vocabulary + course-wide Glossary** (no dedicated checklist). Covered the 35 terms from a lecture slide (attention techniques, architecture optimizations, model tuning, RL, benchmarks, metrics): new Attention Residuals (AttnRes) subsection in 03/06 Modern Architectures; an explanation of Elo vs Bradley-Terry plus a new quiz question in 04/02 Contamination & Leaderboards; SWA spelled out in 03/04; the LaaJ alias in 04/03. Added the missing terms to the Key Terms tables of modules 03, 04, 08 and 16. New page `22-Review/02-Glossary.mdx` (in nav after Readiness Self-Assessment, linked from the Review index) with a mindmap, six curated term tables and a generated A-Z of 297 terms; added the new `scripts/build-glossary.mjs` and a stale-glossary check in `check:content`. Verified: `check:content` reports 0 errors; `npm run build` succeeds; the comment markers don't appear in the HTML or the search index. The mindmap was not checked visually in a browser.
 - **2026-10-18** - Added a new module **08 Training LLMs from Scratch** (`llm-from-scratch`, Large Language Models track, after Pretraining at Scale) to hold one end-to-end build per model version. First page: `Notes/01-GPT-From-Scratch-Step-by-Step.mdx` - plan (C ≈ 6ND) -> clean/dedup -> tokenize -> train/val split (after tokenization, before chunking; contiguous vs document-level) -> (x, y) blocks -> batches -> GPT decoder in PyTorch -> sanity checks -> AdamW + cosine -> training loop -> eval -> checkpoint -> sampling, with 4 Mermaid diagrams, quiz, exercises and references; plus module `INDEX.mdx` and `APPENDIX.mdx`. Renumbered module folders 08-22 -> 09-23 (URLs unchanged: slugs come from module slug + path inside the folder, so no legacy redirects needed), updated cross-links, `NN - Title` references, Review hub table, CLAUDE.md and scripts paths; added `MODULE_SLUG_MAP` and `MODULE_META` entries; rebuilt glossary (306 terms). `check:content` 232 files 0/0, `npm run build` passes, all 4 new diagrams parse.
-- **2026-10-19** - Added a **Primer** section to 08 Training LLMs from Scratch: new `Notes/01-Bigram-Model-Primer.mdx` (Karpathy's bigram section, 7:52-42:13, as reading notes + 2 Mermaid diagrams, quiz, exercises, references) embedding the bigram visualizer lab. The lab lives as a static page at `public/labs/bigram/index.html` (+ `bigram_annotated.py`), restyled to the site design system (Inter/JetBrains Mono, sun-yellow/amber/coral tokens, light default with an on-page dark toggle that also follows the site's `localStorage.theme`, American spelling, no en/em dashes). New ```interactive``` fence (`src`, `title`, `height`, `caption`) in `remarkCourseFences.ts` -> `CourseFences.tsx` (iframe + Open full screen), validated by `check:content` (src must exist under `public/`). Renumbered `01-GPT-From-Scratch-Step-by-Step` -> `02-` with a legacy redirect; INDEX, APPENDIX (3 new terms, glossary rebuilt to 309) and nav updated. `check:content` 233 files 0/0, `npm run build` passes.
-- **2026-10-19** - Fixed the bigram lab embed stacking video and visuals: the ~690px article column is below the lab's 960px two-pane breakpoint. New `InteractiveEmbed.tsx` (client) adds a **Theatre view** that pins the same iframe over the viewport (no reload, Esc to exit) so the video and the visuals sit side by side, plus a New tab link; removed the embedded-mode reorder that put the visuals above the video.
-- **2026-10-19** - Bigram embed showed the site 404 under `npm run dev`: next dev serves `public/` files by exact name only, so `src: /labs/bigram/` failed locally (Apache serves the folder index in production). Fence now uses `/labs/bigram/index.html`; CLAUDE.md fence example notes the rule.
-- **2026-10-19** - Added attribution to Andrej Karpathy across the bigram primer: a Credits & Attribution section (thanks, a source/terms/what-we-added table, a not-affiliated line) in `01-Bigram-Model-Primer.mdx`, a credit line in the module INDEX, a Credits dialog in the lab with the full MIT notice, and the full MIT notice in `bigram_annotated.py`. `ng-video-lecture` ships no LICENSE file; its README states MIT, so the notice reads "Copyright (c) Andrej Karpathy" with no year.
+- **2026-10-19** - **Bigram primer + interactive labs** (no dedicated checklist). Added a **Primer** nav group to 08 Training LLMs from Scratch: new `Notes/01-Bigram-Model-Primer.mdx` (Karpathy's bigram section, 7:52-42:13, as reading notes with 2 Mermaid diagrams, quiz, exercises, references, and a Credits & Attribution section); the GPT note renumbered `01-` -> `02-` with a legacy redirect; INDEX, APPENDIX (3 new terms; glossary rebuilt to 309) and nav updated. The visualizer lab lives at `public/labs/bigram/index.html` (+ `bigram_annotated.py`), restyled to the site design system (Inter/JetBrains Mono, sun-yellow/amber/coral tokens, light default + dark toggle that follows `localStorage.theme`, American spelling, no en/em dashes) with a Credits dialog carrying the MIT notice. New ```` ```interactive ```` fence (`src`, `title`, `height`, `caption`) -> `InteractiveEmbed.tsx` with Theatre view (fixes video and visuals stacking in the narrow article column) and a New tab link; `check:content` checks `src` exists. Two fixes found along the way: `next dev` 404s on folder URLs under `public/`, so fences use `/labs/bigram/index.html`; `ng-video-lecture` has no LICENSE file (README says MIT), so the notice has no year. CLAUDE.md documents the fence. `check:content` 233 files 0/0, `tsc` clean, `npm run build` passes; light, dark, embedded and theatre views checked in headless Chrome.
