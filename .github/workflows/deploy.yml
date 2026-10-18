@@ -10,6 +10,11 @@ on:
       - "**/*.md"
       - ".claude/**"
   workflow_dispatch:
+    inputs:
+      fresh:
+        description: "Fresh deploy: wipe the server folder and upload everything (slow; use when the site looks out of sync)"
+        type: boolean
+        default: false
 
 # One deploy at a time; a newer push waits instead of racing the FTP sync
 concurrency:
@@ -20,16 +25,19 @@ jobs:
   build-and-deploy:
     name: Build & FTP Deploy
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
+    env:
+      # Fresh deploy when started by hand with "fresh" ticked, or when the pushed commit message contains [fresh deploy]
+      FRESH: ${{ github.event.inputs.fresh == 'true' || contains(github.event.head_commit.message, '[fresh deploy]') }}
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
@@ -39,22 +47,28 @@ jobs:
       - name: Check content
         run: npm run check:content
 
+      # Keyed on app code only (not src/content), matching the build ID in next.config.ts
       - name: Restore Next.js build cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .next/cache
-          key: nextjs-${{ hashFiles('package-lock.json') }}-${{ hashFiles('src/**', 'next.config.ts') }}
+          key: nextjs-${{ hashFiles('package-lock.json') }}-${{ hashFiles('src/app/**', 'src/components/**', 'src/lib/**', 'src/types/**', 'next.config.ts') }}
           restore-keys: |
             nextjs-${{ hashFiles('package-lock.json') }}-
 
       - name: Build
         run: npm run build
 
-      # Incremental: the action keeps .ftp-deploy-sync-state.json on the server and uploads only
-      # files whose hash changed (and deletes files that no longer exist). The first run after this
-      # change has no state file yet, so it uploads everything once.
+      - name: Deploy summary
+        run: |
+          echo "Mode: $([ "$FRESH" = "true" ] && echo 'FRESH (server folder wiped, full upload)' || echo 'incremental (changed files only)')"
+          echo "Files to consider: $(find out -type f ! -name 'index.txt' ! -name '__next.*.txt' | wc -l), size: $(du -sh out | cut -f1) before excludes"
+
+      # Incremental by default: the action keeps .ftp-deploy-sync-state.json on the server and uploads
+      # only files whose hash changed (deleting files that no longer exist). With no state file on the
+      # server (first run, or after a fresh deploy) it uploads everything.
       - name: Deploy to Hostinger via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
@@ -62,9 +76,20 @@ jobs:
           port: 21
           local-dir: ./out/
           server-dir: /domains/sunmintz.com/public_html/learngenai/
+          dangerous-clean-slate: ${{ env.FRESH == 'true' }}
+          timeout: 120000
           # Skip Next's ~2,500 client-navigation payload files (index.txt, __next.*.txt, ~130 MB);
           # pages still work, links just do a full page load. robots.txt is deployed.
           exclude: |
             **/.DS_Store
             **/index.txt
             **/__next.*.txt
+
+      # Fail the run if the live site doesn't answer after the upload
+      - name: Smoke test
+        run: |
+          for page in "" "learn/llm-from-scratch/notes-01-bigram-model-primer/" "labs/bigram/index.html" "robots.txt"; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "https://learngenai.sunmintz.com/$page")
+            echo "$code  /$page"
+            [ "$code" = "200" ] || exit 1
+          done
