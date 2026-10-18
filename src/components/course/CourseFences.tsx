@@ -1,5 +1,6 @@
 import { Children, isValidElement, type ComponentPropsWithoutRef, type ReactNode } from "react";
 import { Clock } from "lucide-react";
+import { InteractiveEmbed } from "./InteractiveEmbed";
 import { QuizBlock, QuizOption, QuizPrompt, QuizQuestion, QuizReveal } from "./Quiz";
 
 // Renders the cf-* <div> trees produced by remarkCourseFences.ts. Anything else is a
@@ -11,6 +12,8 @@ type DivProps = ComponentPropsWithoutRef<"div"> & {
   "data-scope"?: string;
   "data-time"?: string;
   "data-title"?: string;
+  "data-src"?: string;
+  "data-height"?: string;
 };
 
 const sectionLabel = "not-prose block text-[10px] font-bold uppercase tracking-widest text-sun-muted mb-1.5";
@@ -82,6 +85,14 @@ export function CourseDiv(props: DivProps) {
       return <Reveal summary="Hint">{children}</Reveal>;
     case "cf-solution":
       return <Reveal summary="Solution">{children}</Reveal>;
+
+    // ```interactive
+    case "cf-interactive":
+      return (
+        <InteractiveEmbed src={props["data-src"] ?? ""} title={props["data-title"] ?? ""} height={Number(props["data-height"] ?? 760)}>
+          {Children.count(children) > 0 ? children : null}
+        </InteractiveEmbed>
+      );
 
     case "cf-error":
       return (

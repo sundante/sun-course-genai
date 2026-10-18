@@ -2,6 +2,7 @@
 
 ## What We Learned
 
+- A bigram model is one V × V embedding table: the current token's row is used directly as next-token logits. It trains, samples and plateaus (~2.5 on Tiny Shakespeare) because it has one token of context.
 - A from-scratch run follows a fixed order: clean, dedup, tokenize, split, chunk, batch, train, evaluate, checkpoint, generate.
 - Split train and validation before chunking (contiguous for one text, by document for a corpus), or validation loss measures memorization.
 - Each window of T tokens gives T next-token predictions, because the targets are the inputs shifted one token left.
@@ -12,6 +13,9 @@
 
 | Term | Short meaning |
 |---|---|
+| **Bigram model** | A language model that predicts the next token from the current token only; here a single `nn.Embedding(V, V)` lookup table. |
+| **Logits** | Unnormalized next-token scores; softmax turns a row of them into probabilities. |
+| **Autoregressive generation** | Sampling one token, appending it to the input and running the model again, repeatedly. |
 | **Train/validation split** | Held-out data for measuring generalization; done before chunking so no window crosses the boundary. |
 | **Document-level split** | Assigns whole documents to train or validation so pieces of one document cannot leak across. |
 | **block_size (context length)** | The fixed number of tokens in each training window the model sees. |

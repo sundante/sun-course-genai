@@ -4,7 +4,8 @@
 //   - no em dashes in content or site source (house style)
 //   - numeric filename prefixes have no gaps within a directory
 //   - every .mdx file under src/content is reachable from nav.yml (lab README.mdx files excepted)
-//   - ```quiz / ```objectives / ```exercise fences contain valid YAML
+//   - ```quiz / ```objectives / ```exercise / ```interactive fences contain valid YAML
+//   - ```interactive fences point at a page that exists under public/
 //   - objectives prerequisites link only to pages at or before the page in nav order
 //   - the generated A-Z glossary (23-Review/02-Glossary.mdx) matches the module Summary & Key Terms tables
 //     (a prerequisite marked "optional" or "later" may point ahead)
@@ -89,7 +90,7 @@ for (const file of mdxFiles) {
   }
 
   // Course fences hold Markdown strings (prerequisites, explanations, solutions), so their links count too
-  const linkText = prose + fences.filter((f) => ["quiz", "objectives", "exercise"].includes(f.lang)).map((f) => f.body).join("\n");
+  const linkText = prose + fences.filter((f) => ["quiz", "objectives", "exercise", "interactive"].includes(f.lang)).map((f) => f.body).join("\n");
   for (const m of linkText.matchAll(/\]\(([^)\s]+)\)/g)) {
     const url = m[1];
     if (/^[a-z]+:/i.test(url) || url.startsWith("#")) continue;
@@ -103,7 +104,7 @@ for (const file of mdxFiles) {
   }
 
   for (const { lang, body } of fences) {
-    if (!["quiz", "objectives", "exercise"].includes(lang)) continue;
+    if (!["quiz", "objectives", "exercise", "interactive"].includes(lang)) continue;
     let data;
     try {
       data = yaml.load(body);
@@ -141,6 +142,14 @@ function fenceProblem(lang, data) {
   if (lang === "objectives") {
     if (!Array.isArray(data?.outcomes) || !data.outcomes.length) return "`outcomes` must be a non-empty list";
     return badText(data.outcomes, "outcome") ?? badText(data.prerequisites, "prerequisite");
+  }
+  if (lang === "interactive") {
+    const src = String(data?.src ?? "");
+    if (!src.startsWith("/")) return "`src` must be a site path starting with /";
+    if (!data.title) return "`title` is required";
+    const file = path.join(ROOT, "public", src.endsWith("/") ? `${src}index.html` : src);
+    if (!fs.existsSync(file)) return `\`src\` ${src} not found under public/`;
+    return badText([data.title, ...(data.caption === undefined ? [] : [data.caption])], "interactive field");
   }
   if (lang === "quiz") {
     if (!Array.isArray(data) || !data.length) return "expected a non-empty list of questions";

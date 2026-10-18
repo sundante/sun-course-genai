@@ -3,7 +3,7 @@ import type { Code, Root, RootContent } from "mdast";
 import { visit } from "unist-util-visit";
 import yaml from "js-yaml";
 
-// Turns ```objectives, ```quiz and ```exercise fences (YAML bodies) into marked
+// Turns ```objectives, ```quiz, ```exercise and ```interactive fences (YAML bodies) into marked
 // <div class="cf-..."> trees. String fields are parsed as Markdown with the page's
 // own parser, so GFM, code highlighting and .mdx link rewriting all apply to them.
 // `CourseDiv` (CourseFences.tsx, mapped as `div` in MdxComponents.tsx) dispatches on the cf-* class names.
@@ -12,8 +12,9 @@ import yaml from "js-yaml";
 //   objectives: { time?: string, scope?: "page" | "module", outcomes: string[], prerequisites?: string[] }
 //   quiz:       [{ q: string, options?: string[], answer: number (1-based) | string, explain?: string }]
 //   exercise:   { title?: string, task: string, hints?: string[], solution?: string } | list of those
+//   interactive: { src: string (site path under public/, e.g. /labs/bigram/), title: string, height?: number, caption?: string }
 
-export const FENCE_LANGS = ["objectives", "quiz", "exercise"] as const;
+export const FENCE_LANGS = ["objectives", "quiz", "exercise", "interactive"] as const;
 
 type Block = RootContent & { data?: { hName?: string; hProperties?: Record<string, unknown> } };
 
@@ -94,6 +95,17 @@ export function remarkCourseFences(): Plugin<[], Root> {
       );
     }
 
+    // A self-contained lab page served from public/ (e.g. public/labs/bigram/index.html), shown in an iframe
+    function interactive(data: Record<string, unknown>): Block {
+      const src = String(data.src ?? "");
+      if (!src.startsWith("/")) throw new Error("`src` must be a site path starting with /");
+      if (!data.title) throw new Error("`title` is required (it labels the iframe)");
+      const height = data.height === undefined ? 760 : Number(data.height);
+      if (!Number.isFinite(height) || height < 200) throw new Error("`height` must be a number of pixels >= 200");
+      const children = data.caption ? markdown(data.caption) : [];
+      return block("cf-interactive", children, { "data-src": src, "data-title": String(data.title), "data-height": String(height) });
+    }
+
     return (tree) => {
       visit(tree, "code", (node: Code, index, parent) => {
         if (!parent || index === undefined) return;
@@ -104,6 +116,7 @@ export function remarkCourseFences(): Plugin<[], Root> {
           const data = yaml.load(node.value);
           if (lang === "objectives") replacement = objectives((data ?? {}) as Record<string, unknown>);
           else if (lang === "quiz") replacement = quiz(data);
+          else if (lang === "interactive") replacement = interactive((data ?? {}) as Record<string, unknown>);
           else replacement = exercise(data);
         } catch (e) {
           replacement = error(lang, e instanceof Error ? e.message.split("\n")[0] : String(e));

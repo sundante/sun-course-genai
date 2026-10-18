@@ -54,6 +54,15 @@ prerequisites:
     Markdown solution, hidden until clicked
 ```
 
+```interactive
+src: /labs/bigram/index.html   # a page under public/ - use the full filename (next dev does not serve folder index files); shown in an iframe with Theatre view + New tab
+title: Bigram, Visualized
+height: 820              # optional, px (default 760)
+caption: "Markdown caption"
+```
+
+Interactive labs are standalone HTML pages in `public/labs/<name>/` (light default + dark toggle, following `localStorage.theme`); `check:content` fails if `src` does not exist.
+
 Reference implementation: `src/content/17-Inference-and-Serving/Notes/01-KV-Cache-and-Inference-Optimization.mdx`.
 
 ## Punctuation
