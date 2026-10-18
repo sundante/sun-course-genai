@@ -28,31 +28,11 @@
 
 ### Current workflow (`.github/workflows/deploy.yml`)
 
-```yaml
-name: Deploy to Hostinger
-on:
-  push:
-    branches: [main]       # auto-deploy on every push to main
-  workflow_dispatch:        # + manual trigger for on-demand redeploys
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - actions/checkout@v4
-      - actions/setup-node@v4 (node-version: 20, cache: npm)
-      - run: npm ci
-      - run: npm run build
-      - uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          port: 21
-          local-dir: ./out/
-          server-dir: /domains/sunmintz.com/public_html/learngenai/
-          exclude: [**/.DS_Store, **/*.txt]
-          dangerous-clean-slate: true
-```
+Triggers: push to `main` (except pushes that only touch `vibes/**`, `**/*.md` or `.claude/**`) and manual `workflow_dispatch`. One deploy at a time (`concurrency: deploy-hostinger`, newer pushes queue), 30-minute timeout.
+
+Steps: checkout -> setup-node 20 (npm cache) -> `npm ci --no-audit --no-fund` -> `npm run check:content` (fails fast before anything uploads) -> restore `.next/cache` -> `npm run build` -> `SamKirkland/FTP-Deploy-Action@v4.3.5` to `/domains/sunmintz.com/public_html/learngenai/`, **incremental** (no `dangerous-clean-slate`; the action keeps `.ftp-deploy-sync-state.json` on the server and uploads only changed files, deleting removed ones). Excludes `**/.DS_Store`, `**/index.txt`, `**/__next.*.txt` (Next's ~2,500 client-navigation payload files, ~130 MB; links fall back to full page loads). `robots.txt` is deployed.
+
+**Why it is fast now (2026-10-19):** `next.config.ts` sets `generateBuildId` to a hash of the app code (`src/` minus `src/content/`, `package-lock.json`, `next.config.ts`). Next stamps the build ID into every page, so the old random ID changed 261 of 394 output files on every build and, with clean-slate on, the whole site was deleted and re-uploaded over FTP (~30 min). Now an identical rebuild changes 0 files and a one-line content edit changes 2 (that page + `search-index.json`). A code or dependency change still re-uploads every page, since chunk names change.
 
 **Required GitHub repo secrets (Settings -> Secrets -> Actions):**
 
@@ -88,7 +68,8 @@ Remote root should look like:
 - Workflow was iterated on heavily in June: briefly deleted and recreated, switched from an auto-trigger to manual-only (`workflow_dispatch`), had CI-breaking issues fixed (untracked `package-lock.json`/`tsconfig.json` blocking npm cache and path-alias resolution).
 - 2026-06-29 (commit `e5f3191`) removed an `environment` choice dropdown from the manual trigger, simplifying it back to a bare `workflow_dispatch` with no inputs.
 - **2026-09-18**: re-added an auto-deploy trigger (`push: branches: [main]`, alongside the existing `workflow_dispatch`) and switched `dangerous-clean-slate` to `true`, after comparing this repo's deployment against a reference "Static SPA + PHP API on shared hosting" pattern - see Changelog.
-- **No CI runs on push/PR** - lint, typecheck, and build are not verified automatically before merge. Every push to `main` now deploys straight to production (`sunmintz.com/learngenai/`).
+- **2026-10-19**: deploy made incremental (see above): stable build ID, clean-slate off, precise `.txt` excludes (the old `**/*.txt` also skipped `robots.txt`), `check:content` gate, Next build cache, `paths-ignore` for docs, `concurrency`.
+- **No CI runs on PRs** - `check:content` + build now run on every deploy, but nothing checks PRs before merge, and lint/typecheck are not run. Every push to `main` deploys straight to production (`sunmintz.com/learngenai/`).
 
 ---
 
@@ -375,3 +356,4 @@ vibes/                                project tracking & active plans
 - **2026-10-10** - **Core LLM vocabulary + course-wide Glossary** (no dedicated checklist). Covered the 35 terms from a lecture slide (attention techniques, architecture optimizations, model tuning, RL, benchmarks, metrics): new Attention Residuals (AttnRes) subsection in 03/06 Modern Architectures; an explanation of Elo vs Bradley-Terry plus a new quiz question in 04/02 Contamination & Leaderboards; SWA spelled out in 03/04; the LaaJ alias in 04/03. Added the missing terms to the Key Terms tables of modules 03, 04, 08 and 16. New page `22-Review/02-Glossary.mdx` (in nav after Readiness Self-Assessment, linked from the Review index) with a mindmap, six curated term tables and a generated A-Z of 297 terms; added the new `scripts/build-glossary.mjs` and a stale-glossary check in `check:content`. Verified: `check:content` reports 0 errors; `npm run build` succeeds; the comment markers don't appear in the HTML or the search index. The mindmap was not checked visually in a browser.
 - **2026-10-18** - Added a new module **08 Training LLMs from Scratch** (`llm-from-scratch`, Large Language Models track, after Pretraining at Scale) to hold one end-to-end build per model version. First page: `Notes/01-GPT-From-Scratch-Step-by-Step.mdx` - plan (C ≈ 6ND) -> clean/dedup -> tokenize -> train/val split (after tokenization, before chunking; contiguous vs document-level) -> (x, y) blocks -> batches -> GPT decoder in PyTorch -> sanity checks -> AdamW + cosine -> training loop -> eval -> checkpoint -> sampling, with 4 Mermaid diagrams, quiz, exercises and references; plus module `INDEX.mdx` and `APPENDIX.mdx`. Renumbered module folders 08-22 -> 09-23 (URLs unchanged: slugs come from module slug + path inside the folder, so no legacy redirects needed), updated cross-links, `NN - Title` references, Review hub table, CLAUDE.md and scripts paths; added `MODULE_SLUG_MAP` and `MODULE_META` entries; rebuilt glossary (306 terms). `check:content` 232 files 0/0, `npm run build` passes, all 4 new diagrams parse.
 - **2026-10-19** - **Bigram primer + interactive labs** (no dedicated checklist). Added a **Primer** nav group to 08 Training LLMs from Scratch: new `Notes/01-Bigram-Model-Primer.mdx` (Karpathy's bigram section, 7:52-42:13, as reading notes with 2 Mermaid diagrams, quiz, exercises, references, and a Credits & Attribution section); the GPT note renumbered `01-` -> `02-` with a legacy redirect; INDEX, APPENDIX (3 new terms; glossary rebuilt to 309) and nav updated. The visualizer lab lives at `public/labs/bigram/index.html` (+ `bigram_annotated.py`), restyled to the site design system (Inter/JetBrains Mono, sun-yellow/amber/coral tokens, light default + dark toggle that follows `localStorage.theme`, American spelling, no en/em dashes) with a Credits dialog carrying the MIT notice. New ```` ```interactive ```` fence (`src`, `title`, `height`, `caption`) -> `InteractiveEmbed.tsx` with Theatre view (fixes video and visuals stacking in the narrow article column) and a New tab link; `check:content` checks `src` exists. Two fixes found along the way: `next dev` 404s on folder URLs under `public/`, so fences use `/labs/bigram/index.html`; `ng-video-lecture` has no LICENSE file (README says MIT), so the notice has no year. CLAUDE.md documents the fence. `check:content` 233 files 0/0, `tsc` clean, `npm run build` passes; light, dark, embedded and theatre views checked in headless Chrome.
+- **2026-10-19** - **Deploy speed-up** (~30 min -> minutes). Root cause: Next's random build ID is stamped into every exported page, so every build changed 261 of 394 files, and `dangerous-clean-slate: true` deleted and re-uploaded the whole site over FTP. `next.config.ts` now derives `generateBuildId` from a hash of the app code (identical rebuild: 0 files change; one-line content edit: 2). `deploy.yml`: incremental FTP sync (clean-slate off), excludes narrowed to `index.txt` / `__next.*.txt` so `robots.txt` finally deploys, `check:content` gate before build, `.next/cache` restore, `npm ci --no-audit --no-fund`, `paths-ignore` for `vibes/**`, `**/*.md`, `.claude/**`, `concurrency`, 30-min timeout. Local build is ~10 s. First deploy after this uploads everything once (no sync-state file on the server yet).

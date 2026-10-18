@@ -4,12 +4,23 @@ on:
   push:
     branches:
       - main
+    # Docs and tracker edits don't change the site, so they don't deploy
+    paths-ignore:
+      - "vibes/**"
+      - "**/*.md"
+      - ".claude/**"
   workflow_dispatch:
+
+# One deploy at a time; a newer push waits instead of racing the FTP sync
+concurrency:
+  group: deploy-hostinger
+  cancel-in-progress: false
 
 jobs:
   build-and-deploy:
     name: Build & FTP Deploy
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -22,11 +33,26 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --no-audit --no-fund
+
+      # Fails in ~1s on broken links, bad fences or a stale glossary, before anything uploads
+      - name: Check content
+        run: npm run check:content
+
+      - name: Restore Next.js build cache
+        uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: nextjs-${{ hashFiles('package-lock.json') }}-${{ hashFiles('src/**', 'next.config.ts') }}
+          restore-keys: |
+            nextjs-${{ hashFiles('package-lock.json') }}-
 
       - name: Build
         run: npm run build
 
+      # Incremental: the action keeps .ftp-deploy-sync-state.json on the server and uploads only
+      # files whose hash changed (and deletes files that no longer exist). The first run after this
+      # change has no state file yet, so it uploads everything once.
       - name: Deploy to Hostinger via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -36,7 +62,9 @@ jobs:
           port: 21
           local-dir: ./out/
           server-dir: /domains/sunmintz.com/public_html/learngenai/
+          # Skip Next's ~2,500 client-navigation payload files (index.txt, __next.*.txt, ~130 MB);
+          # pages still work, links just do a full page load. robots.txt is deployed.
           exclude: |
             **/.DS_Store
-            **/*.txt
-          dangerous-clean-slate: true
+            **/index.txt
+            **/__next.*.txt
