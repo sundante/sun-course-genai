@@ -1,11 +1,12 @@
 # 08 - Training LLMs from Scratch
 
-This module puts the earlier concepts into practice by building and training language models end to end. Each chapter is a complete build of one model version, taking it from raw text to a trained model that generates text. It starts with a GPT-style decoder, and later chapters add newer architectures and larger training recipes on top of the same pipeline.
+This module puts the earlier concepts into practice by building and training language models end to end. It opens with a short primer, a bigram model built alongside an interactive visualizer of Andrej Karpathy's [*Let's build GPT*](https://www.youtube.com/watch?v=kCc8FmEb1nY) lecture, with thanks to him for the lecture and its MIT-licensed code. Each chapter after that is a complete build of one model version, taking it from raw text to a trained model that generates text. It starts with a GPT-style decoder, and later chapters add newer architectures and larger training recipes on top of the same pipeline.
 
 ```objectives
 scope: module
-time: 2-3 hours (growing as builds are added)
+time: 3-4 hours (growing as builds are added)
 outcomes:
+  - Trace a minimal language model (a bigram lookup table) from (B, T) token ids to logits, loss and sampled text
   - Run every step of a from-scratch pretraining pipeline in the right order, from data cleaning to sampling
   - Split train and validation data without leakage, and build (x, y) context blocks and batches from a token stream
   - Implement and size a GPT-style decoder, predicting its parameter count and training compute before running it
@@ -20,13 +21,14 @@ prerequisites:
 
 | # | Note | Topic | Level |
 |---|------|-------|-------|
-| 1 | [GPT From Scratch: Step by Step](Notes/01-GPT-From-Scratch-Step-by-Step.mdx) | The full pipeline: plan the run (C ≈ 6ND), clean and dedup, tokenize, split train/val before chunking, build (x, y) blocks and batches, a GPT decoder in PyTorch, sanity checks, AdamW + cosine, the training loop, evaluation, checkpointing and sampling | Intermediate |
+| 1 | [Primer: Bigram Model, Visualized](Notes/01-Bigram-Model-Primer.mdx) | The warm-up from Karpathy's *Let's build GPT* (7:52-42:13) with a synced interactive lab: character tokenizer, train/val split, (B, T) batches, the 65 × 65 embedding table, cross-entropy at init (≈ ln 65), the generate loop, training to ~2.5, and why one token of context is the limit | Beginner |
+| 2 | [GPT From Scratch: Step by Step](Notes/02-GPT-From-Scratch-Step-by-Step.mdx) | The full pipeline: plan the run (C ≈ 6ND), clean and dedup, tokenize, split train/val before chunking, build (x, y) blocks and batches, a GPT decoder in PyTorch, sanity checks, AdamW + cosine, the training loop, evaluation, checkpointing and sampling | Intermediate |
 
 **Planned builds:** later chapters will follow the same step-by-step format for other model versions, such as a full GPT-2 (124M) reproduction on FineWeb-Edu, a modern Llama-style decoder, a mixture-of-experts model and training a tokenizer from scratch.
 
 ## Code Lab
 
-The runnable companion for this module is the [GPT From Scratch lab](../06-PyTorch/CodeLabs/02-GPT-From-Scratch.mdx) in PyTorch Fundamentals. It is a modernized version of the model built in chapter 1, with RMSNorm, RoPE, grouped-query attention and SwiGLU, trained on Tiny Shakespeare, and a smoke test that runs on a laptop CPU.
+The runnable companion for this module is the [GPT From Scratch lab](../06-PyTorch/CodeLabs/02-GPT-From-Scratch.mdx) in PyTorch Fundamentals. It is a modernized version of the model built in chapter 2, with RMSNorm, RoPE, grouped-query attention and SwiGLU, trained on Tiny Shakespeare, and a smoke test that runs on a laptop CPU.
 
 ## Summary & Key Terms
 
