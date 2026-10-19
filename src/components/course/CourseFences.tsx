@@ -13,7 +13,8 @@ type DivProps = ComponentPropsWithoutRef<"div"> & {
   "data-time"?: string;
   "data-title"?: string;
   "data-src"?: string;
-  "data-height"?: string;
+  "data-poster"?: string;
+  "data-poster-dark"?: string;
 };
 
 const sectionLabel = "not-prose block text-[10px] font-bold uppercase tracking-widest text-sun-muted mb-1.5";
@@ -89,7 +90,7 @@ export function CourseDiv(props: DivProps) {
     // ```interactive
     case "cf-interactive":
       return (
-        <InteractiveEmbed src={props["data-src"] ?? ""} title={props["data-title"] ?? ""} height={Number(props["data-height"] ?? 760)}>
+        <InteractiveEmbed src={props["data-src"] ?? ""} title={props["data-title"] ?? ""} poster={props["data-poster"]} posterDark={props["data-poster-dark"]}>
           {Children.count(children) > 0 ? children : null}
         </InteractiveEmbed>
       );

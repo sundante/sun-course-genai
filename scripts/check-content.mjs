@@ -149,6 +149,11 @@ function fenceProblem(lang, data) {
     if (!data.title) return "`title` is required";
     const file = path.join(ROOT, "public", src.endsWith("/") ? `${src}index.html` : src);
     if (!fs.existsSync(file)) return `\`src\` ${src} not found under public/`;
+    for (const key of ["poster", "poster_dark"]) {
+      if (data[key] === undefined) continue;
+      const img = String(data[key]);
+      if (!img.startsWith("/") || !fs.existsSync(path.join(ROOT, "public", img))) return `\`${key}\` ${img} not found under public/`;
+    }
     return badText([data.title, ...(data.caption === undefined ? [] : [data.caption])], "interactive field");
   }
   if (lang === "quiz") {

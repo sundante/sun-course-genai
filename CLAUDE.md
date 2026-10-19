@@ -55,13 +55,14 @@ prerequisites:
 ```
 
 ```interactive
-src: /labs/bigram/index.html   # a page under public/ - use the full filename (next dev does not serve folder index files); shown in an iframe with Theatre view + New tab
-title: Bigram, Visualized
-height: 820              # optional, px (default 760)
+src: /labs/gpt/index.html   # a page under public/ - use the full filename (next dev does not serve folder index files)
+title: Let's Build GPT, Visualized
+poster: /labs/gpt/poster-light.jpg       # optional screenshot shown in the article (16:9); click opens the lab full screen
+poster_dark: /labs/gpt/poster-dark.jpg   # optional, shown in dark mode
 caption: "Markdown caption"
 ```
 
-Interactive labs are standalone HTML pages in `public/labs/<name>/` (light default + dark toggle, following `localStorage.theme`); `check:content` fails if `src` does not exist.
+Interactive labs are standalone HTML pages in `public/labs/<name>/` (light default + dark toggle, following `localStorage.theme`); `check:content` fails if `src` or a poster does not exist. The article never runs a lab inline: it shows the poster with a play button, and `InteractiveEmbed.tsx` opens the lab in a full-viewport `<dialog>` closed with an ✕ (or Esc), which unloads the iframe. Labs are pop-ups, not pages: no "new tab" or "back to course" links. Labs built on someone else's work open with a thank-you card linking to the original sources (see `public/labs/gpt/`). Two-pane labs give the user a drag handle to resize the split. Capture a poster with headless Chrome, e.g. `--headless=new --window-size=1600,900 --virtual-time-budget=12000 --screenshot=... "file://.../index.html?theme=light&still#<step-id>"` (`?still` hides the lab's own play button), then `sips -Z 1280` to a JPEG.
 
 Reference implementation: `src/content/17-Inference-and-Serving/Notes/01-KV-Cache-and-Inference-Optimization.mdx`.
 
