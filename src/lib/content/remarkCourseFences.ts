@@ -12,7 +12,7 @@ import yaml from "js-yaml";
 //   objectives: { time?: string, scope?: "page" | "module", outcomes: string[], prerequisites?: string[] }
 //   quiz:       [{ q: string, options?: string[], answer: number (1-based) | string, explain?: string }]
 //   exercise:   { title?: string, task: string, hints?: string[], solution?: string } | list of those
-//   interactive: { src: string (site path under public/, e.g. /labs/bigram/), title: string, height?: number, caption?: string }
+//   interactive: { src: string (site path under public/, e.g. /labs/gpt/index.html), title: string, poster?: string, poster_dark?: string, caption?: string }
 
 export const FENCE_LANGS = ["objectives", "quiz", "exercise", "interactive"] as const;
 
@@ -95,15 +95,21 @@ export function remarkCourseFences(): Plugin<[], Root> {
       );
     }
 
-    // A self-contained lab page served from public/ (e.g. public/labs/bigram/index.html), shown in an iframe
+    // A self-contained lab page served from public/ (e.g. public/labs/gpt/index.html). The article shows
+    // its poster image; the lab itself opens full screen in a dialog (InteractiveEmbed.tsx)
     function interactive(data: Record<string, unknown>): Block {
       const src = String(data.src ?? "");
       if (!src.startsWith("/")) throw new Error("`src` must be a site path starting with /");
-      if (!data.title) throw new Error("`title` is required (it labels the iframe)");
-      const height = data.height === undefined ? 760 : Number(data.height);
-      if (!Number.isFinite(height) || height < 200) throw new Error("`height` must be a number of pixels >= 200");
+      if (!data.title) throw new Error("`title` is required (it labels the lab)");
+      const props: Record<string, unknown> = { "data-src": src, "data-title": String(data.title) };
+      for (const [key, attr] of [["poster", "data-poster"], ["poster_dark", "data-poster-dark"]] as const) {
+        if (data[key] === undefined) continue;
+        const value = String(data[key]);
+        if (!value.startsWith("/")) throw new Error(`\`${key}\` must be a site path starting with /`);
+        props[attr] = value;
+      }
       const children = data.caption ? markdown(data.caption) : [];
-      return block("cf-interactive", children, { "data-src": src, "data-title": String(data.title), "data-height": String(height) });
+      return block("cf-interactive", children, props);
     }
 
     return (tree) => {
