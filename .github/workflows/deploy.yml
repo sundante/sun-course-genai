@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       fresh:
-        description: "Fresh deploy: wipe the server folder and upload everything (slow; use when the site looks out of sync)"
+        description: "Re-upload all files without wiping the live site (normally leave off)"
         type: boolean
         default: false
 
@@ -23,12 +23,11 @@ concurrency:
 
 jobs:
   build-and-deploy:
-    name: Build & FTP Deploy
+    name: Build & Incremental Deploy
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
-      # Fresh deploy when started by hand with "fresh" ticked, or when the pushed commit message contains [fresh deploy]
-      FRESH: ${{ github.event.inputs.fresh == 'true' || contains(github.event.head_commit.message, '[fresh deploy]') }}
+      FRESH: ${{ github.event.inputs.fresh == 'true' }}
 
     steps:
       - name: Checkout
@@ -47,49 +46,31 @@ jobs:
       - name: Check content
         run: npm run check:content
 
-      # Keyed on app code only (not src/content), matching the build ID in next.config.ts
+      # Include content so successful builds refresh the cache after content edits.
       - name: Restore Next.js build cache
         uses: actions/cache@v6
         with:
           path: .next/cache
-          key: nextjs-${{ hashFiles('package-lock.json') }}-${{ hashFiles('src/app/**', 'src/components/**', 'src/lib/**', 'src/types/**', 'next.config.ts') }}
+          key: nextjs-${{ hashFiles('package-lock.json') }}-${{ hashFiles('src/app/**', 'src/components/**', 'src/lib/**', 'src/types/**', 'src/content/**/*.mdx', 'src/content/**/*.yml', 'next.config.ts') }}
           restore-keys: |
             nextjs-${{ hashFiles('package-lock.json') }}-
 
       - name: Build
         run: npm run build
 
-      - name: Deploy summary
-        run: |
-          echo "Mode: $([ "$FRESH" = "true" ] && echo 'FRESH (server folder wiped, full upload)' || echo 'incremental (changed files only)')"
-          echo "Files to consider: $(find out -type f ! -name 'index.txt' ! -name '__next.*.txt' | wc -l), size: $(du -sh out | cut -f1) before excludes"
+      - name: Test deployment scripts
+        run: python3 -m unittest discover -s scripts/tests -v
 
-      # Incremental by default: the action keeps .ftp-deploy-sync-state.json on the server and uploads
-      # only files whose hash changed (deleting files that no longer exist). With no state file on the
-      # server (first run, or after a fresh deploy) it uploads everything.
-      - name: Deploy to Hostinger via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          port: 21
-          local-dir: ./out/
-          server-dir: /domains/sunmintz.com/public_html/learngenai/
-          dangerous-clean-slate: ${{ env.FRESH == 'true' }}
-          timeout: 120000
-          # Skip Next's ~2,500 client-navigation payload files (index.txt, __next.*.txt, ~130 MB);
-          # pages still work, links just do a full page load. robots.txt is deployed.
-          exclude: |
-            **/.DS_Store
-            **/index.txt
-            **/__next.*.txt
+      - name: Validate smoke-test targets
+        run: python3 scripts/smoke-test.py --local
 
-      # Fail the run if the live site doesn't answer after the upload
+      - name: Deploy changed files (4 parallel connections)
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: /domains/sunmintz.com/public_html/learngenai/
+        run: python3 scripts/deploy.py
+
       - name: Smoke test
-        run: |
-          for page in "" "learn/llm-from-scratch/notes-01-bigram-model-primer/" "labs/bigram/index.html" "robots.txt"; do
-            code=$(curl -s -o /dev/null -w '%{http_code}' "https://learngenai.sunmintz.com/$page")
-            echo "$code  /$page"
-            [ "$code" = "200" ] || exit 1
-          done
+        run: python3 scripts/smoke-test.py
